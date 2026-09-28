@@ -2180,6 +2180,11 @@
       var list = loadChars();
       data.forEach(function(nc){
         var idx = list.findIndex(function(x){return x.id===nc.id;});
+        // Backup vindo do artefato antigo não sabe de contas Google: se a ficha já
+        // estava vinculada a alguém aqui no site, o vínculo é mantido.
+        if(idx>-1 && list[idx].donoUid && !nc.donoUid){
+          nc.donoUid = list[idx].donoUid; nc.donoEmail = list[idx].donoEmail||null; nc.donoNome = list[idx].donoNome||null;
+        }
         if(idx>-1) list[idx] = nc; else list.push(nc);
         marcarComoMeu(nc.id);
         if(caps.mode === "mesa" && usuario && !ehMestre()){ nc.donoUid = usuario.uid; nc.donoEmail = usuario.email||null; nc.donoNome = usuario.displayName||null; }
