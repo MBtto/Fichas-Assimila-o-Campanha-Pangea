@@ -200,6 +200,10 @@
   .btn-row{ display:flex; gap:10px; justify-content:space-between; margin-top:18px; flex-wrap:wrap; }
 
   .stepper{ display:flex; align-items:stretch; gap:6px; }
+  /* Campos com +/-: o seletor fica sempre na base, alinhado com os vizinhos da mesma linha,
+     não importa quantas linhas a descrição ocupe. */
+  .field-stepper{ display:flex; flex-direction:column; }
+  .field-stepper .stepper{ margin-top:auto; }
   .stepper input{ text-align:center; }
   .stepper-btn{
     width:34px; flex:none; background:var(--surface-2); border:1px solid var(--border-strong); border-radius:var(--radius);
@@ -1989,10 +1993,21 @@
       return alts.some(function(a){ return valorRequisito(c, a[0]) >= a[1]; });
     });
   }
+  function reqGrupoTexto(alts, varios){
+    var t = alts.map(function(a){ return nomeAtributo(a[0])+" "+a[1]+"+"; }).join(" ou ");
+    return (varios && alts.length > 1) ? "("+t+")" : t;
+  }
   function reqTexto(def){
     if(!def.req || !def.req.length) return "Sem requisito";
-    return "Requisito: " + def.req.map(function(alts){
-      return alts.map(function(a){ return nomeAtributo(a[0])+" "+a[1]+"+"; }).join(" ou ");
+    var varios = def.req.length > 1;
+    return "Requisito: " + def.req.map(function(alts){ return reqGrupoTexto(alts, varios); }).join(" e ");
+  }
+  // O que ainda falta pra cumprir o requisito, com o valor atual do personagem.
+  function reqFaltando(c, def){
+    return (def.req||[]).filter(function(alts){
+      return !alts.some(function(a){ return valorRequisito(c, a[0]) >= a[1]; });
+    }).map(function(alts){
+      return alts.map(function(a){ return nomeAtributo(a[0])+" "+a[1]+"+ (tem "+valorRequisito(c, a[0])+")"; }).join(" ou ");
     }).join(" e ");
   }
   // Pontos de Experiência gastos (pág. 83): Características + aumentos de Conhecimento/Prática.
@@ -2478,7 +2493,7 @@
   }
 
   function stepperField(kind, label, desc, id, value, min, max, disabled){
-    return '<div class="field">' +
+    return '<div class="field field-stepper">' +
       '<label>'+label+'</label>' +
       (desc ? '<p class="hint attr-desc" style="margin-top:-2px">'+desc+'</p>' : '') +
       '<div class="stepper">' +
@@ -2668,7 +2683,7 @@
           var ok = reqAtendido(c, t);
           html += '<label class="trait'+(checked?" checked":"")+'"'+(!ok&&!checked?' style="opacity:.55"':'')+'><input type="checkbox" data-carac="'+t.id+'" '+(checked?"checked":"")+((!ok&&!checked)?" disabled":"")+'>' +
             '<span class="cost">'+t.custo+'</span><span class="txt"><b>'+t.nome+'</b>' +
-            '<span class="hint" style="display:block;margin:1px 0 3px;'+(ok?'':'color:var(--danger)')+'">'+reqTexto(t)+(ok?'':' — não cumprido')+'</span>' +
+            '<span class="hint" style="display:block;margin:1px 0 3px;'+(ok?'':'color:var(--danger)')+'">'+reqTexto(t)+(ok?'':' — falta '+reqFaltando(c, t))+'</span>' +
             '<span>'+iconizarTexto(t.txt)+'</span>';
           if(t.escolha && checked){
             var esc0 = (c.caracEscolhas||{})[t.id]||"";
