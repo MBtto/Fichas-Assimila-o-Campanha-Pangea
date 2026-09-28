@@ -1,0 +1,11 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Só quem abre a ficha (login anônimo automático) lê e grava,
+    // e só nas coleções que a ficha usa.
+    match /{colecao}/{id} {
+      allow read, write: if request.auth != null
+        && colecao in ['personagens', 'rolagens', 'meta'];
+    }
+  }
+}
