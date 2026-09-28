@@ -435,7 +435,7 @@
      Os laços do lado de Determinação (à esquerda da posição atual) e do lado
      de Assimilação (à direita) ficam coloridos; o resto fica apagado. */
   .tug-track{
-    display:flex; align-items:center; gap:2px; flex:1; min-width:0; padding:2px 0;
+    display:flex; align-items:center; gap:6px; flex:1; min-width:0; padding:2px 0;
   }
   .tug-endcap{
     flex:none; width:18px; height:18px; border-radius:50%;
@@ -505,7 +505,7 @@
      da aba Mesa (tugMiniBarHtml), no lugar da barrinha de preenchimento única
      que ainda não tinha sido atualizada pro visual "laços entre dois anéis"
      do resto da ficha, a pedido do Marco. */
-  .tug-track.mini{ gap:1px; }
+  .tug-track.mini{ gap:3px; }
   .tug-endcap.mini{ width:10px; height:10px; border-width:2px; }
   .tug-lace.mini{ font-size:13px; cursor:default; }
   .tug-lace.mini:hover{ transform:none; }
@@ -520,7 +520,8 @@
      Cada um tem uma versão "_escuro" com o contorno claro, pro tema escuro. O
      tamanho acompanha o font-size (em), então os mesmos ícones servem nos
      medidores grandes da ficha, nas mini-fichas e no meio dos textos. */
-  .ico{ display:inline-block; vertical-align:-0.2em; background:center/contain no-repeat; width:1.15em; height:1.05em; flex:none; }
+  .ico{ display:inline-block; vertical-align:middle; background:center/contain no-repeat; width:1.15em; height:1.05em; flex:none; font-size:20px; }
+  /* Tamanho mínimo: 20px (o mesmo dos ícones ao lado de "Nível 9"), em qualquer lugar. */
   .ico.tri{ width:.9em; }
   .ico-nd{ background-image:url(icones/nivel_determinacao.png); }
   .ico-pd{ background-image:url(icones/pontos_determinacao.png); }
@@ -547,10 +548,14 @@
   .diamond.ico.filled{ opacity:1; filter:none; }
   .diamond.ico.dsize-lg{ font-size:30px; }
   .diamond.ico.dsize-sm{ font-size:22px; }
-  .dots.mini .diamond.ico{ font-size:14px; cursor:default; }
+  .dots.mini .diamond.ico{ font-size:20px; cursor:default; }
   .tug-nums .ico{ font-size:20px; }
+  /* Trilha maior e com os laços mais espaçados: os nomes Determinação/Assimilação
+     ficam numa linha própria acima, e a trilha usa a largura inteira do card. */
+  .tug-row{ flex-wrap:wrap; justify-content:space-between; row-gap:8px; }
+  .tug-row .tug-track:not(.mini){ order:3; flex:1 1 100%; }
+  .trait .txt span.ico{ font-size:20px; }
   .gm-compact-line .ico{ font-size:20px; }
-  .gm-hud .hint .ico{ font-size:17px; }
   .gm-carac-chip .cost{ font-size:10.5px; color:var(--accent); font-weight:700; }
 </style>
 </head>
@@ -1128,6 +1133,28 @@
   // em si, que a essa altura já não existe mais no texto.
   var RE_EFEITO_DIGITO_DE = new RegExp("(?<![" + PT_LETRA + "0-9])(\\d+)([de])(?![" + PT_LETRA + "0-9&])", "g");
   var RE_EFEITO_D_SOLTO = new RegExp("(?<![" + PT_LETRA + "0-9])d(?![" + PT_LETRA + "0-9&])", "g");
+  // Troca, num texto de descrição JÁ ESCAPADO (HTML), as menções a Nível e
+  // Pontos de Determinação/Assimilação/Saúde pelos ícones oficiais (ver icoHtml).
+  // "caixa de Saúde" é o mesmo que ponto de Saúde na ficha. O número na frente
+  // ("1 Ponto de Determinação") fica, só a expressão vira ícone.
+  var RE_ICO_TEXTO = [
+    [/(Níveis|Nível|níveis|nível) de Determinação/g, "nd"],
+    [/(Níveis|Nível|níveis|nível) de Assimilação/g, "na"],
+    [/(Níveis|Nível|níveis|nível) de Saúde/g, "ns"],
+    [/(Pontos|Ponto|pontos|ponto|Pts|pts|pt) de Determinação/g, "pd"],
+    [/(Pontos|Ponto|pontos|ponto) de Assimilação/g, "pa"],
+    [/(Pontos|Ponto|pontos|ponto|caixas|caixa) de Saúde/g, "ps"]
+  ];
+  function iconizarTexto(html){
+    // Só mexe no TEXTO, nunca dentro de tags já existentes (ex.: o title de um
+    // ícone já inserido também diz "Pontos de Determinação").
+    return String(html==null?"":html).split(/(<[^>]*>)/).map(function(parte){
+      if(parte.charAt(0) === "<") return parte;
+      var marcado = parte;
+      RE_ICO_TEXTO.forEach(function(r){ marcado = marcado.replace(r[0], "\u0001"+r[1]+"\u0001"); });
+      return marcado.replace(/\u0001(\w\w)\u0001/g, function(_, k){ return icoHtml(k); });
+    }).join("");
+  }
   function formatEfeito(txt, htmlColor){
     function sym(color, ch){ return htmlColor ? '<span style="color:'+color+'">'+ch+'</span>' : ch; }
     // Pontos de Determinação ("d") e de Assimilação ("e"/[E]) viram os ícones
@@ -1146,6 +1173,7 @@
       return n + symPts(letra==="d" ? "pd" : "pa");
     });
     out = out.replace(RE_EFEITO_D_SOLTO, function(){ return symPts("pd"); });
+    if(htmlColor) out = iconizarTexto(out);
     return out;
   }
 
@@ -2139,7 +2167,7 @@
       var sel = selectedTraits.filter(function(s){return s.id===t.id;})[0];
       var checked = !!sel;
       html += '<label class="trait'+(checked?" checked":"")+'"><input type="checkbox" data-'+prefix+'trait="'+t.id+'" '+(checked?"checked":"")+'>' +
-        '<span class="cost">'+(t.custo>0?"+":"")+t.custo+'pt</span><span class="txt"><b>'+t.nome+'</b> <span class="hint">(Categoria '+t.cat+(t.rep?", pode repetir":"")+')</span><span>'+t.txt+'</span>';
+        '<span class="cost">'+(t.custo>0?"+":"")+t.custo+'pt</span><span class="txt"><b>'+t.nome+'</b> <span class="hint">(Categoria '+t.cat+(t.rep?", pode repetir":"")+')</span><span>'+iconizarTexto(t.txt)+'</span>';
       if(t.rep && checked){
         html += '<div class="row" style="margin-top:6px"><label style="margin:0">Quantas vezes:</label><select data-'+prefix+'traitqtd="'+t.id+'"><option value="1"'+(sel.qtd===1?" selected":"")+'>1x</option><option value="2"'+(sel.qtd===2?" selected":"")+'>2x</option></select></div>';
       }
@@ -2292,7 +2320,7 @@
       CARACTERISTICAS.forEach(function(t){
         var checked = c.caracComp.indexOf(t.id) > -1;
         html += '<label class="trait'+(checked?" checked":"")+'"><input type="checkbox" data-carac="'+t.id+'" '+(checked?"checked":"")+'>' +
-          '<span class="cost">'+t.custo+'pt</span><span class="txt"><b>'+t.nome+'</b><span>'+t.txt+'</span></span></label>';
+          '<span class="cost">'+t.custo+'pt</span><span class="txt"><b>'+t.nome+'</b><span>'+iconizarTexto(t.txt)+'</span></span></label>';
       });
       html += '</div>';
       return html;
@@ -2592,7 +2620,7 @@
     var caracBody;
     if(caracDetalhes.length){
       caracBody = '<div class="trait-list">' + caracDetalhes.map(function(d){
-        return '<div class="trait" style="cursor:default"><span class="cost">+'+d.custo+'pt</span><span class="txt"><b>'+esc(d.nome)+'</b><span>'+esc(d.txt)+'</span></span></div>';
+        return '<div class="trait" style="cursor:default"><span class="cost">+'+d.custo+'pt</span><span class="txt"><b>'+esc(d.nome)+'</b><span>'+iconizarTexto(esc(d.txt))+'</span></span></div>';
       }).join('') + '</div>';
     } else {
       caracBody = '<p class="hint">Nenhuma característica única comprada.</p>';
@@ -2630,7 +2658,7 @@
         var equipTraitDetails = c.equip.traits.map(function(s){
           var d = EQUIP_TRAITS.filter(function(x){return x.id===s.id;})[0];
           if(!d) return "";
-          return '<div class="trait" style="cursor:default"><span class="cost">'+(d.custo>0?"+":"")+d.custo+'pt</span><span class="txt"><b>'+d.nome+(s.qtd>1?" (2x)":"")+(s.aptidao?" ("+esc(s.aptidao)+")":"")+'</b><span>'+d.txt+'</span></span></div>';
+          return '<div class="trait" style="cursor:default"><span class="cost">'+(d.custo>0?"+":"")+d.custo+'pt</span><span class="txt"><b>'+d.nome+(s.qtd>1?" (2x)":"")+(s.aptidao?" ("+esc(s.aptidao)+")":"")+'</b><span>'+iconizarTexto(d.txt)+'</span></span></div>';
         }).join("");
         equipBody += '<p class="hint" style="margin-bottom:6px">Utilidade das características escolhidas:</p><div class="trait-list">'+equipTraitDetails+'</div>';
       } else {
