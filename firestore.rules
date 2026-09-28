@@ -1,11 +1,59 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Só quem abre a ficha (login anônimo automático) lê e grava,
-    // e só nas coleções que a ficha usa.
-    match /{colecao}/{id} {
-      allow read, write: if request.auth != null
-        && colecao in ['personagens', 'rolagens', 'meta'];
+
+    function logado() {
+      return request.auth != null && request.auth.token.firebase.sign_in_provider == 'google.com';
+    }
+    // O Assimilador é reconhecido pela conta Google.
+    function mestre() {
+      return logado()
+        && request.auth.token.email == 'marcoa.barreto14@gmail.com'
+        && request.auth.token.email_verified == true;
+    }
+    function donoDe(dados) {
+      return dados.get('donoUid', null) == request.auth.uid;
+    }
+
+    // Fichas completas: o jogador só lê e grava as fichas vinculadas à conta dele.
+    match /personagens/{id} {
+      allow read: if mestre() || (logado() && donoDe(resource.data));
+      allow create: if mestre() || (logado() && donoDe(request.resource.data));
+      allow update: if mestre()
+        // o dono edita a própria ficha (e não pode passá-la pra outra conta)
+        || (logado() && donoDe(resource.data) && donoDe(request.resource.data))
+        // vínculo pela senha: só uma ficha sem dono e que não é NPC, e só os campos do dono
+        || (logado()
+            && resource.data.get('donoUid', null) == null
+            && resource.data.get('ehNpc', false) != true
+            && donoDe(request.resource.data)
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['donoUid', 'donoEmail', 'donoNome']));
+      allow delete: if mestre() || (logado() && donoDe(resource.data));
+    }
+
+    // Resumos (o que a aba Mesa mostra das fichas dos outros). NPC: só o Assimilador.
+    match /resumos/{id} {
+      allow read: if mestre() || (logado() && resource.data.ehNpc == false);
+      allow create, update: if mestre()
+        || (logado() && getAfter(/databases/$(database)/documents/personagens/$(id)).data.get('donoUid', null) == request.auth.uid);
+      allow delete: if mestre()
+        || (logado() && get(/databases/$(database)/documents/personagens/$(id)).data.get('donoUid', null) == request.auth.uid);
+    }
+
+    // Histórico de rolagens: todos veem; só o Assimilador apaga.
+    match /rolagens/{id} {
+      allow read, create: if logado();
+      allow delete: if mestre();
+    }
+    // Rolagens de NPC: só o Assimilador vê.
+    match /rolagensNpc/{id} {
+      allow create: if logado();
+      allow read, delete: if mestre();
+    }
+
+    match /meta/{id} {
+      allow read: if logado();
+      allow write: if mestre();
     }
   }
 }

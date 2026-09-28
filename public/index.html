@@ -1280,7 +1280,13 @@
     data.characters = data.characters.map(migrateChar);
     return data;
   }
-  var shared = { characters:[], testLog:[] }; // espelho em memória do banco (modo mesa)
+  var shared = { characters:[], testLog:[], resumos:[] }; // espelho em memória do banco (modo mesa)
+  // Fase 3 (login): conta Google logada e quem é o Assimilador. A regra de verdade
+  // fica no servidor (regras do Firestore); aqui é só pra montar a tela certa.
+  var MESTRE_EMAIL = "marcoa.barreto14@gmail.com";
+  var usuario = null;
+  function ehMestre(){ return !!(usuario && usuario.email && usuario.email.toLowerCase() === MESTRE_EMAIL); }
+  var rolagensComuns = [], rolagensNpc = [];
 
   function loadChars(){
     if(caps.mode === "mesa"){ return shared.characters; }
@@ -1299,6 +1305,8 @@
   }
   function registrarTeste(entry){
     entry.id = uid(); entry.ts = new Date().toISOString();
+    var chRol = entry.charId ? getChar(entry.charId) : null;
+    entry.npc = !!(chRol && chRol.ehNpc);
     if(caps.mode === "mesa"){
       var log = shared.testLog;
       log.unshift(entry);
@@ -1342,8 +1350,13 @@
   // Ids de personagens "reivindicados" por este navegador: além da etiqueta "seu"
   // na interface, é o que a ficha usa pra saber se este navegador já provou dono
   // de quem via senha (ver isCharUnlocked/senhaFicha logo abaixo).
-  function meusIds(){ return loadLS("pangea:meus", []); }
+  function meusIds(){
+    // No site com login, "meus" são os personagens vinculados à conta Google logada.
+    if(caps.mode === "mesa") return usuario ? shared.characters.filter(function(c){ return c.donoUid === usuario.uid; }).map(function(c){ return c.id; }) : [];
+    return loadLS("pangea:meus", []);
+  }
   function marcarComoMeu(id){
+    if(caps.mode === "mesa") return; // o vínculo agora mora no banco (donoUid), não no navegador
     var list = meusIds();
     if(list.indexOf(id) === -1){ list.push(id); saveLS("pangea:meus", list); }
   }
@@ -1372,7 +1385,7 @@
   function temAcessoTotal(){
     if(caps.mode !== "mesa") return true;
     if(caps.isOwner && state.gmPreviewJogador) return false;
-    return caps.isOwner || state.gmUnlocked;
+    return caps.isOwner;
   }
   // Pros outros jogadores, só destrava depois de acertar a senha em qualquer
   // lugar da página (o que também marca o personagem como "meu" nesse navegador).
@@ -1431,10 +1444,16 @@
     var ops = [];
     idsChars.forEach(function(id){
       var c = shared.characters.filter(function(x){ return x.id===id; })[0];
-      if(c) ops.push({ tipo:"set", col:"personagens", id:id, data:paraFirestore(c) });
+      if(c){
+        ops.push({ tipo:"set", col:"personagens", id:id, data:paraFirestore(c) });
+        ops.push({ tipo:"set", col:"resumos", id:id, data:montarResumo(c) });
+      }
     });
-    idsDel.forEach(function(id){ ops.push({ tipo:"del", col:"personagens", id:id }); });
-    entries.forEach(function(e){ ops.push({ tipo:"set", col:"rolagens", id:e.id, data:paraFirestore(e) }); });
+    idsDel.forEach(function(id){
+      ops.push({ tipo:"del", col:"personagens", id:id });
+      ops.push({ tipo:"del", col:"resumos", id:id });
+    });
+    entries.forEach(function(e){ ops.push({ tipo:"set", col:(e.npc ? "rolagensNpc" : "rolagens"), id:e.id, data:paraFirestore(e) }); });
     // Tira da fila já na hora (o Firestore guarda e reenvia sozinho se a rede
     // oscilar); só volta pra fila se o servidor RECUSAR de verdade a gravação.
     idsChars.forEach(function(id){ delete dirtyCharIds[id]; });
@@ -1466,7 +1485,7 @@
     var p;
     if(!shared.testLog.length && logAntes.length){
       dirtyTestLogEntries = [];
-      p = FB.limparColecao("rolagens");
+      p = FB.limparColecao("rolagens").then(function(){ return ehMestre() ? FB.limparColecao("rolagensNpc") : null; });
     } else {
       p = Promise.resolve();
     }
@@ -1515,7 +1534,8 @@
     nova.sort(function(a,b){ return String(a.criadoEm||"").localeCompare(String(b.criadoEm||"")); });
     shared.characters = nova;
   }
-  function aplicarSnapshotRolagens(lista){
+  function aplicarSnapshotRolagens(){
+    var lista = rolagensComuns.concat(rolagensNpc);
     var ids = {};
     lista.forEach(function(e){ ids[e.id] = true; });
     var extras = dirtyTestLogEntries.filter(function(e){ return !ids[e.id]; });
@@ -1526,7 +1546,94 @@
   }
   // Semente única: se o banco está vazio e nunca foi semeado, copia pra lá os
   // personagens embutidos neste HTML (backup do artefato antigo) e marca meta/migracao.
+  // Resumo público de um personagem (coleção "resumos"): só o que a aba Mesa mostra
+  // pros outros jogadores - nome, jogador, acampamento, Saúde e Nível no Cabo de
+  // Guerra. Instintos, anotações, inventário etc. nunca saem da ficha completa.
+  function montarResumo(c){
+    return paraFirestore({
+      id: c.id, nomePersonagem: c.nomePersonagem||"", nomeJogador: c.nomeJogador||"",
+      acampamento: c.acampamento||null, saudeNivel: c.saudeNivel!=null ? c.saudeNivel : 5,
+      saudePontosAtuais: c.saudePontosAtuais!=null ? c.saudePontosAtuais : saudePontosMax(c),
+      saudeMax: saudePontosMax(c),
+      determinacao: { caixaAtual: c.determinacao && c.determinacao.caixaAtual!=null ? c.determinacao.caixaAtual : 3 },
+      ehNpc: !!c.ehNpc, donoUid: c.donoUid || null, criadoEm: c.criadoEm || null
+    });
+  }
+  // O Assimilador mantém os resumos em dia: cria os que faltam (fichas antigas) e
+  // corrige os desatualizados. Roda ao entrar e a cada mudança nos personagens.
+  var sincronizandoResumos = false, sincronizarDeNovo = false;
+  function sincronizarResumos(){
+    if(!FB || !ehMestre()) return;
+    if(sincronizandoResumos){ sincronizarDeNovo = true; return; }
+    var atuais = {};
+    (shared.resumos||[]).forEach(function(r){ atuais[r.id] = JSON.stringify(r); });
+    var ops = [];
+    shared.characters.forEach(function(c){
+      var r = montarResumo(c);
+      var chaveOrdenada = function(o){ return JSON.stringify(Object.keys(o).sort().reduce(function(a,k){ a[k]=o[k]; return a; }, {})); };
+      var atual = atuais[c.id] ? chaveOrdenada(JSON.parse(atuais[c.id])) : null;
+      if(atual !== chaveOrdenada(r)) ops.push({ tipo:"set", col:"resumos", id:c.id, data:r });
+    });
+    var idsChars = {}; shared.characters.forEach(function(c){ idsChars[c.id] = true; });
+    (shared.resumos||[]).forEach(function(r){ if(!idsChars[r.id]) ops.push({ tipo:"del", col:"resumos", id:r.id }); });
+    if(!ops.length) return;
+    sincronizandoResumos = true;
+    // Depois de gravar, espera um instante pro espelho dos resumos se atualizar
+    // antes de comparar de novo (evita gravar a mesma coisa duas vezes).
+    FB.escrever(ops).catch(function(err){ console.error("[Pangea] falha ao atualizar resumos", err); })
+      .then(function(){ setTimeout(function(){
+        sincronizandoResumos = false;
+        if(sincronizarDeNovo){ sincronizarDeNovo = false; sincronizarResumos(); }
+      }, 1500); });
+  }
+  // Vincula uma ficha ainda sem dono à conta Google logada (jogador digitou a
+  // senha nome do personagem + nome do jogador). Só funciona uma vez: depois
+  // que a ficha tem dono, o servidor recusa qualquer outro vínculo.
+  function vincularPersonagem(id){
+    if(!FB || !usuario) return;
+    state.abrirAoChegar = id;
+    FB.escrever([
+      { tipo:"update", col:"personagens", id:id, data:{ donoUid:usuario.uid, donoEmail:usuario.email||null, donoNome:usuario.displayName||null } },
+      { tipo:"update", col:"resumos", id:id, data:{ donoUid:usuario.uid } }
+    ]).catch(function(err){
+      console.error("[Pangea] falha ao vincular", err);
+      state.abrirAoChegar = null;
+      alert("Não deu pra vincular essa ficha à sua conta. Talvez ela já esteja vinculada a outra pessoa - fale com o Assimilador.");
+    });
+  }
+  function abrirFichaVinculadaSeChegou(){
+    var id = state.abrirAoChegar;
+    if(!id || !getChar(id)) return;
+    state.abrirAoChegar = null;
+    if(appPronto) goto("sheet", {charId:id, sheetRevealAnim:true});
+  }
+  // Só o Assimilador: solta a ficha da conta atual (ex.: jogador trocou de conta).
+  function desvincularPersonagem(id){
+    var c = getChar(id);
+    if(!c) return;
+    c.donoUid = null; c.donoEmail = null; c.donoNome = null;
+    updateChar(c);
+    clearTimeout(publishTimer); doPublish();
+  }
+  function mostrarLogin(){
+    document.getElementById("rollfeed").innerHTML = "";
+    app.innerHTML = '<div class="card" style="max-width:460px;margin:60px auto 0;text-align:center">' +
+      '<h1 style="margin-bottom:6px">Fichas de Pangea</h1>' +
+      '<p class="hint" style="margin:0 auto 18px">Entre com sua conta Google pra abrir a sua ficha. Na primeira vez, digite em qualquer lugar da página o nome do personagem junto com o seu nome de jogador pra vincular a ficha à sua conta - depois disso ela abre sozinha, em qualquer aparelho.</p>' +
+      '<button type="button" class="btn accent" data-action="entrar-google" style="margin:0 auto">Entrar com Google</button>' +
+    '</div>';
+    var b = app.querySelector('[data-action="entrar-google"]');
+    b.addEventListener("click", function(){
+      b.disabled = true; b.textContent = "Abrindo o login…";
+      FB.entrar().catch(function(err){
+        b.disabled = false; b.textContent = "Entrar com Google";
+        if(err && err.code === "auth/popup-closed-by-user") return;
+        alert("Não deu pra entrar: " + (err && (err.code || err.message) || "erro desconhecido"));
+      });
+    });
+  }
   function semearSeVazio(){
+    if(!ehMestre()) return;
     FB.lerDoc("meta", "migracao").then(function(m){
       if(m) return;
       var emb = readEmbeddedShared();
@@ -1885,7 +1992,7 @@
         '<button data-nav="mesa" aria-current="'+(active==="mesa")+'">Mesa</button>' +
         (showGm ? '<button data-nav="gm" aria-current="'+(active==="gm")+'">Painel do Assimilador</button>' : "") +
         (caps.mode==="mesa" && caps.isOwner ? '<button type="button" class="btn secondary" data-action="toggle-gm-preview" title="Alterna entre ver a mesa com acesso total (Assimilador) e ver exatamente como um jogador comum veria, sem destravar nada">'+(state.gmPreviewJogador?"🎭 Voltar ao Assimilador":"👁 Ver como Jogador")+'</button>' : "") +
-        (caps.mode==="mesa" ? '<button type="button" class="btn secondary" data-action="refresh-mesa" title="Recarrega a página com os dados mais recentes da mesa">↻ Atualizar</button>' : "") +
+        (caps.mode==="mesa" && usuario ? '<button type="button" class="btn secondary" data-action="sair" title="'+esc(usuario.email||"")+'">Sair ('+esc((usuario.displayName||usuario.email||"").split(" ")[0])+')</button>' : "") +
       '</nav>' +
     '</header>';
     return html;
@@ -1895,7 +2002,7 @@
     var msg;
     if(caps.mode === "mesa"){
       msg = caps.canEdit
-        ? 'Esta mesa está sincronizada ao vivo: qualquer mudança aparece pra todo mundo com o link em poucos segundos.'
+        ? 'Mesa ao vivo: cada ficha fica salva na conta Google do jogador, e qualquer mudança aparece pra todo mundo na hora.'
         : 'Este link é só de visualização: as fichas atualizam ao vivo, mas pra editar é preciso de um link de edição do Assimilador.';
     } else {
       msg = 'Seus personagens ficam salvos só neste navegador. Use "Backup" pra guardar uma cópia, ou "Exportar" numa ficha pra enviar ela pra outra pessoa.';
@@ -1909,7 +2016,7 @@
     var code = "MB1403";
     var buffer = "";
     document.addEventListener("keydown", function(e){
-      if(state.gmUnlocked) return;
+      if(state.gmUnlocked || caps.mode === "mesa") return;
       var tag = (document.activeElement && document.activeElement.tagName) || "";
       if(tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
       if(e.key.length !== 1) return;
@@ -1940,6 +2047,16 @@
       if(buffer.length > SENHA_BUFFER_MAX) buffer = buffer.slice(-SENHA_BUFFER_MAX);
       var norm = normalizeSenha(buffer);
       if(!norm) return;
+      if(caps.mode === "mesa"){
+        if(!usuario || ehMestre()) return;
+        var livre = (shared.resumos||[]).filter(function(r){
+          if(r.donoUid || r.ehNpc) return false;
+          var senhaR = senhaFicha(r);
+          return senhaR && norm.length >= senhaR.length && norm.slice(-senhaR.length) === senhaR;
+        })[0];
+        if(livre){ buffer = ""; vincularPersonagem(livre.id); }
+        return;
+      }
       var alvo = loadChars().filter(function(c){
         if(isCharUnlocked(c)) return false;
         var senha = senhaFicha(c);
@@ -1990,10 +2107,10 @@
     if(caps.mode === "mesa" && !temAcessoTotal()){
       html += '<div class="card tight" style="border-color:var(--accent)">' +
         '<h2>🔒 Sua ficha é secreta</h2>' +
-        '<p class="hint" style="margin:0">Pra abrir a ficha do seu personagem nesta mesa, digite em qualquer lugar desta página (fora de caixas de texto) o nome do personagem junto com o seu nome de jogador, sem espaço - por exemplo, se seu personagem é "Ruhanzito" e você é o "Buteco", digite <code>RuhanzitoButeco</code>. Não precisa clicar em nada antes: acertando, a ficha aparece sozinha na hora.</p>' +
+        '<p class="hint" style="margin:0">Primeira vez nesta conta? Pra vincular a ficha do seu personagem à sua conta Google, digite em qualquer lugar desta página (fora de caixas de texto) o nome do personagem junto com o seu nome de jogador, sem espaço - por exemplo, se seu personagem é "Ruhanzito" e você é o "Buteco", digite <code>RuhanzitoButeco</code>. Só precisa fazer isso uma vez: depois a ficha abre sozinha, em qualquer aparelho em que você entrar com a mesma conta.</p>' +
       '</div>';
     }
-    if(caps.mode === "mesa" && meus.length){
+    if(caps.mode !== "mesa" && meus.length){
       html += '<div class="card tight"><h2>Personagens destravados neste navegador</h2>' +
         '<p class="hint">"Limpar personagens" esconde de novo, só aqui neste navegador, os personagens já destravados por senha - não apaga nada de ninguém, é só digitar a senha de novo pra ver de novo.</p>' +
         '<button class="btn secondary" data-action="clear-personagens">Limpar personagens</button>' +
@@ -2065,6 +2182,7 @@
         var idx = list.findIndex(function(x){return x.id===nc.id;});
         if(idx>-1) list[idx] = nc; else list.push(nc);
         marcarComoMeu(nc.id);
+        if(caps.mode === "mesa" && usuario && !ehMestre()){ nc.donoUid = usuario.uid; nc.donoEmail = usuario.email||null; nc.donoNome = usuario.displayName||null; }
         if(caps.mode === "mesa") marcarCharSujo(nc.id);
       });
       saveChars(list);
@@ -2123,6 +2241,7 @@
           if(!vf.ok){ alert(vf.msg); return; }
           if(!podeEditar()) return;
           c.atualizadoEm = new Date().toISOString();
+          if(caps.mode === "mesa" && usuario){ c.donoUid = usuario.uid; c.donoEmail = usuario.email||null; c.donoNome = usuario.displayName||null; }
           var list = loadChars(); list.push(c);
           if(caps.mode === "mesa") marcarCharSujo(c.id);
           saveChars(list);
@@ -2584,7 +2703,7 @@
     html += '<div class="card" style="border-left:6px solid '+(camp?camp.cor:'var(--accent)')+'">';
     html += '<div class="row" style="justify-content:space-between">';
     html += '<div><h2 style="margin-bottom:2px">'+esc(c.nomePersonagem||"Sem nome")+npcBadgeHtml(c)+'</h2><span class="camp-tag">'+(camp?camp.nome:"")+' · jogador(a): <input type="text" data-jogador value="'+esc(c.nomeJogador)+'" placeholder="seu nome" style="width:140px;display:inline-block"></span>' +
-      (caps.mode === "mesa" && meusIds().indexOf(c.id)===-1 ? ' <button type="button" class="gm-link" data-action="claim">marcar como meu</button>' : '') +
+      (caps.mode === "mesa" && ehMestre() && c.donoEmail ? ' <span class="hint">· vinculada a '+esc(c.donoEmail)+'</span>' : '') +
       '</div>';
     if(camp) html += '<img src="'+camp.img+'" alt="" style="width:88px;height:88px">';
     html += '</div></div>';
@@ -3918,11 +4037,11 @@
   // decoração de cor usada na criação de personagem) e um resumo de Saúde/Determinação.
   // Não mostra a Assimilação oculta nem os Instintos/Conhecimentos - isso fica só
   // no Painel do Assimilador.
-  function miniFichaCard(c){
+  function miniFichaCard(c, soLeitura){
     var camp = c.acampamento ? CAMPS[c.acampamento] : null;
-    var cardStyle = (camp?'--camp-color:'+camp.cor+';':'')+'border-left:6px solid '+(camp?camp.cor:'var(--accent)')+';cursor:pointer';
-    var maxNivel = c.instintos ? (valorInstinto(c, c.atributoSaude||"potencia")+2) : 1;
-    return '<div class="char-card" style="'+cardStyle+'" data-mesaopen="'+c.id+'">' +
+    var cardStyle = (camp?'--camp-color:'+camp.cor+';':'')+'border-left:6px solid '+(camp?camp.cor:'var(--accent)')+';cursor:'+(soLeitura?'default':'pointer');
+    var maxNivel = c.saudeMax != null ? c.saudeMax : (c.instintos ? (valorInstinto(c, c.atributoSaude||"potencia")+2) : 1);
+    return '<div class="char-card" style="'+cardStyle+'"'+(soLeitura?'':' data-mesaopen="'+c.id+'"')+'>' +
       (camp ? '<img class="badge" src="'+camp.img+'" alt="">' : '') +
       '<h3>'+esc(c.nomePersonagem||"Sem nome")+npcBadgeHtml(c)+'</h3>' +
       '<div class="camp-tag">'+(camp?camp.nome:"acampamento não definido")+(c.nomeJogador?" · "+esc(c.nomeJogador):"")+'</div>' +
@@ -3938,17 +4057,26 @@
   // mini-ficha de cada personagem, decorada com a cor do acampamento.
   function renderMesa(){
     var chars = visibleChars();
+    // Jogador no site com login: além das próprias fichas, vê o RESUMO das fichas
+    // dos colegas (menos NPCs) - só leitura, sem abrir a ficha completa.
+    var resumosOutros = [];
+    if(caps.mode === "mesa" && !temAcessoTotal()){
+      var meusSet = {}; chars.forEach(function(c){ meusSet[c.id] = true; });
+      resumosOutros = (shared.resumos||[]).filter(function(r){ return !meusSet[r.id] && !r.ehNpc; })
+        .sort(function(a,b){ return String(a.criadoEm||"").localeCompare(String(b.criadoEm||"")); });
+    }
     var html = topbar("mesa");
     if(caps.mode === "mesa" && !temAcessoTotal()){
-      html += '<div class="card tight" style="border-color:var(--accent)"><p class="hint" style="margin:0">🔒 Personagens de outros jogadores ficam escondidos até a senha certa (nome do personagem + nome do jogador) ser digitada em qualquer lugar da página.</p></div>';
+      html += '<div class="card tight" style="border-color:var(--accent)"><p class="hint" style="margin:0">Você edita só a sua ficha. Das fichas dos outros jogadores aparece só um resumo, sem abrir a ficha completa.</p></div>';
     }
     html += testLogHtml("Histórico de Rolagens", {showClear:true});
     html += '<h2 style="margin:20px 0 10px">Personagens</h2>';
-    if(!chars.length){
+    if(!chars.length && !resumosOutros.length){
       html += '<div class="card"><p class="hint">Nenhum personagem criado ainda.</p></div>';
     } else {
       html += '<div class="roster-grid">';
       chars.forEach(function(c){ html += miniFichaCard(c); });
+      resumosOutros.forEach(function(r){ html += miniFichaCard(r, true); });
       html += '</div>';
     }
     html += '<div class="btn-row"><span></span><button class="btn secondary" data-nav="roster">Voltar</button></div>';
@@ -4028,7 +4156,7 @@
         '<td class="num">'+testeResultadoHtml(t)+'</td></tr>';
     });
     html += '</tbody></table></div>';
-    if(opts.showClear){
+    if(opts.showClear && temAcessoTotal()){
       html += '<div class="row" style="margin-top:10px"><button type="button" class="btn secondary" data-action="clear-rolagens">Limpar histórico de rolagens</button></div>';
     }
     html += '</div>';
@@ -4042,7 +4170,7 @@
   // (sem esperar o debounce padrão) e tenta de novo se perder uma corrida
   // contra a rolagem de outro jogador, em vez de só torcer pra dar certo.
   function limparHistoricoRolagens(){
-    if(!podeEditar()) return;
+    if(!podeEditar() || !temAcessoTotal()) return;
     askConfirm("Apagar TODO o histórico de rolagens pra sempre? Isso não pode ser desfeito.", function(){
       if(caps.mode === "mesa"){
         publicarAgoraComRetry(function(sh){ sh.testLog = []; });
@@ -4419,8 +4547,12 @@
         html += '<div class="card" style="'+cardStyle+'" data-gmopen="'+c.id+'">';
         html += '<div class="row" style="justify-content:space-between;align-items:flex-start">' +
           '<div><h3 style="color:'+(camp?camp.cor:'var(--ink)')+';font-size:17px;margin-bottom:2px">'+esc(c.nomePersonagem||"Sem nome")+npcBadgeHtml(c)+'</h3>' +
-          '<span class="camp-tag">jogador(a): '+esc(c.nomeJogador||"não informado")+' · '+(camp?camp.nome:"acampamento não definido")+'</span></div>' +
-          (caps.canEdit ? '<button class="btn secondary" data-gmdelmesa="'+c.id+'" style="padding:4px 10px;font-size:11px">excluir</button>' : '') +
+          '<span class="camp-tag">jogador(a): '+esc(c.nomeJogador||"não informado")+' · '+(camp?camp.nome:"acampamento não definido")+'</span>' +
+          '<div class="hint" style="margin-top:2px">'+(c.donoEmail ? 'Conta vinculada: '+esc(c.donoEmail) : (c.ehNpc ? 'NPC (só o Assimilador)' : 'Ainda sem conta vinculada'))+'</div></div>' +
+          '<div class="row" style="gap:6px;flex:none">' +
+            (c.donoUid ? '<button class="btn secondary" data-gmdesvincular="'+c.id+'" style="padding:4px 10px;font-size:11px">desvincular</button>' : '') +
+            (caps.canEdit ? '<button class="btn secondary" data-gmdelmesa="'+c.id+'" style="padding:4px 10px;font-size:11px">excluir</button>' : '') +
+          '</div>' +
         '</div>';
         html += gmCharCardBody(c);
         html += '</div>';
@@ -4434,8 +4566,19 @@
     bindGmConflitos();
     app.querySelectorAll('[data-gmopen]').forEach(function(el){
       el.addEventListener("click", function(e){
-        if(e.target.closest('[data-gmdelmesa]')) return;
+        if(e.target.closest('[data-gmdelmesa]') || e.target.closest('[data-gmdesvincular]')) return;
         goto("sheet", {charId: el.getAttribute("data-gmopen")});
+      });
+    });
+    app.querySelectorAll('[data-gmdesvincular]').forEach(function(btn){
+      btn.addEventListener("click", function(e){
+        e.stopPropagation();
+        var id = btn.getAttribute("data-gmdesvincular");
+        var c = getChar(id);
+        askConfirm('Desvincular "'+(c?c.nomePersonagem:"esta ficha")+'" da conta '+(c&&c.donoEmail?c.donoEmail:"atual")+'? O jogador vai precisar digitar a senha (personagem + jogador) de novo pra vincular.', function(){
+          desvincularPersonagem(id);
+          renderGmMesa();
+        });
       });
     });
     app.querySelectorAll('[data-gmdelmesa]').forEach(function(btn){
@@ -4461,8 +4604,8 @@
         goto(target);
       });
     });
-    var refreshBtn = app.querySelector('[data-action="refresh-mesa"]');
-    if(refreshBtn) refreshBtn.addEventListener("click", function(){ stashViewForReload(); location.reload(); });
+    var sairBtn = app.querySelector('[data-action="sair"]');
+    if(sairBtn) sairBtn.addEventListener("click", function(){ flushPendente(); if(FB) FB.sair(); });
     var previewBtn = app.querySelector('[data-action="toggle-gm-preview"]');
     if(previewBtn) previewBtn.addEventListener("click", function(){
       state.gmPreviewJogador = !state.gmPreviewJogador;
@@ -4514,34 +4657,73 @@
     render();
   }
 
+  // ---------- INICIALIZAÇÃO (Fase 3: login com Google) ----------
+  // Sem login, a ficha mostra só a tela "Entrar com Google". Depois do login:
+  //  - o Assimilador (MESTRE_EMAIL) ouve TODOS os personagens, os resumos e as
+  //    rolagens (inclusive as de NPC, em "rolagensNpc");
+  //  - um jogador ouve só os personagens vinculados à conta dele (donoUid), os
+  //    resumos dos outros que não são NPC e as rolagens comuns.
+  // As regras do Firestore garantem isso no servidor; aqui é só o que cada um pede.
+  var ouvintes = [];
+  function pararOuvintes(){
+    ouvintes.forEach(function(u){ try{ u(); }catch(e){} });
+    ouvintes = [];
+  }
   function initCapabilities(){
     var iniciou = false;
     function comFB(fb){
       if(iniciou) return;
       iniciou = true;
-      fb.pronto.then(function(){
-        FB = fb;
+      FB = fb;
+      app.innerHTML = '<p class="empty">Conectando à mesa…</p>';
+      fb.quandoUsuario(function(u){
+        pararOuvintes();
+        appPronto = false;
+        shared = { characters:[], testLog:[], resumos:[] };
+        rolagensComuns = []; rolagensNpc = [];
+        if(!u || u.isAnonymous){
+          usuario = null;
+          caps.mode = "local"; caps.artifact = null; caps.isOwner = false;
+          if(u && u.isAnonymous){ fb.sair(); return; } // sessões anônimas da Fase 1
+          mostrarLogin();
+          return;
+        }
+        usuario = u;
         caps.artifact = fb;
         caps.mode = "mesa";
         caps.canEdit = true;
-        caps.isOwner = false;
-        var chegou = { p:false, r:false };
-        var primeiraVezP = true;
+        caps.isOwner = ehMestre();
+        state.gmUnlocked = false; // o código antigo não vale mais: quem é Assimilador é a conta
+        var mestre = ehMestre();
+        var chegou = { p:false, res:false, r:false, rn:!mestre };
         function talvezRevelar(){
-          if(appPronto || !chegou.p || !chegou.r) return;
+          if(appPronto || !chegou.p || !chegou.res || !chegou.r || !chegou.rn) return;
           appPronto = true;
           boot();
+          if(mestre) sincronizarResumos();
         }
-        fb.ouvir("personagens", function(lista){
-          if(primeiraVezP){ primeiraVezP = false; if(!lista.length) semearSeVazio(); }
+        ouvintes.push(fb.ouvir("personagens", function(lista){
           aplicarSnapshotPersonagens(lista);
-          chegou.p = true; talvezRevelar(); agendarRender();
-        }, mostrarErroConexao);
-        fb.ouvirRolagens(60, function(lista){
-          aplicarSnapshotRolagens(lista);
+          chegou.p = true; talvezRevelar();
+          if(appPronto && mestre) sincronizarResumos();
+          abrirFichaVinculadaSeChegou();
+          agendarRender();
+        }, mostrarErroConexao, mestre ? null : ["donoUid", u.uid]));
+        ouvintes.push(fb.ouvir("resumos", function(lista){
+          shared.resumos = lista;
+          chegou.res = true; talvezRevelar(); agendarRender();
+        }, mostrarErroConexao, mestre ? null : ["ehNpc", false]));
+        ouvintes.push(fb.ouvirRolagens("rolagens", 60, function(lista){
+          rolagensComuns = lista; aplicarSnapshotRolagens();
           chegou.r = true; talvezRevelar(); agendarRender();
-        }, mostrarErroConexao);
-      }).catch(mostrarErroConexao);
+        }, mostrarErroConexao));
+        if(mestre){
+          ouvintes.push(fb.ouvirRolagens("rolagensNpc", 60, function(lista){
+            rolagensNpc = lista; aplicarSnapshotRolagens();
+            chegou.rn = true; talvezRevelar(); agendarRender();
+          }, mostrarErroConexao));
+        }
+      });
     }
     if(window.PANGEA_FB){ comFB(window.PANGEA_FB); return; }
     if(window.PANGEA_FB_ERRO){ mostrarErroConexao(window.PANGEA_FB_ERRO); return; }
@@ -4559,16 +4741,21 @@
 <script type="module">
 // Ponte com o Firebase (site ficha-pangea.web.app). A ficha em si (script acima)
 // só enxerga window.PANGEA_FB e nunca importa nada do Firebase diretamente.
+// Fase 3 (login): entrada com conta Google; o Assimilador é reconhecido pelo e-mail.
 const V = "10.12.2";
 try {
   const { initializeApp } = await import(`https://www.gstatic.com/firebasejs/${V}/firebase-app.js`);
-  const { getAuth, signInAnonymously, onAuthStateChanged } = await import(`https://www.gstatic.com/firebasejs/${V}/firebase-auth.js`);
-  const { getFirestore, collection, doc, onSnapshot, writeBatch, getDocs, getDoc, query, orderBy, limit } =
+  const { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signOut } =
+    await import(`https://www.gstatic.com/firebasejs/${V}/firebase-auth.js`);
+  const { getFirestore, collection, doc, onSnapshot, writeBatch, getDocs, getDoc, query, where, orderBy, limit } =
     await import(`https://www.gstatic.com/firebasejs/${V}/firebase-firestore.js`);
 
+  // No próprio site (web.app/firebaseapp.com) o login usa o domínio do site, o que
+  // evita problemas de login por redirecionamento em Safari/iPhone.
+  const noSiteFirebase = /\.(web\.app|firebaseapp\.com)$/.test(location.hostname);
   const firebaseConfig = {
     apiKey: "AIzaSyB4RpPYOuPe87Pw98aBNjjYPAMZtz3V0gI",
-    authDomain: "ficha-pangea.firebaseapp.com",
+    authDomain: noSiteFirebase ? location.hostname : "ficha-pangea.firebaseapp.com",
     projectId: "ficha-pangea",
     storageBucket: "ficha-pangea.firebasestorage.app",
     messagingSenderId: "476574641686",
@@ -4577,36 +4764,45 @@ try {
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
   const db = getFirestore(app);
-
-  // Login anônimo: o jogador não vê nada disso, mas só quem abre a ficha
-  // consegue ler/gravar no banco (ver regras do Firestore).
-  const pronto = new Promise((resolve, reject) => {
-    const parar = onAuthStateChanged(auth, (u) => { if (u) { parar(); resolve(u); } });
-    signInAnonymously(auth).catch((e) => { parar(); reject(e); });
-  });
+  getRedirectResult(auth).catch((e) => console.warn("[Pangea] retorno do login", e));
 
   const lista = (snap) => snap.docs.map((d) => d.data());
 
   window.PANGEA_FB = {
-    pronto,
-    ouvir(col, cb, erro) {
-      return onSnapshot(collection(db, col), (snap) => cb(lista(snap)), erro);
+    quandoUsuario(cb) { return onAuthStateChanged(auth, cb); },
+    async entrar() {
+      const p = new GoogleAuthProvider();
+      p.setCustomParameters({ prompt: "select_account" });
+      try { await signInWithPopup(auth, p); }
+      catch (e) {
+        const usarRedirect = ["auth/popup-blocked", "auth/operation-not-supported-in-environment", "auth/cancelled-popup-request"];
+        if (usarRedirect.includes(e.code)) return signInWithRedirect(auth, p);
+        throw e;
+      }
     },
-    ouvirRolagens(n, cb, erro) {
-      const q = query(collection(db, "rolagens"), orderBy("ts", "desc"), limit(n));
+    sair() { return signOut(auth); },
+    // filtro opcional: [campo, valor] => só documentos com campo == valor
+    ouvir(col, cb, erro, filtro) {
+      const ref = filtro ? query(collection(db, col), where(filtro[0], "==", filtro[1])) : collection(db, col);
+      return onSnapshot(ref, (snap) => cb(lista(snap)), erro);
+    },
+    ouvirRolagens(col, n, cb, erro) {
+      const q = query(collection(db, col), orderBy("ts", "desc"), limit(n));
       return onSnapshot(q, (snap) => cb(lista(snap)), erro);
     },
     async lerDoc(col, id) {
       const s = await getDoc(doc(db, col, id));
       return s.exists() ? s.data() : null;
     },
-    // ops: [{tipo:"set"|"del", col, id, data}] — gravadas em lotes de até 400.
+    // ops: [{tipo:"set"|"update"|"del", col, id, data}] — gravadas em lotes de até 400.
     async escrever(ops) {
       for (let i = 0; i < ops.length; i += 400) {
         const b = writeBatch(db);
         ops.slice(i, i + 400).forEach((o) => {
           const ref = doc(db, o.col, o.id);
-          if (o.tipo === "del") b.delete(ref); else b.set(ref, o.data);
+          if (o.tipo === "del") b.delete(ref);
+          else if (o.tipo === "update") b.update(ref, o.data);
+          else b.set(ref, o.data);
         });
         await b.commit();
       }
