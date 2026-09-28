@@ -515,6 +515,42 @@
   .gm-attr-cell .v{ font-family:"Oswald",sans-serif; font-weight:700; font-size:16px; color:var(--ink); }
   .gm-carac-list{ display:flex; flex-wrap:wrap; gap:6px; margin-top:4px; }
   .gm-carac-chip{ display:inline-flex; align-items:baseline; gap:6px; background:var(--surface-2); border:1px solid var(--border-strong); border-radius:99px; padding:3px 11px 3px 12px; font-size:12px; }
+  /* Ícones oficiais de Nível (círculo) e Pontos (triângulo) de Determinação,
+     Assimilação e Saúde (Fase 2 do site, 28/09/2026 - ver claude/Icones_Oficiais_Ficha.md).
+     Cada um tem uma versão "_escuro" com o contorno claro, pro tema escuro. O
+     tamanho acompanha o font-size (em), então os mesmos ícones servem nos
+     medidores grandes da ficha, nas mini-fichas e no meio dos textos. */
+  .ico{ display:inline-block; vertical-align:-0.2em; background:center/contain no-repeat; width:1.15em; height:1.05em; flex:none; }
+  .ico.tri{ width:.9em; }
+  .ico-nd{ background-image:url(icones/nivel_determinacao.png); }
+  .ico-pd{ background-image:url(icones/pontos_determinacao.png); }
+  .ico-na{ background-image:url(icones/nivel_assimilacao.png); }
+  .ico-pa{ background-image:url(icones/pontos_assimilacao.png); }
+  .ico-ns{ background-image:url(icones/nivel_saude.png); }
+  .ico-ps{ background-image:url(icones/pontos_saude.png); }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]) .ico-nd{ background-image:url(icones/nivel_determinacao_escuro.png); }
+    :root:not([data-theme="light"]) .ico-pd{ background-image:url(icones/pontos_determinacao_escuro.png); }
+    :root:not([data-theme="light"]) .ico-na{ background-image:url(icones/nivel_assimilacao_escuro.png); }
+    :root:not([data-theme="light"]) .ico-pa{ background-image:url(icones/pontos_assimilacao_escuro.png); }
+    :root:not([data-theme="light"]) .ico-ns{ background-image:url(icones/nivel_saude_escuro.png); }
+    :root:not([data-theme="light"]) .ico-ps{ background-image:url(icones/pontos_saude_escuro.png); }
+  }
+  :root[data-theme="dark"] .ico-nd{ background-image:url(icones/nivel_determinacao_escuro.png); }
+  :root[data-theme="dark"] .ico-pd{ background-image:url(icones/pontos_determinacao_escuro.png); }
+  :root[data-theme="dark"] .ico-na{ background-image:url(icones/nivel_assimilacao_escuro.png); }
+  :root[data-theme="dark"] .ico-pa{ background-image:url(icones/pontos_assimilacao_escuro.png); }
+  :root[data-theme="dark"] .ico-ns{ background-image:url(icones/nivel_saude_escuro.png); }
+  :root[data-theme="dark"] .ico-ps{ background-image:url(icones/pontos_saude_escuro.png); }
+  /* Medidores (antes losangos ♦): apagado = cinza e transparente; marcado = cor cheia. */
+  .diamond.ico{ opacity:.25; filter:grayscale(1); margin-right:2px; }
+  .diamond.ico.filled{ opacity:1; filter:none; }
+  .diamond.ico.dsize-lg{ font-size:30px; }
+  .diamond.ico.dsize-sm{ font-size:22px; }
+  .dots.mini .diamond.ico{ font-size:14px; cursor:default; }
+  .tug-nums .ico{ font-size:20px; }
+  .gm-compact-line .ico{ font-size:20px; }
+  .gm-hud .hint .ico{ font-size:17px; }
   .gm-carac-chip .cost{ font-size:10.5px; color:var(--accent); font-weight:700; }
 </style>
 </head>
@@ -1094,8 +1130,11 @@
   var RE_EFEITO_D_SOLTO = new RegExp("(?<![" + PT_LETRA + "0-9])d(?![" + PT_LETRA + "0-9&])", "g");
   function formatEfeito(txt, htmlColor){
     function sym(color, ch){ return htmlColor ? '<span style="color:'+color+'">'+ch+'</span>' : ch; }
+    // Pontos de Determinação ("d") e de Assimilação ("e"/[E]) viram os ícones
+    // oficiais (triângulos) no HTML; no texto puro continuam sendo ♦.
+    function symPts(k){ return htmlColor ? icoHtml(k) : "♦"; }
     var out = esc(txt);
-    out = out.split("[E]").join(sym("var(--assim)", "♦"));
+    out = out.split("[E]").join(symPts("pa"));
     out = out.replace(RE_EFEITO_ABC, function(run){
       return run.split("").map(function(ch){
         if(ch==="A") return sym("var(--good)","✓");
@@ -1104,9 +1143,9 @@
       }).join("");
     });
     out = out.replace(RE_EFEITO_DIGITO_DE, function(_, n, letra){
-      return n + sym(letra==="d" ? "var(--royal)" : "var(--assim)", "♦");
+      return n + symPts(letra==="d" ? "pd" : "pa");
     });
-    out = out.replace(RE_EFEITO_D_SOLTO, function(){ return sym("var(--royal)","♦"); });
+    out = out.replace(RE_EFEITO_D_SOLTO, function(){ return symPts("pd"); });
     return out;
   }
 
@@ -2568,7 +2607,7 @@
       pendingSectionBannerHtml(c, "saude") +
       '<p class="hint">Base: '+(c.atributoSaude==="potencia"?"Potência":"Resolução")+' + 2 = '+maxNivel+' pontos por nível</p>' +
       '<div class="row"><label style="margin:0">Pontos atuais no nível:</label><div class="dots" data-dots="pontos">' + diamonds(c.saudePontosAtuais, maxNivel, "dsize-lg", "c-saude") + '</div></div>' +
-      '<div class="row" style="margin-top:8px"><label style="margin:0">Nível (de 5):</label><div class="dots" data-dots="nivel">' + diamonds(c.saudeNivel,5,"dsize-sm","c-saude") + '</div></div>' +
+      '<div class="row" style="margin-top:8px"><label style="margin:0">Nível (de 5):</label><div class="dots" data-dots="nivel">' + diamonds(c.saudeNivel,5,"dsize-sm","c-saude","ns") + '</div></div>' +
       '<div class="row" style="margin-top:10px"><button class="btn secondary" data-saude="menos">-1 ponto</button><button class="btn secondary" data-saude="mais">+1 ponto</button></div>' +
     '</div>';
 
@@ -2774,17 +2813,17 @@
           tugLacosHtml(nivelDet, true) +
           '<span class="tug-tag" style="color:var(--assim)">Assimilação</span>' +
         '</div>' +
-        '<div class="tug-nums"><span>Nível '+nivelDet+'</span><span>Nível '+nivelAssim+'</span></div>' +
+        '<div class="tug-nums"><span>'+icoHtml("nd")+' Nível '+nivelDet+'</span><span>Nível '+nivelAssim+' '+icoHtml("na")+'</span></div>' +
       '</div>' +
       '<div class="row" style="margin-top:12px;gap:16px;flex-wrap:wrap;align-items:center">' +
         '<div class="row" style="gap:6px;align-items:center;flex-wrap:nowrap">' +
           '<button type="button" class="btn secondary" data-tugpts="det-menos" style="padding:1px 7px;font-size:11px" '+(ptsDet<=0?"disabled":"")+'>&minus;</button>' +
-          '<span class="gm-compact-line" style="margin:0"><b style="color:var(--royal)">'+ptsDet+'</b> de '+nivelDet+' pontos de Determinação</span>' +
+          '<span class="gm-compact-line" style="margin:0">'+icoHtml("pd")+' <b style="color:var(--royal)">'+ptsDet+'</b> de '+nivelDet+' pontos de Determinação</span>' +
           '<button type="button" class="btn secondary" data-tugpts="det-mais" style="padding:1px 7px;font-size:11px" '+(ptsDet>=nivelDet?"disabled":"")+'>+</button>' +
         '</div>' +
         '<div class="row" style="gap:6px;align-items:center;flex-wrap:nowrap">' +
           '<button type="button" class="btn secondary" data-tugpts="assim-menos" style="padding:1px 7px;font-size:11px" '+(ptsAssim<=0?"disabled":"")+'>&minus;</button>' +
-          '<span class="gm-compact-line" style="margin:0"><b style="color:var(--assim)">'+ptsAssim+'</b> de '+nivelAssim+' '+(nivelAssim===1?'ponto':'pontos')+' de Assimilação</span>' +
+          '<span class="gm-compact-line" style="margin:0">'+icoHtml("pa")+' <b style="color:var(--assim)">'+ptsAssim+'</b> de '+nivelAssim+' '+(nivelAssim===1?'ponto':'pontos')+' de Assimilação</span>' +
           '<button type="button" class="btn secondary" data-tugpts="assim-mais" style="padding:1px 7px;font-size:11px" '+(ptsAssim>=nivelAssim?"disabled":"")+'>+</button>' +
         '</div>' +
       '</div>' +
@@ -2793,10 +2832,20 @@
 
   // Losangos ♦ pros medidores de Saúde e Determinação: sizeClass ("dsize-lg"/"dsize-sm")
   // controla o tamanho do ícone, colorClass ("c-saude"/"c-det") a cor quando preenchido.
-  function diamonds(atual, max, sizeClass, colorClass){
+  // Ícone oficial (ver CSS .ico): k = "nd"/"na"/"ns" (Nível, círculo) ou
+  // "pd"/"pa"/"ps" (Pontos, triângulo) de Determinação/Assimilação/Saúde.
+  var ICO_TITULOS = { nd:"Nível de Determinação", pd:"Pontos de Determinação", na:"Nível de Assimilação",
+    pa:"Pontos de Assimilação", ns:"Nível de Saúde", ps:"Pontos de Saúde" };
+  function icoHtml(k, extraClass){
+    return '<span class="ico ico-'+k+(k.charAt(0)==="p"?" tri":"")+(extraClass?" "+extraClass:"")+'" title="'+ICO_TITULOS[k]+'" role="img" aria-label="'+ICO_TITULOS[k]+'"></span>';
+  }
+  // Medidores de Saúde (e Determinação): antes eram losangos ♦, agora usam os
+  // ícones oficiais - icoKey escolhe qual (padrão: Pontos da cor do medidor).
+  function diamonds(atual, max, sizeClass, colorClass, icoKey){
+    var k = icoKey || (colorClass === "c-det" ? "pd" : "ps");
     var html = "";
     for(var i=1;i<=max;i++){
-      html += '<span class="diamond '+sizeClass+' '+colorClass+(i<=atual?" filled":"")+'" data-dotval="'+i+'">♦</span>';
+      html += '<span class="diamond ico ico-'+k+(k.charAt(0)==="p"?" tri":"")+' '+sizeClass+' '+colorClass+(i<=atual?" filled":"")+'" data-dotval="'+i+'" title="'+ICO_TITULOS[k]+' '+i+'"></span>';
     }
     return html;
   }
@@ -4211,9 +4260,9 @@
       '<div class="stat'+assimClass+'" style="flex:1 1 100%">' +
         '<div class="label">Determinação / Assimilação</div>' +
         '<div style="margin-top:4px">'+tugLacosHtml(nivelDetGm, false)+'</div>' +
-        '<div class="hint" style="margin:4px 0 0">Determinação Nível '+nivelDetGm+' ('+ptsDetGm+'/'+nivelDetGm+' pts) · Assimilação Nível '+nivelAssimGm+' ('+ptsAssimGm+'/'+nivelAssimGm+' pts)</div>' +
+        '<div class="hint" style="margin:4px 0 0">Determinação '+icoHtml("nd")+' '+nivelDetGm+' '+icoHtml("pd")+' '+ptsDetGm+'/'+nivelDetGm+' · Assimilação '+icoHtml("na")+' '+nivelAssimGm+' '+icoHtml("pa")+' '+ptsAssimGm+'/'+nivelAssimGm+'</div>' +
       '</div>' +
-      '<div class="stat"><div class="label">Saúde</div><div class="val">Nível '+(c.saudeNivel!=null?c.saudeNivel:"?")+'</div><div class="dots mini">'+dotsRow(c.saudeNivel||0,5,"")+'</div></div>' +
+      '<div class="stat"><div class="label">Saúde</div><div class="val">Nível '+(c.saudeNivel!=null?c.saudeNivel:"?")+'</div><div class="dots mini">'+diamonds(c.saudeNivel||0,5,"","c-saude","ns")+'</div></div>' +
       '<div class="stat"><div class="label">Pts/nível · total</div><div class="val">'+pontosPorNivel+' · '+(pontosPorNivel*5)+'</div></div>' +
       '<div class="stat'+(pressaoGm>=7?" warn":"")+'"><div class="label">Pressão (Inoportunas)</div><div class="val">'+pressaoGm+' / 10</div>'+(perdidoGm?'<div class="hint" style="color:var(--danger)">perdido(a) p/ Assimilação</div>':(pendentesGm?'<div class="hint">'+pendentesGm+' Teste(s) de Assimilação pendente(s)</div>':''))+'</div>' +
     '</div>';
