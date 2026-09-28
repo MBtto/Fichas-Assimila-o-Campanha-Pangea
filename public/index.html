@@ -555,6 +555,21 @@
   .tug-row{ flex-wrap:wrap; justify-content:space-between; row-gap:8px; }
   .tug-row .tug-track:not(.mini){ order:3; flex:1 1 100%; }
   .trait .txt span.ico{ font-size:20px; }
+  /* Ícones de dado do livro (Sucesso = besouro, Adaptação = cervo, Pressão =
+     máscara). São silhuetas: a imagem vira máscara e a cor vem do texto em
+     volta (currentColor), então funcionam no tema claro, no escuro e dentro
+     dos selos coloridos de resultado. Mínimo de 20px, como os outros ícones. */
+  .dado{ display:inline-block; vertical-align:middle; width:1.1em; height:1.05em; font-size:20px; flex:none;
+    background-color:currentColor;
+    -webkit-mask:center/contain no-repeat; mask:center/contain no-repeat; }
+  .dado-s{ -webkit-mask-image:url(icones/dado_sucesso.png); mask-image:url(icones/dado_sucesso.png); color:var(--good); }
+  .dado-a{ -webkit-mask-image:url(icones/dado_adaptacao.png); mask-image:url(icones/dado_adaptacao.png); color:var(--accent); }
+  .dado-p{ -webkit-mask-image:url(icones/dado_pressao.png); mask-image:url(icones/dado_pressao.png); color:var(--danger); }
+  .trait .txt span.dado{ font-size:20px; }
+  .trait .txt span.dado-s{ color:var(--good); }
+  .trait .txt span.dado-a{ color:var(--accent); }
+  .trait .txt span.dado-p{ color:var(--danger); }
+  .die-chip .dado, .rf-die .dado{ font-size:20px; }
   .gm-compact-line .ico{ font-size:20px; }
   .gm-carac-chip .cost{ font-size:10.5px; color:var(--accent); font-weight:700; }
 </style>
@@ -1143,8 +1158,24 @@
     [/(Níveis|Nível|níveis|nível) de Saúde/g, "ns"],
     [/(Pontos|Ponto|pontos|ponto|Pts|pts|pt) de Determinação/g, "pd"],
     [/(Pontos|Ponto|pontos|ponto) de Assimilação/g, "pa"],
-    [/(Pontos|Ponto|pontos|ponto|caixas|caixa) de Saúde/g, "ps"]
+    [/(Pontos|Ponto|pontos|ponto|caixas|caixa) de Saúde/g, "ps"],
+    [/(?<![A-Za-zÀ-ÿ])(Sucessos|Sucesso)(?![A-Za-zÀ-ÿ])/g, "ds"],
+    [/(?<![A-Za-zÀ-ÿ])(Adaptações|Adaptação)(?![A-Za-zÀ-ÿ])/g, "da"],
+    [/(?<![A-Za-zÀ-ÿ])(Pressões|Pressão)(?![A-Za-zÀ-ÿ])/g, "dp"]
   ];
+  var DADO_TITULOS = { s:"Sucesso", a:"Adaptação", p:"Pressão" };
+  function dadoHtml(k){
+    return '<span class="dado dado-'+k+'" title="'+DADO_TITULOS[k]+'" role="img" aria-label="'+DADO_TITULOS[k]+'"></span>';
+  }
+  // Resultado de um dado com os ícones (ex.: [besouro]2 [cervo]1), pra botões,
+  // chips e o painel de rolagens. diceResultLabel continua existindo pro texto puro.
+  function diceResultHtml(d){
+    var parts = [];
+    if(d.s) parts.push(dadoHtml("s")+d.s);
+    if(d.a) parts.push(dadoHtml("a")+d.a);
+    if(d.p) parts.push(dadoHtml("p")+d.p);
+    return parts.length ? parts.join(" ") : "em branco";
+  }
   function iconizarTexto(html){
     // Só mexe no TEXTO, nunca dentro de tags já existentes (ex.: o title de um
     // ícone já inserido também diz "Pontos de Determinação").
@@ -1152,7 +1183,7 @@
       if(parte.charAt(0) === "<") return parte;
       var marcado = parte;
       RE_ICO_TEXTO.forEach(function(r){ marcado = marcado.replace(r[0], "\u0001"+r[1]+"\u0001"); });
-      return marcado.replace(/\u0001(\w\w)\u0001/g, function(_, k){ return icoHtml(k); });
+      return marcado.replace(/\u0001(\w\w)\u0001/g, function(_, k){ return k.charAt(0)==="d" && DADO_TITULOS[k.charAt(1)] ? dadoHtml(k.charAt(1)) : icoHtml(k); });
     }).join("");
   }
   function formatEfeito(txt, htmlColor){
@@ -1164,9 +1195,9 @@
     out = out.split("[E]").join(symPts("pa"));
     out = out.replace(RE_EFEITO_ABC, function(run){
       return run.split("").map(function(ch){
-        if(ch==="A") return sym("var(--good)","✓");
-        if(ch==="B") return sym("var(--accent)","⟳");
-        return sym("var(--danger)","⚠"); // C ou P (Pressão)
+        if(ch==="A") return htmlColor ? dadoHtml("s") : "✓";
+        if(ch==="B") return htmlColor ? dadoHtml("a") : "⟳";
+        return htmlColor ? dadoHtml("p") : "⚠"; // C ou P (Pressão)
       }).join("");
     });
     out = out.replace(RE_EFEITO_DIGITO_DE, function(_, n, letra){
@@ -3121,9 +3152,9 @@
   function custoChipHtml(custo){
     var s = custoSimbolos(custo);
     var parts = [];
-    if(s.s) parts.push('<span class="rbadge rb-s" style="padding:1px 7px;font-size:11px">✓'+s.s+'</span>');
-    if(s.a) parts.push('<span class="rbadge rb-a" style="padding:1px 7px;font-size:11px">⟳'+s.a+'</span>');
-    if(s.p) parts.push('<span class="rbadge rb-p" style="padding:1px 7px;font-size:11px">⚠'+s.p+'</span>');
+    if(s.s) parts.push('<span class="rbadge rb-s" style="padding:1px 7px;font-size:11px">'+dadoHtml("s")+s.s+'</span>');
+    if(s.a) parts.push('<span class="rbadge rb-a" style="padding:1px 7px;font-size:11px">'+dadoHtml("a")+s.a+'</span>');
+    if(s.p) parts.push('<span class="rbadge rb-p" style="padding:1px 7px;font-size:11px">'+dadoHtml("p")+s.p+'</span>');
     return '<span class="result-badges">'+parts.join('')+'</span>';
   }
   // Uma carta (com todos os tiers) dentro do Teste de Assimilação em andamento - mostra
@@ -3202,11 +3233,11 @@
           '<button type="button" class="btn secondary" data-action="assim-clareza-nivel">Recuperar 1 Nível de Determinação completo</button>' +
         '</div>';
       if(inoportunasComC.length){
-        body += '<p class="hint" style="margin:10px 0 6px">Ou anule 1 Pressão (<span style="color:var(--danger)">⚠</span>) de uma mutação Inoportuna já adquirida:</p><div class="row" style="gap:8px;flex-wrap:wrap">';
+        body += '<p class="hint" style="margin:10px 0 6px">Ou anule 1 Pressão ('+dadoHtml("p")+') de uma mutação Inoportuna já adquirida:</p><div class="row" style="gap:8px;flex-wrap:wrap">';
         inoportunasComC.forEach(function(m){
           var card = MUT_DECKS.H[m.cardIdx]; var tier = card[2][m.tierIdx];
           var total = custoSimbolos(m.custo).p;
-          body += '<button type="button" class="btn secondary" data-action="assim-clareza-c" data-mutid="'+m.id+'">'+esc(card[0]+" — "+tier[1])+' ('+(total-(m.neutralizadas||0))+'/'+total+' <span style="color:var(--danger)">⚠</span>)</button>';
+          body += '<button type="button" class="btn secondary" data-action="assim-clareza-c" data-mutid="'+m.id+'">'+esc(card[0]+" — "+tier[1])+' ('+(total-(m.neutralizadas||0))+'/'+total+' '+dadoHtml("p")+')</button>';
         });
         body += '</div>';
       } else {
@@ -3261,7 +3292,7 @@
           var pInfo = "";
           if(cat==="H"){
             var total = custoSimbolos(m.custo).p, neut = m.neutralizadas||0;
-            pInfo = neut>0 ? ' <span class="hint">('+(total-neut)+'/'+total+' <span style="color:var(--danger)">⚠</span> restantes'+(neut>=total?" · efeito cessado":"")+')</span>' : '';
+            pInfo = neut>0 ? ' <span class="hint">('+(total-neut)+'/'+total+' '+dadoHtml("p")+' restantes'+(neut>=total?" · efeito cessado":"")+')</span>' : '';
           }
           body += '<div class="trait" style="cursor:default;align-items:center"><span style="min-width:74px">'+custoChipHtml(m.custo)+'</span>' +
             '<span class="txt"><b>'+esc(card[0]+" — "+tier[1])+'</b>'+pInfo+'<span>'+formatEfeito(tier[2], true)+'</span></span>' +
@@ -3611,7 +3642,7 @@
         '<p class="hint">Mantém por padrão '+keepN+' dado'+(keepN===1?"":"s")+' (conforme declarado antes da rolagem)'+(t.registered?'':'; clique num dado pra manter ou soltar outro (ex.: tensionando uma Origem), depois confirme pra registrar no histórico')+'.</p>' +
         '<div class="row" style="flex-wrap:wrap;gap:8px">';
       t.results.forEach(function(d, idx){
-        body += '<button type="button" class="btn secondary" data-testtoggle="'+idx+'" '+(t.registered?'disabled':'')+' style="font-family:\'IBM Plex Mono\',monospace'+(d.kept?'':';opacity:.4;text-decoration:line-through')+(t.registered?';cursor:default':'')+'">d'+d.sides+':'+d.face+' ('+diceResultLabel(d)+')</button>';
+        body += '<button type="button" class="btn secondary" data-testtoggle="'+idx+'" '+(t.registered?'disabled':'')+' style="font-family:\'IBM Plex Mono\',monospace'+(d.kept?'':';opacity:.4;text-decoration:line-through')+(t.registered?';cursor:default':'')+'">d'+d.sides+':'+d.face+' ('+diceResultHtml(d)+')</button>';
       });
       body += '</div>';
       body += '<div class="budget ok" style="margin-top:12px"><span>Resultado '+(t.registered?"registrado":"mantido (ainda não registrado)")+'</span><span class="num">'+resultBadges(totS,totA,totP)+'</span></div>';
@@ -3859,9 +3890,9 @@
   // soltos sempre que mostramos o resultado de uma rolagem (na ficha e no histórico).
   function resultBadges(totS, totA, totP){
     return '<span class="result-badges">' +
-      '<span class="rbadge rb-s" title="Sucesso">✓ '+totS+'</span>' +
-      '<span class="rbadge rb-a" title="Adaptação">⟳ '+totA+'</span>' +
-      '<span class="rbadge rb-p" title="Pressão">⚠ '+totP+'</span>' +
+      '<span class="rbadge rb-s" title="Sucesso">'+dadoHtml("s")+' '+totS+'</span>' +
+      '<span class="rbadge rb-a" title="Adaptação">'+dadoHtml("a")+' '+totA+'</span>' +
+      '<span class="rbadge rb-p" title="Pressão">'+dadoHtml("p")+' '+totP+'</span>' +
     '</span>';
   }
   // Losangos pequenos e só decorativos (sem clique) pra mini-ficha da aba Mesa.
@@ -3961,7 +3992,7 @@
     if(!dados || !dados.length) return '<span class="hint">-</span>';
     return dados.map(function(d){
       var lbl = diceResultLabel(d);
-      return '<span class="die-chip'+(d.kept?" kept":"")+'" title="'+esc(lbl)+'">d'+d.sides+':'+d.face+(lbl!=="em branco"?' <span class="die-chip-res">'+esc(lbl)+'</span>':'')+'</span>';
+      return '<span class="die-chip'+(d.kept?" kept":"")+'" title="'+esc(lbl)+'">d'+d.sides+':'+d.face+(lbl!=="em branco"?' <span class="die-chip-res">'+diceResultHtml(d)+'</span>':'')+'</span>';
     }).join('');
   }
   // Resultado de uma linha do histórico: entradas novas guardam os totais como
@@ -4048,7 +4079,7 @@
     try{ quando = new Date(t.ts).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"}); }catch(e){ quando = ""; }
     var diceHtml = (t.dados||[]).map(function(d){
       var lbl = diceResultLabel(d);
-      return '<span class="rf-die'+(d.kept?" kept":"")+'">'+esc(lbl==="em branco"?"-":lbl)+'</span>';
+      return '<span class="rf-die'+(d.kept?" kept":"")+'">'+(lbl==="em branco"?"-":diceResultHtml(d))+'</span>';
     }).join('');
     return '<div class="rollfeed-entry">' +
       '<div class="rollfeed-entry-head"><b>'+esc(t.nomePersonagem||"?")+'</b><span class="hint">'+esc(quando)+'</span></div>' +
@@ -4131,7 +4162,7 @@
         '<p class="hint">Todos os dados contam por padrão. Clique num dado pra soltá-lo (ou clicar de novo pra mantê-lo).</p>' +
         '<div class="row" style="flex-wrap:wrap;gap:8px">';
       t.results.forEach(function(d, idx){
-        body += '<button type="button" class="btn secondary" data-gmdrytoggle="'+idx+'" style="font-family:\'IBM Plex Mono\',monospace'+(d.kept?'':';opacity:.4;text-decoration:line-through')+'">d'+d.sides+':'+d.face+' ('+diceResultLabel(d)+')</button>';
+        body += '<button type="button" class="btn secondary" data-gmdrytoggle="'+idx+'" style="font-family:\'IBM Plex Mono\',monospace'+(d.kept?'':';opacity:.4;text-decoration:line-through')+'">d'+d.sides+':'+d.face+' ('+diceResultHtml(d)+')</button>';
       });
       body += '</div>';
       body += '<div class="budget ok" style="margin-top:12px"><span>Resultado (não vai pro histórico)</span><span class="num">'+resultBadges(totS,totA,totP)+'</span></div>';
