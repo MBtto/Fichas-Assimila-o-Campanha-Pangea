@@ -619,73 +619,126 @@
     ["resolucao","Resolução","Força de vontade e controle emocional."]
   ];
   var CONHECIMENTOS = [
-    ["agrario","Agrário","Plantas, cultivo, solo e produção de alimentos."],
-    ["biologico","Biológico","Corpo, anatomia, doenças e criaturas."],
-    ["exato","Exato","Matemática, física, química e engenharia."],
-    ["saude","Saúde","Primeiros socorros, medicina e cuidados."],
-    ["social","Social","Cultura, política e relações entre grupos."],
-    ["artistico","Artístico","Expressão, estética, música e criação."]
+    ["biologia","Biologia","A vida em todas as formas: corpo humano, fauna, flora e química orgânica."],
+    ["erudicao","Erudição","História, culturas, artes, política, filosofia, sociologia e psicologia."],
+    ["engenharia","Engenharia","Matemática, física, química inorgânica: projetar, construir e manter máquinas e estruturas."],
+    ["geografia","Geografia","A Terra e seus fenômenos: mapas, clima, relevo, ecossistemas e recursos naturais."],
+    ["medicina","Medicina","Saúde humana e animal: diagnóstico, cirurgia, remédios e tratamento."],
+    ["seguranca","Segurança","Proteção e risco: barreiras, alarmes, armadilhas, travas e rotinas de defesa."]
   ];
   var PRATICAS = [
-    ["esportivas","Esportivas","Corpo em movimento: correr, saltar, nadar, lutar."],
-    ["ferramentas","Ferramentas","Manuseio e conserto de ferramentas e mecanismos."],
-    ["oficios","Ofícios","Construção, artesanato e fabricação manual."],
-    ["armas","Armas","Manejo de armas de ataque e defesa."],
-    ["veiculos","Veículos","Condução de veículos terrestres, aquáticos ou outros."],
-    ["infiltracao","Infiltração","Furtividade, disfarce e mãos leves."]
+    ["armas","Armas","Uso eficiente de armas brancas e de fogo: técnica, precisão e manutenção."],
+    ["atletismo","Atletismo","Condicionamento físico: correr, saltar, nadar, força, agilidade e resistência."],
+    ["expressao","Expressão","Comunicação e arte: oratória, escrita, música, dança e criação."],
+    ["furtividade","Furtividade","Mover-se em silêncio, passar despercebido, camuflagem e ocultar itens."],
+    ["manufaturas","Manufaturas","Criar, reparar e modificar objetos: carpintaria, metalurgia, costura."],
+    ["sobrevivencia","Sobrevivência","Viver em ambientes hostis: caça, pesca, abrigo, água, fogo e perigos naturais."]
   ];
   var CONH_PRAT = CONHECIMENTOS.concat(PRATICAS);
 
+  // Características de Infectados do livro definitivo (pág. 84-89). req = lista de
+  // exigências que TODAS precisam ser cumpridas; cada exigência é uma lista de
+  // alternativas [atributo, mínimo] (basta uma). "assimilacao" = Nível de Assimilação.
   var CARACTERISTICAS = [
-    {id:"agroboy", nome:"Agroboy", custo:2, txt:"Testes de Conhecimento Agrário pra identificar grãos, frutos, vegetais ou pragas: toda Adaptação conta como Sucesso."},
-    {id:"artes_marciais", nome:"Artes Marciais", custo:2, txt:"Sucesso em Prática Esportiva pra golpear um adversário: algumas Adaptações também contam como Sucesso (até o valor da Prática)."},
-    {id:"canivete_suico", nome:"Canivete Suíço", custo:2, txt:"Teste de Prática com Ferramentas: use 1 Adaptação pra dar uma característica a uma ferramenta (mesma categoria ou menor); 1 Sucesso aumenta em 1 essa categoria."},
-    {id:"forense_mutacional", nome:"Ciência Forense Mutacional", custo:2, txt:"Teste de Conhecimento pra entender a natureza de uma criatura: cada Adaptação dá uma pergunta extra sobre algo que você já sabe."},
-    {id:"contrabandista", nome:"Contrabandista", custo:2, txt:"Teste de Infiltração pra roubar ou esconder objetos: use 1 Adaptação pra esconder mais um objeto do mesmo tamanho ou menor."},
-    {id:"detetive_campo", nome:"Detetive de Campo", custo:2, txt:"Teste de Sagacidade pra organizar pistas: use 1 Adaptação pra perguntar ao Assimilador se duas pistas se relacionam (ele responde a verdade)."},
-    {id:"encantador_animais", nome:"Encantador de Animais", custo:2, txt:"Teste de Influência pra interagir com animais: toda Adaptação conta como Sucesso."},
-    {id:"esquiva_precisa", nome:"Esquiva Precisa", custo:3, txt:"Ao sofrer dano de uma ameaça atacando ativamente, teste Reação Esportiva: cada Sucesso reduz 1 de dano, até o valor de Reação."},
-    {id:"face_amigavel", nome:"Face Amigável", custo:2, txt:"Teste de Influência pra convencer alguém com honestidade: ganhe 1 Sucesso extra numa face à sua escolha."},
-    {id:"memoria_afiada", nome:"Memória Afiada", custo:2, txt:"Teste de Sagacidade pra lembrar, identificar ou conectar informações já vistas: toda Adaptação conta como Sucesso."},
-    {id:"mente_ferro", nome:"Mente de Ferro", custo:2, txt:"Teste de Resolução contra algo que afeta seu estado emocional: toda Adaptação conta como Sucesso."},
-    {id:"mod_escamoteaveis", nome:"Modificações Escamoteáveis", custo:2, txt:"No fim da Recuperação, teste Sagacidade com Armas: cada Sucesso dá uma característica extra a uma arma (mesma categoria, reduz 1 uso); cada Adaptação ignora uma dessas reduções."},
-    {id:"natureza_questionadora", nome:"Natureza Questionadora", custo:2, txt:"Teste de Sagacidade pra desvendar mistérios ou adquirir informações: cada Adaptação mantida elimina uma Pressão."},
-    {id:"parkour", nome:"Parkour!", custo:2, txt:"Teste pra passar rápido por uma zona arriscada ou apertada: toda Adaptação conta como Sucesso."},
-    {id:"pegada_forte", nome:"Pegada Forte", custo:2, txt:"Teste de Potência pra levantar, sustentar ou amparar peso grande: toda Adaptação conta como Sucesso."},
-    {id:"piloto_fuga", nome:"Piloto de Fuga", custo:2, txt:"Teste pra conduzir um veículo: toda Adaptação conta como Sucesso."},
-    {id:"primeiros_socorros", nome:"Primeiros Socorros", custo:2, txt:"No fim da Recuperação, teste Sagacidade com Medicina: cada Sucesso recupera uma caixa de Saúde pra você ou um aliado."},
-    {id:"punhos_ferro", nome:"Punhos de Ferro", custo:2, txt:"Ao atacar desarmado: adicione 2 Sucessos numa face de dado mantido."},
-    {id:"quimica_bem", nome:"Química do Bem", custo:2, txt:"Teste com Conhecimentos Exatos pra identificar ou modificar uma substância química: toda Adaptação conta como Sucesso."},
-    {id:"resiliente", nome:"Resiliente", custo:2, txt:"Ao sofrer dano, gaste 1 Ponto de Determinação pra marcar uma caixa de Saúde a menos."},
-    {id:"saque_rapido", nome:"Saque Rápido", custo:2, txt:"Use uma Adaptação pra sacar ou guardar uma arma/equipamento durante uma ação, aproveitando mais de um item na mesma ação."},
-    {id:"sentidos_aguçados", nome:"Sentidos de Sobrevivência Aguçados", custo:2, txt:"Teste de Reação pra minimizar danos de um perigo te ameaçando (exceto ataque direto de criatura): toda Adaptação conta como Sucesso."},
-    {id:"sucateiro", nome:"Sucateiro", custo:2, txt:"Teste de Prática com Ofícios pra desmanchar ou desmontar um objeto: ganhe 1 Sucesso extra numa face à sua escolha."},
-    {id:"vasculhar_fundo", nome:"Vasculhar a Fundo", custo:2, txt:"Teste de Percepção pra procurar recursos ou pistas: toda Adaptação conta como Sucesso."}
+    // 1 ponto
+    {id:"agricultor", nome:"Agricultor", custo:1, req:[[["geografia",1]]], txt:"Em jogadas sobre vida vegetal cultivada (grãos, frutos, vegetais, mudas, pragas agrícolas), ganha um Sucesso adicional."},
+    {id:"cavaleiro", nome:"Cavaleiro", custo:1, req:[], txt:"Testes para conduzir animais de montaria podem transformar uma Adaptação em Sucesso."},
+    {id:"estagio_avancado", nome:"Estágio Avançado", custo:1, req:[], soCriacao:true, txt:"Só na criação e com aprovação do Assimilador: +1 Nível de Assimilação inicial (e -1 Nível de Determinação), com rolagem de Assimilações adicionais."},
+    {id:"investigador_assimilacao", nome:"Investigador da Assimilação", custo:1, req:[[["biologia",1]]], txt:"Em testes sobre o funcionamento da Assimilação, pode transformar uma Adaptação em Sucesso."},
+    {id:"pegada_forte", nome:"Pegada Forte", custo:1, req:[[["potencia",2]]], txt:"Testes de firmeza pra se segurar ou não deixar algo/alguém escapar das mãos podem transformar uma Adaptação em Sucesso."},
+    {id:"piloto", nome:"Piloto", custo:1, req:[], txt:"Testes para conduzir veículos podem transformar uma Adaptação em Sucesso."},
+    {id:"punhos_ferro", nome:"Punhos de Ferro", custo:1, req:[[["potencia",2]],[["resolucao",2]]], txt:"Ao usar um Ponto de Determinação pra manter um dado adicional em combate desarmado, também pode transformar uma Adaptação em Sucesso."},
+    {id:"saque_rapido", nome:"Saque Rápido", custo:1, req:[[["reacao",2]]], txt:"Não gasta Adaptação pra sacar ou guardar um Equipamento, mesmo em Conflito."},
+    {id:"sono_leve", nome:"Sono Leve", custo:1, req:[], txt:"Pode fazer um teste de Percepção pra não ser surpreendido enquanto dorme."},
+    {id:"trato_animais", nome:"Trato com Animais", custo:1, req:[[["influencia",2]]], txt:"Jogadas pra influenciar amistosamente o comportamento de animais podem transformar uma Adaptação em Sucesso."},
+    {id:"viajado", nome:"Viajado", custo:1, req:[], txt:"Jogadas envolvendo contato com outras culturas e povos permitem anular uma Pressão no resultado."},
+    // 2 pontos
+    {id:"antecedente_marcante", nome:"Antecedente Marcante", custo:2, req:[], txt:"Ao ativar o Evento Marcante, adiciona um d10 na rolagem, sem alterar a quantidade de dados mantidos."},
+    {id:"aparencia_inofensiva", nome:"Aparência Inofensiva", custo:2, req:[[["influencia",2]]], txt:"Em Conflito, pode gastar Adaptação ou Sucesso pra encarecer as ativações de Ameaças que o tenham como alvo no próximo turno (cada Adaptação +1 Adaptação; cada Sucesso +1 Pressão no custo)."},
+    {id:"artes_marciais", nome:"Artes Marciais", custo:2, req:[[["atletismo",2]],[["reacao",2]]], txt:"Testes que envolvam diretamente artes marciais (atacando ou defendendo) permitem remover uma Pressão do resultado."},
+    {id:"atencao_redobrada", nome:"Atenção Redobrada", custo:2, req:[[["percepcao",2]]], txt:"Ao reagir a um perigo súbito (queda, armadilha, emboscada), pode transformar em Sucesso um número de Adaptações até o seu valor de Reação."},
+    {id:"atirador_astuto", nome:"Atirador Astuto", custo:2, req:[[["furtividade",2]]], txt:"Em ataques de pontaria protegido por uma cobertura onde consiga se esconder, pode transformar uma Adaptação em Sucesso."},
+    {id:"batedor", nome:"Batedor", custo:2, req:[[["geografia",2]]], txt:"Explora a Região na metade do tempo e encontra um marco geográfico escolhido pelo Assimilador se tiver êxito em Geografia ou Sobrevivência."},
+    {id:"disciplinado", nome:"Disciplinado", custo:2, req:[], txt:"Fora de Conflito e sem ser perturbado, pode ignorar uma Pressão no resultado se fizer a ação com calma, levando o dobro do tempo."},
+    {id:"dissimulado", nome:"Dissimulado", custo:2, req:[[["influencia",2]],[["expressao",1],["furtividade",1]]], txt:"Se passa por residente de outro Refúgio (com acesso ao vestuário local) com êxito em Influência + Expressão ou Furtividade; quanto menor o Refúgio, mais Sucessos exigidos."},
+    {id:"escaldado", nome:"Escaldado", custo:2, req:[[["sagacidade",2]]], txt:"Em testes de Percepção pra perceber segundas intenções (pedidos pelo Assimilador), pode transformar uma Adaptação em Sucesso."},
+    {id:"frugal", nome:"Frugal", custo:2, req:[], txt:"Precisa de menos água e comida: aguenta o dobro do tempo sem elas antes de sofrer penalidade."},
+    {id:"intimidador", nome:"Intimidador", custo:2, req:[], txt:"Ao intimidar, pode gastar um Ponto de Determinação pra trocar a quantidade de dados de Expressão pelo valor de um Instinto aprovado pelo Assimilador (o tipo de dado não muda)."},
+    {id:"maos_leves", nome:"Mãos-Leves", custo:2, req:[[["reacao",2]],[["furtividade",2]]], txt:"Ao roubar ou ocultar objetos à vista das pessoas, adiciona uma Adaptação ao resultado."},
+    {id:"memoria_afiada", nome:"Memória Afiada", custo:2, req:[[["sagacidade",2]]], txt:"Testes ligados a lembrar de alguma informação garantem um Sucesso no resultado."},
+    {id:"presenca_encantadora", nome:"Presença Encantadora", custo:2, req:[[["influencia",3]]], txt:"Pode gastar um Ponto de Determinação antes de rolar pra anular todas as Pressões do resultado em interações sociais."},
+    {id:"reliquia", nome:"Relíquia", custo:2, req:[], txt:"O Artefato inicial é um item valioso sempre consigo: não é limitado pelo teto de Escassez da criação e pode ser consertado mesmo Quebrado; perdê-lo custa um Ponto de Determinação."},
+    {id:"sacrificio_heroico", nome:"Sacrifício Heroico", custo:2, req:[], txt:"Uma vez por sessão, pode sofrer todo o dano no lugar de um aliado próximo."},
+    {id:"sentido_agucado", nome:"[Sentido] Aguçado", custo:2, req:[[["percepcao",2]]], escolha:["visão","audição","tato","paladar","olfato"], txt:"Escolha um sentido: todo teste de Percepção pra identificar algo com ele adiciona um Sucesso ao resultado."},
+    // 3 pontos
+    {id:"companheiro_animal", nome:"Companheiro Animal", custo:3, req:[[["sobrevivencia",1]]], txt:"Um animal de pequeno ou médio porte o acompanha; quando ajuda numa ação, adiciona uma Adaptação ao resultado."},
+    {id:"construtor", nome:"Construtor", custo:3, req:[[["engenharia",3]]], txt:"Realiza Construções de forma mais eficiente, sem testes semanais de Engenharia pra obter pontos de obra."},
+    {id:"contra_ataque", nome:"Contra-ataque", custo:3, req:[[["reacao",2]]], txt:"Depois de sofrer um ataque em Conflito, o próximo teste pra Neutralizar aquela Ameaça adiciona um Sucesso."},
+    {id:"corpo_grande", nome:"Corpo Grande", custo:3, req:[[["atletismo",2]]], txt:"Testes de Resolução ligados a resistência física podem ser feitos com Potência (não vale pra testes mentais ou emocionais)."},
+    {id:"determinacao_inabalavel", nome:"Determinação Inabalável", custo:3, req:[[["resolucao",3]]], txt:"Testes ligados ao Propósito do Infectado permitem transformar uma Adaptação em Sucesso."},
+    {id:"esquiva_precisa", nome:"Esquiva Precisa", custo:3, req:[[["reacao",2]]], txt:"Pode investir Sucessos do resultado da Ação pra que ataques contra si sofram a mesma quantidade de Penalidade, até ser paga ou o Conflito acabar."},
+    {id:"gambiarra", nome:"Gambiarra", custo:3, req:[[["sagacidade",2]]], txt:"Pode mudar as Características de Artefatos - sem esta Característica, isso não é possível."},
+    {id:"inabalavel", nome:"Inabalável", custo:3, req:[[["resolucao",3]]], txt:"Em testes de resistência mental e emocional, pode transformar Adaptações em Sucessos, até o seu valor de Resolução de vezes por sessão."},
+    {id:"olhar_minucioso", nome:"Olhar Minucioso", custo:3, req:[[["percepcao",2]]], txt:"Jogadas de Percepção ou Sagacidade pra encontrar algo escondido ou oculto podem adicionar um Sucesso ao resultado."},
+    {id:"orientacao", nome:"Orientação", custo:3, req:[[["geografia",2],["sobrevivencia",2]]], txt:"Dificilmente se perde: testes de Geografia ou Sobrevivência pra recuperar um rastro ou saber onde está adicionam uma Adaptação."},
+    {id:"parkour", nome:"Parkour", custo:3, req:[[["reacao",2]]], txt:"Testes de escalada, equilíbrio, saltos, corridas curtas, acrobacias ou passar por lugares apertados adicionam uma Adaptação."},
+    {id:"primeiros_socorros", nome:"Primeiros Socorros", custo:3, req:[[["medicina",2]]], txt:"Jogadas pra cuidar de ferimentos e doenças adicionam um Sucesso ao resultado."},
+    {id:"racional", nome:"Racional", custo:3, req:[[["erudicao",2]]], txt:"Testes de Resolução ligados a resistência mental podem ser feitos com Sagacidade (não vale pra testes físicos)."},
+    {id:"recuperacao_rapida", nome:"Recuperação Rápida", custo:3, req:[[["resolucao",2]]], txt:"Toda vez que ativa a Recuperação, recupera dois Pontos de Saúde adicionais."},
+    {id:"resiliente", nome:"Resiliente", custo:3, req:[[["assimilacao",2]]], txt:"Uma vez por Conflito, ao sofrer dano, pode gastar Pontos de Assimilação pra reduzir o dano na mesma proporção."},
+    {id:"vaso_ruim", nome:"Vaso Ruim", custo:3, req:[[["resolucao",2]]], txt:"Anula a primeira ativação que levaria à sua morte; só volta a valer depois de cumprir uma Clareza de Propósito."},
+    // 4 pontos
+    {id:"heroi_local", nome:"Herói Local", custo:4, req:[[["influencia",3]]], txt:"Conhecido por um ato heroico: uma vez por arco de história, pode gastar o uso do Evento Marcante pra evitar que o Refúgio perca um nível de Moral."},
+    {id:"macgyver", nome:"MacGyver", custo:4, req:[[["sagacidade",2]],[["manufaturas",2]]], txt:"Uma vez por sessão, monta um Artefato Improvisado com outra característica de categoria 1 à escolha, que dura até o fim da cena."},
+    {id:"suporte", nome:"Suporte", custo:4, req:[[["influencia",2]],[["reacao",2]]], txt:"Ao usar Ajudar Aliado pra transferir Sucessos, adiciona um Sucesso a mais."},
+    // 5 pontos
+    {id:"mira_fatal", nome:"Mira Fatal", custo:5, req:[[["armas",3]],[["percepcao",3],["reacao",3]]], txt:"Em ataques de pontaria, pode gastar 2 Pontos de Determinação pra dobrar os Sucessos investidos em Neutralização de Ameaça."},
+    {id:"motivar_aliado", nome:"Motivar Aliado", custo:5, req:[[["expressao",3]]], txt:"Ao usar Apoiar Aliado, cada Adaptação anula duas Pressões do aliado alvo; usável um número de vezes por sessão igual à sua Influência."}
   ];
 
+  // Características de Artefatos do livro definitivo (pág. 97-98). custo = categoria
+  // (soma na Escassez do item). usos = cargas próprias (quando o item nasce com usos).
   var EQUIP_TRAITS = [
-    {id:"fragil", nome:"Frágil", cat:0, custo:-1, rep:true, txt:"Reduz a durabilidade em -1. Duas vezes: Muito Frágil."},
-    {id:"improvisado", nome:"Improvisado", cat:0, custo:-1, rep:false, txt:"Sucessos e Adaptações só valem se o teste também render 1 Pressão."},
-    {id:"agil", nome:"Ágil", cat:1, custo:1, rep:false, txt:"Gaste 1 uso pra usar Reação no lugar de Potência."},
-    {id:"iluminador", nome:"Iluminador", cat:1, custo:1, rep:false, txt:"Gaste 1 uso pra iluminar um ambiente escuro até o fim da etapa."},
-    {id:"letal", nome:"Letal", cat:1, custo:1, rep:false, txt:"Ao causar dano, gaste 1 uso pra +1 Sucesso numa face mantida."},
-    {id:"discreta", nome:"Discreta", cat:1, custo:1, rep:false, txt:"Testes pra esconder o item ganham 1 d10 extra na pilha."},
-    {id:"protetivo", nome:"Protetivo", cat:1, custo:1, rep:false, txt:"Ao sofrer dano, gaste 1 uso pra absorvê-lo como pontos de Saúde."},
-    {id:"nutritivo", nome:"Nutritivo", cat:1, custo:1, rep:false, txt:"Na Recuperação, gaste 1 uso pra recuperar 1 ponto de Saúde."},
-    {id:"apto", nome:"Apto", cat:2, custo:2, rep:false, txt:"Escolha uma aptidão. Testando com ela, gaste 1 uso pra rolar de novo 1 dado por Pressão obtida.", pedeAptidao:true},
-    {id:"tatica", nome:"Tática", cat:2, custo:2, rep:false, txt:"Gaste 1 uso pra trocar 1 d6 da pilha por 1 d10."},
-    {id:"consumivel", nome:"Consumível", cat:2, custo:2, rep:false, txt:"Só 1 uso; 1 característica Cat.4 custa só 1pt, e 1 de Cat.1 custa 0pt."},
-    {id:"duravel", nome:"Durável", cat:2, custo:2, rep:true, txt:"+2 de durabilidade. Duas vezes: Muito Durável (+5)."},
-    {id:"malandro", nome:"Malandro", cat:3, custo:3, rep:false, txt:"Sucesso contra criatura: gaste 1 uso pra usar uma Adaptação e derrubar/empurrar."},
-    {id:"espacoso", nome:"Espaçoso", cat:3, custo:3, rep:true, txt:"+2 no espaço TOTAL de inventário do personagem (o item em si não ocupa espaço extra). Duas vezes: Muito Espaçoso (+4).", espaco:2},
-    {id:"espinhosa", nome:"Espinhosa", cat:3, custo:3, rep:false, txt:"Sucesso contra ameaça: gaste 1 uso pra alterar em 1 a Pressão da próxima Ativação (mecânica avançada de Conflito)."},
-    {id:"estabilizado", nome:"Estabilizado", cat:3, custo:3, rep:false, txt:"Gaste 1 uso pra rolar de novo todos os dados que deram Pressão."},
-    {id:"explosivo", nome:"Explosivo", cat:4, custo:4, rep:false, txt:"Gaste 1 uso pra explodir a área ao redor."},
-    {id:"inflamavel", nome:"Inflamável", cat:4, custo:4, rep:false, txt:"Gaste 1 uso pra incendiar a área ao redor."},
-    {id:"medico", nome:"Médico", cat:4, custo:4, rep:false, txt:"Na Recuperação, gaste 1 uso pra recuperar todas as caixas de Saúde de um nível."}
+    {id:"fragil", nome:"Frágil", cat:-1, custo:-1, rep:false, txt:"Precisa de uma Pressão a menos pra baixar um nível de Qualidade. Se estiver Defeituoso (nível 1), vira Quebrado no próximo uso."},
+    {id:"improvisado", nome:"Improvisado", cat:-1, custo:-1, rep:false, txt:"Feito com partes reaproveitadas: testes com o item têm um Sucesso a menos, cancelável investindo uma Adaptação."},
+    {id:"pesado", nome:"Pesado", cat:-1, custo:-1, rep:false, espacoItem:2, txt:"Mesmo na mochila, deixa a personagem lenta: cancela um Sucesso em todo teste de pura movimentação ou furtividade (principalmente fuga). Ocupa dois espaços de inventário."},
+    {id:"uso_unico", nome:"Uso Único", cat:-1, custo:-1, rep:false, usos:1, txt:"Basta um único uso pra o item desaparecer ou ficar completamente gasto."},
+    {id:"agil", nome:"Ágil", cat:1, custo:1, rep:false, txt:"Arma branca balanceada: num teste de ataque armado, substitui Potência por Reação."},
+    {id:"discreto", nome:"Discreto", cat:1, custo:1, rep:false, espacoItem:0, txt:"Pequeno, fino ou retrátil: não ocupa espaço de inventário e não é percebido enquanto estiver guardado."},
+    {id:"espacoso", nome:"Espaçoso", cat:1, custo:1, rep:true, repMax:3, txt:"Vestes, bolsas ou mochilas feitas pra carregar mais: +2 espaços de inventário. Pode ser comprada mais de uma vez no mesmo item, acumulando."},
+    {id:"iluminador", nome:"Iluminador", cat:1, custo:1, rep:false, txt:"Ilumina 6 metros por nível de Qualidade atual (lanterna Padrão: 18m). Cai um nível de Qualidade se usado por tempo demais (o Assimilador avisa antes)."},
+    {id:"letal", nome:"Letal", cat:1, custo:1, rep:false, txt:"Uma vez por dia, num teste com a arma, troca qualquer Adaptação por Sucesso. Um uso adicional dá um Sucesso extra, mas o item perde um nível de Qualidade."},
+    {id:"protetivo", nome:"Protetivo", cat:1, custo:1, rep:false, txt:"Ao sofrer dano, um uso por cena evita a perda de um Ponto de Saúde. Um uso adicional é possível baixando um nível de Qualidade."},
+    {id:"restaurador", nome:"Restaurador", cat:1, custo:1, rep:false, usos:6, txt:"Alimento, bebida ou remédio: seis usos, cada um alimenta uma personagem por um dia e dá um Ponto de Saúde na próxima Recuperação (não acumula na mesma personagem no mesmo repouso)."},
+    {id:"eficiente", nome:"Eficiente", cat:2, custo:2, rep:false, txt:"Ergonômico e prático: uma vez por dia, num teste com o item, troca um d6 por um d10. Um uso adicional no mesmo dia faz o item perder um nível de Qualidade."},
+    {id:"duravel", nome:"Durável", cat:2, custo:2, rep:false, txt:"Reforçado pra aguentar o desgaste: precisa de uma Pressão adicional pra perder um nível de Qualidade."},
+    {id:"adrenalina", nome:"Adrenalina", cat:3, custo:3, rep:false, usos:6, txt:"Canetas ou injeções: seis usos, cada um dá 6 Pontos de Saúde até o próximo repouso (quando se perdem). Uso adicional no mesmo dia pede teste de Resolução + Atletismo: êxito dá os 6 pontos, falha perde 8. Depois do repouso, perde um Ponto de Determinação por uso feito no dia."},
+    {id:"armadura", nome:"Armadura", cat:3, custo:3, rep:false, txt:"Ao sofrer dano, até três usos por cena evitam a perda de um Ponto de Saúde cada. Se os três forem usados na mesma cena, a armadura baixa um nível de Qualidade."},
+    {id:"explosivo", nome:"Explosivo", cat:4, custo:4, rep:false, usos:1, txt:"Pensado pra ser detonado: num teste com o item, pode eliminá-lo pra detonar uma área, destruindo estruturas e causando 4 de dano (d10) a quaisquer criaturas. Sempre tem Uso Único (sem descontar na Escassez)."},
+    {id:"inflamavel", nome:"Inflamável", cat:4, custo:4, rep:false, txt:"Num teste com o item, baixa um nível de Qualidade pra incendiar uma área (Sucessos pedidos pelo Assimilador). Alvos sofrem 3 de dano de queimadura e precisam investir Sucesso e Adaptação ou sofrem mais 2 no fim do turno."},
+    {id:"medicinal", nome:"Medicinal", cat:4, custo:4, rep:false, usos:6, txt:"Medicamentos e utensílios médicos: seis usos, cada um cancela uma Pressão num teste de Tratamento Médico, até a sua graduação em Medicina por teste. Se for de Uso Único, cancela até duas Pressões."}
   ];
 
-  var WIZ_STEPS = ["Acampamento","Origem","Propósitos e Conexões","Instintos","Conhecimentos e Práticas","Características","Equipamento"];
+  // Qualidade dos Equipamentos (pág. 95): 0 a 6, começa em Padrão (3). Pra cair um
+  // nível, o Assimilador investe tantas Pressões quanto o nível atual (Frágil -1, Durável +1).
+  var QUALIDADES = ["Quebrado","Defeituoso","Comprometido","Padrão","Reforçado","Superior","Obra-Prima"];
+  var QUALIDADE_BONUS = ["Inutilizado: não pode ser usado.","","","","+1 Sucesso uma vez por sessão num teste com o item.","+1 Sucesso até duas vezes por sessão.","+1 Sucesso até três vezes por sessão."];
+  // Saúde (pág. 65-67): 6 Níveis, cada um com 1 + Potência + Resolução pontos.
+  var NIVEIS_SAUDE = [null,"Incapacitação","Debilitação","Ferimentos","Laceração","Escoriação","Saudável"];
+  var PENALIDADE_SAUDE = [
+    "Morto.",
+    "Estado crítico: gasta 1 Ponto de Determinação por rodada pra se manter consciente; pra agir, precisa investir duas Adaptações. Só se recupera com tratamento médico.",
+    "-2 Sucessos em todos os testes e gasta 1 Ponto de Determinação pra agir. Só se recupera com tratamento médico.",
+    "-1 Sucesso em todos os testes (anula gastando 1 Adaptação ou 1 Ponto de Determinação). Recuperação semanal.",
+    "-1 Sucesso em todos os testes (anula gastando 1 Adaptação ou 1 Ponto de Determinação). Recuperação semanal.",
+    "Age normalmente. Recupera a cada repouso completo.",
+    "Age normalmente. Recupera a cada repouso completo."
+  ];
+  var ESCASSEZ_NOMES = ["Abundante","Corriqueiro","Comum","Incomum","Atípico","Raro","Quase Extinto"];
+  var ESCASSEZ_TETO_INICIAL = 3;
+  var XP_INICIAL = 7;
+
+  var WIZ_STEPS = ["Acampamento","Origem","Propósitos e Conexões","Instintos","Conhecimentos e Práticas","Características (Experiência)","Artefato e Equipamentos"];
 
   // Kits de itens iniciais: cada um preenche o Inventário adicional com alguns itens narrativos prontos.
   var KITS_INICIAIS = [
@@ -1252,9 +1305,47 @@
       // Fichas de antes da tag "NPC" (27/09/2026, ver newCharacter/testLogVisivelPara): sem
       // marcação salva, o personagem é tratado como jogador comum (rolagens visíveis a todos).
       if(c.ehNpc == null) c.ehNpc = false;
+      if(c.sistema !== "oficial" && c.determinacao && c.instintos) converterParaSistemaOficial(c);
+      if(!c.caracEscolhas) c.caracEscolhas = {};
+      if(c.equip && c.equip.qualidade == null){ c.equip.qualidade = 3; c.equip.pressao = 0; }
+      (c.inventarioExtra||[]).forEach(function(it){ if(it.qualidade == null){ it.qualidade = 3; it.pressao = 0; } });
     }
     return c;
   }
+  // ---------- CONVERSÃO PRO SISTEMA OFICIAL (livro definitivo) ----------
+  // Fichas criadas antes (sistema Fastplay/Pangea) são convertidas uma vez: o que é da
+  // história fica (nome, acampamento, origem, propósitos, Instintos, mutações, Cabo de
+  // Guerra, notas); Conhecimentos/Práticas, Características e Artefato inicial zeram pra
+  // serem refeitos pelas regras do livro (decisão do Marco, 28/09/2026). A Saúde passa
+  // pra 6 Níveis. A ficha fica marcada com precisaRefazer até o jogador refazer.
+  var MAPA_TRAIT_ANTIGO = { fragil:"fragil", improvisado:"improvisado", agil:"agil", iluminador:"iluminador", letal:"letal",
+    discreta:"discreto", protetivo:"protetivo", nutritivo:"restaurador", tatica:"eficiente", duravel:"duravel",
+    espacoso:"espacoso", explosivo:"explosivo", inflamavel:"inflamavel", medico:"medicinal", consumivel:"uso_unico" };
+  var charsConvertidosAgora = {};
+  function converterParaSistemaOficial(c){
+    c.conhPrat = {}; c.conhPratAssimBonus = {};
+    CONH_PRAT.forEach(function(p){ c.conhPrat[p[0]] = 0; c.conhPratAssimBonus[p[0]] = 0; });
+    c.caracAntigas = (c.caracComp||[]).slice();
+    c.caracComp = []; c.caracAumentos = {}; c.caracEscolhas = {};
+    c.saudeNivel = clamp((c.saudeNivel!=null ? c.saudeNivel : 5) + 1, 0, 6);
+    c.saudePontosAtuais = saudePontosMax(c);
+    var eqAnt = c.equip || {};
+    c.equipAntigo = { nome:eqAnt.nome||"", traits:(eqAnt.traits||[]).map(function(t){ return t.id; }) };
+    c.equip = { nome:eqAnt.nome||"", desc:eqAnt.desc||"", traits:[], qualidade:3, pressao:0, usosMax:null, usosAtual:null, espaco:1 };
+    c.inventarioExtra = (c.inventarioExtra||[]).map(function(it){
+      var traits = (it.traits||[]).map(function(t){ var id = MAPA_TRAIT_ANTIGO[t.id]; return id ? {id:id, qtd:t.qtd||1} : null; }).filter(Boolean);
+      return novoItem(it.nome, it.desc, traits, it.kitKey ? { qtd:it.qtd||1, kitKey:it.kitKey } : { qtd:it.qtd||1 });
+    });
+    var d = c.determinacao || (c.determinacao = { caixaAtual:3, pontosAtual:10 });
+    d.pontosAtual = clamp(d.pontosAtual!=null ? d.pontosAtual : 10, 0, nivelDetAtual(c));
+    d.suscetivel = d.pontosAtual <= 0;
+    delete c.atributoSaude; delete c.caboDeGuerraAtivo; delete c.instintosDist;
+    c.sistema = "oficial";
+    c.precisaRefazer = true;
+    c.convertidoEm = new Date().toISOString();
+    charsConvertidosAgora[c.id] = true;
+  }
+
   // ---------- MODO MESA (Firebase) ----------
   // Versão do site próprio (ficha-pangea.web.app), 28/09/2026: os dados moram no
   // Firestore, UM DOCUMENTO POR PERSONAGEM (coleção "personagens") e um por rolagem
@@ -1533,6 +1624,12 @@
     nova = nova.filter(function(c){ return !dirtyDeletedCharIds[c.id]; });
     nova.sort(function(a,b){ return String(a.criadoEm||"").localeCompare(String(b.criadoEm||"")); });
     shared.characters = nova;
+    var convertidos = Object.keys(charsConvertidosAgora);
+    if(convertidos.length && ehMestre()){
+      convertidos.forEach(function(id){ if(nova.some(function(x){ return x.id===id; })) marcarCharSujo(id); });
+      schedulePublish();
+    }
+    charsConvertidosAgora = {};
   }
   function aplicarSnapshotRolagens(){
     var lista = rolagensComuns.concat(rolagensNpc);
@@ -1552,7 +1649,7 @@
   function montarResumo(c){
     return paraFirestore({
       id: c.id, nomePersonagem: c.nomePersonagem||"", nomeJogador: c.nomeJogador||"",
-      acampamento: c.acampamento||null, saudeNivel: c.saudeNivel!=null ? c.saudeNivel : 5,
+      acampamento: c.acampamento||null, saudeNivel: c.saudeNivel!=null ? c.saudeNivel : 6,
       saudePontosAtuais: c.saudePontosAtuais!=null ? c.saudePontosAtuais : saudePontosMax(c),
       saudeMax: saudePontosMax(c),
       determinacao: { caixaAtual: c.determinacao && c.determinacao.caixaAtual!=null ? c.determinacao.caixaAtual : 3 },
@@ -1701,42 +1798,31 @@
   function newCharacter(){
     var c = {
       id: uid(), criadoEm: new Date().toISOString(), atualizadoEm: new Date().toISOString(),
+      // Sistema oficial do livro definitivo (ver converterParaSistemaOficial).
+      sistema:"oficial", precisaRefazer:false,
       nomeJogador:"", nomePersonagem:"", acampamento:null,
       origem:{ geracao:"", evento:"", ocupacao:"" },
       propIndividuais:["",""], propRelacionais:["",""],
-      instintos:{ reacao:0,percepcao:0,sagacidade:0,potencia:0,influencia:0,resolucao:0 },
-      // Bônus de Assimilação: cobre Instintos/Conhecimentos/Práticas que uma Assimilação
-      // aumenta além do teto normal de criação. Guardado separado da base, sem limite fixo
-      // e fora do orçamento de pontos da criação; valorInstinto/valorCP somam isso à base
-      // em todo lugar que importa (testes, Painel do Assimilador, Saúde). Editável direto
-      // na ficha (seção "Bônus de Assimilação" em renderSheet), não no assistente de criação.
+      // Livro pág. 80: todo Instinto começa em 1, e há mais 3 pontos livres (máx. 3 por Instinto).
+      instintos:{ reacao:1,percepcao:1,sagacidade:1,potencia:1,influencia:1,resolucao:1 },
+      // Bônus de Assimilação: Instintos/Conhecimentos/Práticas que uma Assimilação aumenta
+      // além do normal. Fica separado da base e fora do orçamento da criação.
       instintosAssimBonus:{ reacao:0,percepcao:0,sagacidade:0,potencia:0,influencia:0,resolucao:0 },
-      conhPrat:{}, caracComp:[], caracAumentos:{}, conhPratAssimBonus:{},
-      atributoSaude:"potencia",
-      saudeNivel:5, saudePontosAtuais:null,
-      determinacao:{ caixaAtual:3, pontosAtual:10 },
-      equip:{ nome:"", desc:"", traits:[], usosMax:4, usosAtual:4, espaco:1 },
+      conhPrat:{}, caracComp:[], caracAumentos:{}, caracEscolhas:{}, conhPratAssimBonus:{},
+      // Saúde: 6 Níveis (6 = Saudável), cada um com 1 + Potência + Resolução pontos.
+      saudeNivel:6, saudePontosAtuais:null,
+      // Cabo de Guerra (pág. 81): começa com Determinação 9 e Assimilação 1.
+      determinacao:{ caixaAtual:2, pontosAtual:9, suscetivel:false },
+      // Artefato inicial (pág. 90/96): opcional, Escassez = soma das categorias (teto 3).
+      equip:{ nome:"", desc:"", traits:[], qualidade:3, pressao:0, usosMax:null, usosAtual:null, espaco:1 },
       inventarioExtra:[],
       kitInicial:null,
       notas:"",
-      // Assimilação (mutações, ver MUT_DECKS/pressaoTotal/renderMutacoesCard): testesAssimPendentes
-      // conta quantos Testes de Assimilação ainda faltam rolar (um Nível de Determinação caiu sem
-      // resolver a mutação decorrente); assimTesteAtual guarda a rolagem em andamento (pool de
-      // símbolos ainda não gastos, ver iniciarTesteAssimilacao); adquiridas guarda cada mutação
-      // já comprada; assimPerdido marca perda de controle definitiva ao acumular 10 C (nunca some).
-      testesAssimPendentes:0,
+      // Começar com Nível de Assimilação exige um Teste de Assimilação (pág. 81).
+      testesAssimPendentes:1,
       assimTesteAtual:null,
       mutAdquiridas:[],
       assimPerdido:false,
-      // NPC (27/09/2026, pedido do Marco): marca esta ficha como um personagem
-      // controlado pelo Assimilador, não por um jogador comum. A única diferença
-      // de comportamento é que as rolagens registradas por essa ficha somem do
-      // Histórico de Rolagens (aba Mesa) e do painel flutuante pra quem não tem
-      // acesso total à mesa (ver testLogVisivelPara) - o Assimilador continua
-      // vendo tudo normalmente nos dois lugares. Editável em "Editar Ficha" por
-      // quem já pode editar aquela ficha (mesma permissão de sempre); não muda
-      // mais nada além disso (a ficha continua aparecendo normalmente nos cards
-      // e na Mesa, só com uma etiqueta "NPC" ao lado do nome).
       ehNpc:false
     };
     CONH_PRAT.forEach(function(p){ c.conhPrat[p[0]] = 0; c.conhPratAssimBonus[p[0]] = 0; });
@@ -1752,33 +1838,43 @@
   function bestSaudeAttr(c){
     return valorInstinto(c,"resolucao") > valorInstinto(c,"potencia") ? "resolucao" : "potencia";
   }
-  function saudePontosMax(c){ var attr = bestSaudeAttr(c); return valorInstinto(c,attr) + 2; }
+  function saudePontosMax(c){ return 1 + valorInstinto(c,"potencia") + valorInstinto(c,"resolucao"); }
 
   // Funções genéricas de item: usadas tanto pro equipamento icônico quanto pros itens extras do inventário.
+  // Escassez de um Artefato = soma das categorias das características (pág. 97).
+  // O Uso Único que vem junto com Explosivo não desconta.
   function itemCusto(traits){
     var t = 0;
-    traits.forEach(function(sel){
+    var temExplosivo = (traits||[]).some(function(s){ return s.id==="explosivo"; });
+    (traits||[]).forEach(function(sel){
       var def = EQUIP_TRAITS.filter(function(e){return e.id===sel.id;})[0];
-      if(def) t += def.custo * (sel.qtd||1);
+      if(!def) return;
+      if(def.id==="uso_unico" && temExplosivo) return;
+      t += def.custo * (sel.qtd||1);
     });
     return t;
   }
+  // Usos próprios do item (Restaurador/Adrenalina/Medicinal: 6; Uso Único/Explosivo: 1).
+  // Itens sem nada disso não têm contador de usos - o desgaste é pela Qualidade.
   function itemUsosMax(traits){
-    var base = 4, consumivel = false;
-    traits.forEach(function(sel){
+    var usos = null, unico = false;
+    (traits||[]).forEach(function(sel){
       var def = EQUIP_TRAITS.filter(function(e){return e.id===sel.id;})[0];
       if(!def) return;
-      if(def.id === "consumivel"){ consumivel = true; }
-      if(def.id === "fragil"){ base -= 1*(sel.qtd||1); }
-      if(def.id === "duravel"){ base += 2*(sel.qtd||1); }
+      if(def.id==="uso_unico" || def.id==="explosivo") unico = true;
+      else if(def.usos) usos = Math.max(usos||0, def.usos);
     });
-    if(consumivel) return 1;
-    return Math.max(0, base);
+    if(unico) return 1;
+    return usos;
   }
   // O espaço que cada item ocupa (mochila/corpo) é sempre 1; "Espaçoso" nunca entra
   // aqui - ver espacosoBonus/capacidadeInventarioMax logo abaixo, que usam essa
   // característica pra aumentar o TETO total de inventário, não o espaço de um item.
+  // Espaço que o item ocupa: 1 por padrão, 0 se Discreto, 2 se Pesado (pág. 97).
   function itemEspaco(traits){
+    var ids = (traits||[]).map(function(s){ return s.id; });
+    if(ids.indexOf("discreto")>-1) return 0;
+    if(ids.indexOf("pesado")>-1) return 2;
     return 1;
   }
   // Quanto uma lista de características de item aumenta o TETO de inventário do
@@ -1793,8 +1889,9 @@
   // Teto total de espaço de inventário do personagem: os 8 clássicos (2 no corpo + 6 na
   // mochila) mais qualquer bônus de "Espaçoso"/"Muito Espaçoso", vindo tanto do equipamento
   // icônico quanto de qualquer item do Inventário adicional que tenha essa característica.
+  // Teto de inventário (pág. 94): 3 espaços no corpo + 6 na mochila, mais +2 por Espaçoso.
   function capacidadeInventarioMax(c){
-    var base = 8;
+    var base = 9;
     var bonus = espacosoBonus(c.equip.traits);
     (c.inventarioExtra||[]).forEach(function(it){ bonus += espacosoBonus(it.traits); });
     return base + bonus;
@@ -1804,6 +1901,7 @@
   function equipEspaco(c){ return itemEspaco(c.equip.traits); }
 
   // Aplica (ou remove, com key=null) um kit de itens iniciais no Inventário adicional, sem mexer nos itens que o jogador já adicionou à mão.
+  // Pacotes de equipamento inicial (pág. 90): todos os itens começam em Qualidade Padrão (3).
   function aplicarKitInicial(c, key){
     if(!c.inventarioExtra) c.inventarioExtra = [];
     c.inventarioExtra = c.inventarioExtra.filter(function(it){ return !it.kitKey; });
@@ -1812,27 +1910,99 @@
       var kit = KITS_INICIAIS.filter(function(k){return k.id===key;})[0];
       if(kit){
         kit.itens.forEach(function(it){
-          c.inventarioExtra.push({ nome:it[0], desc:"", traits:[], usosMax:4, usosAtual:4, espaco:1, qtd:it[1], kitKey:key });
+          c.inventarioExtra.push(novoItem(it[0], "", [], { qtd:it[1], kitKey:key }));
         });
       }
     }
+  }
+  function novoItem(nome, desc, traits, extra){
+    var usos = itemUsosMax(traits);
+    var it = { nome:nome, desc:desc||"", traits:traits||[], qualidade:3, pressao:0, usosMax:usos, usosAtual:usos, espaco:itemEspaco(traits) };
+    if(extra) Object.keys(extra).forEach(function(k){ it[k] = extra[k]; });
+    return it;
+  }
+  // Quantas Pressões o Assimilador precisa investir pra o item cair um nível de
+  // Qualidade (pág. 95): igual ao nível atual; Frágil -1, Durável +1.
+  function qualidadeLimiar(item){
+    var ids = (item.traits||[]).map(function(s){ return s.id; });
+    var n = item.qualidade!=null ? item.qualidade : 3;
+    if(ids.indexOf("fragil")>-1) n -= 1;
+    if(ids.indexOf("duravel")>-1) n += 1;
+    return Math.max(1, n);
+  }
+  function investirPressaoItem(item, delta){
+    if(item.qualidade==null) item.qualidade = 3;
+    if(!item.pressao) item.pressao = 0;
+    if(item.qualidade <= 0 && delta > 0) return;
+    item.pressao = Math.max(0, item.pressao + delta);
+    // Frágil já Defeituoso: quebra no próximo uso.
+    var ids = (item.traits||[]).map(function(s){ return s.id; });
+    if(ids.indexOf("fragil")>-1 && item.qualidade===1 && item.pressao>0){ item.qualidade = 0; item.pressao = 0; return; }
+    while(item.qualidade > 0 && item.pressao >= qualidadeLimiar(item)){
+      item.pressao -= qualidadeLimiar(item);
+      item.qualidade -= 1;
+    }
+    if(item.qualidade <= 0) item.pressao = 0;
+  }
+  function qualidadeHtml(item, attrPrefix, idx){
+    var q = item.qualidade!=null ? item.qualidade : 3;
+    var dataIdx = idx!=null ? ' data-idx="'+idx+'"' : '';
+    return '<div class="row" style="gap:6px;align-items:center;flex-wrap:wrap">' +
+      '<span class="hint" style="margin:0">Qualidade:</span>' +
+      '<button type="button" class="btn secondary" data-'+attrPrefix+'q="menos"'+dataIdx+' style="padding:1px 7px;font-size:11px" '+(q<=0?"disabled":"")+'>&minus;</button>' +
+      '<b style="min-width:120px;text-align:center">'+q+' · '+QUALIDADES[q]+'</b>' +
+      '<button type="button" class="btn secondary" data-'+attrPrefix+'q="mais"'+dataIdx+' style="padding:1px 7px;font-size:11px" '+(q>=6?"disabled":"")+'>+</button>' +
+      (q>0 ? '<span class="hint" style="margin:0">'+icoPressaoTxt(item)+'</span>' +
+        '<button type="button" class="btn secondary" data-'+attrPrefix+'p="mais"'+dataIdx+' style="padding:1px 7px;font-size:11px" title="O Assimilador investiu uma Pressão neste item">+1 '+dadoHtml("p")+'</button>' : '') +
+    '</div>' + (QUALIDADE_BONUS[q] ? '<p class="hint" style="margin:2px 0 0">'+QUALIDADE_BONUS[q]+'</p>' : '');
+  }
+  function icoPressaoTxt(item){
+    return (item.pressao||0)+' de '+qualidadeLimiar(item)+' '+dadoHtml("p")+' pra cair um nível';
   }
 
   // Custo de subir um Conhecimento/Prática de "atual" até "final": cada degrau custa
   // o próprio valor final daquele degrau, e o custo é cumulativo (soma de todos os
   // degraus no caminho). Ex.: de 0 até 3 custa 1+2+3=6, não só 3.
   function triangular(n){ return n*(n+1)/2; }
+  // Livro pág. 83: subir um Conhecimento/Prática custa o DOBRO do nível desejado, por
+  // degrau (ex.: de 2 pra 3 custa 6 XP; de 0 pra 2 custa 2+4 = 6 XP).
   function custoAumento(atual, final){
-    if(final <= atual) return 0;
-    return triangular(final) - triangular(atual);
+    var t = 0;
+    for(var v=atual+1; v<=final; v++) t += 2*v;
+    return t;
   }
+  function temCarac(c, id){ return (c.caracComp||[]).indexOf(id) > -1; }
+  // Valor de um atributo pra checar Requisitos de Característica: Instinto, Conhecimento/
+  // Prática (já com o que foi comprado com XP) ou o Nível de Assimilação.
+  function valorRequisito(c, attr){
+    if(attr === "assimilacao") return nivelAssimAtual(c);
+    if(INSTINTOS.some(function(i){ return i[0]===attr; })) return valorInstinto(c, attr);
+    return valorCP(c, attr);
+  }
+  function nomeAtributo(attr){
+    if(attr === "assimilacao") return "Assimilação";
+    var a = INSTINTOS.concat(CONH_PRAT).filter(function(x){ return x[0]===attr; })[0];
+    return a ? a[1] : attr;
+  }
+  function reqAtendido(c, def){
+    return (def.req||[]).every(function(alts){
+      return alts.some(function(a){ return valorRequisito(c, a[0]) >= a[1]; });
+    });
+  }
+  function reqTexto(def){
+    if(!def.req || !def.req.length) return "Sem requisito";
+    return "Requisito: " + def.req.map(function(alts){
+      return alts.map(function(a){ return nomeAtributo(a[0])+" "+a[1]+"+"; }).join(" ou ");
+    }).join(" e ");
+  }
+  // Pontos de Experiência gastos (pág. 83): Características + aumentos de Conhecimento/Prática.
   function caracPontosGastos(c){
     var t = 0;
     Object.keys(c.caracAumentos||{}).forEach(function(k){
       var atual = (c.conhPrat && c.conhPrat[k]) || 0;
       t += custoAumento(atual, c.caracAumentos[k]);
     });
-    c.caracComp.forEach(function(id){
+    (c.caracComp||[]).forEach(function(id){
       var def = CARACTERISTICAS.filter(function(x){return x.id===id;})[0];
       if(def) t += def.custo;
     });
@@ -1985,7 +2155,7 @@
       html += '<button type="button" class="gm-corner-btn'+(showGm?' unlocked':'')+'" data-nav="gm" '+(showGm?'':'disabled')+' title="'+(showGm?"Área do Assimilador":"Área bloqueada")+'">'+(showGm?"◉":"○")+'</button>';
     }
     html += '<header class="top">' +
-      '<div class="brand"><h1 id="brand-title">Fichas de Pangea</h1><small>calculadora de personagens · Assimilação adaptado'+(caps.mode==="mesa"?" · mesa ao vivo":"")+(state.gmPreviewJogador?" · vendo como jogador":"")+'</small></div>' +
+      '<div class="brand"><h1 id="brand-title">Fichas de Pangea</h1><small>calculadora de personagens · Assimilação RPG'+(caps.mode==="mesa"?" · mesa ao vivo":"")+(state.gmPreviewJogador?" · vendo como jogador":"")+'</small></div>' +
       '<nav class="tabs">' +
         '<button data-nav="roster" aria-current="'+(active==="roster")+'">'+(caps.mode==="mesa"?"Personagens da Mesa":"Meus Personagens")+'</button>' +
         '<button data-nav="wizard-new" aria-current="'+(active==="wizard")+'">Criar Personagem</button>' +
@@ -2143,7 +2313,7 @@
           (camp ? '<img class="badge" src="'+camp.img+'" alt="">' : '') +
           '<h3>'+esc(c.nomePersonagem||"Sem nome")+npcBadgeHtml(c)+'</h3>' +
           '<div class="camp-tag">'+(camp?camp.nome:"acampamento não definido")+(c.nomeJogador?" · "+esc(c.nomeJogador):"")+'</div>' +
-          '<div class="stat-row" style="align-items:flex-end;flex-wrap:wrap">' + tugMiniBarHtml(c) + '<span>Saúde nível '+c.saudeNivel+'/5 · '+pontosRoster+'/'+maxNivelRoster+' pts</span></div>' +
+          '<div class="stat-row" style="align-items:flex-end;flex-wrap:wrap">' + tugMiniBarHtml(c) + '<span>Saúde nível '+c.saudeNivel+'/6 · '+pontosRoster+'/'+maxNivelRoster+' pts</span></div>' +
         '</div>';
       });
       html += '</div><div class="btn-row"><span></span><button class="btn accent" data-nav="wizard-new">+ Novo Personagem</button></div>';
@@ -2274,27 +2444,34 @@
     }
     if(step === 3){
       var totalInst = sum(INSTINTOS.map(function(i){ return c.instintos[i[0]]||0; }));
-      if(totalInst !== 9) return {ok:false, msg:"A soma dos Instintos precisa ser 9 (agora está em "+totalInst+")."};
-      var badInst = INSTINTOS.filter(function(i){ var v = c.instintos[i[0]]||0; return v<0 || v>3; });
-      if(badInst.length) return {ok:false, msg:"Cada Instinto deve ficar entre 0 e 3."};
+      var badInst = INSTINTOS.filter(function(i){ var v = c.instintos[i[0]]||0; return v<1 || v>3; });
+      if(badInst.length) return {ok:false, msg:"Cada Instinto começa em 1 e pode ir até 3."};
+      if(totalInst !== 9) return {ok:false, msg:"Os Instintos somam 9 (1 em cada + 3 pontos livres). Agora estão em "+totalInst+"."};
       return {ok:true};
     }
     if(step === 4){
       var total = conhPratPontosGastos(c);
       if(total > 7) return {ok:false, msg:"Você gastou "+total+" de 7 pontos. Reduza algum valor."};
+      if(total < 7) return {ok:false, msg:"Ainda faltam "+(7-total)+" dos 7 pontos de Conhecimentos e Práticas."};
       var over = CONH_PRAT.filter(function(p){ return c.conhPrat[p[0]] > 2; });
       if(over.length) return {ok:false, msg:"Nessa etapa, o máximo por Conhecimento/Prática é 2."};
       return {ok:true};
     }
     if(step === 5){
       var tc = caracPontosGastos(c);
-      if(tc > 7) return {ok:false, msg:"Você gastou "+tc+" de 7 pontos de característica. Ajuste suas escolhas."};
+      if(tc > XP_INICIAL) return {ok:false, msg:"Você gastou "+tc+" de "+XP_INICIAL+" Pontos de Experiência. Ajuste suas escolhas."};
+      var semReq = (c.caracComp||[]).map(function(id){ return CARACTERISTICAS.filter(function(x){return x.id===id;})[0]; })
+        .filter(function(d){ return d && !reqAtendido(c, d); });
+      if(semReq.length) return {ok:false, msg:'"'+semReq[0].nome+'" pede '+reqTexto(semReq[0]).replace("Requisito: ","")+'. Desmarque ou ajuste os valores.'};
+      var semEscolha = (c.caracComp||[]).map(function(id){ return CARACTERISTICAS.filter(function(x){return x.id===id;})[0]; })
+        .filter(function(d){ return d && d.escolha && !((c.caracEscolhas||{})[d.id]); });
+      if(semEscolha.length) return {ok:false, msg:'Escolha o sentido de "'+semEscolha[0].nome+'".'};
       return {ok:true};
     }
     if(step === 6){
       var ec = equipCusto(c);
-      if(c.equip.traits.length && !c.equip.nome) return {ok:false, msg:"Você escolheu características pro equipamento: dê um nome a ele (ou remova as características se não quiser equipamento)."};
-      if(ec > 3) return {ok:false, msg:"O equipamento icônico é Categoria 3: no máximo 3 pontos de característica (você usou "+ec+")."};
+      if(c.equip.traits.length && !c.equip.nome) return {ok:false, msg:"Você escolheu características pro Artefato: dê um nome a ele (ou remova as características se não quiser Artefato)."};
+      if(ec > ESCASSEZ_TETO_INICIAL && !temCarac(c,"reliquia")) return {ok:false, msg:"O Artefato inicial pode ter no máximo Escassez "+ESCASSEZ_TETO_INICIAL+" (agora está em "+ec+")."};
       return {ok:true};
     }
     return {ok:true};
@@ -2316,21 +2493,32 @@
   // entre o equipamento icônico (wizard passo 6) e itens de inventário
   // (renderItemForm), que usam a mesma estrutura com prefixos de atributo
   // diferentes ("equip" / "item").
-  function renderTraitList(selectedTraits, prefix){
+  // Lista de características de Artefato (pág. 97-98) com a categoria de cada uma.
+  // bloqueado=true mostra só as escolhidas, sem poder mudar (ver Gambiarra).
+  // Livro pág. 87: só quem tem Gambiarra muda as características de um Artefato
+  // existente. Na criação (e ao refazer a ficha pro sistema oficial) é livre, e o
+  // Assimilador sempre pode.
+  function artefatoBloqueado(c){
+    if(!(state.view === "sheet" && state.sheetEditing)) return false;
+    if(c.precisaRefazer) return false;
+    if(temCarac(c,"gambiarra")) return false;
+    return !temAcessoTotal();
+  }
+  function renderTraitList(selectedTraits, prefix, bloqueado){
     var html = "";
     EQUIP_TRAITS.forEach(function(t){
       var sel = selectedTraits.filter(function(s){return s.id===t.id;})[0];
       var checked = !!sel;
-      html += '<label class="trait'+(checked?" checked":"")+'"><input type="checkbox" data-'+prefix+'trait="'+t.id+'" '+(checked?"checked":"")+'>' +
-        '<span class="cost">'+(t.custo>0?"+":"")+t.custo+'pt</span><span class="txt"><b>'+t.nome+'</b> <span class="hint">(Categoria '+t.cat+(t.rep?", pode repetir":"")+')</span><span>'+iconizarTexto(t.txt)+'</span>';
-      if(t.rep && checked){
-        html += '<div class="row" style="margin-top:6px"><label style="margin:0">Quantas vezes:</label><select data-'+prefix+'traitqtd="'+t.id+'"><option value="1"'+(sel.qtd===1?" selected":"")+'>1x</option><option value="2"'+(sel.qtd===2?" selected":"")+'>2x</option></select></div>';
-      }
-      if(t.pedeAptidao && checked){
-        html += '<div class="field" style="margin-top:6px"><label>Aptidão escolhida</label><input type="text" placeholder="ex: Ferramentas" data-'+prefix+'traitapt="'+t.id+'" value="'+esc(sel.aptidao||"")+'"></div>';
+      if(bloqueado && !checked) return;
+      html += '<label class="trait'+(checked?" checked":"")+'"><input type="checkbox" data-'+prefix+'trait="'+t.id+'" '+(checked?"checked":"")+(bloqueado?" disabled":"")+'>' +
+        '<span class="cost">'+(t.custo>0?"+":"")+t.custo+'</span><span class="txt"><b>'+t.nome+'</b> <span class="hint" style="display:block;margin:1px 0 3px">Categoria '+t.cat+(t.rep?" · pode repetir":"")+'</span><span>'+iconizarTexto(t.txt)+'</span>';
+      if(t.rep && checked && !bloqueado){
+        var opts = ""; for(var q=1;q<=(t.repMax||2);q++){ opts += '<option value="'+q+'"'+(sel.qtd===q?" selected":"")+'>'+q+'x</option>'; }
+        html += '<div class="row" style="margin-top:6px"><label style="margin:0">Quantas vezes:</label><select data-'+prefix+'traitqtd="'+t.id+'">'+opts+'</select></div>';
       }
       html += '</span></label>';
     });
+    if(bloqueado && !selectedTraits.length) html += '<p class="hint">Sem características.</p>';
     return html;
   }
 
@@ -2420,19 +2608,18 @@
     if(step === 3){
       var got = INSTINTOS.map(function(i){ return c.instintos[i[0]]||0; });
       var totalInst = sum(got);
-      var faltam = 9 - totalInst;
-      var badRange = INSTINTOS.some(function(i){ var v = c.instintos[i[0]]||0; return v<0 || v>3; });
+      var livres = totalInst - 6;
+      var badRange = INSTINTOS.some(function(i){ var v = c.instintos[i[0]]||0; return v<1 || v>3; });
       var valid = totalInst===9 && !badRange;
-      var html = '<p>Distribua 9 pontos entre os 6 Instintos, cada um entre 0 e 3.</p>';
+      var html = '<p>Todo Instinto começa em 1. Distribua mais 3 pontos livres entre eles (máximo 3 em cada).</p>';
       html += '<div class="budget '+(valid?"ok":"bad")+'">' +
-        '<span>Pontos de Instinto</span><span class="num">'+totalInst+' / 9'+(faltam>0?' · faltam '+faltam:(faltam<0?' · '+(-faltam)+' acima do limite':' · completo ✓'))+'</span></div>';
-      var attr = bestSaudeAttr(c);
-      var vidaPorNivel = (c.instintos[attr]||0) + 2;
-      html += '<div class="budget ok"><span>Saúde (usa automaticamente o maior entre Potência e Resolução: '+(attr==="potencia"?"Potência":"Resolução")+' + 2)</span>' +
-        '<span class="num">'+vidaPorNivel+' pontos por estágio · '+(vidaPorNivel*5)+' pontos no total (5 estágios)</span></div>';
+        '<span>Pontos livres de Instinto</span><span class="num">'+livres+' / 3'+(livres<3?' · faltam '+(3-livres):(livres>3?' · '+(livres-3)+' acima do limite':' · completo ✓'))+'</span></div>';
+      var vidaPorNivel = saudePontosMax(c);
+      html += '<div class="budget ok"><span>Saúde: 1 + Potência + Resolução</span>' +
+        '<span class="num">'+vidaPorNivel+' pontos por Nível · 6 Níveis</span></div>';
       html += '<div class="grid cols-3" style="margin-top:14px">';
       INSTINTOS.forEach(function(i){
-        html += stepperField("instinto", i[1], i[2], i[0], c.instintos[i[0]]||0, 0, 3, false);
+        html += stepperField("instinto", i[1], i[2], i[0], c.instintos[i[0]]||1, 1, 3, false);
       });
       html += '</div>';
       return html;
@@ -2440,29 +2627,29 @@
     if(step === 4){
       var total = conhPratPontosGastos(c);
       var faltamCp = 7 - total;
-      var html = '<p>Você tem 7 pontos pra distribuir entre as 12 opções. Máximo de 2 pontos em cada nessa etapa.</p>';
+      var html = '<p>Você tem 7 pontos pra distribuir entre os 6 Conhecimentos e as 6 Práticas. Podem ficar em 0, e o máximo é 2 em cada nessa etapa (dá pra subir mais com Experiência no próximo passo).</p>';
       html += '<div class="budget '+(total>7?"bad":"ok")+'"><span>Pontos usados</span><span class="num">'+total+' / 7'+(faltamCp>0?' · faltam '+faltamCp:(faltamCp<0?' · '+(-faltamCp)+' acima do limite':' · completo ✓'))+'</span></div>';
       html += '<h3 style="margin-bottom:8px">Conhecimentos</h3><div class="grid cols-3">';
       CONHECIMENTOS.forEach(function(p){
-        html += stepperField("cp", p[1], p[2], p[0], c.conhPrat[p[0]], 0, 2, false);
+        html += stepperField("cp", p[1], p[2], p[0], c.conhPrat[p[0]]||0, 0, 2, false);
       });
       html += '</div><h3 style="margin:14px 0 8px">Práticas</h3><div class="grid cols-3">';
       PRATICAS.forEach(function(p){
-        html += stepperField("cp", p[1], p[2], p[0], c.conhPrat[p[0]], 0, 2, false);
+        html += stepperField("cp", p[1], p[2], p[0], c.conhPrat[p[0]]||0, 0, 2, false);
       });
       html += '</div>';
       return html;
     }
     if(step === 5){
       var tot = caracPontosGastos(c);
-      var faltamCarac = 7 - tot;
-      var html = '<p>Você tem 7 pontos de característica: aumente um Conhecimento/Prática até 3 (o custo de cada degrau é igual ao valor final daquele degrau, e é cumulativo: subir de 0 até 3 soma o custo de 0→1, 1→2 e 2→3) e/ou compre características únicas.</p>';
-      html += '<div class="budget '+(tot>7?"bad":"ok")+'"><span>Pontos usados</span><span class="num">'+tot+' / 7'+(faltamCarac>0?' · faltam '+faltamCarac:(faltamCarac<0?' · '+(-faltamCarac)+' acima do limite':' · completo ✓'))+'</span></div>';
-      html += '<h3 style="margin-bottom:8px">Aumentar Conhecimento ou Prática (até 3)</h3><div class="grid cols-3">';
+      var faltamCarac = XP_INICIAL - tot;
+      var criando = state.view === "wizard";
+      var html = '<p>Você tem <b>'+XP_INICIAL+' Pontos de Experiência</b> pra comprar Características (se cumprir o requisito) e/ou subir Conhecimentos e Práticas. Subir custa o dobro do nível desejado a cada degrau: de 1 pra 2 custa 4, de 2 pra 3 custa 6.</p>';
+      html += '<div class="budget '+(tot>XP_INICIAL?"bad":"ok")+'"><span>Experiência usada</span><span class="num">'+tot+' / '+XP_INICIAL+(faltamCarac>0?' · sobram '+faltamCarac:(faltamCarac<0?' · '+(-faltamCarac)+' acima do limite':' · completo ✓'))+'</span></div>';
+      html += '<h3 style="margin-bottom:8px">Subir Conhecimento ou Prática (até 3)</h3><div class="grid cols-3">';
       CONH_PRAT.forEach(function(p){
-        var atual = c.conhPrat[p[0]];
+        var atual = c.conhPrat[p[0]]||0;
         var aum = c.caracAumentos[p[0]] || 0;
-        var final = aum ? aum : atual;
         html += '<div class="field"><label>'+p[1]+' (base '+atual+')</label>' +
           '<select data-aumento="'+p[0]+'">' +
             '<option value="0"'+(aum===0?" selected":"")+'>manter em '+atual+'</option>' +
@@ -2471,30 +2658,48 @@
             (atual<3?'<option value="3"'+(aum===3?" selected":"")+'>subir pra 3 (custa '+custoAumento(atual,3)+')</option>':'') +
           '</select></div>';
       });
-      html += '</div><h3 style="margin:16px 0 8px">Características únicas</h3><div class="trait-list">';
-      CARACTERISTICAS.forEach(function(t){
-        var checked = c.caracComp.indexOf(t.id) > -1;
-        html += '<label class="trait'+(checked?" checked":"")+'"><input type="checkbox" data-carac="'+t.id+'" '+(checked?"checked":"")+'>' +
-          '<span class="cost">'+t.custo+'pt</span><span class="txt"><b>'+t.nome+'</b><span>'+iconizarTexto(t.txt)+'</span></span></label>';
-      });
       html += '</div>';
+      [1,2,3,4,5].forEach(function(custo){
+        var lista = CARACTERISTICAS.filter(function(t){ return t.custo===custo && (!t.soCriacao || criando || c.caracComp.indexOf(t.id)>-1); });
+        if(!lista.length) return;
+        html += '<h3 style="margin:16px 0 8px">Características de '+custo+' ponto'+(custo>1?'s':'')+'</h3><div class="trait-list">';
+        lista.forEach(function(t){
+          var checked = c.caracComp.indexOf(t.id) > -1;
+          var ok = reqAtendido(c, t);
+          html += '<label class="trait'+(checked?" checked":"")+'"'+(!ok&&!checked?' style="opacity:.55"':'')+'><input type="checkbox" data-carac="'+t.id+'" '+(checked?"checked":"")+((!ok&&!checked)?" disabled":"")+'>' +
+            '<span class="cost">'+t.custo+'</span><span class="txt"><b>'+t.nome+'</b>' +
+            '<span class="hint" style="display:block;margin:1px 0 3px;'+(ok?'':'color:var(--danger)')+'">'+reqTexto(t)+(ok?'':' — não cumprido')+'</span>' +
+            '<span>'+iconizarTexto(t.txt)+'</span>';
+          if(t.escolha && checked){
+            var esc0 = (c.caracEscolhas||{})[t.id]||"";
+            html += '<div class="row" style="margin-top:6px"><label style="margin:0">Sentido:</label><select data-caracescolha="'+t.id+'"><option value="">escolha…</option>' +
+              t.escolha.map(function(o){ return '<option value="'+o+'"'+(esc0===o?" selected":"")+'>'+o+'</option>'; }).join('') + '</select></div>';
+          }
+          html += '</span></label>';
+        });
+        html += '</div>';
+      });
       return html;
     }
     if(step === 6){
       var ec = equipCusto(c);
-      var html = '<p>O equipamento icônico é opcional. Se quiser um, ele é sempre <b>Categoria 3</b>, com até <b>3 pontos</b> de característica pra definir. Se não quiser, deixe o nome em branco e avance.</p>';
-      html += '<div class="field"><label>Nome do equipamento</label><input type="text" data-equip="nome" value="'+esc(c.equip.nome)+'"></div>';
+      var bloqueado = artefatoBloqueado(c);
+      var teto = temCarac(c,"reliquia") ? null : ESCASSEZ_TETO_INICIAL;
+      var html = '<p>O <b>Artefato inicial</b> é opcional: um item com características especiais. A Escassez dele é a soma das categorias das características escolhidas, e o teto na criação é <b>'+ESCASSEZ_TETO_INICIAL+' ('+ESCASSEZ_NOMES[ESCASSEZ_TETO_INICIAL]+')</b>'+(teto===null?' — mas com Relíquia não há teto':'')+'. Se não quiser um, deixe o nome em branco e avance.</p>';
+      if(bloqueado) html += '<div class="card tight" style="border-color:var(--accent)"><p class="hint" style="margin:0">As características de um Artefato só podem ser mudadas por quem tem a Característica <b>Gambiarra</b> (ou pelo Assimilador).</p></div>';
+      html += '<div class="field"><label>Nome do Artefato</label><input type="text" data-equip="nome" value="'+esc(c.equip.nome)+'"></div>';
       html += '<div class="field"><label>Descrição / história curta</label><textarea data-equip="desc">'+esc(c.equip.desc)+'</textarea></div>';
-      html += '<div class="budget '+(ec>3?"bad":"ok")+'"><span>Pontos de característica</span><span class="num">'+ec+' / 3</span></div>';
-      html += '<div class="trait-list">' + renderTraitList(c.equip.traits, "equip") + '</div>';
+      html += '<div class="budget '+((teto!==null && ec>teto)?"bad":"ok")+'"><span>Escassez</span><span class="num">'+ec+(teto!==null?' / '+teto:'')+' · '+(ESCASSEZ_NOMES[clamp(ec,0,6)]||"")+'</span></div>';
+      html += '<div class="trait-list">' + renderTraitList(c.equip.traits, "equip", bloqueado) + '</div>';
       var espacosoWiz = espacosoBonus(c.equip.traits);
-      html += '<p class="hint" style="margin-top:10px">Usos calculados: <b>'+equipUsosMax(c)+'</b> · Espaço que o item ocupa: <b>'+equipEspaco(c)+'</b>'+(espacosoWiz>0?' · <b>+'+espacosoWiz+'</b> no teto total de inventário (Espaçoso)':'')+'</p>';
+      var usosW = equipUsosMax(c);
+      html += '<p class="hint" style="margin-top:10px">Qualidade inicial: <b>Padrão (3)</b> · Espaço que ocupa: <b>'+equipEspaco(c)+'</b>'+(usosW?' · <b>'+usosW+'</b> uso'+(usosW>1?'s':''):'')+(espacosoWiz>0?' · <b>+'+espacosoWiz+'</b> no teto de inventário (Espaçoso)':'')+'</p>';
 
-      html += '<h3 style="margin:20px 0 8px">Kit inicial (opcional)</h3>';
-      html += '<p class="hint">Escolha um kit pra começar seu Inventário adicional já com alguns itens narrativos. Pode trocar de kit à vontade, e ajustar ou remover cada item depois, na ficha.</p>';
+      html += '<h3 style="margin:20px 0 8px">Pacote inicial (opcional)</h3>';
+      html += '<p class="hint">Escolha um pacote de equipamentos (pág. 90 do livro) pra começar o inventário. Dá pra trocar à vontade, e ajustar ou remover cada item depois, na ficha.</p>';
       html += '<div class="kit-pick">';
       html += '<button type="button" class="kit-opt'+(!c.kitInicial?' selected':'')+'" data-kit="">' +
-        '<h4>Nenhum</h4><p>Só o equipamento icônico.</p></button>';
+        '<h4>Nenhum</h4><p>Só o Artefato inicial.</p></button>';
       KITS_INICIAIS.forEach(function(k){
         html += '<button type="button" class="kit-opt'+(c.kitInicial===k.id?' selected':'')+'" data-kit="'+k.id+'">' +
           '<h4>'+esc(k.nome)+'</h4>' +
@@ -2536,15 +2741,11 @@
     if(step === 3){
       app.querySelectorAll("[data-instinto]").forEach(function(el){
         el.addEventListener("input", function(){
-          c.instintos[el.getAttribute("data-instinto")] = clamp(parseInt(el.value,10),0,3);
-          c.atributoSaude = bestSaudeAttr(c);
+          c.instintos[el.getAttribute("data-instinto")] = clamp(parseInt(el.value,10),1,3);
           rerender();
         });
       });
-      bindStepper("instinto", function(id){ return c.instintos[id]; }, function(id,v){ c.instintos[id] = v; }, 0, 3, function(){
-        c.atributoSaude = bestSaudeAttr(c);
-        rerender();
-      });
+      bindStepper("instinto", function(id){ return c.instintos[id]; }, function(id,v){ c.instintos[id] = v; }, 1, 3, rerender);
     }
     if(step === 4){
       app.querySelectorAll("[data-cp]").forEach(function(el){
@@ -2568,8 +2769,14 @@
           var id = el.getAttribute("data-carac");
           var idx = c.caracComp.indexOf(id);
           if(el.checked && idx===-1) c.caracComp.push(id);
-          if(!el.checked && idx>-1) c.caracComp.splice(idx,1);
+          if(!el.checked && idx>-1){ c.caracComp.splice(idx,1); if(c.caracEscolhas) delete c.caracEscolhas[id]; }
           rerender();
+        });
+      });
+      app.querySelectorAll("[data-caracescolha]").forEach(function(el){
+        el.addEventListener("change", function(){
+          if(!c.caracEscolhas) c.caracEscolhas = {};
+          c.caracEscolhas[el.getAttribute("data-caracescolha")] = el.value;
         });
       });
     }
@@ -2713,6 +2920,17 @@
     if(camp) html += '<img src="'+camp.img+'" alt="" style="width:88px;height:88px">';
     html += '</div></div>';
 
+    if(c.precisaRefazer){
+      html += '<div class="card" style="border:2px solid var(--accent)">' +
+        '<h2 style="margin-bottom:6px">Atualize a ficha pro sistema oficial</h2>' +
+        '<p class="hint" style="margin-top:0">A ficha agora segue o livro de regras definitivo. A história, os Instintos, as mutações e o Cabo de Guerra foram mantidos, mas é preciso refazer: <b>Conhecimentos e Práticas</b> (7 pontos), <b>Características</b> (7 Pontos de Experiência, com requisitos) e o <b>Artefato inicial</b> (Escassez até '+ESCASSEZ_TETO_INICIAL+').</p>' +
+        ((c.caracAntigas&&c.caracAntigas.length)||(c.equipAntigo&&c.equipAntigo.nome) ? '<p class="hint">Antes: '+
+          ((c.caracAntigas||[]).length ? 'Características '+esc(c.caracAntigas.join(", ").replace(/_/g," "))+'. ' : '') +
+          (c.equipAntigo&&c.equipAntigo.nome ? 'Equipamento "'+esc(c.equipAntigo.nome)+'"'+(c.equipAntigo.traits.length?' ('+esc(c.equipAntigo.traits.join(", "))+')':'')+'.' : '') + '</p>' : '') +
+        '<div class="btn-row" style="margin-top:6px"><span></span><button class="btn accent" data-action="refazer">Refazer agora</button></div>' +
+      '</div>';
+    }
+
     html += '<div class="grid cols-2">';
 
     // Origem / Propositos
@@ -2786,11 +3004,13 @@
     var maxNivel = saudePontosMax(c);
     if(c.saudePontosAtuais==null) c.saudePontosAtuais = maxNivel;
     html += '<div class="grid cols-2">';
+    var nivelS = clamp(c.saudeNivel!=null ? c.saudeNivel : 6, 0, 6);
     html += '<div class="card"><h2>Saúde</h2>' +
       pendingSectionBannerHtml(c, "saude") +
-      '<p class="hint">Base: '+(c.atributoSaude==="potencia"?"Potência":"Resolução")+' + 2 = '+maxNivel+' pontos por nível</p>' +
+      '<p class="hint">1 + Potência + Resolução = '+maxNivel+' pontos por Nível, 6 Níveis</p>' +
       '<div class="row"><label style="margin:0">Pontos atuais no nível:</label><div class="dots" data-dots="pontos">' + diamonds(c.saudePontosAtuais, maxNivel, "dsize-lg", "c-saude") + '</div></div>' +
-      '<div class="row" style="margin-top:8px"><label style="margin:0">Nível (de 5):</label><div class="dots" data-dots="nivel">' + diamonds(c.saudeNivel,5,"dsize-sm","c-saude","ns") + '</div></div>' +
+      '<div class="row" style="margin-top:8px"><label style="margin:0">Nível (de 6):</label><div class="dots" data-dots="nivel">' + diamonds(nivelS,6,"dsize-sm","c-saude","ns") + '</div></div>' +
+      '<p style="margin:8px 0 0"><b>'+(nivelS>0?NIVEIS_SAUDE[nivelS]:"Morto")+'</b> <span class="hint">· '+iconizarTexto(PENALIDADE_SAUDE[nivelS])+'</span></p>' +
       '<div class="row" style="margin-top:10px"><button class="btn secondary" data-saude="menos">-1 ponto</button><button class="btn secondary" data-saude="mais">+1 ponto</button></div>' +
     '</div>';
 
@@ -2806,31 +3026,32 @@
     // Equipamento
     var equipBody;
     if(!c.equip.nome && !c.equip.traits.length){
-      equipBody = '<p class="hint">Esse personagem não tem equipamento icônico.</p>';
+      equipBody = '<p class="hint">Esse personagem não tem Artefato inicial.</p>';
     } else {
-      equipBody = '<p><b>'+esc(c.equip.nome||"(sem nome)")+':</b> '+esc(c.equip.desc)+'</p>';
+      equipBody = '<p><b>'+esc(c.equip.nome||"(sem nome)")+':</b> '+esc(c.equip.desc)+' <span class="hint">· Escassez '+equipCusto(c)+'</span></p>';
       if(c.equip.traits.length){
         var equipTraitDetails = c.equip.traits.map(function(s){
           var d = EQUIP_TRAITS.filter(function(x){return x.id===s.id;})[0];
           if(!d) return "";
-          return '<div class="trait" style="cursor:default"><span class="cost">'+(d.custo>0?"+":"")+d.custo+'pt</span><span class="txt"><b>'+d.nome+(s.qtd>1?" (2x)":"")+(s.aptidao?" ("+esc(s.aptidao)+")":"")+'</b><span>'+iconizarTexto(d.txt)+'</span></span></div>';
+          return '<div class="trait" style="cursor:default"><span class="cost">'+(d.custo>0?"+":"")+d.custo+'</span><span class="txt"><b>'+d.nome+(s.qtd>1?" ("+s.qtd+"x)":"")+'</b><span>'+iconizarTexto(d.txt)+'</span></span></div>';
         }).join("");
         equipBody += '<p class="hint" style="margin-bottom:6px">Utilidade das características escolhidas:</p><div class="trait-list">'+equipTraitDetails+'</div>';
       } else {
         equipBody += '<p class="hint">Sem características especiais.</p>';
       }
-      equipBody += '<div class="row" style="margin-top:10px"><label style="margin:0">Usos:</label><div class="dots" data-dots="equipusos">'+dotsRow(c.equip.usosAtual, c.equip.usosMax, "")+'</div>' +
-        '<button class="btn secondary" data-equipuso="repor">Repor usos</button></div>' +
+      equipBody += '<div style="margin-top:10px">'+qualidadeHtml(c.equip, "equip")+'</div>' +
+        (c.equip.usosMax ? '<div class="row" style="margin-top:8px"><label style="margin:0">Usos:</label><div class="dots" data-dots="equipusos">'+dotsRow(c.equip.usosAtual||0, c.equip.usosMax, "")+'</div>' +
+          '<button class="btn secondary" data-equipuso="repor">Repor usos</button></div>' : '') +
         '<p class="hint">Espaço de inventário ocupado: '+c.equip.espaco+'</p>';
     }
-    html += sectionCard("equipamento", "Equipamento Icônico", pendingSectionBannerHtml(c, "equip") + equipBody);
+    html += sectionCard("equipamento", "Artefato inicial", pendingSectionBannerHtml(c, "equip") + equipBody);
 
     // Inventario extra
     var totalEspaco = c.equip.espaco + sum(c.inventarioExtra.map(function(it){ return it.espaco||0; }));
     var capMax = capacidadeInventarioMax(c);
-    var espacoExtra = capMax - 8;
+    var espacoExtra = capMax - 9;
     var invBody = '<div id="inv-list">' + renderInventario(c) + '</div>' +
-      '<p class="hint" style="margin-top:8px">Espaço total ocupado: <b>'+totalEspaco+'</b> de '+capMax+' (2 no corpo + 6 na mochila'+(espacoExtra>0?' + '+espacoExtra+' de equipamento Espaçoso':'')+')</p>';
+      '<p class="hint" style="margin-top:8px">Espaço total ocupado: <b>'+totalEspaco+'</b> de '+capMax+' (3 no corpo + 6 na mochila'+(espacoExtra>0?' + '+espacoExtra+' de equipamento Espaçoso':'')+')</p>';
     if(state.itemDraft){
       invBody += renderItemForm(state.itemDraft);
     } else {
@@ -2858,25 +3079,32 @@
   }
 
   function renderInventario(c){
-    if(!c.inventarioExtra.length) return '<p class="hint">Nada além do equipamento icônico.</p>';
-    var html = '<div class="table-wrap"><table><thead><tr><th>Item</th><th class="num">Usos</th><th class="num">Espaço</th><th></th></tr></thead><tbody>';
+    if(!c.inventarioExtra.length) return '<p class="hint">Nada além do Artefato inicial.</p>';
+    var html = '<div class="table-wrap"><table><thead><tr><th>Item</th><th>Qualidade</th><th class="num">Usos</th><th class="num">Espaço</th><th></th></tr></thead><tbody>';
     c.inventarioExtra.forEach(function(it, idx){
       var traitTxt = (it.traits||[]).map(function(s){
         var d = EQUIP_TRAITS.filter(function(x){return x.id===s.id;})[0];
-        return d ? d.nome+(s.qtd>1?" x2":"")+(s.aptidao?" ("+s.aptidao+")":"") : s.id;
+        return d ? d.nome+(s.qtd>1?" x"+s.qtd:"") : s.id;
       });
+      var q = it.qualidade!=null ? it.qualidade : 3;
       html += '<tr><td><b>'+esc(it.nome)+(it.qtd>1?' (x'+it.qtd+')':'')+'</b>' +
         (it.desc?'<br><span class="hint">'+esc(it.desc)+'</span>':'') +
-        (traitTxt.length?'<br><span class="hint">'+traitTxt.join(", ")+'</span>':'') +
-        '</td><td class="num">' +
-          '<div class="row" style="justify-content:flex-end;flex-wrap:nowrap;gap:4px">' +
-            '<button class="btn secondary" data-invuso="menos" data-idx="'+idx+'" style="padding:1px 7px;font-size:11px" '+(it.usosAtual<=0?"disabled":"")+'>&minus;</button>' +
-            '<span style="min-width:34px;text-align:center">'+it.usosAtual+'/'+it.usosMax+'</span>' +
-            '<button class="btn secondary" data-invuso="mais" data-idx="'+idx+'" style="padding:1px 7px;font-size:11px" '+(it.usosAtual>=it.usosMax?"disabled":"")+'>+</button>' +
+        (traitTxt.length?'<br><span class="hint">'+traitTxt.join(", ")+' · Escassez '+itemCusto(it.traits)+'</span>':'') +
+        '</td><td>' +
+          '<div class="row" style="flex-wrap:nowrap;gap:4px">' +
+            '<button class="btn secondary" data-invq="menos" data-idx="'+idx+'" style="padding:1px 7px;font-size:11px" '+(q<=0?"disabled":"")+'>&minus;</button>' +
+            '<span style="min-width:96px;text-align:center" title="'+esc(QUALIDADE_BONUS[q]||"")+'">'+q+' · '+QUALIDADES[q]+'</span>' +
+            '<button class="btn secondary" data-invq="mais" data-idx="'+idx+'" style="padding:1px 7px;font-size:11px" '+(q>=6?"disabled":"")+'>+</button>' +
+            (q>0?'<button class="btn secondary" data-invp="mais" data-idx="'+idx+'" style="padding:1px 7px;font-size:11px" title="Pressão investida: '+(it.pressao||0)+' de '+qualidadeLimiar(it)+' pra cair um nível">+1 '+dadoHtml("p")+' <span class="hint" style="margin:0">('+(it.pressao||0)+'/'+qualidadeLimiar(it)+')</span></button>':'') +
           '</div>' +
+        '</td><td class="num">' +
+          (it.usosMax ? '<div class="row" style="justify-content:flex-end;flex-wrap:nowrap;gap:4px">' +
+            '<button class="btn secondary" data-invuso="menos" data-idx="'+idx+'" style="padding:1px 7px;font-size:11px" '+((it.usosAtual||0)<=0?"disabled":"")+'>&minus;</button>' +
+            '<span style="min-width:34px;text-align:center">'+(it.usosAtual||0)+'/'+it.usosMax+'</span>' +
+            '<button class="btn secondary" data-invuso="mais" data-idx="'+idx+'" style="padding:1px 7px;font-size:11px" '+((it.usosAtual||0)>=it.usosMax?"disabled":"")+'>+</button>' +
+          '</div>' : '<span class="hint">-</span>') +
         '</td><td class="num">'+it.espaco+'</td>' +
         '<td><div class="row" style="justify-content:flex-end;flex-wrap:nowrap;gap:4px">' +
-          '<button class="btn secondary" data-invuso="repor" data-idx="'+idx+'" style="padding:2px 8px;font-size:11px">repor</button>' +
           '<button class="btn secondary" data-inv="del" data-idx="'+idx+'" style="padding:2px 8px;font-size:11px">remover</button>' +
         '</div></td></tr>';
     });
@@ -2888,17 +3116,17 @@
   function newItemDraft(){ return { nome:"", desc:"", traits:[] }; }
 
   function renderItemForm(draft){
-    var custo = itemCusto(draft.traits);
+    var escassez = itemCusto(draft.traits);
     var usos = itemUsosMax(draft.traits);
     var espaco = itemEspaco(draft.traits);
     var html = '<div class="card" style="margin-top:12px;background:var(--surface-2)"><h3 style="margin-bottom:8px">Novo item</h3>';
     html += '<div class="field"><label>Nome do item</label><input type="text" id="item-nome" value="'+esc(draft.nome)+'"></div>';
     html += '<div class="field"><label>Descrição (opcional)</label><textarea id="item-desc">'+esc(draft.desc)+'</textarea></div>';
-    html += '<p class="hint">Características são opcionais: pode deixar sem nenhuma. Quando usadas, seguem as mesmas regras do equipamento icônico (máximo 3 pontos).</p>';
-    html += '<div class="budget '+(custo>3?"bad":"ok")+'"><span>Pontos de característica</span><span class="num">'+custo+' / 3</span></div>';
+    html += '<p class="hint">Equipamento comum não tem características. Um item com características é um Artefato: a Escassez dele é a soma das categorias, e o Assimilador decide o que dá pra encontrar.</p>';
+    html += '<div class="budget ok"><span>Escassez</span><span class="num">'+escassez+' · '+(ESCASSEZ_NOMES[clamp(escassez,0,6)]||"")+'</span></div>';
     html += '<div class="trait-list">' + renderTraitList(draft.traits, "item") + '</div>';
     var espacosoItem = espacosoBonus(draft.traits);
-    html += '<p class="hint" style="margin-top:10px">Usos calculados: <b>'+usos+'</b> · Espaço que o item ocupa: <b>'+espaco+'</b>'+(espacosoItem>0?' · <b>+'+espacosoItem+'</b> no teto total de inventário (Espaçoso)':'')+'</p>';
+    html += '<p class="hint" style="margin-top:10px">Qualidade inicial: <b>Padrão (3)</b>'+(usos?' · <b>'+usos+'</b> uso'+(usos>1?'s':''):'')+' · Espaço que ocupa: <b>'+espaco+'</b>'+(espacosoItem>0?' · <b>+'+espacosoItem+'</b> no teto de inventário (Espaçoso)':'')+'</p>';
     html += '<div class="btn-row"><button class="btn secondary" data-itemaction="cancel">Cancelar</button><button class="btn accent" data-itemaction="add">Adicionar ao inventário</button></div>';
     html += '</div>';
     return html;
@@ -2912,8 +3140,7 @@
     app.querySelector('[data-itemaction="add"]').addEventListener("click", function(){
       var nome = draft.nome.trim();
       if(!nome){ alert("Dê um nome ao item."); return; }
-      var usos = itemUsosMax(draft.traits);
-      c.inventarioExtra.push({ nome:nome, desc:draft.desc||"", traits:draft.traits, usosMax:usos, usosAtual:usos, espaco:itemEspaco(draft.traits) });
+      c.inventarioExtra.push(novoItem(nome, draft.desc||"", draft.traits));
       marcarPendenteOuSalvar(c, "inv");
       state.itemDraft = null;
       renderSheet();
@@ -2990,6 +3217,7 @@
       '<h2>Determinação / Assimilação</h2>' +
       pendingSectionBannerHtml(c, "cabo") +
       '<p class="hint" style="margin-top:2px">Determinação e Assimilação têm cada uma um Nível, e os dois sempre somam 10. Clique num laço da trilha pra ajustar o Nível atual.</p>' +
+      (c.determinacao.suscetivel ? '<p class="hint" style="margin-top:2px;color:var(--suscet)"><b>Estado Suscetível:</b> não pode gastar Pontos de Determinação até completar a Assimilação'+((c.testesAssimPendentes>0||c.assimTesteAtual)?' (faça o Teste de Assimilação)':' ou recuperar Determinação')+'. Qualquer nova perda com os pontos zerados derruba um Nível.</p>' : '') +
       '<div class="tug-wrap">' +
         '<div class="tug-row">' +
           '<span class="tug-tag" style="color:var(--royal)">Determinação</span>' +
@@ -3000,7 +3228,7 @@
       '</div>' +
       '<div class="row" style="margin-top:12px;gap:16px;flex-wrap:wrap;align-items:center">' +
         '<div class="row" style="gap:6px;align-items:center;flex-wrap:nowrap">' +
-          '<button type="button" class="btn secondary" data-tugpts="det-menos" style="padding:1px 7px;font-size:11px" '+(ptsDet<=0?"disabled":"")+'>&minus;</button>' +
+          '<button type="button" class="btn secondary" data-tugpts="det-menos" style="padding:1px 7px;font-size:11px" '+(ptsDet<=0 && c.determinacao.caixaAtual<=DET_CAIXA_FLOOR?"disabled":"")+(ptsDet<=0?' title="Perda com os pontos zerados: desce um Nível de Determinação"':'')+'>&minus;</button>' +
           '<span class="gm-compact-line" style="margin:0">'+icoHtml("pd")+' <b style="color:var(--royal)">'+ptsDet+'</b> de '+nivelDet+' pontos de Determinação</span>' +
           '<button type="button" class="btn secondary" data-tugpts="det-mais" style="padding:1px 7px;font-size:11px" '+(ptsDet>=nivelDet?"disabled":"")+'>+</button>' +
         '</div>' +
@@ -3044,34 +3272,37 @@
   // desceu de verdade nesta chamada (mesmo que os pontos já tenham
   // cascateado de volta pro cheio do próximo Nível) - quem chama usa isso
   // pra acionar o flash do efeito Suscetível (ver marcarFlashSuscetivel).
+  // Livro pág. 59/81: gastar ou perder o último Ponto de Determinação deixa o Infectado
+  // Suscetível (não pode gastar Determinação). Qualquer perda com os pontos zerados
+  // derruba um Nível de Determinação (sobe um de Assimilação): o novo Nível começa
+  // cheio, mas continua Suscetível até completar a Assimilação (Teste de Assimilação).
+  // Retorna true quando um Nível desceu de verdade.
   function gastarDeterminacao(c, n){
     n = n||1;
     var desceuNivel = false;
     for(var i=0;i<n;i++){
-      if(c.determinacao.pontosAtual > 0 || c.determinacao.caixaAtual > DET_CAIXA_FLOOR){
-        c.determinacao.pontosAtual = Math.max(0, (c.determinacao.pontosAtual||0)-1);
-        if(c.determinacao.pontosAtual === 0 && c.determinacao.caixaAtual > DET_CAIXA_FLOOR){
-          c.determinacao.caixaAtual -= 1;
-          desceuNivel = true;
-          // Perder uma caixa de Determinação é subir um NÍVEL de Assimilação
-          // de verdade (ver "O CABO DE GUERRA" na fonte): os pontos de
-          // Assimilação do novo nível voltam a ficar completos, por isso o
-          // valor guardado é zerado aqui (a leitura em assimPontosAtuais volta
-          // a cair no "cheio" automaticamente enquanto ninguém gastar de novo).
-          c.determinacao.assimPontosAtual = null;
-          // Ainda sobra Nível pra descer: a próxima caixa começa cheia. No
-          // piso de vez (Nível 0), não sobra teto nenhum, então os pontos
-          // ficam em 0 mesmo (não há Determinação nenhuma pra ter).
-          c.determinacao.pontosAtual = c.determinacao.caixaAtual > DET_CAIXA_FLOOR ? 10 : 0;
-          // Todo Nível de Determinação perdido de verdade dispara um Teste de Assimilação
-          // (livro definitivo, pág. 124, "EVOLUINDO E ASSIMILANDO") - fica pendente até
-          // alguém rolar (ver renderMutacoesCard/iniciarTesteAssimilacao), sem travar nada.
-          if(c.testesAssimPendentes == null) c.testesAssimPendentes = 0;
-          c.testesAssimPendentes += 1;
-        }
+      var d = c.determinacao;
+      if((d.pontosAtual||0) > 0){
+        d.pontosAtual -= 1;
+        if(d.pontosAtual === 0) d.suscetivel = true;
+      } else if(d.caixaAtual > DET_CAIXA_FLOOR){
+        d.caixaAtual -= 1;
+        desceuNivel = true;
+        d.assimPontosAtual = null; // o novo Nível de Assimilação começa cheio
+        d.pontosAtual = d.caixaAtual > DET_CAIXA_FLOOR ? nivelDetAtual(c) : 0;
+        d.suscetivel = true;
+        if(c.testesAssimPendentes == null) c.testesAssimPendentes = 0;
+        c.testesAssimPendentes += 1;
       }
     }
     return desceuNivel;
+  }
+  // Sai do Estado Suscetível quando há Pontos de Determinação e nenhuma Assimilação
+  // pendente (nem Teste por rolar, nem Teste em andamento).
+  function atualizarSuscetivel(c){
+    var d = c.determinacao;
+    if(!d || !d.suscetivel) return;
+    if((d.pontosAtual||0) > 0 && !(c.testesAssimPendentes>0) && !c.assimTesteAtual) d.suscetivel = false;
   }
   // Liga o flash local (não sincronizado) do efeito Suscetível por alguns
   // segundos - ver detZeroEffectHtml/state.detFlash. Chamado sempre que
@@ -3090,7 +3321,7 @@
   // fica em 0 de verdade no piso absoluto da escala (fora disso, a cascata
   // sempre reenche pra um valor positivo no mesmo instante).
   function determinacaoDisponivel(c){
-    return (c.determinacao.pontosAtual||0) > 0;
+    return (c.determinacao.pontosAtual||0) > 0 && !c.determinacao.suscetivel;
   }
 
   // ----- Pontos de Assimilação -----
@@ -3111,7 +3342,7 @@
   // marcarFlashSuscetivel, pra cobrir o instante (não-persistente) em que um
   // Nível intermediário zera e cascateia.
   function determinacaoZerada(c){
-    return (c.determinacao.pontosAtual!=null ? c.determinacao.pontosAtual : 10) <= 0;
+    return !!c.determinacao.suscetivel || (c.determinacao.pontosAtual!=null ? c.determinacao.pontosAtual : 10) <= 0;
   }
   // Monta a classe CSS e o carimbo "SUSCETÍVEL" do estado zerado (ver CSS
   // .det-zerada/.det-stamp), a partir do booleano "zerada" que cada card já
@@ -3178,6 +3409,7 @@
   function devolverDeterminacaoNivel(c, n){
     n = n||1;
     c.determinacao.pontosAtual = Math.min(nivelDetAtual(c), (c.determinacao.pontosAtual||0)+n);
+    atualizarSuscetivel(c);
   }
 
   // ----- ASSIMILAÇÃO: TESTE, CARTAS DE MUTAÇÃO E PRESSÃO (livro definitivo, Cap. 4) -----
@@ -3228,7 +3460,7 @@
     c.testesAssimPendentes = Math.max(0, (c.testesAssimPendentes||0) - 1);
     perdidoParaAssimilacao(c); // já soma qualquer P vindo de Inoportunas anteriores; a rolagem em si só conta pra perda quando os pontos forem GASTOS numa mutação Inoportuna (pág. 124 conta C "mantidas no resultado", ou seja, efetivamente adquiridas)
   }
-  function encerrarTesteAssimilacao(c){ c.assimTesteAtual = null; }
+  function encerrarTesteAssimilacao(c){ c.assimTesteAtual = null; atualizarSuscetivel(c); }
   function tierJaAdquirido(c, cat, cardIdx, tierIdx){
     return (c.mutAdquiridas||[]).some(function(m){ return m.cat===cat && m.cardIdx===cardIdx && m.tierIdx===tierIdx; });
   }
@@ -3261,6 +3493,7 @@
     c.determinacao.caixaAtual = novoCaixa;
     c.determinacao.pontosAtual = nivelDetAtual(c);
     c.determinacao.assimPontosAtual = null;
+    atualizarSuscetivel(c);
   }
   function clarezaNeutralizarPressao(c, mutId){
     var m = (c.mutAdquiridas||[]).filter(function(x){return x.id===mutId;})[0];
@@ -3599,6 +3832,7 @@
         c.determinacao.caixaAtual = novoCaixa;
         c.determinacao.pontosAtual = nivelDetAtual(c);
         c.determinacao.assimPontosAtual = null;
+        atualizarSuscetivel(c);
         updateChar(c);
         renderSheet();
       });
@@ -3615,7 +3849,7 @@
     });
 
     app.querySelectorAll('[data-dots="nivel"] .diamond').forEach(function(dot){
-      dot.addEventListener("click", function(){ c.saudeNivel = clamp(parseInt(dot.getAttribute("data-dotval"),10),0,5); marcarPendenteOuSalvar(c, "saude"); renderSheet(); });
+      dot.addEventListener("click", function(){ c.saudeNivel = clamp(parseInt(dot.getAttribute("data-dotval"),10),0,6); marcarPendenteOuSalvar(c, "saude"); renderSheet(); });
     });
     app.querySelectorAll('[data-dots="pontos"] .diamond').forEach(function(dot){
       dot.addEventListener("click", function(){ c.saudePontosAtuais = clamp(parseInt(dot.getAttribute("data-dotval"),10),0,maxNivel); marcarPendenteOuSalvar(c, "saude"); renderSheet(); });
@@ -3635,6 +3869,38 @@
     });
     var repor = app.querySelector('[data-equipuso="repor"]');
     if(repor) repor.addEventListener("click", function(){ c.equip.usosAtual = c.equip.usosMax; marcarPendenteOuSalvar(c, "equip"); renderSheet(); });
+    // Qualidade do Artefato e dos itens: -/+ muda o nível direto (reparo, melhoria,
+    // decisão do Assimilador); "+1 Pressão" acumula até derrubar um nível (pág. 95).
+    app.querySelectorAll('[data-equipq]').forEach(function(btn){
+      btn.addEventListener("click", function(){
+        var q = c.equip.qualidade!=null ? c.equip.qualidade : 3;
+        c.equip.qualidade = clamp(q + (btn.getAttribute("data-equipq")==="mais"?1:-1), 0, 6); c.equip.pressao = 0;
+        marcarPendenteOuSalvar(c, "equip"); renderSheet();
+      });
+    });
+    app.querySelectorAll('[data-equipp]').forEach(function(btn){
+      btn.addEventListener("click", function(){ investirPressaoItem(c.equip, 1); marcarPendenteOuSalvar(c, "equip"); renderSheet(); });
+    });
+    app.querySelectorAll('[data-invq]').forEach(function(btn){
+      btn.addEventListener("click", function(){
+        var it = c.inventarioExtra[parseInt(btn.getAttribute("data-idx"),10)]; if(!it) return;
+        var q = it.qualidade!=null ? it.qualidade : 3;
+        it.qualidade = clamp(q + (btn.getAttribute("data-invq")==="mais"?1:-1), 0, 6); it.pressao = 0;
+        marcarPendenteOuSalvar(c, "inv"); renderSheet();
+      });
+    });
+    app.querySelectorAll('[data-invp]').forEach(function(btn){
+      btn.addEventListener("click", function(){
+        var it = c.inventarioExtra[parseInt(btn.getAttribute("data-idx"),10)]; if(!it) return;
+        investirPressaoItem(it, 1); marcarPendenteOuSalvar(c, "inv"); renderSheet();
+      });
+    });
+    var refazerBtn = app.querySelector('[data-action="refazer"]');
+    if(refazerBtn) refazerBtn.addEventListener("click", function(){
+      state.sheetEditing = true;
+      state.sheetDraft = JSON.parse(JSON.stringify(c));
+      render(); window.scrollTo(0,0);
+    });
 
     var addInv = app.querySelector('[data-inv="add"]');
     if(addInv) addInv.addEventListener("click", function(){ state.itemDraft = newItemDraft(); renderSheet(); });
@@ -3960,7 +4226,7 @@
     var camp = draft.acampamento ? CAMPS[draft.acampamento] : null;
     var html = topbar("sheet");
     html += '<div'+(camp?' style="--camp-color:'+camp.cor+'"':'')+'>';
-    html += '<div class="card"><h2>Editando: '+esc(draft.nomePersonagem||"personagem")+'</h2>' +
+    html += '<div class="card"><h2>'+(draft.precisaRefazer?'Refazendo no sistema oficial: ':'Editando: ')+esc(draft.nomePersonagem||"personagem")+'</h2>' +
       '<div class="field" style="max-width:320px"><label>Nome do personagem</label><input type="text" data-editnome value="'+esc(draft.nomePersonagem)+'"></div>' +
       '<label style="display:flex;align-items:center;gap:8px;text-transform:none;font-size:13px;margin-bottom:0"><input type="checkbox" style="width:auto" data-editnpc'+(draft.ehNpc?" checked":"")+'> É um NPC (personagem controlado pelo Assimilador): as rolagens dele ficam escondidas dos outros jogadores no Histórico de Rolagens e no painel flutuante — o Assimilador continua vendo tudo normalmente.</label>' +
     '</div>';
@@ -3989,7 +4255,10 @@
         var v = validateStep(draft, s);
         if(!v.ok){ alert(v.msg); return; }
       }
-      draft.atributoSaude = bestSaudeAttr(draft);
+      draft.precisaRefazer = false;
+      draft.equip.usosMax = equipUsosMax(draft); if(draft.equip.usosAtual==null || draft.equip.usosAtual > (draft.equip.usosMax||0)) draft.equip.usosAtual = draft.equip.usosMax;
+      draft.equip.espaco = equipEspaco(draft);
+      if(draft.saudePontosAtuais!=null && draft.saudePontosAtuais > saudePontosMax(draft)) draft.saudePontosAtuais = saudePontosMax(draft);
       updateChar(draft);
       var id = draft.id;
       state.sheetEditing = false; state.sheetDraft = null;
@@ -4045,13 +4314,13 @@
   function miniFichaCard(c, soLeitura){
     var camp = c.acampamento ? CAMPS[c.acampamento] : null;
     var cardStyle = (camp?'--camp-color:'+camp.cor+';':'')+'border-left:6px solid '+(camp?camp.cor:'var(--accent)')+';cursor:'+(soLeitura?'default':'pointer');
-    var maxNivel = c.saudeMax != null ? c.saudeMax : (c.instintos ? (valorInstinto(c, c.atributoSaude||"potencia")+2) : 1);
+    var maxNivel = c.saudeMax != null ? c.saudeMax : (c.instintos ? saudePontosMax(c) : 1);
     return '<div class="char-card" style="'+cardStyle+'"'+(soLeitura?'':' data-mesaopen="'+c.id+'"')+'>' +
       (camp ? '<img class="badge" src="'+camp.img+'" alt="">' : '') +
       '<h3>'+esc(c.nomePersonagem||"Sem nome")+npcBadgeHtml(c)+'</h3>' +
       '<div class="camp-tag">'+(camp?camp.nome:"acampamento não definido")+(c.nomeJogador?" · "+esc(c.nomeJogador):"")+'</div>' +
       '<div class="row" style="margin-top:10px;gap:16px;flex-wrap:wrap">' +
-        '<div><span class="hint" style="display:block;margin-bottom:3px">Saúde (nível '+(c.saudeNivel!=null?c.saudeNivel:"?")+'/5)</span>'+diamondsMini(c.saudePontosAtuais||0, maxNivel, "c-saude")+'</div>' +
+        '<div><span class="hint" style="display:block;margin-bottom:3px">Saúde (nível '+(c.saudeNivel!=null?c.saudeNivel:"?")+'/6)</span>'+diamondsMini(c.saudePontosAtuais||0, maxNivel, "c-saude")+'</div>' +
         tugMiniBarHtml(c) +
       '</div>' +
     '</div>';
@@ -4443,8 +4712,7 @@
     var ptsDetGm = c.determinacao ? clamp(c.determinacao.pontosAtual!=null?c.determinacao.pontosAtual:10, 0, nivelDetGm) : nivelDetGm;
     var ptsAssimGm = c.determinacao ? assimPontosAtuais(c) : 0;
     var assimClass = nivelAssimGm >= 6 ? " warn" : "";
-    var attr = c.atributoSaude || "potencia";
-    var pontosPorNivel = c.instintos ? valorInstinto(c,attr) + 2 : 0;
+    var pontosPorNivel = c.instintos ? saudePontosMax(c) : 0;
     var pressaoGm = pressaoTotal(c);
     var perdidoGm = perdidoParaAssimilacao(c);
     var pendentesGm = c.testesAssimPendentes||0;
@@ -4454,8 +4722,8 @@
         '<div style="margin-top:4px">'+tugLacosHtml(nivelDetGm, false)+'</div>' +
         '<div class="hint" style="margin:4px 0 0">Determinação '+icoHtml("nd")+' '+nivelDetGm+' '+icoHtml("pd")+' '+ptsDetGm+'/'+nivelDetGm+' · Assimilação '+icoHtml("na")+' '+nivelAssimGm+' '+icoHtml("pa")+' '+ptsAssimGm+'/'+nivelAssimGm+'</div>' +
       '</div>' +
-      '<div class="stat"><div class="label">Saúde</div><div class="val">Nível '+(c.saudeNivel!=null?c.saudeNivel:"?")+'</div><div class="dots mini">'+diamonds(c.saudeNivel||0,5,"","c-saude","ns")+'</div></div>' +
-      '<div class="stat"><div class="label">Pts/nível · total</div><div class="val">'+pontosPorNivel+' · '+(pontosPorNivel*5)+'</div></div>' +
+      '<div class="stat"><div class="label">Saúde</div><div class="val">Nível '+(c.saudeNivel!=null?c.saudeNivel:"?")+'</div><div class="dots mini">'+diamonds(c.saudeNivel||0,6,"","c-saude","ns")+'</div></div>' +
+      '<div class="stat"><div class="label">Pts/nível · total</div><div class="val">'+pontosPorNivel+' · '+(pontosPorNivel*6)+'</div></div>' +
       '<div class="stat'+(pressaoGm>=7?" warn":"")+'"><div class="label">Pressão (Inoportunas)</div><div class="val">'+pressaoGm+' / 10</div>'+(perdidoGm?'<div class="hint" style="color:var(--danger)">perdido(a) p/ Assimilação</div>':(pendentesGm?'<div class="hint">'+pendentesGm+' Teste(s) de Assimilação pendente(s)</div>':''))+'</div>' +
     '</div>';
     if((c.mutAdquiridas||[]).length){
