@@ -203,6 +203,13 @@
   /* Campos com +/-: o seletor fica sempre na base, alinhado com os vizinhos da mesma linha,
      não importa quantas linhas a descrição ocupe. */
   .field-stepper{ display:flex; flex-direction:column; }
+  .evol-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(230px, 1fr)); gap:6px 14px; }
+  .evol-item{ display:flex; justify-content:space-between; align-items:center; gap:8px; padding:4px 0; border-bottom:1px dashed var(--line, rgba(128,128,128,.3)); }
+  .evol-btn{ padding:3px 9px !important; font-size:11px !important; white-space:nowrap; }
+  .gm-xp{ margin-top:12px; padding-top:10px; border-top:1px dashed var(--line, rgba(128,128,128,.3)); }
+  .gm-xp .row{ gap:6px; flex-wrap:wrap; align-items:center; }
+  .gm-xp input[type=number]{ width:64px; }
+  .gm-xp select{ width:auto; flex:1 1 180px; }
   .field-stepper .stepper{ margin-top:auto; }
   .stepper input{ text-align:center; }
   .stepper-btn{
@@ -1836,8 +1843,12 @@
   // Valor "de verdade" de um Instinto pra tudo que é jogo (testes, Saúde, Painel do
   // Assimilador): a base da criação (0-3) mais o bônus de Assimilação (ver newCharacter),
   // que não tem teto. Sem bônus salvo (fichas antigas, migradas em migrateChar), cai pra 0.
+  // Instinto base = o da criação, ou o nível comprado depois com Experiência (instintosEvol).
+  function instintoBase(c, key){
+    return Math.max((c.instintos && c.instintos[key])||0, (c.instintosEvol && c.instintosEvol[key])||0);
+  }
   function valorInstinto(c, key){
-    return (c.instintos[key]||0) + ((c.instintosAssimBonus && c.instintosAssimBonus[key])||0);
+    return instintoBase(c, key) + ((c.instintosAssimBonus && c.instintosAssimBonus[key])||0);
   }
   function bestSaudeAttr(c){
     return valorInstinto(c,"resolucao") > valorInstinto(c,"potencia") ? "resolucao" : "potencia";
@@ -2010,6 +2021,46 @@
       return alts.map(function(a){ return nomeAtributo(a[0])+" "+a[1]+"+ (tem "+valorRequisito(c, a[0])+")"; }).join(" ou ");
     }).join(" e ");
   }
+  // ----- EXPERIÊNCIA GANHA EM JOGO (livro pág. 247-248) -----
+  // c.xp é escrito SÓ pelo Assimilador (as regras do Firestore recusam qualquer
+  // mudança nele vinda da conta do jogador): { recebida, historico:[{ts,qtd,motivo}],
+  // liberarInstinto }. Nunca criamos c.xp com valor padrão pelo lado do jogador -
+  // sempre lemos por xpDados(c).
+  var XP_MOTIVOS = [
+    ["sessao","Sessão jogada",1],["proposito","Propósito alcançado",2],["conflito","Conflito resolvido",1],
+    ["refugio","Avanço no Refúgio",1],["arco","Conclusão de arco",2],["descoberta","Grande descoberta",1],
+    ["interpretacao","Interpretação inspirada",1],["outro","Outro motivo",1]
+  ];
+  function xpDados(c){
+    var x = c.xp || {};
+    return { recebida: x.recebida||0, historico: x.historico||[], liberarInstinto: !!x.liberarInstinto };
+  }
+  function xpTotal(c){ return XP_INICIAL + xpDados(c).recebida; }
+  // Instintos: o TRIPLO do nível que vai atingir, por degrau (2->3 custa 9).
+  function custoAumentoInstinto(atual, final){
+    var t = 0;
+    for(var v=atual+1; v<=final; v++) t += 3*v;
+    return t;
+  }
+  function instintosEvolGasto(c){
+    var t = 0;
+    Object.keys(c.instintosEvol||{}).forEach(function(k){
+      t += custoAumentoInstinto((c.instintos && c.instintos[k])||0, c.instintosEvol[k]);
+    });
+    return t;
+  }
+  function xpGasto(c){ return caracPontosGastos(c) + instintosEvolGasto(c); }
+  function xpSaldo(c){ return xpTotal(c) - xpGasto(c); }
+  // Quanto sobra pra Características/Aptidões (o que já foi pra Instintos sai do total).
+  function xpParaCaracteristicas(c){ return xpTotal(c) - instintosEvolGasto(c); }
+  function darExperiencia(c, qtd, motivo){
+    var x = xpDados(c);
+    x.recebida += qtd;
+    x.historico = x.historico.concat([{ ts:new Date().toISOString(), qtd:qtd, motivo:motivo }]);
+    c.xp = x;
+  }
+  function carDef(id){ return CARACTERISTICAS.filter(function(x){return x.id===id;})[0]; }
+
   // Pontos de Experiência gastos (pág. 83): Características + aumentos de Conhecimento/Prática.
   function caracPontosGastos(c){
     var t = 0;
@@ -2474,7 +2525,8 @@
     }
     if(step === 5){
       var tc = caracPontosGastos(c);
-      if(tc > XP_INICIAL) return {ok:false, msg:"Você gastou "+tc+" de "+XP_INICIAL+" Pontos de Experiência. Ajuste suas escolhas."};
+      var xpCar = xpParaCaracteristicas(c);
+      if(tc > xpCar) return {ok:false, msg:"Você gastou "+tc+" de "+xpCar+" Pontos de Experiência. Ajuste suas escolhas."};
       var semReq = (c.caracComp||[]).map(function(id){ return CARACTERISTICAS.filter(function(x){return x.id===id;})[0]; })
         .filter(function(d){ return d && !reqAtendido(c, d); });
       if(semReq.length) return {ok:false, msg:'"'+semReq[0].nome+'" pede '+reqTexto(semReq[0]).replace("Requisito: ","")+'. Desmarque ou ajuste os valores.'};
@@ -2657,10 +2709,12 @@
     }
     if(step === 5){
       var tot = caracPontosGastos(c);
-      var faltamCarac = XP_INICIAL - tot;
+      var xpCarTot = xpParaCaracteristicas(c);
+      var faltamCarac = xpCarTot - tot;
       var criando = state.view === "wizard";
       var html = '<p>Você tem <b>'+XP_INICIAL+' Pontos de Experiência</b> pra comprar Características (se cumprir o requisito) e/ou subir Conhecimentos e Práticas. Subir custa o dobro do nível desejado a cada degrau: de 1 pra 2 custa 4, de 2 pra 3 custa 6.</p>';
-      html += '<div class="budget '+(tot>XP_INICIAL?"bad":"ok")+'"><span>Experiência usada</span><span class="num">'+tot+' / '+XP_INICIAL+(faltamCarac>0?' · sobram '+faltamCarac:(faltamCarac<0?' · '+(-faltamCarac)+' acima do limite':' · completo ✓'))+'</span></div>';
+      if(xpCarTot !== XP_INICIAL) html += '<p class="hint">Total de Experiência deste personagem: '+XP_INICIAL+' da criação + '+xpDados(c).recebida+' recebidos'+(instintosEvolGasto(c)?' − '+instintosEvolGasto(c)+' já usados em Instintos':'')+'.</p>';
+      html += '<div class="budget '+(tot>xpCarTot?"bad":"ok")+'"><span>Experiência usada</span><span class="num">'+tot+' / '+xpCarTot+(faltamCarac>0?' · sobram '+faltamCarac:(faltamCarac<0?' · '+(-faltamCarac)+' acima do limite':' · completo ✓'))+'</span></div>';
       html += '<h3 style="margin-bottom:8px">Subir Conhecimento ou Prática (até 3)</h3><div class="grid cols-3">';
       CONH_PRAT.forEach(function(p){
         var atual = c.conhPrat[p[0]]||0;
@@ -2671,6 +2725,7 @@
             (atual<1?'<option value="1"'+(aum===1?" selected":"")+'>subir pra 1 (custa '+custoAumento(atual,1)+')</option>':'') +
             (atual<2?'<option value="2"'+(aum===2?" selected":"")+'>subir pra 2 (custa '+custoAumento(atual,2)+')</option>':'') +
             (atual<3?'<option value="3"'+(aum===3?" selected":"")+'>subir pra 3 (custa '+custoAumento(atual,3)+')</option>':'') +
+            (aum>3?'<option value="'+aum+'" selected>'+aum+' (evoluído com Experiência, custa '+custoAumento(atual,aum)+')</option>':'') +
           '</select></div>';
       });
       html += '</div>';
@@ -3014,6 +3069,7 @@
       caracBody = '<p class="hint">Nenhuma característica única comprada.</p>';
     }
     html += sectionCard("caracteristicas", "Características", caracBody);
+    if(!c.precisaRefazer) html += sectionCard("evoluir", "Evoluir (Experiência)", evoluirHtml(c));
 
     // Saude e Determinacao
     var maxNivel = saudePontosMax(c);
@@ -3782,7 +3838,108 @@
     return decodeBackupCode(code);
   }
 
+  function evoluirHtml(c){
+    var x = xpDados(c), saldo = xpSaldo(c), gm = temAcessoTotal();
+    var html = '<div class="budget '+(saldo<0?"bad":"ok")+'"><span>Experiência disponível</span><span class="num">'+saldo+'</span></div>';
+    html += '<p class="hint">'+XP_INICIAL+' da criação + <b>'+x.recebida+'</b> recebidos do Assimilador − '+xpGasto(c)+' gastos. Só o Assimilador dá Experiência (no fim da sessão, pelo Painel).</p>';
+    if(x.historico.length){
+      html += '<details style="margin:6px 0 12px"><summary class="hint" style="cursor:pointer">Histórico ('+x.historico.length+')</summary><ul class="hint" style="margin:6px 0 0 18px;padding:0">' +
+        x.historico.slice().reverse().map(function(e){
+          return '<li>'+esc((e.ts||"").slice(0,10).split("-").reverse().join("/"))+' · '+(e.qtd>0?'+'+e.qtd+' · ':'')+esc(e.motivo||"")+'</li>';
+        }).join('') + '</ul></details>';
+    }
+    // Conhecimentos e Práticas: dobro do nível a atingir.
+    html += '<h3 style="margin:12px 0 6px">Conhecimentos e Práticas</h3><p class="hint" style="margin-top:0">Custa o dobro do nível que vai atingir (de 2 pra 3 custa 6, de 3 pra 4 custa 8).</p><div class="evol-grid">';
+    CONH_PRAT.forEach(function(p){
+      var atual = valorCPBase(c, p[0]), custo = 2*(atual+1);
+      html += '<div class="evol-item"><span>'+p[1]+' <b>'+atual+'</b></span><button type="button" class="btn secondary evol-btn" data-evol="cp" data-id="'+p[0]+'"'+(custo>saldo?" disabled":"")+'>+1 · '+custo+' XP</button></div>';
+    });
+    html += '</div>';
+    // Instintos: triplo, só depois de uma sessão com mutação (o Assimilador libera).
+    html += '<h3 style="margin:16px 0 6px">Instintos</h3>';
+    if(x.liberarInstinto || gm){
+      html += '<p class="hint" style="margin-top:0">Custa o triplo do nível que vai atingir (de 2 pra 3 custa 9).'+(x.liberarInstinto?' <b>Liberado pelo Assimilador.</b>':' Ainda não liberado pro jogador (só você, Assimilador, vê os botões).')+'</p><div class="evol-grid">';
+      INSTINTOS.forEach(function(i){
+        var atual = instintoBase(c, i[0]), custo = 3*(atual+1);
+        html += '<div class="evol-item"><span>'+i[1]+' <b>'+atual+'</b></span><button type="button" class="btn secondary evol-btn" data-evol="inst" data-id="'+i[0]+'"'+(custo>saldo?" disabled":"")+'>+1 · '+custo+' XP</button></div>';
+      });
+      html += '</div>';
+    } else {
+      html += '<p class="hint" style="margin-top:0">Humanos só aguçam Instintos depois de uma sessão em que passaram por mutação: o Assimilador libera quando for o caso.</p>';
+    }
+    // Características: pedido do jogador, aprovação do Assimilador.
+    html += '<h3 style="margin:16px 0 6px">Características</h3>';
+    var pedidas = c.caracPedidas||[];
+    if(pedidas.length){
+      html += pedidas.map(function(id){
+        var d = carDef(id); if(!d) return '';
+        return '<div class="evol-item" style="margin-bottom:6px"><span><b>'+esc(d.nome)+'</b> · '+d.custo+' XP · '+(gm?'pedido do jogador':'aguardando o Assimilador')+'</span><span class="row" style="gap:6px;flex:none">' +
+          (gm?'<button type="button" class="btn accent evol-btn" data-evolaprovar="'+id+'"'+(d.custo>saldo?" disabled":"")+'>Aprovar</button>':'') +
+          '<button type="button" class="btn secondary evol-btn" data-evolcancelar="'+id+'">'+(gm?'Recusar':'Cancelar pedido')+'</button></span></div>';
+      }).join('');
+    }
+    var elegiveis = CARACTERISTICAS.filter(function(d){ return !d.soCriacao && !temCarac(c,d.id) && pedidas.indexOf(d.id)===-1 && reqAtendido(c,d); });
+    html += '<p class="hint" style="margin-top:0">O livro pede autorização do Assimilador, que deve fazer sentido na história. Aparecem aqui só as que o personagem já cumpre o requisito.</p>';
+    html += '<div class="row" style="gap:8px;flex-wrap:wrap;align-items:center"><select id="evol-carac" style="flex:1 1 240px"><option value="">escolha uma Característica…</option>' +
+      elegiveis.map(function(d){ return '<option value="'+d.id+'"'+(d.custo>saldo?" disabled":"")+'>'+esc(d.nome)+' · '+d.custo+' XP'+(d.custo>saldo?' (falta Experiência)':'')+'</option>'; }).join('') +
+      '</select><button type="button" class="btn accent" data-evolpedir>'+(gm?'Conceder':'Pedir ao Assimilador')+'</button></div>';
+    return html;
+  }
+  function bindEvoluir(c){
+    function salvar(){ updateChar(c); if(caps.mode==="mesa"){ clearTimeout(publishTimer); doPublish(); } renderSheet(); }
+    app.querySelectorAll('[data-evol]').forEach(function(btn){
+      btn.addEventListener("click", function(){
+        var k = btn.getAttribute("data-id"), tipo = btn.getAttribute("data-evol");
+        if(tipo === "cp"){
+          var atual = valorCPBase(c,k), custo = 2*(atual+1);
+          askConfirm('Subir '+nomeAtributo(k)+' de '+atual+' pra '+(atual+1)+' gastando '+custo+' de Experiência?', function(){
+            if(xpSaldo(c) < custo) return;
+            if(!c.caracAumentos) c.caracAumentos = {};
+            c.caracAumentos[k] = atual+1; salvar();
+          });
+        } else {
+          var atualI = instintoBase(c,k), custoI = 3*(atualI+1);
+          askConfirm('Subir '+nomeAtributo(k)+' de '+atualI+' pra '+(atualI+1)+' gastando '+custoI+' de Experiência?', function(){
+            if(xpSaldo(c) < custoI) return;
+            if(!c.instintosEvol) c.instintosEvol = {};
+            c.instintosEvol[k] = atualI+1; salvar();
+          });
+        }
+      });
+    });
+    var pedir = app.querySelector('[data-evolpedir]');
+    if(pedir) pedir.addEventListener("click", function(){
+      var sel = app.querySelector('#evol-carac'); var id = sel ? sel.value : "";
+      var d = carDef(id); if(!d) return;
+      if(temAcessoTotal()){
+        askConfirm('Conceder "'+d.nome+'" pra '+(c.nomePersonagem||"este personagem")+', gastando '+d.custo+' de Experiência?', function(){
+          if(xpSaldo(c) < d.custo) return;
+          c.caracComp.push(id); salvar();
+        });
+      } else {
+        c.caracPedidas = (c.caracPedidas||[]).concat([id]); salvar();
+      }
+    });
+    app.querySelectorAll('[data-evolaprovar]').forEach(function(btn){
+      btn.addEventListener("click", function(){
+        var id = btn.getAttribute("data-evolaprovar"), d = carDef(id);
+        if(!d || xpSaldo(c) < d.custo) return;
+        c.caracPedidas = (c.caracPedidas||[]).filter(function(x){ return x!==id; });
+        if(!temCarac(c,id)) c.caracComp.push(id);
+        salvar();
+      });
+    });
+    app.querySelectorAll('[data-evolcancelar]').forEach(function(btn){
+      btn.addEventListener("click", function(){
+        var id = btn.getAttribute("data-evolcancelar");
+        c.caracPedidas = (c.caracPedidas||[]).filter(function(x){ return x!==id; });
+        salvar();
+      });
+    });
+  }
+
   function bindSheet(c, maxNivel){
+    bindEvoluir(c);
     // Nome do jogador e Notas: só atualizam o objeto local a cada tecla (sem
     // publicar nada ainda) e só chamam updateChar/schedulePublish no "change"
     // (quando o campo perde o foco) - ver o comentário grande acima de
@@ -4233,6 +4390,10 @@
     });
   }
 
+  // Na edição comum (fora do "Refazer"), só o Assimilador mexe no passo de Experiência.
+  function editPassos(c){
+    return (c.precisaRefazer || temAcessoTotal()) ? [3,4,5,6] : [3,4,6];
+  }
   // ----- SHEET EDIT MODE (reaproveita a UI do assistente pra Instintos/Conh.Prat/Caracteristicas/Equipamento) -----
   function renderSheetEdit(){
     var draft = state.sheetDraft;
@@ -4246,9 +4407,11 @@
       '<label style="display:flex;align-items:center;gap:8px;text-transform:none;font-size:13px;margin-bottom:0"><input type="checkbox" style="width:auto" data-editnpc'+(draft.ehNpc?" checked":"")+'> É um NPC (personagem controlado pelo Assimilador): as rolagens dele ficam escondidas dos outros jogadores no Histórico de Rolagens e no painel flutuante — o Assimilador continua vendo tudo normalmente.</label>' +
     '</div>';
 
-    [3,4,5,6].forEach(function(step){
+    var passosEdit = editPassos(draft);
+    passosEdit.forEach(function(step){
       html += '<div class="card"><h2>'+WIZ_STEPS[step]+'</h2>' + wizardStepBody(draft, step) + '</div>';
     });
+    if(passosEdit.indexOf(5) === -1) html += '<div class="card"><h2>'+WIZ_STEPS[5]+'</h2><p class="hint" style="margin:0">Depois da criação, a Experiência é gasta na seção <b>Evoluir</b> da ficha: Conhecimentos e Práticas direto, Características com autorização do Assimilador.</p></div>';
 
     html += '<div class="btn-row"><button class="btn secondary" data-editaction="cancel">Cancelar edição</button><button class="btn accent" data-editaction="save">Salvar alterações</button></div>';
     html += '</div>';
@@ -4258,7 +4421,7 @@
 
     app.querySelector('[data-editnome]').addEventListener("input", function(e){ draft.nomePersonagem = e.target.value; });
     app.querySelector('[data-editnpc]').addEventListener("change", function(e){ draft.ehNpc = e.target.checked; });
-    [3,4,5,6].forEach(function(step){ bindWizardStep(draft, step, renderSheetEdit); });
+    passosEdit.forEach(function(step){ bindWizardStep(draft, step, renderSheetEdit); });
 
     app.querySelector('[data-editaction="cancel"]').addEventListener("click", function(){
       var id = draft.id;
@@ -4762,6 +4925,82 @@
     return html;
   }
 
+  function xpMotivoOptions(){
+    return XP_MOTIVOS.map(function(m){ return '<option value="'+m[0]+'" data-qtd="'+m[2]+'">'+m[1]+'</option>'; }).join('');
+  }
+  function gmXpTodosHtml(roster){
+    var jogadores = roster.filter(function(c){ return !c.precisaRefazer; });
+    if(!jogadores.length) return '';
+    var html = '<div class="card"><h2>Dar Experiência</h2>' +
+      '<p class="hint">No fim da sessão: o livro sugere no mínimo 1 por sessão, e não passar de 3 por sessão em aventuras iniciais. Propósito alcançado 2–4, Conflito 1–6, Avanço no Refúgio 1–2, Conclusão de arco 2–6, Grande descoberta 1–3, Interpretação inspirada 1.</p>' +
+      '<div class="gm-xp" style="border-top:0;margin-top:0;padding-top:0"><div class="row" style="margin-bottom:8px">' +
+      jogadores.map(function(c){ return '<label style="display:flex;align-items:center;gap:5px;text-transform:none;margin:0 10px 0 0"><input type="checkbox" style="width:auto" data-gmxptodos="'+c.id+'"'+(c.ehNpc?'':' checked')+'>'+esc(c.nomePersonagem||"Sem nome")+'</label>'; }).join('') +
+      '</div><div class="row"><select data-gmxpmotivo="todos">'+xpMotivoOptions()+'</select>' +
+      '<input type="number" min="1" max="20" value="1" data-gmxpqtd="todos">' +
+      '<input type="text" placeholder="detalhe (opcional)" data-gmxpdet="todos" style="flex:1 1 160px">' +
+      '<button type="button" class="btn accent" data-gmxpdar="todos">Dar aos marcados</button></div></div></div>';
+    return html;
+  }
+  function gmXpCardHtml(c){
+    if(c.precisaRefazer) return '<div class="gm-xp hint">Experiência: a ficha ainda precisa ser refeita no sistema oficial.</div>';
+    var x = xpDados(c), pedidas = c.caracPedidas||[];
+    return '<div class="gm-xp">' +
+      '<div class="row" style="justify-content:space-between"><span><b>Experiência</b> · disponível '+xpSaldo(c)+' · recebida '+x.recebida+'</span>' +
+      '<label style="display:flex;align-items:center;gap:5px;text-transform:none;margin:0"><input type="checkbox" style="width:auto" data-gmxpinst="'+c.id+'"'+(x.liberarInstinto?' checked':'')+'> Liberar Instintos (passou por mutação)</label></div>' +
+      (pedidas.length?'<p class="hint" style="margin:6px 0;color:var(--accent)">Pedido de Característica: '+pedidas.map(function(id){ var d=carDef(id); return d?esc(d.nome)+' ('+d.custo+' XP)':''; }).join(', ')+' — abra a ficha pra aprovar ou recusar.</p>':'') +
+      '<div class="row" style="margin-top:6px"><select data-gmxpmotivo="'+c.id+'">'+xpMotivoOptions()+'</select>' +
+      '<input type="number" min="-20" max="20" value="1" data-gmxpqtd="'+c.id+'">' +
+      '<input type="text" placeholder="detalhe (opcional)" data-gmxpdet="'+c.id+'" style="flex:1 1 140px">' +
+      '<button type="button" class="btn secondary" data-gmxpdar="'+c.id+'" style="padding:4px 10px;font-size:11px">Dar</button></div>' +
+    '</div>';
+  }
+  function bindGmXp(){
+    function motivoTexto(chave){
+      var sel = app.querySelector('[data-gmxpmotivo="'+chave+'"]'), det = app.querySelector('[data-gmxpdet="'+chave+'"]');
+      var m = XP_MOTIVOS.filter(function(x){ return x[0]===sel.value; })[0];
+      var t = m ? m[1] : "Experiência";
+      if(det && det.value.trim()) t += ": " + det.value.trim();
+      return t;
+    }
+    app.querySelectorAll('[data-gmxpmotivo]').forEach(function(sel){
+      sel.addEventListener("change", function(){
+        var m = XP_MOTIVOS.filter(function(x){ return x[0]===sel.value; })[0];
+        var q = app.querySelector('[data-gmxpqtd="'+sel.getAttribute("data-gmxpmotivo")+'"]');
+        if(m && q) q.value = m[2];
+      });
+    });
+    app.querySelectorAll('[data-gmxpdar]').forEach(function(btn){
+      btn.addEventListener("click", function(e){
+        e.stopPropagation();
+        if(!temAcessoTotal()) return;
+        var chave = btn.getAttribute("data-gmxpdar");
+        var qtd = parseInt(app.querySelector('[data-gmxpqtd="'+chave+'"]').value, 10);
+        if(!qtd) return;
+        var motivo = motivoTexto(chave);
+        var ids = chave === "todos"
+          ? Array.prototype.slice.call(app.querySelectorAll('[data-gmxptodos]')).filter(function(el){ return el.checked; }).map(function(el){ return el.getAttribute("data-gmxptodos"); })
+          : [chave];
+        if(!ids.length) return;
+        var nomes = ids.map(function(id){ var c = getChar(id); return c ? c.nomePersonagem : ""; }).filter(Boolean);
+        askConfirm((qtd>0?'Dar ':'Retirar ')+Math.abs(qtd)+' de Experiência ('+motivo+') pra: '+nomes.join(", ")+'?', function(){
+          ids.forEach(function(id){ var c = getChar(id); if(c){ darExperiencia(c, qtd, motivo); updateChar(c); } });
+          if(caps.mode==="mesa"){ clearTimeout(publishTimer); doPublish(); }
+          renderGmMesa();
+        });
+      });
+    });
+    app.querySelectorAll('[data-gmxpinst]').forEach(function(el){
+      el.addEventListener("click", function(e){ e.stopPropagation(); });
+      el.addEventListener("change", function(){
+        if(!temAcessoTotal()) return;
+        var c = getChar(el.getAttribute("data-gmxpinst")); if(!c) return;
+        var x = xpDados(c); x.liberarInstinto = el.checked; c.xp = x;
+        updateChar(c);
+        if(caps.mode==="mesa"){ clearTimeout(publishTimer); doPublish(); }
+      });
+    });
+  }
+
   function renderGm(){
     if(caps.mode === "mesa"){ return renderGmMesa(); }
     var roster = loadLS("pangea:gm:roster", []).map(migrateChar);
@@ -4825,6 +5064,7 @@
     var html = topbar("gm");
     html += renderGmDryRoll();
     html += renderGmConflitos();
+    html += gmXpTodosHtml(roster);
     html += '<h2 style="margin:20px 0 10px">Personagens da Mesa</h2>';
     if(!roster.length){
       html += '<div class="card"><p class="hint">Nenhum personagem criado ainda nesta mesa.</p></div>';
@@ -4843,6 +5083,7 @@
           '</div>' +
         '</div>';
         html += gmCharCardBody(c);
+        html += gmXpCardHtml(c);
         html += '</div>';
       });
     }
@@ -4852,9 +5093,10 @@
     bindGlobal();
     bindGmDryRoll();
     bindGmConflitos();
+    bindGmXp();
     app.querySelectorAll('[data-gmopen]').forEach(function(el){
       el.addEventListener("click", function(e){
-        if(e.target.closest('[data-gmdelmesa]') || e.target.closest('[data-gmdesvincular]')) return;
+        if(e.target.closest('[data-gmdelmesa]') || e.target.closest('[data-gmdesvincular]') || e.target.closest('.gm-xp')) return;
         goto("sheet", {charId: el.getAttribute("data-gmopen")});
       });
     });

@@ -14,14 +14,18 @@ service cloud.firestore {
     function donoDe(dados) {
       return dados.get('donoUid', null) == request.auth.uid;
     }
+    // Experiência (campo "xp"): só o Assimilador dá. O jogador nunca cria nem muda esse campo.
+    function xpIntacta() {
+      return request.resource.data.get('xp', null) == resource.data.get('xp', null);
+    }
 
     // Fichas completas: o jogador só lê e grava as fichas vinculadas à conta dele.
     match /personagens/{id} {
       allow read: if mestre() || (logado() && donoDe(resource.data));
-      allow create: if mestre() || (logado() && donoDe(request.resource.data));
+      allow create: if mestre() || (logado() && donoDe(request.resource.data) && request.resource.data.get('xp', null) == null);
       allow update: if mestre()
         // o dono edita a própria ficha (e não pode passá-la pra outra conta)
-        || (logado() && donoDe(resource.data) && donoDe(request.resource.data))
+        || (logado() && donoDe(resource.data) && donoDe(request.resource.data) && xpIntacta())
         // vínculo pela senha: só uma ficha sem dono e que não é NPC, e só os campos do dono
         || (logado()
             && resource.data.get('donoUid', null) == null
