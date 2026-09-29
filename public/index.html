@@ -2639,7 +2639,7 @@
       var html = '<div class="grid cols-2">' +
         '<div class="field"><label>Nome do personagem</label><input type="text" data-basicinfo="nomePersonagem" value="'+esc(c.nomePersonagem)+'" placeholder="obrigatório"></div>' +
         '<div class="field"><label>Nome do jogador(a)</label><input type="text" data-basicinfo="nomeJogador" value="'+esc(c.nomeJogador)+'" placeholder="opcional, dá pra preencher depois"></div>' +
-      '</div>';
+      '</div>' + npcCheckboxHtml(c, 'data-wiznpc');
       html += '<p>Escolha a qual dos quatro acampamentos de Pangea seu personagem pertence.</p><div class="camp-pick">';
       Object.keys(CAMPS).forEach(function(key){
         var camp = CAMPS[key];
@@ -2791,6 +2791,8 @@
       app.querySelectorAll("[data-basicinfo]").forEach(function(el){
         el.addEventListener("input", function(){ c[el.getAttribute("data-basicinfo")] = el.value; });
       });
+      var npcWiz = app.querySelector('[data-wiznpc]');
+      if(npcWiz) npcWiz.addEventListener("change", function(){ c.ehNpc = npcWiz.checked; });
     }
     if(step === 1){
       app.querySelectorAll("[data-origem]").forEach(function(el){
@@ -4390,6 +4392,11 @@
     });
   }
 
+  // Caixa "É um NPC": só aparece pro Assimilador (jogador não esconde a própria ficha).
+  function npcCheckboxHtml(c, attr){
+    if(!temAcessoTotal()) return '';
+    return '<label style="display:flex;align-items:center;gap:8px;text-transform:none;font-size:13px;margin:10px 0 0"><input type="checkbox" style="width:auto" '+attr+(c.ehNpc?" checked":"")+'> É um NPC (personagem controlado pelo Assimilador): a ficha e as rolagens dele ficam escondidas dos jogadores (aba Mesa, Histórico de Rolagens e painel flutuante) — só o Assimilador vê.</label>';
+  }
   // Na edição comum (fora do "Refazer"), só o Assimilador mexe no passo de Experiência.
   function editPassos(c){
     return (c.precisaRefazer || temAcessoTotal()) ? [3,4,5,6] : [3,4,6];
@@ -4404,7 +4411,7 @@
     html += '<div'+(camp?' style="--camp-color:'+camp.cor+'"':'')+'>';
     html += '<div class="card"><h2>'+(draft.precisaRefazer?'Refazendo no sistema oficial: ':'Editando: ')+esc(draft.nomePersonagem||"personagem")+'</h2>' +
       '<div class="field" style="max-width:320px"><label>Nome do personagem</label><input type="text" data-editnome value="'+esc(draft.nomePersonagem)+'"></div>' +
-      '<label style="display:flex;align-items:center;gap:8px;text-transform:none;font-size:13px;margin-bottom:0"><input type="checkbox" style="width:auto" data-editnpc'+(draft.ehNpc?" checked":"")+'> É um NPC (personagem controlado pelo Assimilador): as rolagens dele ficam escondidas dos outros jogadores no Histórico de Rolagens e no painel flutuante — o Assimilador continua vendo tudo normalmente.</label>' +
+      npcCheckboxHtml(draft, 'data-editnpc') +
     '</div>';
 
     var passosEdit = editPassos(draft);
@@ -4420,7 +4427,8 @@
     bindGlobal();
 
     app.querySelector('[data-editnome]').addEventListener("input", function(e){ draft.nomePersonagem = e.target.value; });
-    app.querySelector('[data-editnpc]').addEventListener("change", function(e){ draft.ehNpc = e.target.checked; });
+    var npcEdit = app.querySelector('[data-editnpc]');
+    if(npcEdit) npcEdit.addEventListener("change", function(e){ draft.ehNpc = e.target.checked; });
     passosEdit.forEach(function(step){ bindWizardStep(draft, step, renderSheetEdit); });
 
     app.querySelector('[data-editaction="cancel"]').addEventListener("click", function(){
@@ -5077,7 +5085,8 @@
           '<div><h3 style="color:'+(camp?camp.cor:'var(--ink)')+';font-size:17px;margin-bottom:2px">'+esc(c.nomePersonagem||"Sem nome")+npcBadgeHtml(c)+'</h3>' +
           '<span class="camp-tag">jogador(a): '+esc(c.nomeJogador||"não informado")+' · '+(camp?camp.nome:"acampamento não definido")+'</span>' +
           '<div class="hint" style="margin-top:2px">'+(c.donoEmail ? 'Conta vinculada: '+esc(c.donoEmail) : (c.ehNpc ? 'NPC (só o Assimilador)' : 'Ainda sem conta vinculada'))+'</div></div>' +
-          '<div class="row" style="gap:6px;flex:none">' +
+          '<div class="row" style="gap:6px;flex:none;align-items:center">' +
+            '<label class="gm-npc" style="display:flex;align-items:center;gap:5px;text-transform:none;margin:0;font-size:12px"><input type="checkbox" style="width:auto" data-gmnpc="'+c.id+'"'+(c.ehNpc?' checked':'')+'> NPC</label>' +
             (c.donoUid ? '<button class="btn secondary" data-gmdesvincular="'+c.id+'" style="padding:4px 10px;font-size:11px">desvincular</button>' : '') +
             (caps.canEdit ? '<button class="btn secondary" data-gmdelmesa="'+c.id+'" style="padding:4px 10px;font-size:11px">excluir</button>' : '') +
           '</div>' +
@@ -5094,9 +5103,20 @@
     bindGmDryRoll();
     bindGmConflitos();
     bindGmXp();
+    app.querySelectorAll('[data-gmnpc]').forEach(function(el){
+      el.addEventListener("click", function(e){ e.stopPropagation(); });
+      el.addEventListener("change", function(){
+        if(!temAcessoTotal()) return;
+        var c = getChar(el.getAttribute("data-gmnpc")); if(!c) return;
+        c.ehNpc = el.checked;
+        updateChar(c);
+        if(caps.mode==="mesa"){ clearTimeout(publishTimer); doPublish(); }
+        renderGmMesa();
+      });
+    });
     app.querySelectorAll('[data-gmopen]').forEach(function(el){
       el.addEventListener("click", function(e){
-        if(e.target.closest('[data-gmdelmesa]') || e.target.closest('[data-gmdesvincular]') || e.target.closest('.gm-xp')) return;
+        if(e.target.closest('[data-gmdelmesa]') || e.target.closest('[data-gmdesvincular]') || e.target.closest('.gm-xp') || e.target.closest('.gm-npc')) return;
         goto("sheet", {charId: el.getAttribute("data-gmopen")});
       });
     });
