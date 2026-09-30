@@ -2823,7 +2823,7 @@
   var XP_MOTIVOS = [
     ["sessao","Sessão jogada",1],["proposito","Propósito alcançado",2],["conflito","Conflito resolvido",1],
     ["refugio","Avanço no Refúgio",1],["arco","Conclusão de arco",2],["descoberta","Grande descoberta",1],
-    ["interpretacao","Interpretação inspirada",1],["outro","Outro motivo",1]
+    ["interpretacao","Interpretação inspirada",1],["ajuste","Ajuste do Assimilador",1],["outro","Outro motivo",1]
   ];
   function xpDados(c){
     var x = c.xp || {};
@@ -2848,10 +2848,15 @@
   // Quanto sobra pra Características/Aptidões (o que já foi pra Instintos sai do total).
   function xpParaCaracteristicas(c){ return xpTotal(c) - instintosEvolGasto(c); }
   function darExperiencia(c, qtd, motivo){
+    // qtd negativo retira Experiência (ajuste do Assimilador). A recebida nunca
+    // fica abaixo de 0; o histórico guarda o quanto realmente mudou.
     var x = xpDados(c);
-    x.recebida += qtd;
-    x.historico = x.historico.concat([{ ts:new Date().toISOString(), qtd:qtd, motivo:motivo }]);
+    var novo = Math.max(0, x.recebida + qtd), real = novo - x.recebida;
+    if(!real) return 0;
+    x.recebida = novo;
+    x.historico = x.historico.concat([{ ts:new Date().toISOString(), qtd:real, motivo:motivo }]);
     c.xp = x;
+    return real;
   }
   function carDef(id){ return CARACTERISTICAS.filter(function(x){return x.id===id;})[0]; }
 
@@ -4675,10 +4680,17 @@
     var x = xpDados(c), saldo = xpSaldo(c), gm = temAcessoTotal();
     var html = '<div class="budget '+(saldo<0?"bad":"ok")+'"><span>Experiência disponível</span><span class="num">'+saldo+'</span></div>';
     html += '<p class="hint">'+XP_INICIAL+' da criação + <b>'+x.recebida+'</b> recebidos do Assimilador − '+xpGasto(c)+' gastos. Só o Assimilador dá Experiência (no fim da sessão, pelo Painel).</p>';
+    if(gm){
+      html += '<div class="row" style="gap:6px;flex-wrap:wrap;align-items:center;margin:4px 0 8px"><span class="hint" style="margin:0">Ajustar:</span>' +
+        '<input type="number" min="1" max="50" value="1" data-evolxpqtd style="width:70px">' +
+        '<input type="text" placeholder="motivo (opcional)" data-evolxpdet style="flex:1 1 140px">' +
+        '<button type="button" class="btn secondary evol-btn" data-evolxp="1">Dar</button>' +
+        '<button type="button" class="btn secondary evol-btn" data-evolxp="-1">Retirar</button></div>';
+    }
     if(x.historico.length){
       html += '<details style="margin:6px 0 12px"><summary class="hint" style="cursor:pointer">Histórico ('+x.historico.length+')</summary><ul class="hint" style="margin:6px 0 0 18px;padding:0">' +
         x.historico.slice().reverse().map(function(e){
-          return '<li>'+esc((e.ts||"").slice(0,10).split("-").reverse().join("/"))+' · '+(e.qtd>0?'+'+e.qtd+' · ':'')+esc(e.motivo||"")+'</li>';
+          return '<li>'+esc((e.ts||"").slice(0,10).split("-").reverse().join("/"))+' · '+(e.qtd?(e.qtd>0?'+':'')+e.qtd+' · ':'')+esc(e.motivo||"")+'</li>';
         }).join('') + '</ul></details>';
     }
     // Conhecimentos e Práticas: dobro do nível a atingir.
@@ -4762,6 +4774,18 @@
       if(x.recebida == null) x.recebida = 0;
       c.xp = x;
     }
+    app.querySelectorAll('[data-evolxp]').forEach(function(btn){
+      btn.addEventListener("click", function(){
+        if(!temAcessoTotal()) return;
+        var q = Math.abs(parseInt((app.querySelector('[data-evolxpqtd]')||{}).value,10)||0); if(!q) return;
+        var sinal = parseInt(btn.getAttribute("data-evolxp"),10);
+        var det = ((app.querySelector('[data-evolxpdet]')||{}).value||"").trim();
+        var motivo = "Ajuste do Assimilador" + (det ? ": "+det : "");
+        askConfirm((sinal>0?'Dar ':'Retirar ')+q+' de Experiência '+(sinal>0?'pra ':'de ')+(c.nomePersonagem||"este personagem")+'?', function(){
+          darExperiencia(c, sinal*q, motivo); salvar();
+        });
+      });
+    });
     app.querySelectorAll('[data-evolmenos]').forEach(function(btn){
       btn.addEventListener("click", function(){
         var k = btn.getAttribute("data-id"), tipo = btn.getAttribute("data-evolmenos");
@@ -5854,7 +5878,8 @@
       '</div><div class="row"><select data-gmxpmotivo="todos">'+xpMotivoOptions()+'</select>' +
       '<input type="number" min="1" max="20" value="1" data-gmxpqtd="todos">' +
       '<input type="text" placeholder="detalhe (opcional)" data-gmxpdet="todos" style="flex:1 1 160px">' +
-      '<button type="button" class="btn accent" data-gmxpdar="todos">Dar aos marcados</button></div></div></div>';
+      '<button type="button" class="btn accent" data-gmxpdar="todos">Dar aos marcados</button>' +
+      '<button type="button" class="btn secondary" data-gmxpdar="todos" data-gmxpsinal="-1">Retirar dos marcados</button></div></div></div>';
     return html;
   }
   function gmXpCardHtml(c){
@@ -5865,9 +5890,10 @@
       '<label style="display:flex;align-items:center;gap:5px;text-transform:none;margin:0"><input type="checkbox" style="width:auto" data-gmxpinst="'+c.id+'"'+(x.liberarInstinto?' checked':'')+'> Liberar Instintos (passou por mutação)</label></div>' +
       (pedidas.length?'<p class="hint" style="margin:6px 0;color:var(--accent)">Pedido de Característica: '+pedidas.map(function(id){ var d=carDef(id); return d?esc(d.nome)+' ('+d.custo+' XP)':''; }).join(', ')+' — abra a ficha pra aprovar ou recusar.</p>':'') +
       '<div class="row" style="margin-top:6px"><select data-gmxpmotivo="'+c.id+'">'+xpMotivoOptions()+'</select>' +
-      '<input type="number" min="-20" max="20" value="1" data-gmxpqtd="'+c.id+'">' +
+      '<input type="number" min="1" max="50" value="1" data-gmxpqtd="'+c.id+'">' +
       '<input type="text" placeholder="detalhe (opcional)" data-gmxpdet="'+c.id+'" style="flex:1 1 140px">' +
-      '<button type="button" class="btn secondary" data-gmxpdar="'+c.id+'" style="padding:4px 10px;font-size:11px">Dar</button></div>' +
+      '<button type="button" class="btn secondary" data-gmxpdar="'+c.id+'" style="padding:4px 10px;font-size:11px">Dar</button>' +
+      '<button type="button" class="btn secondary" data-gmxpdar="'+c.id+'" data-gmxpsinal="-1" style="padding:4px 10px;font-size:11px">Retirar</button></div>' +
     '</div>';
   }
   function bindGmXp(){
@@ -5890,15 +5916,16 @@
         e.stopPropagation();
         if(!temAcessoTotal()) return;
         var chave = btn.getAttribute("data-gmxpdar");
-        var qtd = parseInt(app.querySelector('[data-gmxpqtd="'+chave+'"]').value, 10);
+        var qtd = Math.abs(parseInt(app.querySelector('[data-gmxpqtd="'+chave+'"]').value, 10)||0);
         if(!qtd) return;
-        var motivo = motivoTexto(chave);
+        if(btn.getAttribute("data-gmxpsinal") === "-1") qtd = -qtd;
+        var motivo = (qtd<0?'Retirado · ':'') + motivoTexto(chave);
         var ids = chave === "todos"
           ? Array.prototype.slice.call(app.querySelectorAll('[data-gmxptodos]')).filter(function(el){ return el.checked; }).map(function(el){ return el.getAttribute("data-gmxptodos"); })
           : [chave];
         if(!ids.length) return;
         var nomes = ids.map(function(id){ var c = getChar(id); return c ? c.nomePersonagem : ""; }).filter(Boolean);
-        askConfirm((qtd>0?'Dar ':'Retirar ')+Math.abs(qtd)+' de Experiência ('+motivo+') pra: '+nomes.join(", ")+'?', function(){
+        askConfirm((qtd>0?'Dar ':'Retirar ')+Math.abs(qtd)+' de Experiência ('+motivo+')'+(qtd>0?' pra: ':' de: ')+nomes.join(", ")+'?'+(qtd<0?' Se o saldo de alguém ficar negativo, desfaça compras na seção Evoluir da ficha.':''), function(){
           ids.forEach(function(id){ var c = getChar(id); if(c){ darExperiencia(c, qtd, motivo); updateChar(c); } });
           if(caps.mode==="mesa"){ clearTimeout(publishTimer); doPublish(); }
           renderGmMesa();
