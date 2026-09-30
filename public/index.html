@@ -2943,12 +2943,41 @@
   // ---------- RENDER ----------
   var app = document.getElementById("app");
 
+  // ---------- ERROS VISÍVEIS ----------
+  // Se um pedaço da ficha quebrar com os dados de algum personagem, o resto da
+  // página continua (botão Editar, Assimilação, etc.) e aparece um aviso com a
+  // mensagem do erro, pra dar pra mandar um print. Antes, um erro no meio da
+  // ficha cortava tudo o que vinha depois sem avisar (relato do Marco, 30/09/2026).
+  function avisarErro(onde, e){
+    var msg = (e && e.message) ? e.message : String(e);
+    try{ console.error("[Pangea] " + onde + ":", e); }catch(_){}
+    var el = document.getElementById("erro-banner");
+    if(!el){
+      el = document.createElement("div"); el.id = "erro-banner";
+      el.style.cssText = "position:fixed;left:12px;right:12px;bottom:12px;z-index:10000;background:var(--danger);color:#fff;padding:10px 14px;border-radius:8px;font-size:13.5px;box-shadow:0 4px 14px rgba(0,0,0,.35)";
+      document.body.appendChild(el);
+    }
+    el.innerHTML = '<b>Algo deu errado em "' + esc(onde) + '":</b> ' + esc(msg) +
+      '<br><span style="opacity:.9">O resto da página continua funcionando. Tire um print desta mensagem e mande pro Claude.</span> ' +
+      '<button type="button" style="margin-left:8px;background:#fff;color:#000;border:0;border-radius:4px;padding:2px 8px;cursor:pointer" onclick="this.parentNode.remove()">fechar</button>';
+  }
+  function tentar(onde, fn){ try{ fn(); }catch(e){ avisarErro(onde, e); } }
+  function tentarHtml(onde, fn){
+    try{ return fn(); }catch(e){
+      avisarErro(onde, e);
+      return '<div class="card tight" style="border:2px solid var(--danger)"><p class="hint" style="margin:0;color:var(--danger)">Não deu pra mostrar "'+esc(onde)+'" nesta ficha ('+esc((e&&e.message)||String(e))+').</p></div>';
+    }
+  }
+  window.addEventListener("error", function(ev){ if(ev && ev.error) avisarErro("página", ev.error); });
+
   function render(){
-    if(state.view === "roster") renderRoster();
-    else if(state.view === "wizard") renderWizard();
-    else if(state.view === "sheet"){ if(state.sheetEditing) renderSheetEdit(); else renderSheet(); }
-    else if(state.view === "gm") renderGm();
-    else if(state.view === "mesa") renderMesa();
+    tentar("tela", function(){
+      if(state.view === "roster") renderRoster();
+      else if(state.view === "wizard") renderWizard();
+      else if(state.view === "sheet"){ if(state.sheetEditing) renderSheetEdit(); else renderSheet(); }
+      else if(state.view === "gm") renderGm();
+      else if(state.view === "mesa") renderMesa();
+    });
     renderRollFeed();
     renderConfirmOverlay();
     renderSyncBanner();
@@ -3338,6 +3367,11 @@
     return {ok:true};
   }
 
+  // O Assimilador pode mudar tudo na edição de uma ficha: os tetos da criação
+  // (Instinto até 3, Conhecimento/Prática até 2) sobem pra 6 e as validações
+  // viram só um aviso na hora de salvar (pedido do Marco, 30/09/2026).
+  function edicaoLivre(){ return state.view === "sheet" && !!state.sheetEditing && temAcessoTotal(); }
+  function tetoEdicao(padrao){ return edicaoLivre() ? 6 : padrao; }
   function stepperField(kind, label, desc, id, value, min, max, disabled){
     return '<div class="field field-stepper">' +
       '<label>'+label+'</label>' +
@@ -3480,7 +3514,7 @@
         '<span class="num">'+vidaPorNivel+' pontos por Nível · 6 Níveis</span></div>';
       html += '<div class="grid cols-3" style="margin-top:14px">';
       INSTINTOS.forEach(function(i){
-        html += stepperField("instinto", i[1], i[2], i[0], c.instintos[i[0]]||1, 1, 3, false);
+        html += stepperField("instinto", i[1], i[2], i[0], c.instintos[i[0]]||1, 1, tetoEdicao(3), false);
       });
       html += '</div>';
       return html;
@@ -3492,11 +3526,11 @@
       html += '<div class="budget '+(total>7?"bad":"ok")+'"><span>Pontos usados</span><span class="num">'+total+' / 7'+(faltamCp>0?' · faltam '+faltamCp:(faltamCp<0?' · '+(-faltamCp)+' acima do limite':' · completo ✓'))+'</span></div>';
       html += '<h3 style="margin-bottom:8px">Conhecimentos</h3><div class="grid cols-3">';
       CONHECIMENTOS.forEach(function(p){
-        html += stepperField("cp", p[1], p[2], p[0], c.conhPrat[p[0]]||0, 0, 2, false);
+        html += stepperField("cp", p[1], p[2], p[0], c.conhPrat[p[0]]||0, 0, tetoEdicao(2), false);
       });
       html += '</div><h3 style="margin:14px 0 8px">Práticas</h3><div class="grid cols-3">';
       PRATICAS.forEach(function(p){
-        html += stepperField("cp", p[1], p[2], p[0], c.conhPrat[p[0]]||0, 0, 2, false);
+        html += stepperField("cp", p[1], p[2], p[0], c.conhPrat[p[0]]||0, 0, tetoEdicao(2), false);
       });
       html += '</div>';
       return html;
@@ -3505,7 +3539,8 @@
       var tot = caracPontosGastos(c);
       var xpCarTot = xpParaCaracteristicas(c);
       var faltamCarac = xpCarTot - tot;
-      var criando = state.view === "wizard";
+      var criando = state.view === "wizard" || edicaoLivre();
+      var livreCarac = edicaoLivre();
       var html = '<p>Você tem <b>'+XP_INICIAL+' Pontos de Experiência</b> pra comprar Características (se cumprir o requisito) e/ou subir Conhecimentos e Práticas. Subir custa o dobro do nível desejado a cada degrau: de 1 pra 2 custa 4, de 2 pra 3 custa 6.</p>';
       if(xpCarTot !== XP_INICIAL) html += '<p class="hint">Total de Experiência deste personagem: '+XP_INICIAL+' da criação + '+xpDados(c).recebida+' recebidos'+(instintosEvolGasto(c)?' − '+instintosEvolGasto(c)+' já usados em Instintos':'')+'.</p>';
       html += '<div class="budget '+(tot>xpCarTot?"bad":"ok")+'"><span>Experiência usada</span><span class="num">'+tot+' / '+xpCarTot+(faltamCarac>0?' · sobram '+faltamCarac:(faltamCarac<0?' · '+(-faltamCarac)+' acima do limite':' · completo ✓'))+'</span></div>';
@@ -3519,7 +3554,8 @@
             (atual<1?'<option value="1"'+(aum===1?" selected":"")+'>subir pra 1 (custa '+custoAumento(atual,1)+')</option>':'') +
             (atual<2?'<option value="2"'+(aum===2?" selected":"")+'>subir pra 2 (custa '+custoAumento(atual,2)+')</option>':'') +
             (atual<3?'<option value="3"'+(aum===3?" selected":"")+'>subir pra 3 (custa '+custoAumento(atual,3)+')</option>':'') +
-            (aum>3?'<option value="'+aum+'" selected>'+aum+' (evoluído com Experiência, custa '+custoAumento(atual,aum)+')</option>':'') +
+            (livreCarac ? [4,5,6].filter(function(v){ return v>atual; }).map(function(v){ return '<option value="'+v+'"'+(aum===v?" selected":"")+'>subir pra '+v+' (custa '+custoAumento(atual,v)+')</option>'; }).join('') : '') +
+            (aum>3 && !livreCarac?'<option value="'+aum+'" selected>'+aum+' (evoluído com Experiência, custa '+custoAumento(atual,aum)+')</option>':'') +
           '</select></div>';
       });
       html += '</div>';
@@ -3529,7 +3565,7 @@
         html += '<h3 style="margin:16px 0 8px">Características de '+custo+' ponto'+(custo>1?'s':'')+'</h3><div class="trait-list">';
         lista.forEach(function(t){
           var checked = c.caracComp.indexOf(t.id) > -1;
-          var ok = reqAtendido(c, t);
+          var ok = reqAtendido(c, t) || livreCarac;
           html += '<label class="trait'+(checked?" checked":"")+'"'+(!ok&&!checked?' style="opacity:.55"':'')+'><input type="checkbox" data-carac="'+t.id+'" '+(checked?"checked":"")+((!ok&&!checked)?" disabled":"")+'>' +
             '<span class="cost">'+t.custo+'</span><span class="txt"><b>'+t.nome+'</b>' +
             '<span class="hint" style="display:block;margin:1px 0 3px;'+(ok?'':'color:var(--danger)')+'">'+reqTexto(t)+(ok?'':' — falta '+reqFaltando(c, t))+'</span>' +
@@ -3607,20 +3643,20 @@
     if(step === 3){
       app.querySelectorAll("[data-instinto]").forEach(function(el){
         el.addEventListener("input", function(){
-          c.instintos[el.getAttribute("data-instinto")] = clamp(parseInt(el.value,10),1,3);
+          c.instintos[el.getAttribute("data-instinto")] = clamp(parseInt(el.value,10),1,tetoEdicao(3));
           rerender();
         });
       });
-      bindStepper("instinto", function(id){ return c.instintos[id]; }, function(id,v){ c.instintos[id] = v; }, 1, 3, rerender);
+      bindStepper("instinto", function(id){ return c.instintos[id]; }, function(id,v){ c.instintos[id] = v; }, 1, tetoEdicao(3), rerender);
     }
     if(step === 4){
       app.querySelectorAll("[data-cp]").forEach(function(el){
         el.addEventListener("input", function(){
-          c.conhPrat[el.getAttribute("data-cp")] = clamp(parseInt(el.value,10),0,2);
+          c.conhPrat[el.getAttribute("data-cp")] = clamp(parseInt(el.value,10),0,tetoEdicao(2));
           rerender();
         });
       });
-      bindStepper("cp", function(id){ return c.conhPrat[id]; }, function(id,v){ c.conhPrat[id] = v; }, 0, 2, rerender);
+      bindStepper("cp", function(id){ return c.conhPrat[id]; }, function(id,v){ c.conhPrat[id] = v; }, 0, tetoEdicao(2), rerender);
     }
     if(step === 5){
       app.querySelectorAll("[data-aumento]").forEach(function(el){
@@ -3852,7 +3888,7 @@
     if(!state.sheetTest || state.sheetTest.charId !== c.id){
       state.sheetTest = { charId:c.id, instintoKey:INSTINTOS[0][0], cpKey:CONH_PRAT[0][0], instinto2Key:INSTINTOS[0][0], agir:false, extraDado:false, agirSnapshot:null, extraSnapshot:null, agirUsouAssim:false, results:[], rolling:false, rollingCount:0, keepN:0, registered:false };
     }
-    html += renderSheetTest(c);
+    html += tentarHtml("Teste", function(){ return renderSheetTest(c); });
 
     // Caracteristicas
     var caracDetalhes = c.caracComp.map(function(id){ return CARACTERISTICAS.filter(function(x){return x.id===id;})[0]; }).filter(Boolean);
@@ -3865,7 +3901,7 @@
       caracBody = '<p class="hint">Nenhuma característica única comprada.</p>';
     }
     html += sectionCard("caracteristicas", "Características", caracBody);
-    if(!c.precisaRefazer) html += sectionCard("evoluir", "Evoluir (Experiência)", evoluirHtml(c));
+    if(!c.precisaRefazer) html += tentarHtml("Evoluir", function(){ return sectionCard("evoluir", "Evoluir (Experiência)", evoluirHtml(c)); });
 
     // Saude e Determinacao
     var maxNivel = saudePontosMax(c);
@@ -3883,12 +3919,12 @@
 
     // Determinação/Assimilação (ver tugDeGuerraCardHtml): o Cabo de Guerra é
     // a única forma de calcular e mostrar isso, sempre visível na ficha.
-    html += tugDeGuerraCardHtml(c);
+    html += tentarHtml("Determinação", function(){ return tugDeGuerraCardHtml(c); });
     html += '</div>';
 
     // Assimilação: Teste de Assimilação, mutações adquiridas e Clareza de Propósito
     // (ver renderMutacoesCard) - livro definitivo, Cap. 4.
-    html += renderMutacoesCard(c);
+    html += tentarHtml("Assimilação", function(){ return renderMutacoesCard(c); });
 
     // Equipamento
     var equipBody;
@@ -3925,7 +3961,7 @@
       invBody += '<div class="row" style="margin-top:10px"><button class="btn secondary" data-inv="add">+ adicionar item</button></div>';
     }
     html += sectionCard("inventario", "Inventário adicional", pendingSectionBannerHtml(c, "inv") + invBody);
-    if(caps.mode === "mesa") html += sectionCard("documentos", "Documentos", docsFichaHtml(c));
+    if(caps.mode === "mesa") html += tentarHtml("Documentos", function(){ return sectionCard("documentos", "Documentos", docsFichaHtml(c)); });
 
     // Notas
     html += sectionCard("notas", "Notas", '<textarea data-notas style="min-height:80px">'+esc(c.notas)+'</textarea>');
@@ -4649,7 +4685,10 @@
     html += '<h3 style="margin:12px 0 6px">Conhecimentos e Práticas</h3><p class="hint" style="margin-top:0">Custa o dobro do nível que vai atingir (de 2 pra 3 custa 6, de 3 pra 4 custa 8).</p><div class="evol-grid">';
     CONH_PRAT.forEach(function(p){
       var atual = valorCPBase(c, p[0]), custo = 2*(atual+1);
-      html += '<div class="evol-item"><span>'+p[1]+' <b>'+atual+'</b></span><button type="button" class="btn secondary evol-btn" data-evol="cp" data-id="'+p[0]+'"'+(custo>saldo?" disabled":"")+'>+1 · '+custo+' XP</button></div>';
+      var podeDesfazer = gm && (c.caracAumentos||{})[p[0]] > ((c.conhPrat&&c.conhPrat[p[0]])||0);
+      html += '<div class="evol-item"><span>'+p[1]+' <b>'+atual+'</b></span><span class="row" style="gap:6px;flex:none">' +
+        (podeDesfazer?'<button type="button" class="btn secondary evol-btn" data-evolmenos="cp" data-id="'+p[0]+'" title="Desfaz a última compra e devolve a Experiência">−1 · devolve '+(2*atual)+'</button>':'') +
+        '<button type="button" class="btn secondary evol-btn" data-evol="cp" data-id="'+p[0]+'"'+(custo>saldo?" disabled":"")+'>+1 · '+custo+' XP</button></span></div>';
     });
     html += '</div>';
     // Instintos: triplo, só depois de uma sessão com mutação (o Assimilador libera).
@@ -4658,7 +4697,10 @@
       html += '<p class="hint" style="margin-top:0">Custa o triplo do nível que vai atingir (de 2 pra 3 custa 9).'+(x.liberarInstinto?' <b>Liberado pelo Assimilador.</b>':' Ainda não liberado pro jogador (só você, Assimilador, vê os botões).')+'</p><div class="evol-grid">';
       INSTINTOS.forEach(function(i){
         var atual = instintoBase(c, i[0]), custo = 3*(atual+1);
-        html += '<div class="evol-item"><span>'+i[1]+' <b>'+atual+'</b></span><button type="button" class="btn secondary evol-btn" data-evol="inst" data-id="'+i[0]+'"'+(custo>saldo?" disabled":"")+'>+1 · '+custo+' XP</button></div>';
+        var podeDesfazerI = gm && (c.instintosEvol||{})[i[0]] > ((c.instintos&&c.instintos[i[0]])||0);
+        html += '<div class="evol-item"><span>'+i[1]+' <b>'+atual+'</b></span><span class="row" style="gap:6px;flex:none">' +
+          (podeDesfazerI?'<button type="button" class="btn secondary evol-btn" data-evolmenos="inst" data-id="'+i[0]+'" title="Desfaz a última compra e devolve a Experiência">−1 · devolve '+(3*atual)+'</button>':'') +
+          '<button type="button" class="btn secondary evol-btn" data-evol="inst" data-id="'+i[0]+'"'+(custo>saldo?" disabled":"")+'>+1 · '+custo+' XP</button></span></div>';
       });
       html += '</div>';
     } else {
@@ -4666,13 +4708,20 @@
     }
     // Características: pedido do jogador, aprovação do Assimilador.
     html += '<h3 style="margin:16px 0 6px">Características</h3>';
-    var pedidas = c.caracPedidas||[];
+    var pedidas = Array.isArray(c.caracPedidas) ? c.caracPedidas : [];
     if(pedidas.length){
       html += pedidas.map(function(id){
         var d = carDef(id); if(!d) return '';
         return '<div class="evol-item" style="margin-bottom:6px"><span><b>'+esc(d.nome)+'</b> · '+d.custo+' XP · '+(gm?'pedido do jogador':'aguardando o Assimilador')+'</span><span class="row" style="gap:6px;flex:none">' +
           (gm?'<button type="button" class="btn accent evol-btn" data-evolaprovar="'+id+'"'+(d.custo>saldo?" disabled":"")+'>Aprovar</button>':'') +
           '<button type="button" class="btn secondary evol-btn" data-evolcancelar="'+id+'">'+(gm?'Recusar':'Cancelar pedido')+'</button></span></div>';
+      }).join('');
+    }
+    if(gm && (c.caracComp||[]).length){
+      html += '<p class="hint" style="margin:0 0 6px">Compradas (só você, Assimilador, vê o botão de devolver):</p>';
+      html += (c.caracComp||[]).map(function(id){
+        var d = carDef(id); if(!d) return '';
+        return '<div class="evol-item" style="margin-bottom:6px"><span><b>'+esc(d.nome)+'</b> · '+d.custo+' XP</span><button type="button" class="btn secondary evol-btn" data-evolremover="'+id+'">Remover · devolve '+d.custo+'</button></div>';
       }).join('');
     }
     var elegiveis = CARACTERISTICAS.filter(function(d){ return !d.soCriacao && !temCarac(c,d.id) && pedidas.indexOf(d.id)===-1 && reqAtendido(c,d); });
@@ -4702,6 +4751,46 @@
             c.instintosEvol[k] = atualI+1; salvar();
           });
         }
+      });
+    });
+    // Desfazer compras (só o Assimilador vê esses botões): pra quando alguém
+    // comprou sem querer. A Experiência volta sozinha, porque o gasto é sempre
+    // recalculado a partir do que está comprado. Fica anotado no histórico.
+    function anotar(txt){
+      if(!temAcessoTotal()) return;
+      var x = c.xp || {}; x.historico = (x.historico||[]).concat([{ qtd:0, motivo:txt, ts:new Date().toISOString() }]);
+      if(x.recebida == null) x.recebida = 0;
+      c.xp = x;
+    }
+    app.querySelectorAll('[data-evolmenos]').forEach(function(btn){
+      btn.addEventListener("click", function(){
+        var k = btn.getAttribute("data-id"), tipo = btn.getAttribute("data-evolmenos");
+        if(tipo === "cp"){
+          var atual = valorCPBase(c,k), base = (c.conhPrat&&c.conhPrat[k])||0;
+          askConfirm('Voltar '+nomeAtributo(k)+' de '+atual+' pra '+(atual-1)+' e devolver '+(2*atual)+' de Experiência?', function(){
+            if(atual-1 <= base) delete c.caracAumentos[k]; else c.caracAumentos[k] = atual-1;
+            anotar('Desfeito: '+nomeAtributo(k)+' '+atual+' → '+(atual-1)+' (devolveu '+(2*atual)+')');
+            salvar();
+          });
+        } else {
+          var atualI = instintoBase(c,k), baseI = (c.instintos&&c.instintos[k])||0;
+          askConfirm('Voltar '+nomeAtributo(k)+' de '+atualI+' pra '+(atualI-1)+' e devolver '+(3*atualI)+' de Experiência?', function(){
+            if(atualI-1 <= baseI) delete c.instintosEvol[k]; else c.instintosEvol[k] = atualI-1;
+            anotar('Desfeito: '+nomeAtributo(k)+' '+atualI+' → '+(atualI-1)+' (devolveu '+(3*atualI)+')');
+            salvar();
+          });
+        }
+      });
+    });
+    app.querySelectorAll('[data-evolremover]').forEach(function(btn){
+      btn.addEventListener("click", function(){
+        var id = btn.getAttribute("data-evolremover"), d = carDef(id); if(!d) return;
+        askConfirm('Remover "'+d.nome+'" de '+(c.nomePersonagem||"este personagem")+' e devolver '+d.custo+' de Experiência?', function(){
+          c.caracComp = (c.caracComp||[]).filter(function(x){ return x!==id; });
+          if(c.caracEscolhas) delete c.caracEscolhas[id];
+          anotar('Desfeito: removida a Característica '+d.nome+' (devolveu '+d.custo+')');
+          salvar();
+        });
       });
     });
     var pedir = app.querySelector('[data-evolpedir]');
@@ -4736,8 +4825,23 @@
   }
 
   function bindSheet(c, maxNivel){
-    bindEvoluir(c);
-    bindDocsFicha();
+    tentar("botões Editar/Excluir", function(){
+      var editBtn = app.querySelector('[data-action="edit"]');
+      if(editBtn) editBtn.addEventListener("click", function(){
+        state.sheetEditing = true;
+        state.sheetDraft = JSON.parse(JSON.stringify(c));
+        render();
+      });
+      var delBtn = app.querySelector('[data-action="delete"]');
+      if(delBtn) delBtn.addEventListener("click", function(){ state.deleteConfirm = true; render(); });
+    });
+    tentar("Assimilação", function(){ bindMutacoesCard(c); });
+    tentar("Evoluir", function(){ bindEvoluir(c); });
+    tentar("Documentos", function(){ bindDocsFicha(); });
+    tentar("Teste", function(){ bindSheetTest(c); });
+    tentar("ficha", function(){ bindSheetCampos(c, maxNivel); });
+  }
+  function bindSheetCampos(c, maxNivel){
     // Nome do jogador e Notas: só atualizam o objeto local a cada tecla (sem
     // publicar nada ainda) e só chamam updateChar/schedulePublish no "change"
     // (quando o campo perde o foco) - ver o comentário grande acima de
@@ -4910,17 +5014,6 @@
       try{ navigator.clipboard.writeText(box.value); copyBtn.textContent = "Copiado!"; setTimeout(function(){copyBtn.textContent="Copiar código";},1500); }
       catch(e){ document.execCommand('copy'); }
     });
-    var editBtn = app.querySelector('[data-action="edit"]');
-    if(editBtn) editBtn.addEventListener("click", function(){
-      state.sheetEditing = true;
-      state.sheetDraft = JSON.parse(JSON.stringify(c));
-      render();
-    });
-    var delBtn = app.querySelector('[data-action="delete"]');
-    if(delBtn) delBtn.addEventListener("click", function(){ state.deleteConfirm = true; render(); });
-
-    bindSheetTest(c);
-    bindMutacoesCard(c);
   }
 
   // ----- TESTE INTEGRADO NA FICHA (Instinto + Prática/Conhecimento) -----
@@ -5195,7 +5288,8 @@
   }
   // Na edição comum (fora do "Refazer"), só o Assimilador mexe no passo de Experiência.
   function editPassos(c){
-    return (c.precisaRefazer || temAcessoTotal()) ? [3,4,5,6] : [3,4,6];
+    if(temAcessoTotal()) return [0,1,2,3,4,5,6];
+    return c.precisaRefazer ? [3,4,5,6] : [3,4,6];
   }
   // ----- SHEET EDIT MODE (reaproveita a UI do assistente pra Instintos/Conh.Prat/Caracteristicas/Equipamento) -----
   function renderSheetEdit(){
@@ -5205,12 +5299,14 @@
     var camp = draft.acampamento ? CAMPS[draft.acampamento] : null;
     var html = topbar("sheet");
     html += '<div'+(camp?' style="--camp-color:'+camp.cor+'"':'')+'>';
+    var passosEdit = editPassos(draft);
+    var livre = temAcessoTotal();
     html += '<div class="card"><h2>'+(draft.precisaRefazer?'Refazendo no sistema oficial: ':'Editando: ')+esc(draft.nomePersonagem||"personagem")+'</h2>' +
+      (livre ? '<p class="hint" style="margin:0">Como Assimilador, você pode mudar qualquer coisa: os limites da criação (Instinto até 3, Conhecimento/Prática até 2, pontos exatos, Escassez do Artefato, requisitos) não travam nada aqui. Se algo sair das regras, o site só avisa antes de salvar.</p>' :
       '<div class="field" style="max-width:320px"><label>Nome do personagem</label><input type="text" data-editnome value="'+esc(draft.nomePersonagem)+'"></div>' +
-      npcCheckboxHtml(draft, 'data-editnpc') +
+      npcCheckboxHtml(draft, 'data-editnpc')) +
     '</div>';
 
-    var passosEdit = editPassos(draft);
     passosEdit.forEach(function(step){
       html += '<div class="card"><h2>'+WIZ_STEPS[step]+'</h2>' + wizardStepBody(draft, step) + '</div>';
     });
@@ -5222,7 +5318,8 @@
     app.innerHTML = html;
     bindGlobal();
 
-    app.querySelector('[data-editnome]').addEventListener("input", function(e){ draft.nomePersonagem = e.target.value; });
+    var nomeEdit = app.querySelector('[data-editnome]');
+    if(nomeEdit) nomeEdit.addEventListener("input", function(e){ draft.nomePersonagem = e.target.value; });
     var npcEdit = app.querySelector('[data-editnpc]');
     if(npcEdit) npcEdit.addEventListener("change", function(e){ draft.ehNpc = e.target.checked; });
     passosEdit.forEach(function(step){ bindWizardStep(draft, step, renderSheetEdit); });
@@ -5233,10 +5330,22 @@
       goto("sheet", {charId:id});
     });
     app.querySelector('[data-editaction="save"]').addEventListener("click", function(){
+      if(!draft.nomePersonagem || !draft.nomePersonagem.trim()){ alert("Dê um nome ao personagem."); return; }
+      var problemas = [];
       for(var s=3;s<=6;s++){
         var v = validateStep(draft, s);
-        if(!v.ok){ alert(v.msg); return; }
+        if(!v.ok){
+          if(!livre){ alert(v.msg); return; }
+          problemas.push(v.msg);
+        }
       }
+      if(problemas.length){
+        askConfirm("Essa ficha fica fora das regras de criação: " + problemas.join(" ") + " Salvar mesmo assim?", salvarEdicao);
+        return;
+      }
+      salvarEdicao();
+    });
+    function salvarEdicao(){
       draft.precisaRefazer = false;
       draft.equip.usosMax = equipUsosMax(draft); if(draft.equip.usosAtual==null || draft.equip.usosAtual > (draft.equip.usosMax||0)) draft.equip.usosAtual = draft.equip.usosMax;
       draft.equip.espaco = equipEspaco(draft);
@@ -5245,7 +5354,7 @@
       var id = draft.id;
       state.sheetEditing = false; state.sheetDraft = null;
       goto("sheet", {charId:id});
-    });
+    }
   }
 
   // ----- ROLADOR DE DADOS -----
