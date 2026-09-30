@@ -5289,7 +5289,8 @@
   // Na edição comum (fora do "Refazer"), só o Assimilador mexe no passo de Experiência.
   function editPassos(c){
     if(temAcessoTotal()) return [0,1,2,3,4,5,6];
-    return c.precisaRefazer ? [3,4,5,6] : [3,4,6];
+    // Textos da ficha (Origem, Propósitos e Conexões) sempre editáveis pelo jogador.
+    return c.precisaRefazer ? [1,2,3,4,5,6] : [1,2,3,4,6];
   }
   // ----- SHEET EDIT MODE (reaproveita a UI do assistente pra Instintos/Conh.Prat/Caracteristicas/Equipamento) -----
   function renderSheetEdit(){
