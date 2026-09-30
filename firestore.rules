@@ -55,6 +55,16 @@ service cloud.firestore {
       allow read, delete: if mestre();
     }
 
+    // Documentos da campanha: só quem recebeu (conta dona do personagem) lê; só o Assimilador escreve.
+    match /documentos/{id} {
+      allow read: if mestre() || (logado() && request.auth.uid in resource.data.get('leitores', []));
+      allow write: if mestre();
+    }
+    // Onde é achado e nota do Assimilador: só o Assimilador.
+    match /documentosNotas/{id} {
+      allow read, write: if mestre();
+    }
+
     match /meta/{id} {
       allow read: if logado();
       allow write: if mestre();
