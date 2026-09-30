@@ -577,6 +577,15 @@
   .dado-a{ -webkit-mask-image:url(icones/dado_adaptacao.png); mask-image:url(icones/dado_adaptacao.png); color:var(--accent); }
   .dado-p{ -webkit-mask-image:url(icones/dado_pressao.png); mask-image:url(icones/dado_pressao.png); color:var(--danger); }
   .trait .txt span.dado{ font-size:20px; }
+  /* Modo de alto contraste (Windows/Edge): o navegador troca as cores do site pelas do sistema
+     e apagaria os ícones de dado (a cor deles vem do fundo recortado pela máscara). Aqui eles
+     ficam na cor do texto do sistema (branco no tema escuro) e os demais ícones/papéis mantêm
+     as próprias imagens. */
+  @media (forced-colors: active){
+    .dado{ forced-color-adjust:none; background-color:CanvasText !important; color:CanvasText !important; }
+    .ico{ forced-color-adjust:none; }
+    .pdoc-wrap{ forced-color-adjust:none; }
+  }
   .trait .txt span.dado-s{ color:var(--good); }
   .trait .txt span.dado-a{ color:var(--accent); }
   .trait .txt span.dado-p{ color:var(--danger); }
