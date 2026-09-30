@@ -758,6 +758,10 @@
 .doc-item{ display:flex; gap:10px; align-items:center; text-align:left; padding:10px 12px; border:1px solid var(--line, rgba(128,128,128,.35)); border-radius:8px; background:transparent; color:inherit; cursor:pointer; font:inherit; }
 .doc-item:hover{ border-color:var(--accent); }
 .doc-ico{ font-size:22px; }
+.doc-grupo{ margin-top:10px; border:1px solid var(--line, rgba(128,128,128,.35)); border-radius:8px; padding:6px 12px; }
+.doc-grupo > summary{ cursor:pointer; padding:6px 0; list-style:revert; }
+.doc-grupo[open] > summary{ border-bottom:1px dashed var(--line, rgba(128,128,128,.35)); margin-bottom:4px; }
+.doc-grupo .doc-linha:first-of-type{ border-top:0; }
 .doc-linha{ padding:10px 0; border-top:1px dashed var(--line, rgba(128,128,128,.35)); }
 .doc-linha-topo{ display:flex; justify-content:space-between; gap:10px; align-items:flex-start; flex-wrap:wrap; }
 .doc-btn{ padding:4px 10px !important; font-size:11px !important; }
@@ -1919,9 +1923,26 @@
   }
   // Nome do documento na lista: o título, ou o começo do texto (sem as marcações).
   function docRotulo(d){
+    var n = docNota(d.id);
+    if(n.rotulo) return n.rotulo;
     if(d.titulo) return d.titulo;
     var t = String(d.texto||"").replace(/\[ileg[ií]vel\]/gi,"…").replace(/~~|\{\{|\}\}|\*\*/g,"").replace(/^&gt; |^> /gm,"").replace(/\s+/g," ").trim();
     return t ? (t.length > 42 ? t.slice(0,42).replace(/\s+\S*$/,"")+"…" : t) : "Sem título";
+  }
+  // Locais em ordem de viagem; os que você inventar entram no fim, em ordem alfabética.
+  var DOC_LOCAIS_ORDEM = ["Já lidos (sessão 1)","Cidade abandonada (shopping)","Centro (Cruzamento)","Rêverie","Traúm","Yūgen","Mriya","Estradas e postos dos exploradores","Território do D'lém","Ruínas pelo caminho","Caverna da Gaia","A qualquer momento"];
+  function docOrdemLocais(ls){
+    return ls.slice().sort(function(a,b){
+      var ia = DOC_LOCAIS_ORDEM.indexOf(a), ib = DOC_LOCAIS_ORDEM.indexOf(b);
+      if(a==="Sem local") ia = 999; if(b==="Sem local") ib = 999;
+      if(ia<0) ia = 500; if(ib<0) ib = 500;
+      return ia!==ib ? ia-ib : a.localeCompare(b);
+    });
+  }
+  function docLocaisConhecidos(){
+    var s = {}; DOC_LOCAIS_ORDEM.forEach(function(l){ s[l]=1; });
+    (shared.documentosNotas||[]).forEach(function(n){ if(n.local) s[n.local]=1; });
+    return docOrdemLocais(Object.keys(s));
   }
   function condicaoNome(k){ var x = PDOC_CONDICOES.filter(function(c){ return c[0]===k; })[0]; return x ? x[1] : k; }
 
@@ -1962,6 +1983,9 @@
         '<div class="grid cols-2"><div class="field"><label>Cabeçalho à esquerda (relatório)</label><input type="text" data-doccab="0" value="'+esc(cab[0]||"")+'"></div>' +
         '<div class="field"><label>Cabeçalho à direita (relatório)</label><input type="text" data-doccab="1" value="'+esc(cab[1]||"")+'"></div></div>' +
         '<p class="hint" style="margin:12px 0 4px"><b>Só você vê</b> os campos abaixo.</p>' +
+        '<div class="field"><label>Nome na lista (opcional)</label><input type="text" data-docf="rotulo" value="'+esc(ed.rotulo||"")+'" placeholder="ex.: Carta do Guardião"></div>' +
+        '<div class="field"><label>Local (onde pode ser achado, para organizar a lista)</label><input type="text" list="doc-locais" data-docf="local" value="'+esc(ed.local||"")+'" placeholder="ex.: Rêverie">' +
+          '<datalist id="doc-locais">'+docLocaisConhecidos().map(function(l){ return '<option value="'+esc(l)+'">'; }).join('')+'</datalist></div>' +
         '<div class="field"><label>Quem escreveu</label><input type="text" data-docf="autor" value="'+esc(ed.autor)+'"></div>' +
         '<div class="field"><label>Onde / como é achado</label><textarea data-docf="achado" style="min-height:60px">'+esc(ed.achado)+'</textarea></div>' +
         '<div class="field"><label>Nota do Assimilador</label><textarea data-docf="notaMestre" style="min-height:60px">'+esc(ed.notaMestre)+'</textarea></div>' +
@@ -1977,7 +2001,14 @@
       var lista = docsLista();
       if(!lista.length) html += '<p class="hint" style="margin-top:12px">Nenhum documento ainda.</p>';
       var chars = loadChars();
-      lista.forEach(function(d){
+      var grupos = {};
+      lista.forEach(function(d){ var l = docNota(d.id).local || "Sem local"; (grupos[l] = grupos[l] || []).push(d); });
+      if(!state.docGruposAbertos) state.docGruposAbertos = {};
+      docOrdemLocais(Object.keys(grupos)).forEach(function(local){
+        var itens = grupos[local], entreguesN = itens.filter(function(d){ return (d.entregues||[]).length; }).length;
+        var aberto = state.docGruposAbertos[local] || itens.some(function(d){ return d.id===state.docEntregar; });
+        html += '<details class="doc-grupo" data-docgrupo="'+esc(local)+'"'+(aberto?' open':'')+'><summary><b>'+esc(local)+'</b> <span class="hint">· '+itens.length+' documento'+(itens.length>1?'s':'')+(entreguesN?' · '+entreguesN+' entregue'+(entreguesN>1?'s':''):'')+'</span></summary>';
+      itens.forEach(function(d){
         var nota = docNota(d.id);
         var nomes = (d.entregues||[]).map(function(cid){ var ch = getChar(cid); return ch ? ch.nomePersonagem : null; }).filter(Boolean);
         html += '<div class="doc-linha">' +
@@ -1998,6 +2029,8 @@
         }
         html += '</div>';
       });
+        html += '</details>';
+      });
     }
     html += '</div>';
     return html;
@@ -2007,7 +2040,7 @@
       data:d.data||"", assinatura:d.assinatura||"", carimbo:d.carimbo||"", cabecalho:(d.cabecalho||["",""]).slice(0,2),
       entregues:(d.entregues||[]).slice(), leitores:leitoresDe(d.entregues), criadoEm:d.criadoEm||new Date().toISOString(), atualizadoEm:new Date().toISOString() };
   }
-  function docDadosNotas(d){ return { id:d.id, autor:d.autor||"", achado:d.achado||"", achadoAlt:d.achadoAlt||"", notaMestre:d.notaMestre||"" }; }
+  function docDadosNotas(d){ return { id:d.id, autor:d.autor||"", achado:d.achado||"", achadoAlt:d.achadoAlt||"", notaMestre:d.notaMestre||"", local:d.local||"", rotulo:d.rotulo||"" }; }
   function bindGmDocs(rerender){
     var raiz = app.querySelector("#gm-docs"); if(!raiz) return;
     var ed = state.docEdit;
@@ -2038,12 +2071,19 @@
           if(!Array.isArray(arr)) arr = [arr];
           var ops = [];
           arr.forEach(function(x){
-            if(!x || (!x.titulo && !x.texto)) return;
+            if(!x) return;
             var id = String(x.id||uid()); if(id.indexOf("doc_")!==0) id = "doc_"+id;
+            if(!x.titulo && !x.texto){
+              // só o local de um documento que já existe: não mexe no texto nem nas suas edições
+              if((x.local || x.rotulo) && docsLista().some(function(y){ return y.id===id; })){
+                var n0 = docNota(id); ops.push({ tipo:"set", col:"documentosNotas", id:id, data:docDadosNotas({ id:id, autor:n0.autor, achado:n0.achado, achadoAlt:n0.achadoAlt, notaMestre:n0.notaMestre, local:x.local||n0.local, rotulo:x.rotulo||n0.rotulo }) });
+              }
+              return;
+            }
             var existente = docsLista().filter(function(y){ return y.id===id; })[0];
             var d = { id:id, titulo:x.titulo, texto:x.texto, escrita:x.escrita, papel:x.papel, condicao:x.condicao, data:x.data, assinatura:x.assinatura, carimbo:x.carimbo,
               cabecalho:(x.cabecalho && x.cabecalho.length) ? x.cabecalho : ["",""], autor:x.autor, achado:x.achado, achadoAlt:x.achado_alt||x.achadoAlt,
-              notaMestre:x.nota_mestre||x.notaMestre, entregues: existente ? existente.entregues : [], criadoEm: existente ? existente.criadoEm : new Date().toISOString() };
+              notaMestre:x.nota_mestre||x.notaMestre, local:x.local||docNota(id).local||"", rotulo:x.rotulo||docNota(id).rotulo||"", entregues: existente ? existente.entregues : [], criadoEm: existente ? existente.criadoEm : new Date().toISOString() };
             ops.push({ tipo:"set", col:"documentos", id:id, data:docDadosPublicos(d) }, { tipo:"set", col:"documentosNotas", id:id, data:docDadosNotas(d) });
           });
           if(!ops.length){ alert("Nenhum documento encontrado no código."); return; }
@@ -2061,11 +2101,14 @@
         }
       });
     });
+    raiz.querySelectorAll("[data-docgrupo]").forEach(function(el){
+      el.addEventListener("toggle", function(){ if(!state.docGruposAbertos) state.docGruposAbertos = {}; state.docGruposAbertos[el.getAttribute("data-docgrupo")] = el.open; });
+    });
     raiz.querySelectorAll("[data-docver]").forEach(function(b){ b.addEventListener("click", function(){ var d = docsLista().filter(function(x){ return x.id===b.getAttribute("data-docver"); })[0]; if(d) abrirDocumento(d); }); });
     raiz.querySelectorAll("[data-doceditar]").forEach(function(b){ b.addEventListener("click", function(){
       var d = docsLista().filter(function(x){ return x.id===b.getAttribute("data-doceditar"); })[0]; if(!d) return;
       var n = docNota(d.id);
-      state.docEdit = JSON.parse(JSON.stringify(d)); state.docEdit.autor = n.autor||""; state.docEdit.achado = n.achado||""; state.docEdit.achadoAlt = n.achadoAlt||""; state.docEdit.notaMestre = n.notaMestre||"";
+      state.docEdit = JSON.parse(JSON.stringify(d)); state.docEdit.autor = n.autor||""; state.docEdit.achado = n.achado||""; state.docEdit.achadoAlt = n.achadoAlt||""; state.docEdit.notaMestre = n.notaMestre||""; state.docEdit.local = n.local||""; state.docEdit.rotulo = n.rotulo||"";
       rerender(); var el = app.querySelector("#gm-docs"); if(el) el.scrollIntoView();
     }); });
     raiz.querySelectorAll("[data-docentregar]").forEach(function(b){ b.addEventListener("click", function(){ state.docEntregar = b.getAttribute("data-docentregar"); rerender(); }); });
