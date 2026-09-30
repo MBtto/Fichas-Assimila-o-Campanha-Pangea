@@ -609,7 +609,9 @@
   transform:rotate(var(--giro,0deg));
 }
 /* Camadas por cima do texto (manchas, queimado, água) */
-.pdoc .pdoc-sujeira{ position:absolute; inset:0; pointer-events:none; z-index:2; }
+.pdoc .pdoc-relevo{ position:absolute; inset:0; pointer-events:none; z-index:2; mix-blend-mode:multiply; background-size:100% 100%; opacity:.55; }
+.pdoc .pdoc-sujeira{ position:absolute; inset:0; pointer-events:none; z-index:3; }
+.pdoc .pdoc-palavra{ display:inline-block; }
 .pdoc .pdoc-corpo{ position:relative; z-index:1; }
 
 /* ---------- ESCRITA ---------- */
@@ -622,9 +624,10 @@
 .escrita-manuscrito .pdoc-titulo{ font-size:28px; }
 .escrita-manuscrito .pdoc-texto p{ margin-bottom:.45em; }
 
-.escrita-rabisco{ font-family:"Doc Rabisco", cursive; font-size:31px; line-height:1.18; --tinta:#2b2520; }
+.escrita-rabisco{ font-family:"Doc Rabisco", cursive; font-size:33px; line-height:1.28; --tinta:#1c1c20; letter-spacing:.02em; }
 .escrita-rabisco .pdoc-titulo{ font-size:30px; }
-.escrita-rabisco .pdoc-texto{ transform:rotate(-1.2deg); }
+.escrita-rabisco .pdoc-texto{ transform:rotate(-2deg); filter:url(#pdoc-lapis); }
+.escrita-rabisco .pdoc-titulo{ filter:url(#pdoc-lapis); }
 
 .escrita-datilografado{ font-family:"Doc Maquina", "Courier New", monospace; font-size:14.5px; line-height:1.7; --tinta:#1d1a17; }
 .escrita-datilografado .pdoc-titulo{ font-size:17px; text-transform:uppercase; text-decoration:underline; text-underline-offset:4px; }
@@ -665,7 +668,7 @@
 
 /* Carimbo */
 .pdoc-com-carimbo{ padding-bottom:92px; }
-.pdoc-carimbo{ position:absolute; z-index:3; right:34px; bottom:30px; transform:rotate(-9deg);
+.pdoc-carimbo{ position:absolute; z-index:4; right:34px; bottom:30px; transform:rotate(-9deg);
   font-family:"Doc Relatorio", monospace; font-weight:700; font-size:15px; letter-spacing:.14em; text-transform:uppercase;
   color:rgba(150,28,24,.78); border:3px double rgba(150,28,24,.72); padding:5px 10px; border-radius:4px;
   mix-blend-mode:multiply; -webkit-mask-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='60'><filter id='m'><feTurbulence baseFrequency='.9' numOctaves='2'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -2.2 1.7'/></filter><rect width='100%' height='100%' filter='url(%23m)'/></svg>");
@@ -676,18 +679,34 @@
 .cond-preservado{ --papel:#f4eedd; }
 .cond-preservado.escrita-antigo{ --papel:#efe0bb; }
 
-/* Gasto: amarelado, dobras, manchas de mão e de xícara. */
-.cond-gasto{ --papel:#e6d3a6; }
+/* Gasto: papel velho de verdade: amarelado forte, bordas escurecidas e puídas,
+   dobras marcadas, pintas de oxidação, dedos sujos, tinta desbotada e orelha no canto. */
+.cond-gasto{ --papel:#d8c089; }
+.cond-gasto .pdoc-relevo{ opacity:.7; }
+.cond-gasto .pdoc-texto, .cond-gasto .pdoc-titulo{ color:color-mix(in srgb, var(--tinta) 78%, #6b5030); }
 .cond-gasto .pdoc-sujeira::before{ content:""; position:absolute; inset:0;
   background:
-    linear-gradient(90deg, transparent calc(50% - 1px), rgba(90,60,20,.18) 50%, rgba(255,255,255,.25) calc(50% + 1px), transparent calc(50% + 3px)),
-    linear-gradient(180deg, transparent calc(33% - 1px), rgba(90,60,20,.16) 33%, rgba(255,255,255,.22) calc(33% + 1px), transparent calc(33% + 3px)),
-    linear-gradient(180deg, transparent calc(66% - 1px), rgba(90,60,20,.16) 66%, rgba(255,255,255,.22) calc(66% + 1px), transparent calc(66% + 3px)),
-    radial-gradient(ellipse at 50% 50%, transparent 55%, rgba(120,80,25,.35) 100%);
+    linear-gradient(90deg, transparent calc(50% - 2px), rgba(90,55,15,.30) 50%, rgba(255,248,225,.45) calc(50% + 1.5px), transparent calc(50% + 4px)),
+    linear-gradient(180deg, transparent calc(33% - 2px), rgba(90,55,15,.28) 33%, rgba(255,248,225,.4) calc(33% + 1.5px), transparent calc(33% + 4px)),
+    linear-gradient(180deg, transparent calc(66% - 2px), rgba(90,55,15,.28) 66%, rgba(255,248,225,.4) calc(66% + 1.5px), transparent calc(66% + 4px)),
+    radial-gradient(ellipse at 50% 50%, transparent 45%, rgba(120,72,20,.45) 100%);
 }
+.cond-gasto .pdoc-sujeira::after{ content:""; position:absolute; inset:0; box-shadow:inset 0 0 36px 6px rgba(105,62,15,.5), inset 0 0 7px 2px rgba(80,45,10,.55); }
+.pdoc-orelha{ position:absolute; z-index:5; pointer-events:none; filter:drop-shadow(0 0 2px rgba(40,25,5,.45)); }
+.pdoc-orelha::before{ content:""; position:absolute; inset:0; background:linear-gradient(var(--dobra,225deg), #b99c5e, #dcc48c 60%, #cdb173); }
+.pdoc-orelha-tr{ top:0; right:0; } .pdoc-orelha-tr::before{ clip-path:polygon(0 0, 100% 100%, 0 100%); --dobra:45deg; }
+.pdoc-orelha-tl{ top:0; left:0; } .pdoc-orelha-tl::before{ clip-path:polygon(100% 0, 0 100%, 100% 100%); --dobra:-45deg; }
+.pdoc-orelha-bl{ bottom:0; left:0; } .pdoc-orelha-bl::before{ clip-path:polygon(0 0, 100% 100%, 100% 0); --dobra:225deg; }
+.pdoc-orelha-br{ bottom:0; right:0; } .pdoc-orelha-br::before{ clip-path:polygon(0 100%, 100% 0, 0 0); --dobra:135deg; }
+
+/* Amassado: amarrotado e aberto de novo; vincos por todo lado. */
+.cond-amassado{ --papel:#e3d7b6; }
+.cond-amassado .pdoc-relevo{ opacity:.95; }
+.cond-amassado .pdoc-sujeira::after{ content:""; position:absolute; inset:0; box-shadow:inset 0 0 26px 4px rgba(90,60,25,.35); }
 
 /* Rasgado: bordas irregulares (clip-path gerado pelo JS) e pedaço faltando. */
-.cond-rasgado{ --papel:#e9dbb8; }
+.cond-rasgado{ --papel:#e2cf9f; }
+.cond-rasgado .pdoc-sujeira::after{ content:""; position:absolute; inset:0; box-shadow:inset 0 0 30px 4px rgba(105,62,15,.35); }
 .cond-rasgado .pdoc-sujeira::before{ content:""; position:absolute; inset:0; background:radial-gradient(ellipse at 50% 50%, transparent 60%, rgba(120,80,25,.25) 100%); }
 
 /* Queimado: bordas carbonizadas, escurecimento puxando pro marrom. */
@@ -698,6 +717,26 @@
 .cond-molhado{ --papel:#e2dcc6; }
 .cond-molhado .pdoc-corpo{ filter:url(#pdoc-tinta-escorrida); }
 .cond-molhado .pdoc-texto{ color:color-mix(in srgb, var(--tinta) 82%, #4a5a70); }
+
+/* Em pedaços: o papel se partiu em dois ou três; cada pedaço é uma cópia recortada. */
+.cond-pedacos{ --papel:#ddc796; }
+.cond-pedacos .pdoc-relevo{ opacity:.7; }
+.cond-pedacos .pdoc-sujeira::after{ content:""; position:absolute; inset:0; box-shadow:inset 0 0 30px 5px rgba(105,62,15,.4); }
+.pdoc-wrap-pedacos{ padding:0 30px 20px 0; }
+.pdoc-wrap-pedacos .pdoc-peca-extra{ position:absolute; top:0; left:0; width:calc(100% - 30px); height:calc(100% - 20px); }
+
+/* Mofado: manchas esverdeadas e pontinhos escuros de fungo. */
+.cond-mofado{ --papel:#d9d3b4; }
+.cond-mofado .pdoc-relevo{ opacity:.6; }
+.cond-mofado .pdoc-sujeira::after{ content:""; position:absolute; inset:0; box-shadow:inset 0 0 40px 8px rgba(60,70,40,.35); }
+
+/* Manchado de sangue: sangue seco, marrom-avermelhado, com respingos. */
+.cond-ensanguentado{ --papel:#e0cfa6; }
+.cond-ensanguentado .pdoc-relevo{ opacity:.6; }
+.cond-ensanguentado .pdoc-sujeira::after{ content:""; position:absolute; inset:0; box-shadow:inset 0 0 30px 5px rgba(105,62,15,.35); }
+
+.cond-molhado .pdoc-relevo{ opacity:.5; }
+.cond-queimado .pdoc-relevo{ opacity:.55; }
 
 /* Visualização em tela cheia */
 .pdoc-overlay{ position:fixed; inset:0; z-index:9999; background:rgba(12,9,6,.82); overflow:auto; padding:40px 16px; display:flex; align-items:flex-start; justify-content:center; }
@@ -1504,12 +1543,13 @@
      doc = { id, titulo, texto, escrita, papel, condicao, data, assinatura, carimbo, cabecalho }
      escrita:  manuscrito | rabisco | datilografado | relatorio | antigo
      papel:    liso | caderno
-     condicao: preservado | gasto | rasgado | queimado | molhado
+     condicao: preservado | gasto | amassado | rasgado | pedacos | queimado | molhado | mofado | ensanguentado
      Marcações no texto: linha em branco = novo parágrafo; [ilegível] = borrão;
      ~~riscado~~; {{apagado}}; **destaque**;
-     parágrafo começando com "> " = anotação à mão de outra pessoa. */
+     parágrafo começando com "> " = anotação à mão de outra pessoa.
+     Todo o estrago é sorteado a partir do id do documento: todo mundo vê o mesmo papel. */
   var PDOC_ESCRITAS = [["manuscrito","Manuscrito"],["rabisco","Rabisco apressado"],["datilografado","Máquina de escrever"],["relatorio","Relatório impresso"],["antigo","Documento antigo"]];
-  var PDOC_CONDICOES = [["preservado","Preservado"],["gasto","Gasto"],["rasgado","Rasgado"],["queimado","Queimado"],["molhado","Molhado"]];
+  var PDOC_CONDICOES = [["preservado","Preservado"],["gasto","Gasto"],["amassado","Amassado"],["rasgado","Rasgado"],["pedacos","Em pedaços"],["queimado","Queimado"],["molhado","Molhado"],["mofado","Mofado"],["ensanguentado","Manchado de sangue"]];
 
   function pdocHash(str){
     var h = 2166136261;
@@ -1521,34 +1561,51 @@
     return function(){ a |= 0; a = a + 0x6D2B79F5 | 0; var t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
   }
   function pdocEsc(s){ return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+  function pdocSvg(svg){ return "url('data:image/svg+xml,"+encodeURIComponent(svg).replace(/'/g,"%27")+"')"; }
 
-  function pdocTexto(txt){
+  // Letra à mão: cada palavra ganha uma inclinação, um desnível e uma pressão de tinta
+  // próprios (sorteados), pra não parecer fonte de computador alinhada.
+  function pdocMaoTremida(html, rnd, forte){
+    var giro = forte ? 4.2 : 1.3, sobe = forte ? 3.2 : 1.4;
+    return html.split(/(<[^>]+>)/).map(function(parte){
+      if(parte.charAt(0) === "<") return parte;
+      return parte.replace(/[^\s]+/g, function(w){
+        var r = ((rnd()-.5)*2*giro).toFixed(2), y = ((rnd()-.5)*2*sobe).toFixed(1);
+        var o = rnd() < (forte ? .22 : .14) ? (forte ? .62 : .72) + rnd()*.15 : 1;
+        var s = forte ? (0.88 + rnd()*0.3).toFixed(2) : 1;
+        var peso = forte && rnd() < .2 ? ";text-shadow:.6px 0 0 currentColor,-.3px .3px 0 currentColor" : "";
+        return '<span class="pdoc-palavra" style="transform:translateY('+y+'px) rotate('+r+'deg)'+(s!==1?' scale('+s+')':'')+(o<1?';opacity:'+o.toFixed(2):'')+peso+'">'+w+'</span>';
+      });
+    }).join("");
+  }
+
+  function pdocTexto(txt, rnd, escrita){
     var t = pdocEsc(txt||"").replace(/\r/g,"");
     t = t.replace(/\[ileg[ií]vel\]/gi, '<span class="ilegivel" title="ilegível"></span>');
     t = t.replace(/~~([\s\S]+?)~~/g, "<s>$1</s>");
     t = t.replace(/\{\{([\s\S]+?)\}\}/g, '<span class="apagado">$1</span>');
     t = t.replace(/\*\*([\s\S]+?)\*\*/g, "<b>$1</b>");
+    var mao = escrita === "manuscrito" || escrita === "rabisco";
     // Parágrafo começando com "> " = anotação à mão de outra pessoa (lápis, na margem/rodapé).
     return t.split(/\n\s*\n/).map(function(p){
       p = p.trim();
-      if(p.indexOf("&gt; ") === 0) return '<p class="pdoc-nota">'+p.slice(5).replace(/\n/g,"<br>")+"</p>";
-      return "<p>"+p.replace(/\n/g,"<br>")+"</p>";
+      if(p.indexOf("&gt; ") === 0) return '<p class="pdoc-nota">'+pdocMaoTremida(p.slice(5).replace(/\n/g,"<br>"), rnd, false)+"</p>";
+      p = p.replace(/\n/g,"<br>");
+      return "<p>"+(mao ? pdocMaoTremida(p, rnd, escrita === "rabisco") : p)+"</p>";
     }).join("");
   }
 
   // Borda irregular: pontos ao longo do perímetro, em %, com recuo sorteado.
-  function pdocBorda(rnd, amp, lados, pedaco){
-    var pts = [], n = 22;
+  function pdocBordaPts(rnd, amp, lados, pedaco){
+    var pts = [], n = 26;
     function j(lado){ return lados[lado] ? rnd()*amp[lado] : rnd()*0.35; }
-    for(var i=0;i<=n;i++) pts.push([i/n*100, j("t")]);                 // topo
-    for(i=1;i<=n;i++) pts.push([100-j("r"), i/n*100]);                  // direita
-    for(i=n-1;i>=0;i--) pts.push([i/n*100, 100-j("b")]);                // base
-    for(i=n-1;i>=1;i--) pts.push([j("l"), i/n*100]);                    // esquerda
+    for(var i=0;i<=n;i++) pts.push([i/n*100, j("t")]);
+    for(i=1;i<=n;i++) pts.push([100-j("r"), i/n*100]);
+    for(i=n-1;i>=0;i--) pts.push([i/n*100, 100-j("b")]);
+    for(i=n-1;i>=1;i--) pts.push([j("l"), i/n*100]);
     if(pedaco){
-      // arranca um canto: tira os pontos dessa região e liga as pontas com um rasgo irregular
       var cx = pedaco.canto.indexOf("r")>-1 ? 100 : 0, cy = pedaco.canto.indexOf("b")>-1 ? 100 : 0;
       function dentro(p){ return Math.abs(p[0]-cx)/pedaco.w + Math.abs(p[1]-cy)/pedaco.h < 1; }
-      // gira a lista pra começar longe do canto (assim a região arrancada fica contínua)
       var longe = 0, dmax = -1;
       pts.forEach(function(p, idx){ var d = Math.pow(p[0]-cx,2)+Math.pow(p[1]-cy,2); if(d>dmax){ dmax=d; longe=idx; } });
       pts = pts.slice(longe).concat(pts.slice(0, longe));
@@ -1556,14 +1613,32 @@
       pts.forEach(function(p, idx){ if(dentro(p)){ if(i0<0) i0 = idx; i1 = idx; } });
       if(i0 > 0 && i1 < pts.length-1){
         var a = pts[i0-1], z = pts[i1+1], rasgo = [];
-        for(var k=1;k<10;k++){
-          var f = k/10, x = a[0]+(z[0]-a[0])*f, y = a[1]+(z[1]-a[1])*f;
-          rasgo.push([Math.min(100,Math.max(0, x + (rnd()-.5)*3.5)), Math.min(100,Math.max(0, y + (rnd()-.5)*3.5))]);
+        for(var k=1;k<12;k++){
+          var f = k/12, x = a[0]+(z[0]-a[0])*f, y = a[1]+(z[1]-a[1])*f;
+          rasgo.push([Math.min(100,Math.max(0, x + (rnd()-.5)*4)), Math.min(100,Math.max(0, y + (rnd()-.5)*4))]);
         }
         pts = pts.slice(0, i0).concat(rasgo, pts.slice(i1+1));
       }
     }
-    return "polygon(" + pts.map(function(p){ return p[0].toFixed(2)+"% "+p[1].toFixed(2)+"%"; }).join(",") + ")";
+    return pts;
+  }
+  function pdocPoly(pts){ return "polygon(" + pts.map(function(p){ return (typeof p[0]==="string"?p[0]:p[0].toFixed(2)+"%")+" "+(typeof p[1]==="string"?p[1]:p[1].toFixed(2)+"%"); }).join(",") + ")"; }
+  function pdocBorda(rnd, amp, lados, pedaco){ return pdocPoly(pdocBordaPts(rnd, amp, lados, pedaco)); }
+
+  // Borda gasta com uma "orelha" (canto dobrado) de s px no canto escolhido.
+  function pdocBordaOrelha(rnd, canto, s){
+    var pts = pdocBordaPts(rnd, {t:.9,r:.9,b:.9,l:.9}, {t:true,r:true,b:true,l:true}, null);
+    var cx = canto.indexOf("r")>-1, cy = canto.indexOf("b")>-1;
+    // tira os pontos do canto e troca pela diagonal da dobra (em px, com calc)
+    var X = function(off){ return cx ? "calc(100% - "+off+"px)" : off+"px"; };
+    var Y = function(off){ return cy ? "calc(100% - "+off+"px)" : off+"px"; };
+    var alvoX = cx ? 100 : 0, alvoY = cy ? 100 : 0, idx = 0, dmin = 1e9;
+    pts.forEach(function(p, i){ var d = Math.abs(p[0]-alvoX)+Math.abs(p[1]-alvoY); if(d<dmin){ dmin=d; idx=i; } });
+    // o ponto do canto vira dois pontos (fim da dobra em cada lado); a ordem depende do sentido do contorno
+    var horizontalPrimeiro = (canto==="tr" || canto==="bl");
+    var p1 = horizontalPrimeiro ? [X(s), Y(0)] : [X(0), Y(s)], p2 = horizontalPrimeiro ? [X(0), Y(s)] : [X(s), Y(0)];
+    pts.splice(idx, 1, p1, p2);
+    return pdocPoly(pts);
   }
 
   function pdocManchas(rnd, qtd, cor1, cor2, raioMin, raioMax, anel){
@@ -1575,60 +1650,171 @@
     }
     return g;
   }
+  // Pintinhas de oxidação (o "foxing" de papel velho).
+  function pdocPintas(rnd, qtd, cor){
+    var g = [];
+    for(var i=0;i<qtd;i++){
+      var x = (3+rnd()*94).toFixed(1), y = (3+rnd()*94).toFixed(1), r = (1.5+rnd()*5).toFixed(1);
+      g.push("radial-gradient(circle "+r+"px at "+x+"% "+y+"%, "+cor+", transparent)");
+    }
+    return g;
+  }
+  // Vinco: linha escura + reflexo claro, num ângulo qualquer.
+  function pdocVinco(rnd, forte){
+    var ang = Math.round(rnd()*180), pos = (20+rnd()*60).toFixed(1), a = forte ? .30 : .20;
+    return "linear-gradient("+ang+"deg, transparent calc("+pos+"% - 2px), rgba(70,45,15,"+a+") "+pos+"%, rgba(255,250,235,"+(a+.15)+") calc("+pos+"% + 1.2px), transparent calc("+pos+"% + 3px))";
+  }
+  // Relevo de papel amassado: ruído + luz rasante (fica numa camada em "multiply").
+  function pdocRelevo(rnd, freq, altura, octavas){
+    var seed = Math.floor(rnd()*900)+1;
+    return pdocSvg("<svg xmlns='http://www.w3.org/2000/svg' width='600' height='800'><filter id='r' x='0' y='0' width='100%' height='100%'>" +
+      "<feTurbulence type='fractalNoise' baseFrequency='"+freq+"' numOctaves='"+octavas+"' seed='"+seed+"' result='n'/>" +
+      "<feDiffuseLighting in='n' surfaceScale='"+altura+"' lighting-color='#fff' diffuseConstant='1.05'><feDistantLight azimuth='"+(200+Math.round(rnd()*60))+"' elevation='52'/></feDiffuseLighting>" +
+      "</filter><rect width='100%' height='100%' filter='url(#r)'/></svg>");
+  }
+  // Mancha orgânica (água, mofo, sangue): ruído cortado num limiar, pintado de uma cor,
+  // concentrado numa região (máscara radial) e com a borda mais escura.
+  function pdocMancha(rnd, cor, freq, corte, borda, regiao){
+    var seed = Math.floor(rnd()*900)+1;
+    var cx = regiao ? regiao.x : 50, cy = regiao ? regiao.y : 50, raio = regiao ? regiao.r : 80;
+    return pdocSvg("<svg xmlns='http://www.w3.org/2000/svg' width='600' height='800' viewBox='0 0 600 800' preserveAspectRatio='none'>" +
+      "<defs><radialGradient id='g' cx='"+cx+"%' cy='"+cy+"%' r='"+raio+"%'><stop offset='0' stop-color='#fff'/><stop offset='.7' stop-color='#fff'/><stop offset='1' stop-color='#000'/></radialGradient>" +
+      "<mask id='m'><rect width='100%' height='100%' fill='url(#g)'/></mask>" +
+      "<filter id='f' x='0' y='0' width='100%' height='100%' color-interpolation-filters='sRGB'><feTurbulence type='fractalNoise' baseFrequency='"+freq+"' numOctaves='4' seed='"+seed+"'/>" +
+      "<feColorMatrix type='matrix' values='0 0 0 0 "+cor[0]+"  0 0 0 0 "+cor[1]+"  0 0 0 0 "+cor[2]+"  2.4 0 0 0 -"+corte+"'/>" +
+      "<feComponentTransfer><feFuncA type='table' tableValues='"+borda+"'/></feComponentTransfer><feGaussianBlur stdDeviation='1.2'/></filter></defs>" +
+      "<rect width='100%' height='100%' filter='url(#f)' mask='url(#m)'/></svg>");
+  }
 
   function renderDocumento(doc){
     doc = doc || {};
     var escrita = doc.escrita || "manuscrito", cond = doc.condicao || "gasto", papel = doc.papel || "liso";
     var rnd = pdocRng(pdocHash(String(doc.id || doc.titulo || "doc")));
-    var giro = ((rnd()-.5) * (cond==="preservado" ? 0.6 : 2.4)).toFixed(2);
-    var estilo = "--giro:"+giro+"deg;", sujeira = [];
+    var giroMax = { preservado:.6, amassado:4, pedacos:1.5 }[cond] || 2.4;
+    var giro = ((rnd()-.5) * giroMax).toFixed(2);
+    var estilo = "--giro:"+giro+"deg;", sujeira = [], relevo = null, extras = "";
 
     if(cond === "gasto"){
-      sujeira = sujeira.concat(pdocManchas(rnd, 1, "rgba(120,72,20,.28)", "rgba(120,72,20,.12)", 34, 48, true));
-      sujeira = sujeira.concat(pdocManchas(rnd, 2, "rgba(110,80,40,.10)", "rgba(110,80,40,.04)", 40, 90, false));
+      // manchas de uso, pintas de oxidação, dedos sujos, xícara, desbotado, dobras e orelha
+      sujeira = sujeira.concat(pdocManchas(rnd, 1, "rgba(110,62,15,.40)", "rgba(110,62,15,.18)", 30, 46, true));
+      sujeira = sujeira.concat(pdocManchas(rnd, 3, "rgba(95,65,30,.16)", "rgba(95,65,30,.06)", 30, 80, false));
+      sujeira = sujeira.concat(pdocManchas(rnd, 2, "rgba(60,45,30,.20)", "rgba(60,45,30,.07)", 14, 26, false)); // dedos
+      sujeira = sujeira.concat(pdocPintas(rnd, 22, "rgba(120,70,20,.55)"));
+      sujeira.push("radial-gradient(ellipse "+Math.round(90+rnd()*80)+"px "+Math.round(60+rnd()*60)+"px at "+(20+rnd()*60).toFixed(0)+"% "+(20+rnd()*60).toFixed(0)+"%, rgba(240,228,195,.55), transparent 75%)"); // tinta desbotada
+      sujeira.push(pdocVinco(rnd, true));
+      relevo = pdocRelevo(rnd, 0.035, 1.6, 3);
+      if(rnd() < .75){
+        var cantoO = ["tl","tr","bl","br"][Math.floor(rnd()*4)], s = Math.round(34 + rnd()*22);
+        estilo += "clip-path:"+pdocBordaOrelha(rnd, cantoO, s)+";";
+        extras += '<div class="pdoc-orelha pdoc-orelha-'+cantoO+'" style="width:'+s+'px;height:'+s+'px"></div>';
+      } else {
+        estilo += "clip-path:"+pdocBorda(rnd, {t:.9,r:.9,b:.9,l:.9}, {t:true,r:true,b:true,l:true}, null)+";";
+      }
+    }
+    if(cond === "amassado"){
+      relevo = pdocRelevo(rnd, 0.011 + rnd()*0.006, 5.5, 4);
+      for(var v=0; v<5; v++) sujeira.push(pdocVinco(rnd, true));
+      sujeira = sujeira.concat(pdocPintas(rnd, 8, "rgba(110,70,30,.35)"));
+      estilo += "clip-path:"+pdocBorda(rnd, {t:1.4,r:1.4,b:1.4,l:1.4}, {t:true,r:true,b:true,l:true}, null)+";";
     }
     if(cond === "rasgado"){
       var lados = { t:rnd()<.5, r:rnd()<.5, b:rnd()<.6, l:rnd()<.4 };
       if(!lados.t && !lados.r && !lados.b && !lados.l) lados.b = true;
       var cantos = doc.titulo ? ["bl","br"] : ["tl","tr","bl","br"];  // não arranca o título
       estilo += "clip-path:"+pdocBorda(rnd, {t:3.5,r:3,b:4,l:3}, lados, { canto:cantos[Math.floor(rnd()*cantos.length)], w:18+rnd()*16, h:14+rnd()*14 })+";";
+      sujeira = sujeira.concat(pdocPintas(rnd, 10, "rgba(120,70,20,.4)"));
+      relevo = pdocRelevo(rnd, 0.03, 1.2, 3);
     }
     if(cond === "queimado"){
       estilo += "clip-path:"+pdocBorda(rnd, {t:4,r:4,b:5,l:4}, {t:true,r:true,b:true,l:true}, rnd()<.6 ? { canto:["tl","tr","bl","br"][Math.floor(rnd()*4)], w:14+rnd()*12, h:12+rnd()*12 } : null)+";";
-      for(var q=0;q<4;q++){
-        var lado = Math.floor(rnd()*4), pos = (10+rnd()*80).toFixed(1), rr = Math.round(40+rnd()*60);
+      for(var q=0;q<5;q++){
+        var lado = Math.floor(rnd()*4), pos = (10+rnd()*80).toFixed(1), rr = Math.round(40+rnd()*70);
         var xy = lado===0 ? pos+"% 0%" : lado===1 ? "100% "+pos+"%" : lado===2 ? pos+"% 100%" : "0% "+pos+"%";
         sujeira.push("radial-gradient(circle "+rr+"px at "+xy+", rgba(25,10,2,.95), rgba(80,35,8,.7) 45%, rgba(140,80,25,.25) 70%, transparent 80%)");
       }
+      relevo = pdocRelevo(rnd, 0.03, 1.4, 3);
     }
     if(cond === "molhado"){
-      // Mancha d'água orgânica: ruído do SVG cortado num limiar, com a "linha de maré"
-      // mais escura na borda (tabela da transferência de alfa) - cada documento tem a sua.
-      var semente = Math.floor(rnd()*900)+1, freq = (0.0028 + rnd()*0.0018).toFixed(4);
-      var svg = "<svg xmlns='http://www.w3.org/2000/svg' width='600' height='800'><filter id='w' x='0' y='0' width='100%' height='100%'>" +
-        "<feTurbulence type='fractalNoise' baseFrequency='"+freq+"' numOctaves='3' seed='"+semente+"'/>" +
-        "<feColorMatrix type='matrix' values='0 0 0 0 .42  0 0 0 0 .40  0 0 0 0 .34  2.2 0 0 0 -.78'/>" +
-        "<feComponentTransfer><feFuncA type='table' tableValues='0 0 0 0 0 0 .5 .2 .15 .14 .14'/></feComponentTransfer><feGaussianBlur stdDeviation='1.6'/>" +
-        "</filter><rect width='100%' height='100%' filter='url(%23w)'/></svg>";
-      sujeira.push("url('data:image/svg+xml,"+encodeURIComponent(svg.replace("%23","#")).replace(/'/g,"%27")+"')");
+      sujeira.push(pdocMancha(rnd, [.42,.40,.34], (0.0028 + rnd()*0.0018).toFixed(4), .78, "0 0 0 0 0 0 .5 .2 .15 .14 .14", null));
+      relevo = pdocRelevo(rnd, 0.008, 2.2, 2); // papel ondulado depois de secar
     }
+    if(cond === "mofado"){
+      var mx = Math.round(15+rnd()*70), my = Math.round(15+rnd()*70);
+      sujeira.push(pdocMancha(rnd, [.30,.36,.22], "0.012", .55, "0 0 0 0 .35 .55 .45 .5 .55 .6 .6", { x:mx, y:my, r:55 }));
+      sujeira.push(pdocMancha(rnd, [.12,.14,.10], "0.03", .85, "0 0 0 0 0 0 0 .6 .75 .8 .8", { x:mx, y:my, r:40 }));
+      sujeira = sujeira.concat(pdocPintas(rnd, 40, "rgba(40,50,30,.55)"));
+      relevo = pdocRelevo(rnd, 0.02, 1.2, 3);
+    }
+    if(cond === "ensanguentado"){
+      var bx = Math.round(30+rnd()*40), by = Math.round(35+rnd()*30);
+      sujeira.push(pdocMancha(rnd, [.30,.04,.02], "0.006", .8, "0 0 0 0 0 .95 .82 .8 .8 .82 .85", { x:bx, y:by, r:52 }));
+      for(var gota=0; gota<14; gota++){
+        var gx = (bx + (rnd()-.5)*70).toFixed(1), gy = (by + (rnd()-.5)*80).toFixed(1), gr = (2+rnd()*7).toFixed(1);
+        sujeira.push("radial-gradient(circle "+gr+"px at "+gx+"% "+gy+"%, rgba(75,10,5,.9), rgba(75,10,5,.55) 70%, transparent)");
+      }
+      sujeira.push("linear-gradient("+Math.round(rnd()*360)+"deg, transparent 40%, rgba(90,20,10,.16) 48%, rgba(90,20,10,.10) 56%, transparent 62%)"); // rastro arrastado
+      sujeira = sujeira.concat(pdocPintas(rnd, 10, "rgba(110,70,30,.35)"));
+      relevo = pdocRelevo(rnd, 0.03, 1.4, 3);
+    }
+    if(cond === "pedacos"){
+      sujeira = sujeira.concat(pdocPintas(rnd, 14, "rgba(120,70,20,.45)"));
+      sujeira.push(pdocVinco(rnd, false));
+      relevo = pdocRelevo(rnd, 0.03, 1.6, 3);
+    }
+
     var classes = "pdoc escrita-"+escrita+" cond-"+cond+(papel==="caderno"?" papel-caderno":"")+(doc.carimbo?" pdoc-com-carimbo":"")+(doc.titulo?"":" pdoc-sem-titulo");
     var bilhete = (doc.tamanho === "bilhete") || (!doc.tamanho && String(doc.texto||"").length < 140 && !doc.titulo);
-    var html = '<div class="pdoc-wrap'+(bilhete?' pdoc-bilhete':'')+'"><div class="'+classes+'" style="'+estilo+'">';
-    if(doc.carimbo) html += '<div class="pdoc-carimbo">'+pdocEsc(doc.carimbo)+'</div>';
-    html += '<div class="pdoc-corpo">';
-    if(escrita === "relatorio" && doc.cabecalho && (doc.cabecalho[0]||doc.cabecalho[1])) html += '<div class="pdoc-cabecalho"><span>'+pdocEsc(doc.cabecalho[0]||"")+'</span><span>'+pdocEsc(doc.cabecalho[1]||"")+'</span></div>';
-    if(doc.data) html += '<div class="pdoc-data">'+pdocEsc(doc.data)+'</div>';
-    if(doc.titulo) html += '<div class="pdoc-titulo">'+pdocEsc(doc.titulo)+'</div>';
-    html += '<div class="pdoc-texto">'+pdocTexto(doc.texto)+'</div>';
-    if(doc.assinatura) html += '<div class="pdoc-assinatura">'+pdocEsc(doc.assinatura)+'</div>';
+    var miolo = "";
+    if(doc.carimbo) miolo += '<div class="pdoc-carimbo">'+pdocEsc(doc.carimbo)+'</div>';
+    miolo += '<div class="pdoc-corpo">';
+    if(escrita === "relatorio" && doc.cabecalho && (doc.cabecalho[0]||doc.cabecalho[1])) miolo += '<div class="pdoc-cabecalho"><span>'+pdocEsc(doc.cabecalho[0]||"")+'</span><span>'+pdocEsc(doc.cabecalho[1]||"")+'</span></div>';
+    if(doc.data) miolo += '<div class="pdoc-data">'+pdocEsc(doc.data)+'</div>';
+    if(doc.titulo) miolo += '<div class="pdoc-titulo">'+(escrita==="manuscrito"||escrita==="rabisco" ? pdocMaoTremida(pdocEsc(doc.titulo), rnd, escrita==="rabisco") : pdocEsc(doc.titulo))+'</div>';
+    miolo += '<div class="pdoc-texto">'+pdocTexto(doc.texto, rnd, escrita)+'</div>';
+    if(doc.assinatura) miolo += '<div class="pdoc-assinatura">'+pdocEsc(doc.assinatura)+'</div>';
+    miolo += '</div>';
+    if(relevo) miolo += '<div class="pdoc-relevo" style="background-image:'+relevo+'"></div>';
+    miolo += '<div class="pdoc-sujeira"'+(sujeira.length?' style="background-image:'+sujeira.join(",")+'"':'')+'></div>';
+    miolo += extras;
+
+    var html = '<div class="pdoc-wrap'+(bilhete?' pdoc-bilhete':'')+(cond==="pedacos"?' pdoc-wrap-pedacos':'')+'">';
+    if(cond === "pedacos"){
+      // Mesmo papel desenhado duas (ou três) vezes, cada cópia recortada num pedaço,
+      // separadas por um rasgo irregular e um pouco afastadas umas das outras.
+      var xt = 38 + rnd()*24, xb = 38 + rnd()*24, rasgo = [];
+      for(var k=0;k<=18;k++){ var f = k/18; rasgo.push([Math.max(4, Math.min(96, xt + (xb-xt)*f + (rnd()-.5)*5)), f*100]); }
+      var bordaFina = function(){ return rnd()*0.8; };
+      var esq = [[0+bordaFina(),0+bordaFina()]].concat(rasgo, [[0+bordaFina(),100-bordaFina()]]);
+      var dir = [[100-bordaFina(),0+bordaFina()]].concat(rasgo.slice(), [[100-bordaFina(),100-bordaFina()]]);
+      var tres = rnd() < .5, pecas = [];
+      if(tres){
+        // o pedaço da direita se parte de novo, na horizontal
+        var yc = 45 + rnd()*20, cortes = [];
+        for(k=0;k<=10;k++){ cortes.push([null, yc + (rnd()-.5)*5]); }
+        var xRasgoEm = function(y){ var best = rasgo[0]; rasgo.forEach(function(p){ if(Math.abs(p[1]-y) < Math.abs(best[1]-y)) best = p; }); return best[0]; };
+        var x0 = xRasgoEm(yc);
+        cortes = cortes.map(function(c, i){ return [x0 + (100-x0)*(i/10), c[1]]; });
+        var rasgoCima = rasgo.filter(function(p){ return p[1] <= yc; }), rasgoBaixo = rasgo.filter(function(p){ return p[1] >= yc; });
+        var dirCima = rasgoCima.concat(cortes, [[100-bordaFina(), 0+bordaFina()]]);
+        var dirBaixo = [cortes[0]].concat(rasgoBaixo, [[100-bordaFina(),100-bordaFina()]], cortes.slice().reverse().slice(0, cortes.length-1));
+        pecas = [ { poly:esq, t:"rotate("+(-1.2+rnd()*.8).toFixed(2)+"deg)" },
+                  { poly:dirCima, t:"translate("+(14+rnd()*10).toFixed(0)+"px,"+(-4-rnd()*6).toFixed(0)+"px) rotate("+(1+rnd()*2).toFixed(2)+"deg)" },
+                  { poly:dirBaixo, t:"translate("+(10+rnd()*10).toFixed(0)+"px,"+(10+rnd()*8).toFixed(0)+"px) rotate("+(-.5-rnd()*2).toFixed(2)+"deg)" } ];
+      } else {
+        pecas = [ { poly:esq, t:"rotate("+(-1.2+rnd()*.8).toFixed(2)+"deg)" },
+                  { poly:dir, t:"translate("+(16+rnd()*12).toFixed(0)+"px,"+(4+rnd()*10).toFixed(0)+"px) rotate("+(1+rnd()*2).toFixed(2)+"deg)" } ];
+      }
+      pecas.forEach(function(pc, i){
+        html += '<div class="'+classes+(i>0?' pdoc-peca-extra':'')+'" style="'+estilo+'clip-path:'+pdocPoly(pc.poly)+';transform:'+pc.t+'">'+miolo+'</div>';
+      });
+    } else {
+      html += '<div class="'+classes+'" style="'+estilo+'">'+miolo+'</div>';
+    }
     html += '</div>';
-    html += '<div class="pdoc-sujeira"'+(sujeira.length?' style="background-image:'+sujeira.join(",")+(cond==="molhado"?';background-size:100% 100%':'')+'"':'')+'></div>';
-    html += '</div></div>';
     return html;
   }
 
-  // Filtro SVG da tinta escorrida (papel molhado): inserido uma vez na página.
+  // Filtros SVG usados pelos papéis: tinta escorrida (molhado) e traço de lápis (rabisco).
   function pdocInstalarFiltros(){
     if(document.getElementById("pdoc-filtros")) return;
     var d = document.createElement("div");
@@ -1637,7 +1823,12 @@
       '<feTurbulence type="fractalNoise" baseFrequency="0.018 0.09" numOctaves="2" seed="7" result="t"/>' +
       '<feDisplacementMap in="SourceGraphic" in2="t" scale="4.5" xChannelSelector="R" yChannelSelector="G" result="d"/>' +
       '<feGaussianBlur in="d" stdDeviation="0.7" result="b"/>' +
-      '<feMerge><feMergeNode in="b"/><feMergeNode in="d"/></feMerge></filter></svg>';
+      '<feMerge><feMergeNode in="b"/><feMergeNode in="d"/></feMerge></filter>' +
+      '<filter id="pdoc-lapis" x="-5%" y="-5%" width="110%" height="110%">' +
+      '<feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="3" result="t"/>' +
+      '<feDisplacementMap in="SourceGraphic" in2="t" scale="1.6" xChannelSelector="R" yChannelSelector="G" result="d"/>' +
+      '<feColorMatrix in="t" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -0.9 1.35" result="gr"/>' +
+      '<feComposite in="d" in2="gr" operator="in"/></filter></svg>';
     document.body.appendChild(d);
   }
 
@@ -1681,6 +1872,12 @@
       b.addEventListener("click", function(e){ if(e.target.closest("[data-pdocpapel]") && !e.target.closest(".pdoc-fechar")) return; fechar(); });
     });
   }
+  // Nome do documento na lista: o título, ou o começo do texto (sem as marcações).
+  function docRotulo(d){
+    if(d.titulo) return d.titulo;
+    var t = String(d.texto||"").replace(/\[ileg[ií]vel\]/gi,"…").replace(/~~|\{\{|\}\}|\*\*/g,"").replace(/^&gt; |^> /gm,"").replace(/\s+/g," ").trim();
+    return t ? (t.length > 42 ? t.slice(0,42).replace(/\s+\S*$/,"")+"…" : t) : "Sem título";
+  }
   function condicaoNome(k){ var x = PDOC_CONDICOES.filter(function(c){ return c[0]===k; })[0]; return x ? x[1] : k; }
 
   // Seção da ficha: documentos que este personagem recebeu.
@@ -1688,7 +1885,7 @@
     var lista = docsDoPersonagem(c);
     if(!lista.length) return '<p class="hint" style="margin:0">Nenhum documento encontrado ainda. Quando o grupo achar papéis, cartas ou registros, o Assimilador entrega por aqui.</p>';
     return '<div class="doc-lista">' + lista.map(function(d){
-      return '<button type="button" class="doc-item" data-docabrir="'+d.id+'"><span class="doc-ico">📜</span><span><b>'+esc(d.titulo||"Sem título")+'</b><span class="hint" style="display:block;margin:0">'+condicaoNome(d.condicao)+'</span></span></button>';
+      return '<button type="button" class="doc-item" data-docabrir="'+d.id+'"><span class="doc-ico">📜</span><span><b>'+esc(docRotulo(d))+'</b><span class="hint" style="display:block;margin:0">'+condicaoNome(d.condicao)+'</span></span></button>';
     }).join('') + '</div><p class="hint" style="margin:8px 0 0">Papéis não ocupam espaço no inventário.</p>';
   }
   function bindDocsFicha(){
@@ -1739,7 +1936,7 @@
         var nota = docNota(d.id);
         var nomes = (d.entregues||[]).map(function(cid){ var ch = getChar(cid); return ch ? ch.nomePersonagem : null; }).filter(Boolean);
         html += '<div class="doc-linha">' +
-          '<div class="doc-linha-topo"><div><b>'+esc(d.titulo||"Sem título")+'</b> <span class="hint">· '+condicaoNome(d.condicao)+'</span>' +
+          '<div class="doc-linha-topo"><div><b>'+esc(docRotulo(d))+'</b> <span class="hint">· '+condicaoNome(d.condicao)+'</span>' +
             '<div class="hint" style="margin:2px 0 0">'+(nomes.length ? 'Entregue a: '+esc(nomes.join(", ")) : 'Ainda não entregue')+'</div>' +
             (nota.achado ? '<div class="hint" style="margin:2px 0 0"><i>Achado:</i> '+esc(nota.achado)+'</div>' : '') +
             (nota.notaMestre ? '<div class="hint" style="margin:2px 0 0"><i>Nota:</i> '+esc(nota.notaMestre)+'</div>' : '') +
