@@ -637,6 +637,7 @@
 .escrita-antigo{ font-family:"Doc Antigo", Georgia, serif; font-size:17px; line-height:1.55; --papel:#ead9b0; --tinta:#2c1d0e; }
 .escrita-antigo .pdoc-titulo{ font-size:25px; text-align:center; font-weight:400; font-style:italic; }
 .escrita-antigo .pdoc-texto p:first-child::first-letter{ float:left; font-size:3.1em; line-height:.8; padding:4px 6px 0 0; }
+.escrita-antigo.pdoc-sem-titulo .pdoc-texto p:first-child::first-letter{ float:none; font-size:inherit; line-height:inherit; padding:0; }
 
 /* Papel pautado de caderno */
 .papel-caderno{ --papel:#f3efe2; background-image:
@@ -1611,7 +1612,7 @@
         "</filter><rect width='100%' height='100%' filter='url(%23w)'/></svg>";
       sujeira.push("url('data:image/svg+xml,"+encodeURIComponent(svg.replace("%23","#")).replace(/'/g,"%27")+"')");
     }
-    var classes = "pdoc escrita-"+escrita+" cond-"+cond+(papel==="caderno"?" papel-caderno":"")+(doc.carimbo?" pdoc-com-carimbo":"");
+    var classes = "pdoc escrita-"+escrita+" cond-"+cond+(papel==="caderno"?" papel-caderno":"")+(doc.carimbo?" pdoc-com-carimbo":"")+(doc.titulo?"":" pdoc-sem-titulo");
     var bilhete = (doc.tamanho === "bilhete") || (!doc.tamanho && String(doc.texto||"").length < 140 && !doc.titulo);
     var html = '<div class="pdoc-wrap'+(bilhete?' pdoc-bilhete':'')+'"><div class="'+classes+'" style="'+estilo+'">';
     if(doc.carimbo) html += '<div class="pdoc-carimbo">'+pdocEsc(doc.carimbo)+'</div>';
