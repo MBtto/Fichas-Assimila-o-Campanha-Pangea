@@ -3803,7 +3803,7 @@
     // a maioria das fichas, que nunca vai usar isso)
     var instintosBody = '<table><tbody>';
     INSTINTOS.forEach(function(i){
-      var baseInstDisp = c.instintos[i[0]]||0;
+      var baseInstDisp = instintoBase(c, i[0]); // já inclui o que foi comprado com Experiência
       var bonusInstDisp = (c.instintosAssimBonus && c.instintosAssimBonus[i[0]])||0;
       instintosBody += '<tr><td>'+i[1]+'</td><td class="num">'+(baseInstDisp+bonusInstDisp)+(bonusInstDisp?' <span class="hint">('+baseInstDisp+'+'+bonusInstDisp+')</span>':'')+'</td></tr>';
     });
