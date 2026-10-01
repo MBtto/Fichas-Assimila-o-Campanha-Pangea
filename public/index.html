@@ -933,7 +933,7 @@
 .pdoc .pdoc-relevo{ position:absolute; inset:0; pointer-events:none; z-index:2; mix-blend-mode:multiply; background-size:100% 100%; opacity:.55; }
 .pdoc .pdoc-sujeira{ position:absolute; inset:0; pointer-events:none; z-index:3; }
 .pdoc .pdoc-palavra{ display:inline-block; }
-.escrita-rabisco .pdoc-palavra{ margin-right:.14em; }
+.escrita-rabisco .pdoc-palavra{ margin-right:.06em; }
 .pdoc .pdoc-corpo{ position:relative; z-index:1; }
 
 /* ---------- ESCRITA ---------- */
@@ -946,8 +946,9 @@
 .escrita-manuscrito .pdoc-titulo{ font-size:28px; }
 .escrita-manuscrito .pdoc-texto p{ margin-bottom:.45em; }
 
-.escrita-rabisco{ font-family:"Doc Rabisco", cursive; font-size:33px; line-height:1.28; --tinta:#1c1c20; letter-spacing:.02em; }
-.escrita-rabisco .pdoc-titulo{ font-size:30px; }
+.escrita-rabisco{ font-family:"Doc Rabisco", cursive; font-size:24px; line-height:1.18; --tinta:#1c1c20; }
+.escrita-rabisco .pdoc-titulo{ font-size:26px; }
+.escrita-rabisco .pdoc-texto p{ margin-bottom:.4em; }
 .escrita-rabisco .pdoc-texto{ transform:rotate(-2deg); filter:url(#pdoc-lapis); }
 .escrita-rabisco .pdoc-titulo{ filter:url(#pdoc-lapis); }
 
@@ -1066,9 +1067,9 @@
 .pdoc-fechar{ position:fixed; top:12px; right:14px; z-index:10000; background:#efe4c8 !important; color:#2a2118 !important; border-color:#efe4c8 !important; }
 
 @media (max-width:560px){
-  .escrita-rabisco{ font-size:26px; }
+  .escrita-rabisco{ font-size:21px; }
   .pdoc{ padding:32px 26px 36px; }
-  .escrita-manuscrito{ font-size:20px; } .escrita-rabisco{ font-size:22px; }
+  .escrita-manuscrito{ font-size:20px; } .escrita-rabisco{ font-size:19px; }
   .escrita-datilografado, .escrita-relatorio{ font-size:13px; }
   .pdoc-carimbo{ right:14px; bottom:18px; font-size:12px; }
   .pdoc-com-carimbo{ padding-bottom:72px; }
@@ -2033,6 +2034,38 @@
       "<rect width='100%' height='100%' filter='url(#f)' mask='url(#m)'/></svg>");
   }
 
+  // Papel amassado e aberto de novo: uma malha irregular de facetas (triângulos)
+  // com luz e sombra alternadas, e vincos curtos nas bordas de algumas facetas -
+  // é o que dá a cara de papel amarrotado, em vez de linhas retas cruzando a folha.
+  function pdocAmassado(rnd){
+    var cols = 9, rows = 12, W = 600, H = 800, pts = [], r, c;
+    for(r=0; r<=rows; r++){ pts.push([]); for(c=0; c<=cols; c++){
+      var x = c*W/cols, y = r*H/rows;
+      if(c>0 && c<cols) x += (rnd()-.5)*W/cols*.8;
+      if(r>0 && r<rows) y += (rnd()-.5)*H/rows*.8;
+      pts[r].push([x.toFixed(1), y.toFixed(1)]);
+    } }
+    var faces = "", vincos = "";
+    function tri(a,b,c2){
+      var luz = rnd(), fill = luz > .5 ? "rgba(255,252,240,"+(.04+(luz-.5)*.22).toFixed(3)+")" : "rgba(95,65,25,"+(.02+(.5-luz)*.16).toFixed(3)+")";
+      faces += "<polygon points='"+a.join(",")+" "+b.join(",")+" "+c2.join(",")+"' fill='"+fill+"'/>";
+    }
+    function vinco(a,b){
+      if(rnd() > .32) return;
+      vincos += "<line x1='"+a[0]+"' y1='"+a[1]+"' x2='"+b[0]+"' y2='"+b[1]+"' stroke='rgba(80,52,18,.2)' stroke-width='.9'/>" +
+        "<line x1='"+(+a[0]+1.2)+"' y1='"+(+a[1]+1.2)+"' x2='"+(+b[0]+1.2)+"' y2='"+(+b[1]+1.2)+"' stroke='rgba(255,250,235,.3)' stroke-width='.8'/>";
+    }
+    for(r=0; r<rows; r++) for(c=0; c<cols; c++){
+      var p00 = pts[r][c], p10 = pts[r][c+1], p01 = pts[r+1][c], p11 = pts[r+1][c+1];
+      if(rnd() < .5){ tri(p00,p10,p11); tri(p00,p11,p01); vinco(p00,p11); }
+      else { tri(p00,p10,p01); tri(p10,p11,p01); vinco(p10,p01); }
+      vinco(p00,p10); vinco(p00,p01);
+    }
+    return pdocSvg("<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 800' preserveAspectRatio='none'><defs><filter id='t' x='-5%' y='-5%' width='110%' height='110%'><feTurbulence type='fractalNoise' baseFrequency='.018' numOctaves='2' seed='"+Math.floor(rnd()*900+1)+"'/><feDisplacementMap in='SourceGraphic' scale='26'/><feGaussianBlur stdDeviation='.9'/></filter>" +
+      "<filter id='v' x='-5%' y='-5%' width='110%' height='110%'><feTurbulence type='fractalNoise' baseFrequency='.03' numOctaves='2' seed='"+Math.floor(rnd()*900+1)+"'/><feDisplacementMap in='SourceGraphic' scale='14'/></filter></defs>" +
+      "<g filter='url(#t)'>"+faces+"</g><g filter='url(#v)'>"+vincos+"</g></svg>");
+  }
+
   function renderDocumento(doc){
     doc = doc || {};
     var escrita = doc.escrita || "manuscrito", cond = doc.condicao || "gasto", papel = doc.papel || "liso";
@@ -2042,8 +2075,7 @@
     var estilo = "--giro:"+giro+"deg;", sujeira = [], relevo = null, extras = "";
 
     if(cond === "gasto"){
-      // manchas de uso, pintas de oxidação, dedos sujos, xícara, desbotado, dobras e orelha
-      sujeira = sujeira.concat(pdocManchas(rnd, 1, "rgba(110,62,15,.40)", "rgba(110,62,15,.18)", 30, 46, true));
+      // manchas de uso, pintas de oxidação, dedos sujos, desbotado, dobras e orelha (sem o anel de xícara)
       sujeira = sujeira.concat(pdocManchas(rnd, 3, "rgba(95,65,30,.16)", "rgba(95,65,30,.06)", 30, 80, false));
       sujeira = sujeira.concat(pdocManchas(rnd, 2, "rgba(60,45,30,.20)", "rgba(60,45,30,.07)", 14, 26, false)); // dedos
       sujeira = sujeira.concat(pdocPintas(rnd, 22, "rgba(120,70,20,.55)"));
@@ -2059,8 +2091,8 @@
       }
     }
     if(cond === "amassado"){
-      relevo = pdocRelevo(rnd, 0.011 + rnd()*0.006, 5.5, 4);
-      for(var v=0; v<5; v++) sujeira.push(pdocVinco(rnd, true));
+      relevo = pdocRelevo(rnd, 0.02 + rnd()*0.01, 2.6, 4);
+      sujeira.push(pdocAmassado(rnd));
       sujeira = sujeira.concat(pdocPintas(rnd, 8, "rgba(110,70,30,.35)"));
       estilo += "clip-path:"+pdocBorda(rnd, {t:1.4,r:1.4,b:1.4,l:1.4}, {t:true,r:true,b:true,l:true}, null)+";";
     }
