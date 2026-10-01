@@ -6030,7 +6030,31 @@
     return { id:it.id, nome:it.nome||"", desc:it.desc||"", efeito:it.efeito||"", nota:it.nota||"", local:it.local||"",
       escassez:(it.escassez===null||it.escassez===undefined||it.escassez==="") ? null : clamp(parseInt(it.escassez,10)||0,0,6),
       traits:normalizarTraits(it.traits), qtd:Math.max(1, parseInt(it.qtd,10)||1), entregues:(it.entregues||[]).slice(),
+      qualidade:(it.qualidade===null||it.qualidade===undefined||it.qualidade==="") ? null : clamp(parseInt(it.qualidade,10)||0,0,6),
       criadoEm:it.criadoEm||new Date().toISOString(), atualizadoEm:new Date().toISOString() };
+  }
+  // Estado em que o item é achado (Qualidade 0-6, pág. 95). Itens marcantes têm
+  // Qualidade fixa; os outros sorteiam pela tendência do local: ruínas e lugares
+  // abandonados dão itens gastos, acampamentos dão itens Padrão ou melhores.
+  var ITEM_QUAL_LOCAL = {
+    abandonado: [[1,25],[2,40],[3,30],[4,5]],
+    acampamento:[[2,10],[3,65],[4,20],[5,5]],
+    geral:      [[1,10],[2,35],[3,45],[4,10]]
+  };
+  function itemQualTendencia(local){
+    if(/Rêverie|Traúm|Yūgen|Mriya|Centro/i.test(local||"")) return "acampamento";
+    if(/Ruínas|shopping|Caverna|Território|Estradas/i.test(local||"")) return "abandonado";
+    return "geral";
+  }
+  function itemQualSortear(local){
+    var tab = ITEM_QUAL_LOCAL[itemQualTendencia(local)], r = Math.random()*100, acc = 0;
+    for(var i=0;i<tab.length;i++){ acc += tab[i][1]; if(r < acc) return tab[i][0]; }
+    return 3;
+  }
+  function itemQualTexto(it){
+    if(it.qualidade!=null) return it.qualidade+' · '+QUALIDADES[it.qualidade];
+    var t = itemQualTendencia(it.local);
+    return 'sorteada ('+(t==="acampamento"?"acampamento: em geral Padrão ou melhor":t==="abandonado"?"abandonado: em geral gasto":"em geral Comprometido ou Padrão")+')';
   }
   function gravarItensPool(ops){
     if(!FB) return Promise.resolve();
@@ -6059,6 +6083,8 @@
         '<div class="grid cols-2"><div class="field"><label>Escassez</label><select data-ipf="escassez"><option value=""'+((ed.escassez===null||ed.escassez===undefined||ed.escassez==="")?' selected':'')+'>Automática pelas características ('+escAuto+' · '+ESCASSEZ_NOMES[escAuto]+')</option>' +
           [0,1,2,3,4,5,6].map(function(n){ return '<option value="'+n+'"'+(String(ed.escassez)===String(n)?' selected':'')+'>'+n+' · '+ESCASSEZ_NOMES[n]+'</option>'; }).join('')+'</select></div>' +
         '<div class="field"><label>Quantidade</label><input type="number" min="1" max="99" data-ipf="qtd" value="'+esc(String(ed.qtd||1))+'"></div></div>' +
+        '<div class="field"><label>Qualidade em que é achado</label><select data-ipf="qualidade"><option value=""'+((ed.qualidade===null||ed.qualidade===undefined||ed.qualidade==="")?' selected':'')+'>Sortear pelo local na hora da entrega</option>' +
+          [0,1,2,3,4,5,6].map(function(n){ return '<option value="'+n+'"'+(String(ed.qualidade)===String(n)?' selected':'')+'>'+n+' · '+QUALIDADES[n]+'</option>'; }).join('')+'</select></div>' +
         '<p class="hint" style="margin:6px 0">Características (deixe sem nenhuma para um equipamento comum):</p>' +
         '<div class="trait-list">'+renderTraitList(ed.traits, "pitem", false)+'</div>' +
         '<div class="btn-row"><button type="button" class="btn secondary" data-ipacao="cancelar">Cancelar</button><button type="button" class="btn accent" data-ipacao="salvar">Salvar item</button></div>';
@@ -6105,7 +6131,7 @@
     var tr = itemPoolTraitsTexto(it.traits);
     var html = '<div class="doc-linha"><div class="doc-linha-topo"><div><b>'+esc(it.nome||"Sem nome")+'</b>'+((it.qtd||1)>1?' <span class="hint">x'+it.qtd+'</span>':'')+
         ' <span class="badge-pill" style="vertical-align:middle">Escassez '+e+' · '+esc(ESCASSEZ_NOMES[e]||"")+'</span>' +
-        (tr ? '<div class="hint" style="margin:2px 0 0">'+esc(tr)+'</div>' : '') +
+        '<div class="hint" style="margin:2px 0 0">'+(tr ? esc(tr)+' · ' : '')+'Qualidade '+esc(itemQualTexto(it))+'</div>' +
         (it.desc ? '<div style="margin:3px 0 0;font-size:13.5px">'+esc(it.desc)+'</div>' : '') +
         (it.efeito ? '<div style="margin:3px 0 0;font-size:13.5px"><b>Efeito:</b> '+esc(it.efeito)+'</div>' : '<div class="hint" style="margin:3px 0 0;color:var(--danger)">Sem efeito descrito.</div>') +
         (it.nota ? '<div class="hint" style="margin:2px 0 0"><i>Nota:</i> '+esc(it.nota)+'</div>' : '') +
@@ -6117,7 +6143,10 @@
     if(state.itemEntregar === it.id && (sorteado || state.itemSorteado !== it.id)){
       html += '<div class="doc-entrega"><p class="hint" style="margin:0 0 6px">Quem fica com o item?</p><div class="row" style="gap:6px 14px;flex-wrap:wrap">' +
         loadChars().map(function(ch, i){ return '<label style="display:flex;align-items:center;gap:5px;text-transform:none;margin:0"><input type="radio" name="ippara" style="width:auto" data-ippara="'+ch.id+'"'+(i===0?' checked':'')+'>'+esc(ch.nomePersonagem||"Sem nome")+(ch.ehNpc?' <span class="hint">(NPC)</span>':'')+'</label>'; }).join('') +
-        '</div><div class="btn-row" style="justify-content:flex-start;gap:8px;margin-top:8px"><button type="button" class="btn accent doc-btn" data-ipacao="entregar-ok">Colocar no inventário</button><button type="button" class="btn secondary doc-btn" data-ipacao="entregar-cancelar">Cancelar</button></div></div>';
+        '</div><div class="row" style="gap:8px;margin-top:8px;align-items:center;flex-wrap:wrap"><span class="hint" style="margin:0">Estado em que foi achado'+(it.qualidade==null?' (sorteado, pode trocar)':'')+':</span>' +
+          '<select data-ipqual style="max-width:220px">'+[0,1,2,3,4,5,6].map(function(n){ return '<option value="'+n+'"'+(n===state.itemEntregarQual?' selected':'')+'>'+n+' · '+QUALIDADES[n]+'</option>'; }).join('')+'</select>' +
+          (it.qualidade==null?'<button type="button" class="btn secondary doc-btn" data-ipacao="ressortear">🎲 Sortear de novo</button>':'')+'</div>' +
+        '<div class="btn-row" style="justify-content:flex-start;gap:8px;margin-top:8px"><button type="button" class="btn accent doc-btn" data-ipacao="entregar-ok">Colocar no inventário</button><button type="button" class="btn secondary doc-btn" data-ipacao="entregar-cancelar">Cancelar</button></div></div>';
     }
     return html + '</div>';
   }
@@ -6138,7 +6167,14 @@
     raiz.querySelectorAll("[data-ipgrupo]").forEach(function(el){
       el.addEventListener("toggle", function(){ state.itemGruposAbertos[el.getAttribute("data-ipgrupo")] = el.open; });
     });
-    raiz.querySelectorAll("[data-ipentregar]").forEach(function(b){ b.addEventListener("click", function(){ state.itemEntregar = b.getAttribute("data-ipentregar"); rerender(); }); });
+    raiz.querySelectorAll("[data-ipentregar]").forEach(function(b){ b.addEventListener("click", function(){
+      var id = b.getAttribute("data-ipentregar"), it = itensPoolLista().filter(function(x){ return x.id===id; })[0];
+      state.itemEntregar = id;
+      state.itemEntregarQual = it ? (it.qualidade!=null ? it.qualidade : itemQualSortear(it.local)) : 3;
+      rerender();
+    }); });
+    var qualSel = raiz.querySelector("[data-ipqual]");
+    if(qualSel) qualSel.addEventListener("change", function(){ state.itemEntregarQual = parseInt(qualSel.value,10); });
     raiz.querySelectorAll("[data-ipeditar]").forEach(function(b){ b.addEventListener("click", function(){
       var it = itensPoolLista().filter(function(x){ return x.id===b.getAttribute("data-ipeditar"); })[0]; if(!it) return;
       state.itemPoolEdit = JSON.parse(JSON.stringify(it)); state.itemPoolEdit.traits = normalizarTraits(it.traits); rerender();
@@ -6150,7 +6186,7 @@
     raiz.querySelectorAll("[data-ipacao]").forEach(function(b){
       b.addEventListener("click", function(){
         var acao = b.getAttribute("data-ipacao");
-        if(acao === "novo"){ state.itemPoolEdit = { id:"it_"+uid(), nome:"", desc:"", efeito:"", nota:"", local:(state.itemFiltro||{}).local||"", escassez:"", traits:[], qtd:1, entregues:[] }; state.itemImportar = false; rerender(); }
+        if(acao === "novo"){ state.itemPoolEdit = { id:"it_"+uid(), nome:"", desc:"", efeito:"", qualidade:"", nota:"", local:(state.itemFiltro||{}).local||"", escassez:"", traits:[], qtd:1, entregues:[] }; state.itemImportar = false; rerender(); }
         else if(acao === "cancelar"){ state.itemPoolEdit = null; rerender(); }
         else if(acao === "salvar"){
           if(!String(ed.nome||"").trim()){ alert("Dê um nome ao item."); return; }
@@ -6170,7 +6206,7 @@
             if(!x || !x.nome) return;
             var id = String(x.id||uid()); if(id.indexOf("it_")!==0) id = "it_"+id;
             var existente = itensPoolLista().filter(function(y){ return y.id===id; })[0];
-            var d = itemPoolDados({ id:id, nome:x.nome, desc:x.desc, efeito:x.efeito, nota:x.nota, local:x.local, escassez:x.escassez, traits:x.traits, qtd:x.qtd,
+            var d = itemPoolDados({ id:id, nome:x.nome, desc:x.desc, efeito:x.efeito, qualidade:x.qualidade, nota:x.nota, local:x.local, escassez:x.escassez, traits:x.traits, qtd:x.qtd,
               entregues: existente ? existente.entregues : [], criadoEm: existente ? existente.criadoEm : null });
             ops.push({ tipo:"set", col:"itensPool", id:id, data:d });
           });
@@ -6184,6 +6220,10 @@
           state.itemEntregar = null; rerender();
         }
         else if(acao === "entregar-cancelar"){ state.itemEntregar = null; rerender(); }
+        else if(acao === "ressortear"){
+          var itR = itensPoolLista().filter(function(x){ return x.id===state.itemEntregar; })[0];
+          if(itR) state.itemEntregarQual = itemQualSortear(itR.local); rerender();
+        }
         else if(acao === "entregar-ok"){
           var it = itensPoolLista().filter(function(x){ return x.id===state.itemEntregar; })[0]; if(!it) return;
           var sel = raiz.querySelector("[data-ippara]:checked"); if(!sel) return;
@@ -6191,6 +6231,7 @@
           var traits = normalizarTraits(it.traits);
           var novo = novoItem(it.nome, it.desc, traits, { qtd:it.qtd||1, achadoId:it.id, efeito:it.efeito||"" });
           if(!traits.length) novo.escassez = itemPoolEscassez(it);
+          novo.qualidade = clamp(state.itemEntregarQual!=null ? state.itemEntregarQual : 3, 0, 6);
           c.inventarioExtra = (c.inventarioExtra||[]).concat([novo]);
           updateChar(c);
           if(caps.mode==="mesa"){ clearTimeout(publishTimer); doPublish(); }
