@@ -3398,12 +3398,10 @@
   // Livro pág. 87: só quem tem Gambiarra muda as características de um Artefato
   // existente. Na criação (e ao refazer a ficha pro sistema oficial) é livre, e o
   // Assimilador sempre pode.
-  function artefatoBloqueado(c){
-    if(!(state.view === "sheet" && state.sheetEditing)) return false;
-    if(c.precisaRefazer) return false;
-    if(temCarac(c,"gambiarra")) return false;
-    return !temAcessoTotal();
-  }
+  // Pedido do Marco (30/09/2026): os jogadores também editam o próprio Artefato
+  // pelo "Editar Ficha", sem precisar de Gambiarra. A regra de Escassez continua
+  // valendo ao salvar (o Assimilador pode salvar mesmo assim).
+  function artefatoBloqueado(c){ return false; }
   function renderTraitList(selectedTraits, prefix, bloqueado){
     var html = "";
     EQUIP_TRAITS.forEach(function(t){
