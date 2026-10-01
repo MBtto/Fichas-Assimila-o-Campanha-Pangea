@@ -34,7 +34,7 @@
     color-scheme: light;
   }
   @media (prefers-color-scheme: dark){
-    :root:not([data-theme="light"]){
+    :root:not([data-theme]){
       --bg:#161209;
       --surface:#211b12;
       --surface-2:#2c2416;
@@ -138,7 +138,7 @@
     letter-spacing:.05em;
     text-transform:uppercase;
   }
-  :root[data-theme="dark"] .stamp, @media (prefers-color-scheme:dark){ :root:not([data-theme="light"]) .stamp{ background:var(--accent); color:var(--accent-ink);} }
+  :root[data-theme="dark"] .stamp, :root[data-theme="hc-dark"] .stamp, @media (prefers-color-scheme:dark){ :root:not([data-theme]) .stamp{ background:var(--accent); color:var(--accent-ink);} }
 
   header.top{
     display:flex; align-items:center; justify-content:space-between; gap:12px;
@@ -616,19 +616,67 @@
   .ico-ns{ background-image:url(icones/nivel_saude.png); }
   .ico-ps{ background-image:url(icones/pontos_saude.png); }
   @media (prefers-color-scheme: dark){
-    :root:not([data-theme="light"]) .ico-nd{ background-image:url(icones/nivel_determinacao_escuro.png); }
-    :root:not([data-theme="light"]) .ico-pd{ background-image:url(icones/pontos_determinacao_escuro.png); }
-    :root:not([data-theme="light"]) .ico-na{ background-image:url(icones/nivel_assimilacao_escuro.png); }
-    :root:not([data-theme="light"]) .ico-pa{ background-image:url(icones/pontos_assimilacao_escuro.png); }
-    :root:not([data-theme="light"]) .ico-ns{ background-image:url(icones/nivel_saude_escuro.png); }
-    :root:not([data-theme="light"]) .ico-ps{ background-image:url(icones/pontos_saude_escuro.png); }
+    :root:not([data-theme]) .ico-nd{ background-image:url(icones/nivel_determinacao_escuro.png); }
+    :root:not([data-theme]) .ico-pd{ background-image:url(icones/pontos_determinacao_escuro.png); }
+    :root:not([data-theme]) .ico-na{ background-image:url(icones/nivel_assimilacao_escuro.png); }
+    :root:not([data-theme]) .ico-pa{ background-image:url(icones/pontos_assimilacao_escuro.png); }
+    :root:not([data-theme]) .ico-ns{ background-image:url(icones/nivel_saude_escuro.png); }
+    :root:not([data-theme]) .ico-ps{ background-image:url(icones/pontos_saude_escuro.png); }
   }
-  :root[data-theme="dark"] .ico-nd{ background-image:url(icones/nivel_determinacao_escuro.png); }
-  :root[data-theme="dark"] .ico-pd{ background-image:url(icones/pontos_determinacao_escuro.png); }
-  :root[data-theme="dark"] .ico-na{ background-image:url(icones/nivel_assimilacao_escuro.png); }
-  :root[data-theme="dark"] .ico-pa{ background-image:url(icones/pontos_assimilacao_escuro.png); }
-  :root[data-theme="dark"] .ico-ns{ background-image:url(icones/nivel_saude_escuro.png); }
-  :root[data-theme="dark"] .ico-ps{ background-image:url(icones/pontos_saude_escuro.png); }
+  :root[data-theme="dark"] .ico-nd, :root[data-theme="hc-dark"] .ico-nd{ background-image:url(icones/nivel_determinacao_escuro.png); }
+  :root[data-theme="dark"] .ico-pd, :root[data-theme="hc-dark"] .ico-pd{ background-image:url(icones/pontos_determinacao_escuro.png); }
+  :root[data-theme="dark"] .ico-na, :root[data-theme="hc-dark"] .ico-na{ background-image:url(icones/nivel_assimilacao_escuro.png); }
+  :root[data-theme="dark"] .ico-pa, :root[data-theme="hc-dark"] .ico-pa{ background-image:url(icones/pontos_assimilacao_escuro.png); }
+  :root[data-theme="dark"] .ico-ns, :root[data-theme="hc-dark"] .ico-ns{ background-image:url(icones/nivel_saude_escuro.png); }
+  :root[data-theme="dark"] .ico-ps, :root[data-theme="hc-dark"] .ico-ps{ background-image:url(icones/pontos_saude_escuro.png); }
+  /* ===== Temas de acessibilidade (escolhidos no botão "Aparência") ===== */
+  :root[data-theme="hc-dark"]{
+    --bg:#000; --surface:#000; --surface-2:#1c1c1c; --ink:#fff; --ink-muted:#f0f0f0;
+    --border:#fff; --border-strong:#fff; --accent:#ffd400; --accent-ink:#000;
+    --danger:#ff7070; --good:#5dff7f; --blood:#ff6b6b; --royal:#9dbcff; --assim:#d8ff5a;
+    --suscet:#5cf2ff; --suscet-rgb:92,242,255;
+    --c-reverie:#c9b8ff; --c-traum:#ffb27a; --c-mriya:#b8f07a; --c-yugen:#6ff0f2;
+    --shadow:none; color-scheme:dark;
+  }
+  :root[data-theme="hc-light"]{
+    --bg:#fff; --surface:#fff; --surface-2:#ececec; --ink:#000; --ink-muted:#1f1f1f;
+    --border:#000; --border-strong:#000; --accent:#0038b8; --accent-ink:#fff;
+    --danger:#b00000; --good:#005f00; --blood:#9a0000; --royal:#0026a0; --assim:#3f4d00;
+    --suscet:#00606f; --suscet-rgb:0,96,111;
+    --c-reverie:#3d2a8a; --c-traum:#8a2e00; --c-mriya:#2f5a00; --c-yugen:#00585a;
+    --shadow:none; color-scheme:light;
+  }
+  /* Cores seguras para daltonismo (paleta Okabe-Ito): Sucesso azul, Pressão vermelhão,
+     Determinação roxo, Assimilação amarelo escuro - nunca verde contra vermelho. */
+  :root[data-theme="cvd"]{
+    --good:#0072b2; --danger:#d55e00; --blood:#a63d00; --royal:#6a3d9a; --assim:#8a6d00;
+    --suscet:#009e9e; --suscet-rgb:0,158,158; --accent:#b35a00;
+    --c-reverie:#6a3d9a; --c-traum:#d55e00; --c-mriya:#8a6d00; --c-yugen:#0072b2;
+  }
+  :root[data-theme="hc-dark"] .card, :root[data-theme="hc-light"] .card,
+  :root[data-theme="hc-dark"] .btn, :root[data-theme="hc-light"] .btn{ border-width:2px; }
+  :root[data-theme="hc-dark"] .btn.accent{ color:#000; }
+  :root[data-theme="hc-dark"] .btn:disabled, :root[data-theme="hc-light"] .btn:disabled{ opacity:.8; border-style:dashed; }
+  :root[data-theme="hc-dark"] a, :root[data-theme="hc-light"] a{ text-decoration:underline; }
+  :root[data-texto="grande"] body{ zoom:1.15; }
+  :root[data-texto="maior"] body{ zoom:1.3; }
+  /* Botão e painel de Aparência */
+  .aparencia-btn{ position:fixed; left:12px; bottom:12px; z-index:9000; width:44px; height:44px; border-radius:50%;
+    border:2px solid var(--border-strong); background:var(--surface); color:var(--ink); font-family:"Oswald",sans-serif;
+    font-weight:700; font-size:16px; cursor:pointer; box-shadow:var(--shadow); }
+  .aparencia-btn:focus-visible, .aparencia-painel button:focus-visible{ outline:3px solid var(--accent); outline-offset:2px; }
+  .aparencia-painel{ position:fixed; left:12px; bottom:64px; z-index:9001; width:min(300px, calc(100vw - 24px));
+    background:var(--surface); color:var(--ink); border:2px solid var(--border-strong); border-radius:10px; padding:12px; box-shadow:0 10px 30px rgba(0,0,0,.3); }
+  .aparencia-painel h3{ font-size:14px; margin:0 0 8px; }
+  .aparencia-painel .rot{ font-family:"Oswald",sans-serif; text-transform:uppercase; font-size:11.5px; letter-spacing:.05em; color:var(--ink-muted); margin:10px 0 6px; }
+  .aparencia-opcoes{ display:grid; gap:6px; }
+  .aparencia-opcoes button{ display:flex; align-items:center; gap:8px; width:100%; text-align:left; padding:6px 8px; border-radius:6px;
+    border:1px solid var(--border); background:var(--surface-2); color:var(--ink); cursor:pointer; font-size:13.5px; }
+  .aparencia-opcoes button[aria-pressed="true"]{ border:2px solid var(--accent); font-weight:600; }
+  .aparencia-amostra{ display:inline-flex; gap:2px; flex:none; }
+  .aparencia-amostra i{ width:12px; height:12px; border-radius:50%; border:1px solid rgba(128,128,128,.6); display:inline-block; }
+  .aparencia-tamanho{ display:flex; gap:6px; }
+  .aparencia-tamanho button{ flex:1; justify-content:center; }
   /* Medidores (antes losangos ♦): apagado = cinza e transparente; marcado = cor cheia. */
   .diamond.ico{ opacity:.25; filter:grayscale(1); margin-right:2px; }
   .diamond.ico.filled{ opacity:1; filter:none; }
@@ -855,6 +903,13 @@
 .doc-editor-previa .hint{ color:#cdbb95; }
 @media (max-width:820px){ .doc-editor{ grid-template-columns:1fr; } .doc-editor-previa{ position:static; } }
 </style>
+<script>
+  (function(){ try{
+    var t = localStorage.getItem("pangea:tema"), x = localStorage.getItem("pangea:texto");
+    if(t && t !== "auto") document.documentElement.setAttribute("data-theme", t);
+    if(x && x !== "normal") document.documentElement.setAttribute("data-texto", x);
+  }catch(e){} })();
+</script>
 </head>
 <body>
 
@@ -3024,6 +3079,58 @@
   // ---------- RENDER ----------
   var app = document.getElementById("app");
 
+  // ---------- APARÊNCIA (temas de cores e tamanho do texto) ----------
+  // Pedido do Marco (01/10/2026), pensando em jogadores com dificuldade visual:
+  // cada pessoa escolhe a paleta no próprio aparelho (fica guardada só nele).
+  var TEMAS = [
+    ["auto","Automático (segue o aparelho)",["#efe7d3","#161209","#b5502c"]],
+    ["light","Claro",["#efe7d3","#2a2318","#b5502c"]],
+    ["dark","Escuro",["#161209","#efe4cc","#d97a4a"]],
+    ["hc-dark","Alto contraste escuro",["#000","#fff","#ffd400"]],
+    ["hc-light","Alto contraste claro",["#fff","#000","#0038b8"]],
+    ["cvd","Cores para daltonismo",["#0072b2","#d55e00","#6a3d9a"]]
+  ];
+  var TAMANHOS = [["normal","Normal"],["grande","Grande"],["maior","Maior"]];
+  function lerPref(k, padrao){ try{ return localStorage.getItem(k) || padrao; }catch(e){ return padrao; } }
+  function gravarPref(k, v){ try{ localStorage.setItem(k, v); }catch(e){} }
+  function aplicarAparencia(){
+    var t = lerPref("pangea:tema","auto"), x = lerPref("pangea:texto","normal");
+    if(t === "auto") document.documentElement.removeAttribute("data-theme"); else document.documentElement.setAttribute("data-theme", t);
+    if(x === "normal") document.documentElement.removeAttribute("data-texto"); else document.documentElement.setAttribute("data-texto", x);
+  }
+  function montarAparencia(){
+    if(document.getElementById("aparencia-btn")) return;
+    var btn = document.createElement("button");
+    btn.id = "aparencia-btn"; btn.type = "button"; btn.className = "aparencia-btn";
+    btn.setAttribute("aria-label", "Aparência: temas de cores e tamanho do texto");
+    btn.setAttribute("aria-expanded", "false"); btn.title = "Aparência e acessibilidade";
+    btn.textContent = "Aa";
+    document.body.appendChild(btn);
+    var painel = null;
+    function fechar(){ if(painel){ painel.remove(); painel = null; } btn.setAttribute("aria-expanded","false"); }
+    function desenhar(){
+      var t = lerPref("pangea:tema","auto"), x = lerPref("pangea:texto","normal");
+      painel.innerHTML = '<h3>Aparência</h3>' +
+        '<div class="rot">Cores</div><div class="aparencia-opcoes">' + TEMAS.map(function(o){
+          return '<button type="button" data-tema="'+o[0]+'" aria-pressed="'+(t===o[0])+'"><span class="aparencia-amostra">'+o[2].map(function(c){ return '<i style="background:'+c+'"></i>'; }).join('')+'</span>'+o[1]+'</button>';
+        }).join('') + '</div>' +
+        '<div class="rot">Tamanho do texto</div><div class="aparencia-opcoes aparencia-tamanho">' + TAMANHOS.map(function(o){
+          return '<button type="button" data-texto="'+o[0]+'" aria-pressed="'+(x===o[0])+'">'+o[1]+'</button>';
+        }).join('') + '</div>' +
+        '<p class="hint" style="margin:10px 0 0">Fica salvo só neste aparelho. Quem usa o alto contraste do Windows/Edge pode desligá-lo e usar o "Alto contraste" daqui, que não estraga os ícones.</p>';
+      painel.querySelectorAll("[data-tema]").forEach(function(b){ b.addEventListener("click", function(){ gravarPref("pangea:tema", b.getAttribute("data-tema")); aplicarAparencia(); desenhar(); }); });
+      painel.querySelectorAll("[data-texto]").forEach(function(b){ b.addEventListener("click", function(){ gravarPref("pangea:texto", b.getAttribute("data-texto")); aplicarAparencia(); desenhar(); }); });
+    }
+    btn.addEventListener("click", function(){
+      if(painel){ fechar(); return; }
+      painel = document.createElement("div"); painel.className = "aparencia-painel"; painel.setAttribute("role","dialog"); painel.setAttribute("aria-label","Aparência");
+      document.body.appendChild(painel); desenhar(); btn.setAttribute("aria-expanded","true");
+      var primeiro = painel.querySelector('[aria-pressed="true"]'); if(primeiro) primeiro.focus();
+    });
+    document.addEventListener("keydown", function(e){ if(e.key === "Escape" && painel){ fechar(); btn.focus(); } });
+    document.addEventListener("click", function(e){ if(painel && e.target.isConnected && !painel.contains(e.target) && !btn.contains(e.target)) fechar(); });
+  }
+
   // ---------- ERROS VISÍVEIS ----------
   // Se um pedaço da ficha quebrar com os dados de algum personagem, o resto da
   // página continua (botão Editar, Assimilação, etc.) e aparece um aviso com a
@@ -3050,6 +3157,7 @@
     }
   }
   window.addEventListener("error", function(ev){ if(ev && ev.error) avisarErro("página", ev.error); });
+  tentar("Aparência", function(){ aplicarAparencia(); montarAparencia(); });
 
   function render(){
     tentar("tela", function(){
