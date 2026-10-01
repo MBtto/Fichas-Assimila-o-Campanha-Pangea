@@ -623,10 +623,10 @@
     :root:not([data-theme]) .ico-ns{ background-image:url(icones/nivel_saude_escuro.png); }
     :root:not([data-theme]) .ico-ps{ background-image:url(icones/pontos_saude_escuro.png); }
   }
-  :root[data-theme="dark"] .ico-nd, :root[data-theme="hc-dark"] .ico-nd, :root[data-theme="noite"] .ico-nd, :root[data-theme="ferrugem"] .ico-nd{ background-image:url(icones/nivel_determinacao_escuro.png); }
-  :root[data-theme="dark"] .ico-pd, :root[data-theme="hc-dark"] .ico-pd, :root[data-theme="noite"] .ico-pd, :root[data-theme="ferrugem"] .ico-pd{ background-image:url(icones/pontos_determinacao_escuro.png); }
-  :root[data-theme="dark"] .ico-na, :root[data-theme="hc-dark"] .ico-na, :root[data-theme="noite"] .ico-na, :root[data-theme="ferrugem"] .ico-na{ background-image:url(icones/nivel_assimilacao_escuro.png); }
-  :root[data-theme="dark"] .ico-pa, :root[data-theme="hc-dark"] .ico-pa, :root[data-theme="noite"] .ico-pa, :root[data-theme="ferrugem"] .ico-pa{ background-image:url(icones/pontos_assimilacao_escuro.png); }
+  :root[data-theme="dark"] .ico-nd, :root[data-theme="noite"] .ico-nd, :root[data-theme="ferrugem"] .ico-nd{ background-image:url(icones/nivel_determinacao_escuro.png); }
+  :root[data-theme="dark"] .ico-pd, :root[data-theme="noite"] .ico-pd, :root[data-theme="ferrugem"] .ico-pd{ background-image:url(icones/pontos_determinacao_escuro.png); }
+  :root[data-theme="dark"] .ico-na, :root[data-theme="noite"] .ico-na, :root[data-theme="ferrugem"] .ico-na{ background-image:url(icones/nivel_assimilacao_escuro.png); }
+  :root[data-theme="dark"] .ico-pa, :root[data-theme="noite"] .ico-pa, :root[data-theme="ferrugem"] .ico-pa{ background-image:url(icones/pontos_assimilacao_escuro.png); }
   :root[data-theme="dark"] .ico-ns, :root[data-theme="hc-dark"] .ico-ns, :root[data-theme="noite"] .ico-ns, :root[data-theme="ferrugem"] .ico-ns{ background-image:url(icones/nivel_saude_escuro.png); }
   :root[data-theme="dark"] .ico-ps, :root[data-theme="hc-dark"] .ico-ps, :root[data-theme="noite"] .ico-ps, :root[data-theme="ferrugem"] .ico-ps{ background-image:url(icones/pontos_saude_escuro.png); }
   /* ===== Temas de acessibilidade (escolhidos no botão "Aparência") ===== */
@@ -712,6 +712,30 @@
     --c-reverie:#6a5b9e; --c-traum:#c2410c; --c-mriya:#5b8a2e; --c-yugen:#1f8a8d;
     --shadow:0 1px 3px rgba(0,0,0,.12); color-scheme:light;
   }
+  /* Só nos modos de acessibilidade: ícones de Determinação/Assimilação recoloridos com
+     as cores do tema (contorno na cor do texto). Nos estilos de preferência ficam os originais. */
+  :root[data-theme="hc-dark"] .ico-nd{ background-image:url(icones/nivel_determinacao_hc-dark.png); }
+  :root[data-theme="hc-dark"] .ico-pd{ background-image:url(icones/pontos_determinacao_hc-dark.png); }
+  :root[data-theme="hc-dark"] .ico-na{ background-image:url(icones/nivel_assimilacao_hc-dark.png); }
+  :root[data-theme="hc-dark"] .ico-pa{ background-image:url(icones/pontos_assimilacao_hc-dark.png); }
+  :root[data-theme="hc-light"] .ico-nd{ background-image:url(icones/nivel_determinacao_hc-light.png); }
+  :root[data-theme="hc-light"] .ico-pd{ background-image:url(icones/pontos_determinacao_hc-light.png); }
+  :root[data-theme="hc-light"] .ico-na{ background-image:url(icones/nivel_assimilacao_hc-light.png); }
+  :root[data-theme="hc-light"] .ico-pa{ background-image:url(icones/pontos_assimilacao_hc-light.png); }
+  :root[data-theme="cvd"] .ico-nd{ background-image:url(icones/nivel_determinacao_cvd.png); }
+  :root[data-theme="cvd"] .ico-pd{ background-image:url(icones/pontos_determinacao_cvd.png); }
+  :root[data-theme="cvd"] .ico-na{ background-image:url(icones/nivel_assimilacao_cvd.png); }
+  :root[data-theme="cvd"] .ico-pa{ background-image:url(icones/pontos_assimilacao_cvd.png); }
+  :root[data-theme="sakura"]{
+    --bg:#fbedf1; --surface:#fff7f9; --surface-2:#f6dae3; --ink:#3b2430; --ink-muted:#8a6474;
+    --border:#e9bccb; --border-strong:#c98ba1; --accent:#b0407e; --accent-ink:#fff;
+    --danger:#b03a2e; --good:#3f7a52; --blood:#9b1d3a; --royal:#3d4fc4; --assim:#6f7f1a;
+    --suscet:#0b8193; --suscet-rgb:11,129,147;
+    --c-reverie:#7a5bb0; --c-traum:#c0563a; --c-mriya:#5f8a3a; --c-yugen:#1f8a8d;
+    --shadow:3px 3px 0 rgba(176,64,126,.16); color-scheme:light;
+  }
+  :root[data-cantos="quadrados"]{ --radius:0px; }
+  :root[data-cantos="quadrados"] *:not(.aparencia-btn):not(.aparencia-amostra i):not(.ico):not(.dado):not(.steps span):not(.dot):not(.tug-endcap):not(.tug-lvl-dot){ border-radius:0 !important; }
   :root[data-fonte="mono"] body{ font-family:"IBM Plex Mono", ui-monospace, monospace; }
   :root[data-fonte="serif"] body{ font-family:Georgia, "Times New Roman", serif; }
   :root[data-densidade="compacta"] body{ line-height:1.4; }
@@ -3149,14 +3173,15 @@
     ["floresta","Floresta",["#e6ece0","#1e291b","#8a5a2b"]],
     ["cinza","Cinza neutro",["#eceff1","#1d2327","#c2410c"]],
     ["noite","Noite azul",["#0f1420","#e6ecf7","#ff9f43"]],
-    ["ferrugem","Ferrugem",["#1a0f0c","#f3e3d6","#ff8a4c"]]
+    ["ferrugem","Ferrugem",["#1a0f0c","#f3e3d6","#ff8a4c"]],
+    ["sakura","Sakura",["#fbedf1","#3b2430","#b0407e"]]
   ];
   // Ajustes visuais: [chave, título, [[valor, rótulo], ...]] - o primeiro valor é o padrão.
   var AJUSTES = [
     ["texto","Tamanho do texto",[["normal","Normal"],["grande","Grande"],["maior","Maior"]]],
     ["fonte","Fonte do texto",[["padrao","Moderna"],["mono","Máquina"],["serif","Livro"]]],
     ["densidade","Espaçamento",[["compacta","Compacto"],["padrao","Normal"],["ampla","Amplo"]]],
-    ["cantos","Cantos",[["padrao","Retos"],["redondos","Arredondados"]]],
+    ["cantos","Cantos",[["quadrados","Quadrados"],["padrao","Suaves"],["redondos","Arredondados"]]],
     ["anim","Animações",[["padrao","Normais"],["reduzidas","Reduzidas"]]]
   ];
   function lerPref(k, padrao){ try{ return localStorage.getItem(k) || padrao; }catch(e){ return padrao; } }
