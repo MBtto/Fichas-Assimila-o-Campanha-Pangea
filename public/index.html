@@ -726,6 +726,23 @@
   :root[data-theme="cvd"] .ico-pd{ background-image:url(icones/pontos_determinacao_cvd.png); }
   :root[data-theme="cvd"] .ico-na{ background-image:url(icones/nivel_assimilacao_cvd.png); }
   :root[data-theme="cvd"] .ico-pa{ background-image:url(icones/pontos_assimilacao_cvd.png); }
+  /* Deuteranopia com fundo escuro: Sucesso azul-claro, Adaptação âmbar e Pressão rosa
+     (no escuro, um marrom não apareceria). Separação conferida em simulação. */
+  :root[data-theme="cvd-dark"]{
+    --bg:#161209; --surface:#211b12; --surface-2:#2c2416; --ink:#efe4cc; --ink-muted:#b3a487;
+    --border:#4d4128; --border-strong:#6e5d38; --accent:#ffb000; --accent-ink:#1a1000;
+    --good:#4aa3ff; --danger:#ff8fc0; --blood:#ff8fc0; --royal:#6f8dff; --assim:#e0c040;
+    --suscet:#7cc8ff; --suscet-rgb:124,200,255;
+    --c-reverie:#a99bf0; --c-traum:#ffb000; --c-mriya:#e0c040; --c-yugen:#4aa3ff;
+    --shadow:3px 3px 0 rgba(0,0,0,.5); color-scheme:dark;
+  }
+  :root[data-theme="cvd-dark"] .ico-nd{ background-image:url(icones/nivel_determinacao_cvd-dark.png); }
+  :root[data-theme="cvd-dark"] .ico-pd{ background-image:url(icones/pontos_determinacao_cvd-dark.png); }
+  :root[data-theme="cvd-dark"] .ico-na{ background-image:url(icones/nivel_assimilacao_cvd-dark.png); }
+  :root[data-theme="cvd-dark"] .ico-pa{ background-image:url(icones/pontos_assimilacao_cvd-dark.png); }
+  :root[data-theme="cvd-dark"] .ico-ns{ background-image:url(icones/nivel_saude_escuro.png); }
+  :root[data-theme="cvd-dark"] .ico-ps{ background-image:url(icones/pontos_saude_escuro.png); }
+  :root[data-theme="cvd-dark"] .stamp{ background:var(--accent); color:var(--accent-ink); }
   :root[data-theme="sakura"]{
     --bg:#fbedf1; --surface:#fff7f9; --surface-2:#f6dae3; --ink:#3b2430; --ink-muted:#8a6474;
     --border:#e9bccb; --border-strong:#c98ba1; --accent:#b0407e; --accent-ink:#fff;
@@ -3165,7 +3182,8 @@
     ["auto","Automático (segue o aparelho)",["#efe7d3","#161209","#b5502c"]],
     ["hc-dark","Alto contraste escuro",["#000","#fff","#ffd400"]],
     ["hc-light","Alto contraste claro",["#fff","#000","#0038b8"]],
-    ["cvd","Daltonismo (deuteranopia)",["#005fb8","#b06a00","#4a1f00"]]
+    ["cvd","Daltonismo claro (deuteranopia)",["#005fb8","#b06a00","#4a1f00"]],
+    ["cvd-dark","Daltonismo escuro (deuteranopia)",["#161209","#4aa3ff","#ffb000"]]
   ];
   var TEMAS_ESTILO = [
     ["light","Papel (claro)",["#efe7d3","#2a2318","#b5502c"]],
