@@ -407,6 +407,50 @@
   .rollfeed.collapsed .rollfeed-list{ display:none; }
   .rollfeed-list{ overflow-y:auto; padding:8px 12px; flex:1 1 auto; min-height:0; }
   .rollfeed-entry{ padding:7px 0; border-bottom:1px solid var(--border); }
+  /* ===== Bestiário (Painel do Assimilador) e Ameaças em cena (Mesa) ===== */
+  .best-enc > summary{ list-style:none; cursor:pointer; }
+  .best-enc > summary::-webkit-details-marker{ display:none; }
+  .best-enc-cab{ display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap; }
+  .best-enc-nome{ font-family:"Oswald",sans-serif; font-size:16px; font-weight:600; }
+  .best-enc[open] > summary{ margin-bottom:8px; padding-bottom:8px; border-bottom:1px solid var(--border); }
+  .best-fase{ margin:0 0 6px; font-family:"Oswald",sans-serif; text-transform:uppercase; letter-spacing:.06em; font-size:12.5px; color:var(--danger); }
+  .best-grupo-tit{ margin:12px 0 4px; font-family:"Oswald",sans-serif; text-transform:uppercase; letter-spacing:.06em; font-size:12px; color:var(--ink-muted); }
+  .best-cont{ margin:6px 0 8px; }
+  .best-cont-cab{ display:flex; justify-content:space-between; align-items:center; gap:8px; font-size:13px; }
+  .best-cont-num{ font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums; white-space:nowrap; }
+  .best-cont-num input{ width:52px; padding:2px 4px; display:inline-block; font:inherit; }
+  .best-barra{ height:8px; border-radius:99px; background:var(--surface-2); border:1px solid var(--border); overflow:hidden; margin-top:3px; }
+  .best-barra > span{ display:block; height:100%; background:var(--accent); transition:width .3s; }
+  .best-cont.feito .best-barra > span{ background:var(--good); }
+  .best-check{ display:flex; align-items:center; gap:6px; text-transform:none; margin:4px 0; font-size:13px; letter-spacing:0; }
+  .best-check input{ width:auto; }
+  .best-pontos{ display:flex; align-items:center; gap:6px 10px; flex-wrap:wrap; margin-top:10px; padding-top:8px; border-top:1px dashed var(--border); }
+  .best-ponto{ display:inline-flex; align-items:center; gap:3px; font-family:"IBM Plex Mono",monospace; }
+  .best-mini{ min-width:22px; height:22px; padding:0 5px; border:1px solid var(--border-strong); background:var(--surface-2); color:var(--ink); border-radius:6px; cursor:pointer; line-height:1; }
+  .best-mini:disabled{ opacity:.35; cursor:default; }
+  .best-rolagem{ margin-top:8px; padding:8px 10px; border:1px solid var(--border); border-radius:8px; background:var(--surface-2); }
+  .best-dado{ font-family:"IBM Plex Mono",monospace; font-size:12px; padding:2px 7px; border:1px solid var(--border-strong); border-radius:6px; background:var(--surface); display:inline-flex; align-items:center; gap:4px; }
+  .best-cond{ margin-top:10px; padding:6px 10px; border-left:3px solid var(--danger); background:color-mix(in srgb, var(--danger) 6%, transparent); border-radius:0 6px 6px 0; }
+  .best-cond p, .best-ativ p{ margin:4px 0; font-size:13px; line-height:1.5; max-width:none; }
+  .best-ativs{ margin-top:6px; }
+  .best-ativ{ padding:7px 0; border-bottom:1px solid var(--border); }
+  .best-ativ:last-child{ border-bottom:none; }
+  .best-ativ-cab{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .best-custo{ display:inline-flex; align-items:center; gap:6px; font-family:"IBM Plex Mono",monospace; font-size:12px; }
+  .best-custo-parte{ display:inline-flex; align-items:center; gap:2px; }
+  .best-custo-x{ font-family:inherit; font-size:11px; color:var(--ink-muted); font-style:italic; }
+  .best-pagar{ margin-left:auto; padding:2px 10px !important; }
+  .best-dano{ font:inherit; font-family:"IBM Plex Mono",monospace; font-size:12px; padding:0 6px; border:1px dashed var(--border-strong); background:transparent; color:var(--ink); border-radius:6px; cursor:pointer; }
+  .best-dano b{ color:var(--danger); }
+  .best-ficha{ margin-top:8px; padding-top:8px; border-top:1px dashed var(--border); }
+  .best-mesa{ margin-top:12px; padding:8px 10px; border:1px solid var(--border); border-radius:8px; }
+  .best-mesa-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(240px, 1fr)); gap:10px; }
+  .best-mesa-card{ border:1px solid var(--border); border-left:4px solid var(--danger); border-radius:8px; padding:8px 12px; background:var(--surface); }
+  .best-mesa-card.compacto{ padding:4px 8px; margin-bottom:6px; }
+  .best-mesa-card.compacto .best-enc-nome{ font-size:13.5px; }
+  .best-mesa-card.compacto .best-cont{ margin:2px 0 4px; }
+  .best-revela-desc{ margin:8px auto 14px; max-width:44ch; font-size:14px; line-height:1.55; color:var(--ink); }
+  .rollfeed-cena{ padding:8px 12px 2px; border-bottom:1px solid var(--border-strong); }
   /* ===== Teste de Assimilação: animação central e destaque no histórico ===== */
   .assim-ov{ position:fixed; inset:0; z-index:9500; display:flex; align-items:center; justify-content:center; padding:16px;
     background:rgba(12,8,4,.62); backdrop-filter:blur(2px); -webkit-backdrop-filter:blur(2px); animation:assimFade .25s ease-out; }
@@ -5981,6 +6025,7 @@
     if(caps.mode === "mesa" && !temAcessoTotal()){
       html += '<div class="card tight" style="border-color:var(--accent)"><p class="hint" style="margin:0">Você edita só a sua ficha. Das fichas dos outros jogadores aparece só um resumo, sem abrir a ficha completa.</p></div>';
     }
+    html += tentarHtml("Ameaças em cena", encontrosMesaHtml);
     html += testLogHtml("Histórico de Rolagens", {showClear:true});
     html += '<h2 style="margin:20px 0 10px">Personagens</h2>';
     if(!chars.length && !resumosOutros.length){
@@ -6152,12 +6197,18 @@
       '<button type="button" class="rollfeed-toggle" data-rollfeed="toggle">' +
         '<span>🎲 Histórico de Rolagens'+(log.length?' ('+log.length+')':'')+'</span><span>'+(collapsed?'▸':'▾')+'</span>' +
       '</button>' +
-      '<div class="rollfeed-list">'+listHtml+'</div>' +
+      '<div class="rollfeed-list">'+rollFeedCenaHtml()+listHtml+'</div>' +
     '</div>';
     feed.innerHTML = html;
     bindRollFeed();
   }
 
+  // Ameaças em cena (só o que o Assimilador decidiu mostrar), no topo do painel flutuante.
+  function rollFeedCenaHtml(){
+    var lista = (typeof encontrosMesaLista === "function") ? encontrosMesaLista() : [];
+    if(!lista.length) return '';
+    return '<div class="rollfeed-cena" style="margin:-8px -12px 6px"><p class="hint" style="margin:0 0 4px">Ameaças em cena</p>'+lista.map(function(e){ return encontroMesaCardHtml(e, true); }).join('')+'</div>';
+  }
   function bindRollFeed(){
     var feed = document.getElementById("rollfeed");
     if(!feed) return;
@@ -6306,6 +6357,605 @@
         if(state.view === "gm") renderGm();
       });
     });
+  }
+
+  // ---------- BESTIÁRIO (só o Assimilador) ----------
+  // Pedido do Marco (01/10/2026): catálogo das criaturas de Pangea no Painel, a
+  // partir de claude_Lista_de_Criaturas_Pangea.md (revisão de balanceamento de
+  // 01/10). Os gimmicks NÃO são automatizados: ficam só descritos no texto, e
+  // quem interpreta e ativa é o Assimilador. Custos: s = Sucesso, a = Adaptação,
+  // p = Pressão (no livro: A, B e C). "desc" é o que os jogadores leem quando a
+  // criatura é revelada (dá pra editar antes de revelar).
+  var BEST_CATS = [
+    ["burros", "Burros e hordas"],
+    ["pequenas", "Ameaças pequenas"],
+    ["grandes", "Ameaças médias e grandes"],
+    ["humanos", "Grupos humanos"],
+    ["chefes", "Chefes finais"]
+  ];
+  var BESTIARIO = [
+    { id:"burro", cat:"burros", nome:"Burro", sub:"Assimilado comum", perfil:"assimilado comum, base pra hordas",
+      desc:"Um assimilado “cru”: mordido, tomado pela infecção e reduzido ao instinto. Devagar, previsível, sem noção de dor.",
+      pilha:{d6:1}, suc:3,
+      grupos:[{ itens:[
+        { n:"Mordida Descoordenada", c:{p:1}, t:"Avança e morde sem técnica: 1d6/2 de dano. O alvo perde 1 Ponto de Determinação a cada mordida bem-sucedida, sem chance de resistência (é o próprio toque da assimilação)." }
+      ]}],
+      nota:"Sozinho, raramente justifica um Conflito: pode ser resolvido com um único Teste do Infectado. Horda: a cada ~5 Burros, +1 dado na pilha (d6 → d10 → d12) e +2 Sucessos para Neutralizar." },
+    { id:"horda-pequena", cat:"burros", nome:"Horda Pequena de Burros", sub:"~5 a 8 Burros agrupados", perfil:"horda pequena",
+      desc:"Um amontoado de assimilados se arrastando juntos, atraídos pelo barulho. Nenhum deles pensa; juntos, eles cercam.",
+      pilha:{d6:2, d10:1}, suc:8,
+      grupos:[{ itens:[
+        { n:"Mordidas Descoordenadas", c:{p:2}, t:"1d6/2 de dano a até 2 Infectados próximos. Cada alvo mordido perde 1 Ponto de Determinação, sem chance de resistência." },
+        { n:"Avanço em Massa", c:{p:3}, t:"Vários Burros cercam um Infectado, derrubando-o (1 Sucesso ou Adaptação pra se soltar) e causando 1d6 de dano." }
+      ]}] },
+    { id:"horda-media", cat:"burros", nome:"Horda Média de Burros", sub:"~10 a 20 Burros agrupados", perfil:"horda média",
+      desc:"Uma massa de assimilados que enche a rua de ponta a ponta. O perigo não é técnica: é o peso dos corpos.",
+      pilha:{d6:3, d10:2}, suc:15,
+      grupos:[{ itens:[
+        { n:"Mordidas Descoordenadas", c:{p:2}, t:"1d6/2 de dano a até 3 Infectados próximos. Cada alvo mordido perde 1 Ponto de Determinação, sem chance de resistência." },
+        { n:"Cerco", c:{p:4}, t:"Agarra até 2 Infectados ao mesmo tempo; cada um precisa de 1 Sucesso ou Adaptação pra se soltar." },
+        { n:"Avalanche de Corpos", c:{p:6}, t:"O peso da massa esmaga todos os Infectados envolvidos no conflito: 1d6 de dano a cada um. Cada um perde 2 Pontos de Determinação, sem chance de resistência." }
+      ]}],
+      nota:"Horda Grande (~25+): use a Horda de Burros do Fastplay (3d6 + 3d10, 20 Sucessos)." },
+    { id:"burro-emparedado", cat:"burros", nome:"Burro Emparedado", sub:"Burro preso em entulho urbano", perfil:"controle de área via escombros",
+      desc:"Um assimilado encravado no entulho, entre parede caída e ferragem retorcida. Não consegue se soltar, e o metal preso ao corpo virou arma.",
+      pilha:{d6:2, d10:1}, suc:8,
+      cond:[{ n:"Preso nos Escombros", t:"Imobilizado no local; não pode ser flanqueado (só atacado pela frente ou pelos lados acessíveis)." }],
+      grupos:[{ itens:[
+        { n:"Golpe de Ferragem", c:{p:2}, t:"Golpeia com um pedaço de metal retorcido preso ao braço: 1d6 de dano." },
+        { n:"Alcance Retorcido", c:{p:3}, t:"Usa cacos de metal entrelaçados nos braços pra alcançar mais longe que o esperado: 1d6/2 de dano e o alvo fica Agarrado." },
+        { n:"Colapso ao Redor", c:{p:3}, t:"Puxa a própria estrutura e derruba escombros que bloqueiam uma rota de fuga ou passagem por 1 rodada. Sem dano: controle de campo puro." }
+      ]}] },
+    { id:"burro-suspenso", cat:"burros", nome:"Burro Suspenso", sub:"Burro pendurado em cabos, andaimes ou vãos", perfil:"imprevisibilidade posicional",
+      desc:"Um assimilado pendurado no alto, preso em cabos e andaimes tortos. Nunca vem do mesmo lugar duas vezes.",
+      pilha:{d6:2, d10:1}, suc:8,
+      cond:[{ n:"Posição Imprevisível", t:"Antes de cada Ativação, o Assimilador escolhe de qual ponto vertical ele ataca (andar de cima, vão lateral, buraco no teto); os Infectados só descobrem no momento do ataque." }],
+      grupos:[{ itens:[
+        { n:"Investida Pendular", c:{p:2}, t:"Balança pelos cabos e ataca um Infectado desprevenido: 1d6 de dano." },
+        { n:"Queda Controlada", c:{p:3}, t:"Solta-se de propósito sobre um Infectado, derrubando-o (1 Sucesso ou Adaptação pra se soltar), sem dano adicional." },
+        { n:"Reposicionamento", c:{}, x:"sem custo, entre rodadas", t:"Muda livremente de ponto vertical na cena. É movimento, não ataque." }
+      ]}] },
+    { id:"burro-alagado", cat:"burros", nome:"Burro Alagado", sub:"Burro submerso em porões e garagens alagadas", perfil:"emboscada aquática furtiva",
+      desc:"Algo se mexe debaixo da água turva. Um assimilado que vive submerso nos porões e garagens alagadas, invisível até o bote.",
+      pilha:{d6:2, d10:1}, suc:8,
+      cond:[{ n:"Submerso", t:"Fica escondido debaixo d'água; só é percebido com um teste específico de “algo se mexendo na água” ou quando ataca." }],
+      grupos:[{ itens:[
+        { n:"Emergir Mordendo", c:{p:2}, t:"Sai da água de repente e morde: 1d6 de dano." },
+        { n:"Puxão Aquático", c:{p:3}, t:"Agarra a perna de um Infectado perto da água e puxa pra baixo: 1d6/2 de dano e o alvo fica Agarrado (precisa de uma ação extra só pra sair da água)." },
+        { n:"Arrastar pro Fundo", c:{p:3}, x:"só contra alvo já Agarrado", t:"Tenta afogá-lo: o alvo perde a próxima ação lutando pra respirar, a menos que gaste 1 Sucesso ou Adaptação." }
+      ]}] },
+    { id:"burro-sinalizador", cat:"burros", nome:"Burro Sinalizador", sub:"Burro preso perto de algo que amplifica som", perfil:"atrai reforços",
+      desc:"Um assimilado preso junto a um sino, um cano longo ou uma câmara vazia. Qualquer guincho dele ecoa longe demais.",
+      pilha:{d6:2, d10:1}, suc:8,
+      cond:[{ n:"Eco de Socorro", t:"Ao sofrer o primeiro dano do conflito (ou ao usar Guincho Ensurdecedor), solta um guincho amplificado que pode atrair uma Horda Pequena de Burros ou outra Ameaça próxima, a critério do Assimilador." }],
+      grupos:[{ itens:[
+        { n:"Mordida Descoordenada", c:{p:1}, t:"1d6/2 de dano e o alvo perde 1 Ponto de Determinação, igual ao Burro base." },
+        { n:"Guincho Ensurdecedor", c:{p:2}, t:"−1 dado na próxima rolagem de Percepção de até 2 Infectados; pode atrair reforços mesmo sem ter sofrido dano." }
+      ]}] },
+
+    { id:"corvogarida", cat:"pequenas", nome:"Corvogarida", sub:"corvo + mutação floral de margarida", perfil:"complicação aérea",
+      desc:"Um corvo de penas manchadas de branco, com um brilho amarelado no pescoço que lembra o miolo de uma flor. Deixa no ar um cheiro doce de margarida.",
+      pilha:{d6:1, d10:1}, suc:5,
+      grupos:[{ itens:[
+        { n:"Bicada e Furto", c:{p:2}, t:"1d6/2 de dano. Se acertar um Infectado carregando algo pequeno e visível (não guardado ou preso), pode roubar o item e alçar voo." },
+        { n:"Aroma de Margarida", c:{p:2}, t:"Solta a nuvem floral sobre até 2 Infectados próximos: −1 dado na próxima rolagem de Reação ou Percepção de cada um." }
+      ]}] },
+    { id:"araboleta", cat:"pequenas", nome:"Araboleta", sub:"arara + borboleta", perfil:"complicação aérea com carga de pólen",
+      desc:"O colorido vivo de uma arara misturado a escamas iridescentes de asa de borboleta. Cada batida de asa solta um pó fino e brilhante.",
+      pilha:{d6:1, d10:1}, suc:5,
+      grupos:[{ itens:[
+        { n:"Bicada Simples", c:{p:1}, t:"Bicada direta, sem veneno: 1d6/2 de dano." },
+        { n:"Nuvem de Pó de Asas", c:{p:2}, t:"Nuvem de pó colorido sobre até 2 Infectados próximos: −1 dado na próxima rolagem de Percepção ou de ataque à distância de cada um." },
+        { n:"Bicada Carregada de Pólen", c:{p:3}, t:"Descarrega o pólen acumulado: 1d6 de dano e o alvo fica Tonto (perde a próxima ação). O alvo perde 2 Pontos de Determinação, a menos que gaste 1 Sucesso ou Adaptação pra limpar os sentidos." }
+      ]}],
+      nota:"Com 5 Infectados costuma cair em ~1 rodada: funciona melhor como complicação no meio de outro conflito." },
+    { id:"gambalato", cat:"pequenas", nome:"Gambalato", sub:"gambá + lagarto", perfil:"chata e resistente, baixo dano",
+      desc:"Um bicho de pele escamosa e pelo ralo, de cauda comprida e preênsil. Parece frágil, mas é difícil de derrubar de vez.",
+      pilha:{d6:2, d10:1}, suc:7,
+      cond:[
+        { n:"Tanatose", t:"Na primeira vez que o total de Sucessos para Neutralizar for atingido, finge de morto e volta com 2 Sucessos faltando; no round seguinte, ninguém pode declarar Cumprir Objetivo contra ele." },
+        { n:"Regeneração de Lagarto", t:"Enquanto não sofrer dano num round, recupera 2 Sucessos do total necessário (não passa do total original)." }
+      ],
+      grupos:[{ itens:[
+        { n:"Mordida Fraca", c:{p:1}, t:"Mordida simples: 1d6/2 de dano." },
+        { n:"Arranhão e Fuga Rápida", c:{p:2}, t:"1d6/2 de dano; a pele grossa e o reflexo de fuga previnem 1 Sucesso do próximo teste de neutralização feito contra ele." },
+        { n:"Rabada Prendedora", c:{p:3}, t:"A cauda preênsil derruba o alvo (1 Sucesso ou Adaptação pra se livrar) e causa 1d6 de dano." }
+      ]}] },
+    { id:"cachorrinha", cat:"pequenas", nome:"Cachorrinha", sub:"cachorro-do-mato + galinha", perfil:"pequena, territorialista",
+      desc:"Pequena, de pelo ralo e penas misturadas, com um bico duro onde deveria haver focinho. Entra sem pensar duas vezes quando alguém invade o espaço dela.",
+      pilha:{d6:2, d10:1}, suc:8,
+      cond:[{ n:"Território", t:"Bote Territorial e Investida Cega só ficam disponíveis enquanto pelo menos um Infectado avança em direção ao território dela. Se todos recuarem ou saírem da área por 2 rodadas seguidas, ela perde essas duas (Bicada em Sequência ainda pode ser usada mais uma vez) e o Conflito termina com ela desistindo." }],
+      grupos:[{ itens:[
+        { n:"Bote Territorial", c:{p:2}, t:"Mordida certeira em um Infectado dentro do território: 1d6 de dano." },
+        { n:"Bicada em Sequência", c:{p:3}, t:"Bicadas rápidas em até 2 Infectados dentro do território: 1d6/2 de dano a cada um." },
+        { n:"Investida Cega", c:{p:3}, t:"Derruba um Infectado que esteja indo em direção ao território. Ele precisa de 1 Sucesso ou Adaptação no próprio turno pra se livrar; enquanto derrubado, sofre +1 de dano fixo em qualquer Ativação dela." }
+      ]}] },
+    { id:"camaleobra", cat:"pequenas", nome:"Camaleobra", sub:"cobra + camaleão", perfil:"emboscada e constrição",
+      desc:"Escamas que mudam de tom conforme o ambiente. Enrolada no chão, parece só uma pilha de folhas.",
+      pilha:{d6:2, d10:1}, suc:8,
+      cond:[{ n:"Camuflagem", t:"Se os Infectados não a perceberem antes do conflito (falharem um teste de Percepção), a primeira Ativação é automática e gratuita: Bote Camuflado e Enroscada sem pagar o custo." }],
+      grupos:[{ itens:[
+        { n:"Mordida Simples", c:{p:1}, t:"Mordida rápida, sem veneno: 1d6/2 de dano." },
+        { n:"Bote Camuflado e Enroscada", c:{p:3}, t:"Sobe pela perna apertando: 1d6 de dano e o alvo fica Agarrado (1 Sucesso ou Adaptação no próprio turno pra se soltar)." },
+        { n:"Apertar o Abraço", c:{p:3}, x:"só contra alvo já Agarrado", t:"Aumenta a constrição: 1d6 de dano. Pode repetir enquanto o alvo continuar Agarrado." },
+        { n:"Sufocar o Ar", c:{p:2}, x:"só contra alvo já Agarrado", t:"O aperto corta o fôlego: o alvo perde 2 Pontos de Determinação. Pode gastar 1 Sucesso ou Adaptação pra evitar a perda, mas ainda perde a ação recuperando o fôlego." }
+      ]}] },
+    { id:"mico-musgo", cat:"pequenas", nome:"Mico-Musgo", sub:"mico comum + mutação por exposição urbana", perfil:"furto e provocação em bando",
+      desc:"Um bando de micos de pelo emaranhado de musgo e brotos, saltando entre fiações, marquises e postes tomados pelo verde. Quase nunca descem ao chão.",
+      pilha:{d6:2, d10:1}, suc:8,
+      cond:[{ n:"Bando Ágil", t:"Só pode ser alvo de Cumprir Objetivo quando pelo menos um Infectado estiver em posição de alcançá-los (subindo, com arma à distância etc.). Do contrário, ficam fora de alcance, provocando e roubando de longe." }],
+      grupos:[{ itens:[
+        { n:"Furto Relâmpago", c:{p:2}, t:"Um mico desce e rouba um item pequeno e visível de um Infectado. Causa 1d6 de dano só se o Infectado resistir e lutar pelo item." },
+        { n:"Chuva de Detritos", c:{p:3}, t:"Entulho, telhas e lixo endurecido de cima em até 2 Infectados: 1d6/2 de dano a cada um." },
+        { n:"Algazarra Ensurdecedora", c:{p:3}, t:"−1 dado na próxima rolagem de Percepção de até 2 Infectados; pode atrair outras Ameaças da vizinhança (inclusive Burros), a critério do Assimilador." }
+      ]}] },
+
+    { id:"barata-colossal", cat:"grandes", nome:"Barata Colossal", sub:"barata + mutação por exposição prolongada", perfil:"média, resistente e evasiva",
+      desc:"Uma barata do tamanho de um cachorro, de carapaça grossa e brilhante. Atravessa entulho, cano e duto sem esforço.",
+      pilha:{d6:2, d10:2}, suc:10,
+      cond:[{ n:"Casco Reforçado", t:"Testes com arma branca ou desarmado contra ela contam 1 Sucesso a menos (mínimo 1). Não afeta fogo, esmagamento com peso (carros, escombros) ou veneno." }],
+      grupos:[{ itens:[
+        { n:"Mordida Roedora", c:{p:1}, t:"Mordida rápida que perfura qualquer coisa orgânica: 1d6 de dano." },
+        { n:"Spray de Bile Nauseante", c:{p:3}, t:"Cospe líquido fétido e ácido em até 2 Infectados próximos: −1 dado na próxima ação física de cada um." },
+        { n:"Fenda e Fuga", c:{a:2}, t:"Se enfia numa fresta, duto ou bueiro e reaparece em outro ponto da cena na rodada seguinte. Reposicionamento puro." }
+      ]}] },
+    { id:"tigrosa", cat:"grandes", nome:"Tigrosa", sub:"tigre + rosa vermelha", perfil:"predador emboscador grande",
+      desc:"Pelagem listrada que se mistura com pétalas vermelho-sangue ao longo do dorso e da cauda. As garras dianteiras são espinhos endurecidos.",
+      pilha:{d6:3, d10:2}, suc:15,
+      cond:[
+        { n:"Emboscada", t:"Se os Infectados não a perceberem antes do conflito (falharem um teste de Percepção), a primeira Ativação é automática e gratuita: Salto Predador sem pagar o custo." },
+        { n:"Espinhos Retaliatórios", t:"Sempre que um Infectado tiver sucesso atacando desarmado ou com arma branca a curta distância, sofre 1 ponto de dano dos espinhos, antes do próprio ataque ser resolvido." }
+      ],
+      grupos:[{ itens:[
+        { n:"Golpe de Espinhos", c:{p:3}, t:"1d6 de dano e um corte que sangra: o alvo perde mais 1 Ponto de Saúde na próxima rodada, a menos que gaste 1 Sucesso ou Adaptação pra estancar." },
+        { n:"Salto Predador", c:{p:4}, t:"Salta sobre um Infectado, derrubando-o (1 Sucesso ou Adaptação pra se soltar): 1d10 de dano." },
+        { n:"Fúria Territorial", c:{p:6}, t:"Ataca dois Infectados próximos ao mesmo tempo: 1d10 de dano a cada um." }
+      ]}] },
+    { id:"preguicarvore", cat:"grandes", nome:"Preguiçárvore", sub:"bicho-preguiça + árvore", perfil:"predador grande de dois modos",
+      desc:"Um corpo coberto de musgo e casca, quase impossível de distinguir do tronco onde vive fundido. Lenta, mas com uma força e um peso surpreendentes.",
+      pilha:{d6:3, d10:2}, suc:15,
+      trilhas:[{ nome:"Derrubar a árvore-hospedeira", alvo:8 }],
+      cond:[{ n:"Enraizada / Solta", t:"Começa enraizada ou solta, à escolha do Assimilador. Enraizada: imóvel, usa o Kit Enraizado. Solta: se move, usa o Kit Solto. Retorno à Copa a faz voltar a ficar Enraizada. Se a árvore cair (8 Sucessos na trilha própria, que não contam pra Neutralizar), fica presa no Kit Solto." }],
+      grupos:[
+        { titulo:"Kit Solto (enquanto Solta)", itens:[
+          { n:"Garra Preguiçosa", c:{p:2}, t:"Golpe lento mas pesado: 1d6 de dano." },
+          { n:"Investida Vagarosa", c:{p:4}, t:"Avança com todo o peso, derrubando o alvo (1 Sucesso ou Adaptação pra se soltar): 1d6 de dano." },
+          { n:"Retorno à Copa", c:{a:2}, x:"só com a árvore de pé", t:"Se desengaja e sobe de volta à árvore; fica Enraizada a partir da próxima Ativação." }
+        ]},
+        { titulo:"Kit Enraizado (enquanto Enraizada)", itens:[
+          { n:"Chicote de Cipós", c:{p:3}, t:"Um cipó alcança um Infectado próximo à árvore: 1d6 de dano e o alvo fica Agarrado." },
+          { n:"Abraço Sufocante", c:{p:4}, x:"só contra alvo já Agarrado", t:"Aperto lento e letal: 1d10 de dano e o alvo perde 1 Ponto de Determinação. Repetível enquanto o alvo continuar Agarrado." },
+          { n:"Queda de Galhos", c:{p:6}, t:"Sacode a copa sobre até 2 Infectados próximos à árvore: 1d10 de dano a cada um." }
+        ]}
+      ] },
+    { id:"aranha-sombras", cat:"grandes", nome:"Aranha-das-Sombras", sub:"aranha + mutação por exposição a subsolos escuros", perfil:"controle de área com teias",
+      desc:"Enorme e pálida, crescida nos subsolos e estacionamentos que nunca mais viram sol. Pilares, vãos e corredores estreitos estão cobertos de teia grudenta.",
+      pilha:{d6:3, d10:2}, suc:15,
+      cond:[{ n:"Domínio da Teia", t:"Sempre que um Infectado se mover rápido pelas áreas com teia (correr, investir, flanquear, fugir), precisa gastar 1 Sucesso ou Adaptação pra não ficar Enredado. Vale o conflito inteiro." }],
+      grupos:[{ itens:[
+        { n:"Enredar em Teia", c:{p:2}, t:"Fio grudento à distância: o alvo fica Agarrado (1 Sucesso ou Adaptação pra se soltar), sem dano." },
+        { n:"Picada Paralisante", c:{p:3}, t:"Veneno neurotóxico: 1d6 de dano e −1 dado em testes físicos na rodada seguinte." },
+        { n:"Fúria das Sombras", c:{p:5}, t:"Avança sobre até 2 Infectados Enredados ou envenenados: 1d10 de dano a cada um." }
+      ]}] },
+
+    { id:"patrulha-dlem", cat:"humanos", nome:"Patrulha do D'lém", sub:"grupo humano de batedores", perfil:"prioriza diplomacia à força",
+      desc:"Um pequeno grupo armado de batedores do D'lém. Galhos brotando do ombro, manchas de líquen na pele, olhos levemente alterados, e nenhuma vergonha disso.",
+      pilha:{d6:2, d10:2}, suc:15,
+      trilhas:[{ nome:"Caminho pacífico (negociar)", alvo:6 }],
+      cond:[{ n:"Diplomacia Antes da Força", t:"Só usa Ativações de combate se os Infectados atacarem primeiro, tentarem impedir a fuga deles à força, ou a negociação falhar. Antes disso, os Infectados podem convencer, negociar ou trocar recursos (trilha separada, geralmente 5 a 8 Sucessos com Práticas sociais; ajuste o alvo na trilha). Se der certo, o conflito acaba sem violência." }],
+      grupos:[{ titulo:"Só se o conflito virar violento", itens:[
+        { n:"Aviso a Bala", c:{p:2}, t:"Disparo de aviso ou golpe de coronha: 1d6/2 de dano." },
+        { n:"Cerco Coordenado", c:{p:3}, t:"Ataca dois Infectados ao mesmo tempo: 1d6 de dano a cada um." },
+        { n:"Retirada Tática", c:{a:2}, t:"O grupo recua em formação levando feridos, dificultando qualquer perseguição." },
+        { n:"Investida Armada", c:{p:5}, t:"Ataque coordenado contra um único Infectado: 1d10 de dano." }
+      ]}] },
+
+    { id:"mariah", cat:"chefes", nome:"Mariah, a Cirurgiã da Ley Line", sub:"líder do D'lém, médica, assimilada completa", perfil:"chefe final (ramo D'lém)",
+      desc:"Médica, líder do D'lém, e completamente assimilada. Não tem pressa: ela observa como quem examina um paciente.",
+      pilha:{d6:3, d10:4, d12:2}, suc:28,
+      trilhas:[{ nome:"Trégua (convencê-la a recuar)", alvo:10 }],
+      cond:[
+        { n:"Resolução Pragmática", t:"A qualquer momento, os Infectados podem tentar convencê-la a recuar: trilha paralela de 10 Sucessos sociais. Alcançada, o conflito termina sem neutralizá-la; ela se retira viva e o D'lém continua existindo." },
+        { n:"Precisão Cirúrgica", t:"Todas as Ativações dela ignoram redução de dano por resistência física (blindagem de itens etc.)." }
+      ],
+      grupos:[{ itens:[
+        { n:"Diagnóstico Implacável", c:{p:3}, x:"uma vez por alvo", t:"Expõe um ponto fraco: o alvo sofre −1 dado em todos os testes de Reação pelo resto do conflito." },
+        { n:"Incisão Direcionada", c:{p:5}, t:"Ataque cirúrgico preciso: 1d10 de dano, ignorando qualquer resistência do alvo." },
+        { n:"Anestesia de Campo", c:{p:4}, t:"Sedativo à distância em até 2 Infectados próximos: −1 dado na próxima ação física de cada um." },
+        { n:"Transfusão Forçada", c:{p:10}, x:"uma vez por conflito", t:"Desloca 1 Nível do Cabo de Guerra de um Infectado (Determinação → Assimilação, disparando o Teste de Assimilação) e ela recupera 5 Sucessos do total necessário pra neutralizá-la." }
+      ]}] },
+    { id:"lider-conselho", cat:"chefes", nome:"Líder do Conselho", sub:"assimilado completo, sem deformações visíveis", perfil:"chefe final (ramo Conselho)",
+      desc:"Impecável, calmo, com a voz de quem está acostumado a ser ouvido.",
+      pilha:{d6:3, d10:4, d12:2}, suc:30,
+      fases:[
+        { ate:10, nome:"Fase 1 — Fachada Impecável" },
+        { ate:20, nome:"Fase 2 — Rachaduras na Máscara" },
+        { ate:30, nome:"Fase 3 — Forma Verdadeira" }
+      ],
+      cond:[
+        { n:"Recusa Categórica (Fase 1)", t:"Sucessos de ataque físico não contam. Só contam Sucessos de exposição/investigação (achar provas, confrontá-lo com fatos, expor contradições)." },
+        { n:"Rachaduras (Fase 2)", t:"A fachada cede: veias esverdeadas, cheiro de seiva, olhos mudando de cor. A partir daqui, ataques físicos contam." },
+        { n:"Escolta", t:"Antes dele vêm Conselheiros corruptos e Soldados/Exploradores leais (fichas de escolta ainda pendentes)." }
+      ],
+      grupos:[
+        { titulo:"Fase 1 — Fachada Impecável (0 a 10)", itens:[
+          { n:"Ordem Direta", c:{p:4}, t:"Guardas/Conselheiros presentes atacam em conjunto um Infectado: 1d6 de dano." },
+          { n:"Emboscada Silenciosa", c:{p:5}, t:"Gás escondido, arma disfarçada de instrumento médico: atinge um Infectado que se aproximou demais, 1d10 de dano." },
+          { n:"Desviar as Atenções", c:{p:3}, t:"Argumentos manipuladores: −1 dado na próxima ação de um Infectado." }
+        ]},
+        { titulo:"Fase 2 — Rachaduras na Máscara (11 a 20)", itens:[
+          { n:"Sussurro da Seiva", c:{p:4}, x:"uma vez por rodada", t:"Drena energia da Grande Árvore e recupera 3 Sucessos do próprio total (nunca abaixo de 11)." },
+          { n:"Esporos de Controle", c:{p:5}, t:"Esporos desorientam até 2 Infectados: −1 dado em todos os testes na próxima rodada." }
+        ]},
+        { titulo:"Fase 3 — Forma Verdadeira (21 a 30)", itens:[
+          { n:"Amplificação da Ley Line", c:{p:7}, t:"Canaliza a força da Árvore: 1d10 de dano a todos os Infectados na cena." },
+          { n:"Raízes do Colapso", c:{p:5}, t:"Raízes sob o chão prendem até 2 Infectados (Agarrados)." },
+          { n:"Corrupção Absoluta", c:{p:8}, x:"uma vez por conflito", t:"Desloca 1 Nível do Cabo de Guerra de um Infectado (Determinação → Assimilação, disparando o Teste de Assimilação)." }
+        ]}
+      ] }
+  ];
+  function bestCriatura(id){ return BESTIARIO.filter(function(b){ return b.id===id; })[0] || null; }
+  function bestPilhaTexto(p){
+    return [6,10,12].filter(function(n){ return (p||{})["d"+n]; }).map(function(n){ return p["d"+n]+"d"+n; }).join(" + ") || "—";
+  }
+  function bestCustoHtml(c, extra){
+    c = c || {};
+    var partes = [];
+    ["s","a","p"].forEach(function(k){ if(c[k]) partes.push('<span class="best-custo-parte">'+c[k]+' '+dadoHtml(k)+'</span>'); });
+    var txt = partes.length ? partes.join(" ") : '<span class="best-custo-parte">sem custo</span>';
+    return '<span class="best-custo">'+txt+(extra?'<span class="best-custo-x">'+esc(extra)+'</span>':'')+'</span>';
+  }
+  // Rola as expressões de dano do texto (1d6/2, 1d6, 1d10, 1d12): cada uma vira
+  // um botãozinho; o resultado fica ao lado até rolar de novo. Só um número, não
+  // mexe em nada da ficha (o Assimilador aplica o dano onde for o caso).
+  function bestTextoHtml(txt, chave){
+    var n = 0;
+    var html = esc(txt).replace(/(\d+)d(6|10|12)(\/2)?/g, function(m){
+      var k = chave+"-"+(n++), r = (state.bestDano||{})[k];
+      return '<button type="button" class="best-dano" data-bdano="'+m+'" data-bdkey="'+esc(k)+'" title="Rolar dano">🎲 '+m+(r!=null?' <b>= '+r+'</b>':'')+'</button>';
+    });
+    return iconizarTexto(html);
+  }
+  function bestRolarExpr(expr){
+    var m = /^(\d+)d(\d+)(\/2)?$/.exec(expr); if(!m) return 0;
+    var tot = 0; for(var i=0;i<parseInt(m[1],10);i++) tot += 1 + Math.floor(Math.random()*parseInt(m[2],10));
+    return m[3] ? Math.ceil(tot/2) : tot;
+  }
+  function bestRolarPilha(p){
+    var dados = [];
+    [6,10,12].forEach(function(n){ for(var i=0;i<((p||{})["d"+n]||0);i++) dados.push(rollDie(n)); });
+    return dados;
+  }
+  function bestTotais(dados){
+    return { s:sum(dados.map(function(d){ return d.s; })), a:sum(dados.map(function(d){ return d.a; })), p:sum(dados.map(function(d){ return d.p; })) };
+  }
+  function bestRolagemHtml(rol, attrMostrar){
+    if(!rol || !rol.dados || !rol.dados.length) return "";
+    var t = bestTotais(rol.dados);
+    return '<div class="best-rolagem">' +
+      '<div class="row" style="gap:6px;flex-wrap:wrap">' + rol.dados.map(function(d){
+        return '<span class="best-dado">d'+d.sides+' · <b>'+d.face+'</b> '+(diceResultHtml(d)==="em branco"?'<span class="hint" style="margin:0">—</span>':diceResultHtml(d))+'</span>';
+      }).join('') + '</div>' +
+      '<div class="row" style="gap:8px;align-items:center;flex-wrap:wrap;margin-top:6px">'+resultBadges(t.s,t.a,t.p) +
+        '<button type="button" class="btn secondary doc-btn" '+attrMostrar+(rol.mostrado?' disabled':'')+'>'+(rol.mostrado?'Mostrado para a mesa ✓':'📣 Mostrar para a mesa')+'</button></div>' +
+    '</div>';
+  }
+  // Mesma animação central da Rolagem Seca ("destaque"), com o nome da criatura
+  // só se ela já foi revelada; senão aparece como "Ameaça".
+  function bestMostrarRolagem(titulo, pilhaTxt, dados, depois){
+    var t = bestTotais(dados);
+    var entrada = { tipo:"destaque", nomePersonagem:titulo, nomeJogador:"",
+      label:titulo+" · Ativação "+pilhaTxt, subtitulo:"Ativação · "+pilhaTxt,
+      totS:t.s, totA:t.a, totP:t.p,
+      dados:dados.map(function(d){ return {sides:d.sides, face:d.face, s:d.s, a:d.a, p:d.p, kept:true}; }) };
+    entrada.resultado = t.s+" Suc · "+t.a+" Adap · "+t.p+" Press";
+    mostrarAnimAssim(entrada, function(){
+      registrarTeste(entrada);
+      assimVistos[entrada.id] = true;
+      if(caps.mode==="mesa"){ clearTimeout(publishTimer); doPublish(); }
+      if(depois) depois();
+    });
+  }
+  function bestFaseAtual(cri, suc){
+    if(!cri || !cri.fases) return null;
+    for(var i=0;i<cri.fases.length;i++){ if(suc <= cri.fases[i].ate) return cri.fases[i]; }
+    return cri.fases[cri.fases.length-1];
+  }
+
+  // ----- Encontros (criaturas em cena) -----
+  // "encontros": estado completo, só o Assimilador lê. "encontrosMesa": só o que
+  // ele decidiu mostrar (nome/descrição se revelada, Sucessos se o progresso
+  // estiver visível). Sem nada visível, o documento público é apagado.
+  function encontrosLista(){
+    return (shared.encontros||[]).slice().sort(function(a,b){ return String(a.criadoEm||"").localeCompare(String(b.criadoEm||"")); });
+  }
+  function encontroGet(id){ return (shared.encontros||[]).filter(function(e){ return e.id===id; })[0] || null; }
+  function encontroPublico(enc){
+    if(!enc.revelada && !enc.progresso) return null;
+    return { id:enc.id, revelada:!!enc.revelada, reveladaEm:enc.reveladaEm||null, progresso:!!enc.progresso,
+      nome:enc.revelada ? (enc.nome||"") : "", desc:enc.revelada ? (enc.descMesa||"") : "",
+      suc:enc.progresso ? (enc.suc||0) : null, alvo:enc.progresso ? (enc.alvo||0) : null,
+      trilhas:enc.progresso ? (enc.trilhas||[]).filter(function(t){ return t.mostrar; }).map(function(t){ return {nome:t.nome, alvo:t.alvo, atual:t.atual}; }) : [],
+      criadoEm:enc.criadoEm||"", ts:new Date().toISOString() };
+  }
+  function gravarEncontro(enc, apagar){
+    var lista = (shared.encontros||[]).filter(function(e){ return e.id!==enc.id; });
+    if(!apagar){ enc.atualizadoEm = new Date().toISOString(); lista.push(enc); }
+    shared.encontros = lista;
+    var pub = apagar ? null : encontroPublico(enc);
+    var ops = [ apagar ? { tipo:"del", col:"encontros", id:enc.id } : { tipo:"set", col:"encontros", id:enc.id, data:JSON.parse(JSON.stringify(enc)) },
+      pub ? { tipo:"set", col:"encontrosMesa", id:enc.id, data:pub } : { tipo:"del", col:"encontrosMesa", id:enc.id } ];
+    if(!FB) return;
+    FB.escrever(ops).catch(function(e){ console.error("[Pangea] bestiário", e); alert("Não consegui salvar a criatura em cena. Confira a conexão e se as regras do Firestore têm os blocos encontros e encontrosMesa."); });
+  }
+  function encontroNovo(cri){
+    var mesmos = (shared.encontros||[]).filter(function(e){ return e.criaturaId===cri.id; }).length;
+    return { id:uid(), criaturaId:cri.id, nome:cri.nome+(mesmos?" "+(mesmos+1):""), suc:0, alvo:cri.suc,
+      trilhas:(cri.trilhas||[]).map(function(t){ return { nome:t.nome, alvo:t.alvo, atual:0, mostrar:false }; }),
+      pontos:{s:0,a:0,p:0}, revelada:false, progresso:false, descMesa:cri.desc||"", rolagem:null,
+      criadoEm:new Date().toISOString() };
+  }
+
+  function bestAtivacoesHtml(cri, chave, enc){
+    var html = '';
+    (cri.grupos||[]).forEach(function(g, gi){
+      if(g.titulo) html += '<p class="best-grupo-tit">'+esc(g.titulo)+'</p>';
+      g.itens.forEach(function(a, ai){
+        var c = a.c||{}, temCusto = !!(c.s||c.a||c.p);
+        var pode = enc && temCusto && ["s","a","p"].every(function(k){ return (enc.pontos[k]||0) >= (c[k]||0); });
+        html += '<div class="best-ativ"><div class="best-ativ-cab"><b>'+esc(a.n)+'</b>'+bestCustoHtml(c, a.x) +
+          (enc && temCusto ? '<button type="button" class="btn '+(pode?'accent':'secondary')+' doc-btn best-pagar" data-bpagar="'+enc.id+'" data-bg="'+gi+'" data-ba="'+ai+'"'+(pode?'':' disabled')+' title="Desconta o custo dos pontos da Ameaça">Pagar</button>' : '') +
+          '</div><p>'+bestTextoHtml(a.t, chave+"-"+gi+"-"+ai)+'</p></div>';
+      });
+    });
+    return html;
+  }
+  function bestCondHtml(cri, chave){
+    if(!(cri.cond||[]).length) return '';
+    return '<div class="best-cond">' + cri.cond.map(function(c, i){
+      return '<p><b>'+esc(c.n)+':</b> '+bestTextoHtml(c.t, chave+"-c"+i)+'</p>';
+    }).join('') + '</div>';
+  }
+  function bestContadorHtml(rotulo, atual, alvo, attrs, mostrarAttr, mostrando){
+    var pct = alvo ? Math.min(100, Math.round(100*atual/alvo)) : 0;
+    var feito = alvo && atual >= alvo;
+    return '<div class="best-cont'+(feito?' feito':'')+'">' +
+      '<div class="best-cont-cab"><span>'+esc(rotulo)+'</span><span class="best-cont-num">'+atual+' / '+
+        '<input type="number" min="1" max="99" value="'+alvo+'" '+attrs+' data-balvo title="Total necessário"></span></div>' +
+      '<div class="best-barra"><span style="width:'+pct+'%"></span></div>' +
+      '<div class="row" style="gap:4px;align-items:center;flex-wrap:wrap;margin-top:6px">' +
+        '<button type="button" class="btn secondary doc-btn" '+attrs+' data-bdelta="-1"'+(atual<=0?' disabled':'')+'>−1</button>' +
+        '<button type="button" class="btn secondary doc-btn" '+attrs+' data-bdelta="1">+1</button>' +
+        '<button type="button" class="btn secondary doc-btn" '+attrs+' data-bdelta="2">+2</button>' +
+        '<button type="button" class="btn secondary doc-btn" '+attrs+' data-bdelta="3">+3</button>' +
+        (feito ? '<span class="item-chip esc" style="margin-left:4px">'+(rotulo.indexOf("Neutralizar")===0?'Neutralizada':'Concluída')+'</span>' : '') +
+        (mostrarAttr ? '<label class="best-check"><input type="checkbox" '+mostrarAttr+(mostrando?' checked':'')+'> mostrar aos jogadores</label>' : '') +
+      '</div></div>';
+  }
+  function bestEncontroHtml(enc){
+    var cri = bestCriatura(enc.criaturaId);
+    if(!cri) return '<div class="item-card"><p class="hint">Criatura desconhecida ('+esc(enc.criaturaId)+').</p><button type="button" class="btn secondary doc-btn" data-bencerrar="'+enc.id+'">Tirar de cena</button></div>';
+    var fase = bestFaseAtual(cri, enc.suc||0);
+    var p = enc.pontos || {s:0,a:0,p:0};
+    var aberto = !(state.bestEncFechado||{})[enc.id];
+    var html = '<details class="item-card best-enc" data-benc="'+enc.id+'"'+(aberto?' open':'')+'><summary class="best-enc-cab">' +
+      '<span class="best-enc-nome">'+esc(enc.nome)+'</span>' +
+      '<span class="item-chips"><span class="item-chip">'+bestPilhaTexto(cri.pilha)+'</span>' +
+        '<span class="item-chip esc">'+(enc.suc||0)+'/'+enc.alvo+'</span>' +
+        (enc.revelada?'<span class="item-chip">revelada</span>':'')+(enc.progresso?'<span class="item-chip">progresso visível</span>':'')+'</span></summary>';
+    if(fase) html += '<p class="best-fase">'+esc(fase.nome)+'</p>';
+    html += bestContadorHtml("Neutralizar Ameaça", enc.suc||0, enc.alvo, 'data-bcont="'+enc.id+'" data-btrilha="-1"', null, false);
+    (enc.trilhas||[]).forEach(function(t, ti){
+      html += bestContadorHtml(t.nome, t.atual||0, t.alvo, 'data-bcont="'+enc.id+'" data-btrilha="'+ti+'"', 'data-btrmostrar="'+enc.id+'" data-btrilha="'+ti+'"', t.mostrar);
+    });
+    // Pontos da Ameaça (o que sobrou das rolagens de Ativação, represado)
+    html += '<div class="best-pontos"><span class="hint" style="margin:0">Pontos da Ameaça:</span>' +
+      ["s","a","p"].map(function(k){
+        return '<span class="best-ponto">'+dadoHtml(k)+' <b>'+(p[k]||0)+'</b>' +
+          '<button type="button" class="best-mini" data-bponto="'+enc.id+'" data-bk="'+k+'" data-bv="-1"'+((p[k]||0)<=0?' disabled':'')+'>−</button>' +
+          '<button type="button" class="best-mini" data-bponto="'+enc.id+'" data-bk="'+k+'" data-bv="1">+</button></span>';
+      }).join('') +
+      '<button type="button" class="btn accent doc-btn" data-brolar="'+enc.id+'">🎲 Rolar Ativação</button>' +
+      '<button type="button" class="btn secondary doc-btn" data-bzerar="'+enc.id+'"'+((p.s||p.a||p.p)?'':' disabled')+'>Zerar pontos</button></div>';
+    html += '<p class="hint" style="margin:4px 0 0">A rolagem mantém todos os dados e soma aos pontos. Pressão e Sucesso devem ser investidos na rodada; o que sobrar numa Ativação incompleta fica represado.</p>';
+    html += bestRolagemHtml(enc.rolagem, 'data-bmostrar="'+enc.id+'"');
+    html += bestCondHtml(cri, "e"+enc.id);
+    html += '<div class="best-ativs">'+bestAtivacoesHtml(cri, "e"+enc.id, enc)+'</div>';
+    if(cri.nota) html += '<p class="item-nota">'+bestTextoHtml(cri.nota, "e"+enc.id+"-nota")+'</p>';
+    // O que a mesa vê
+    html += '<div class="best-mesa"><p class="best-grupo-tit" style="margin-top:0">O que os jogadores veem</p>' +
+      '<label class="best-check"><input type="checkbox" data-brevelar="'+enc.id+'"'+(enc.revelada?' checked':'')+'> Revelar criatura (nome e descrição, com aviso na tela de todos)</label>' +
+      '<label class="best-check"><input type="checkbox" data-bprogresso="'+enc.id+'"'+(enc.progresso?' checked':'')+'> Mostrar o progresso para Neutralizar</label>' +
+      '<div class="grid cols-2" style="margin-top:6px"><div class="field" style="margin:0"><label>Nome mostrado</label><input type="text" data-bnome="'+enc.id+'" value="'+esc(enc.nome)+'"></div></div>' +
+      '<div class="field" style="margin:6px 0 0"><label>Descrição para os jogadores</label><textarea data-bdesc="'+enc.id+'" style="min-height:54px">'+esc(enc.descMesa||"")+'</textarea></div>' +
+      '<p class="hint" style="margin:4px 0 0">'+(enc.revelada||enc.progresso ? 'Visível na aba Mesa e no Histórico flutuante.' : 'Escondida: os jogadores não veem nada desta criatura.')+'</p></div>';
+    html += '<div class="btn-row" style="margin-top:8px"><span></span><button type="button" class="btn secondary doc-btn" data-bencerrar="'+enc.id+'">Tirar de cena</button></div>';
+    return html + '</details>';
+  }
+  function bestCatalogoHtml(){
+    var html = '';
+    var rolCat = state.bestRolCat || (state.bestRolCat = {});
+    var abertos = state.bestCatAbertos || (state.bestCatAbertos = {});
+    var fichas = state.bestFichaAberta || (state.bestFichaAberta = {});
+    BEST_CATS.forEach(function(cat){
+      var lista = BESTIARIO.filter(function(b){ return b.cat===cat[0]; });
+      html += '<details class="doc-grupo" data-bcat="'+cat[0]+'"'+(abertos[cat[0]]?' open':'')+'><summary><b>'+esc(cat[1])+'</b> <span class="hint">· '+lista.length+'</span></summary>';
+      lista.forEach(function(cri){
+        html += '<div class="item-card best-cri" data-bbusca="'+esc((cri.nome+" "+cri.sub+" "+cri.perfil).toLowerCase())+'">' +
+          '<div class="best-enc-cab"><span class="best-enc-nome">'+esc(cri.nome)+'</span><span class="item-chips">' +
+            '<span class="item-chip">'+bestPilhaTexto(cri.pilha)+'</span><span class="item-chip esc">'+cri.suc+' Sucessos</span></span></div>' +
+          '<p class="item-nota" style="margin-top:2px">'+esc(cri.sub)+' · '+esc(cri.perfil)+'</p>' +
+          '<div class="row" style="gap:6px;flex-wrap:wrap;margin-top:8px">' +
+            '<button type="button" class="btn accent doc-btn" data-bcena="'+cri.id+'">⚔ Colocar em cena</button>' +
+            '<button type="button" class="btn secondary doc-btn" data-bficha="'+cri.id+'">'+(fichas[cri.id]?'Fechar ficha':'Ver ficha')+'</button>' +
+            '<button type="button" class="btn secondary doc-btn" data-brolcat="'+cri.id+'">🎲 Rolar Ativação</button></div>' +
+          bestRolagemHtml(rolCat[cri.id], 'data-bmostrarcat="'+cri.id+'"');
+        if(fichas[cri.id]){
+          html += '<div class="best-ficha"><p class="item-nota" style="margin-top:0"><b>Descrição (jogadores):</b> '+esc(cri.desc)+'</p>' +
+            (cri.trilhas ? '<p class="item-nota">'+cri.trilhas.map(function(t){ return '<b>'+esc(t.nome)+':</b> '+t.alvo+' Sucessos'; }).join(' · ')+'</p>' : '') +
+            bestCondHtml(cri, "c"+cri.id) + bestAtivacoesHtml(cri, "c"+cri.id, null) +
+            (cri.nota ? '<p class="item-nota">'+bestTextoHtml(cri.nota, "c"+cri.id+"-nota")+'</p>' : '') + '</div>';
+        }
+        html += '</div>';
+      });
+      html += '</details>';
+    });
+    return html;
+  }
+  function gmBestiarioHtml(){
+    var encs = encontrosLista();
+    var body = '<div id="gm-bestiario">';
+    body += '<p class="best-grupo-tit" style="margin-top:0">Em cena'+(encs.length?' ('+encs.length+')':'')+'</p>';
+    if(!encs.length) body += '<p class="hint">Nenhuma criatura em cena. Escolha uma no catálogo e clique em “Colocar em cena”. Os jogadores só veem o que você revelar.</p>';
+    encs.forEach(function(enc){ body += bestEncontroHtml(enc); });
+    body += '<p class="best-grupo-tit">Catálogo</p>' +
+      '<div class="field" style="max-width:320px;margin:0 0 6px"><input type="search" id="best-busca" placeholder="Buscar criatura…" value="'+esc(state.bestBusca||"")+'"></div>';
+    body += bestCatalogoHtml();
+    body += '<p class="hint" style="margin-top:10px">Os gimmicks não são automáticos: as condicionantes ficam descritas, e você decide quando valem. Os botões 🎲 nos textos rolam só o dano.</p>';
+    return sectionCard("gmbestiario", "Bestiário", body + '</div>');
+  }
+  function bestAplicarBusca(raiz){
+    var q = String(state.bestBusca||"").trim().toLowerCase();
+    raiz.querySelectorAll(".best-cri").forEach(function(el){ el.style.display = (!q || el.getAttribute("data-bbusca").indexOf(q) > -1) ? "" : "none"; });
+    raiz.querySelectorAll("[data-bcat]").forEach(function(d){
+      if(q){ d.open = true; d.style.display = d.querySelector('.best-cri:not([style*="none"])') ? "" : "none"; }
+      else { d.style.display = ""; d.open = !!state.bestCatAbertos[d.getAttribute("data-bcat")]; }
+    });
+  }
+  function bindGmBestiario(rerender){
+    var raiz = app.querySelector("#gm-bestiario"); if(!raiz) return;
+    function on(sel, ev, fn){ raiz.querySelectorAll(sel).forEach(function(el){ el.addEventListener(ev, function(e){ fn(el, e); }); }); }
+    var busca = raiz.querySelector("#best-busca");
+    if(busca){
+      busca.addEventListener("input", function(){ state.bestBusca = busca.value; bestAplicarBusca(raiz); });
+      if(state.bestBusca) bestAplicarBusca(raiz);
+    }
+    on("[data-bcat]", "toggle", function(el){ if(!String(state.bestBusca||"").trim()) state.bestCatAbertos[el.getAttribute("data-bcat")] = el.open; });
+    on("[data-benc]", "toggle", function(el){ (state.bestEncFechado = state.bestEncFechado || {})[el.getAttribute("data-benc")] = !el.open; });
+    on("[data-bficha]", "click", function(el){ var id = el.getAttribute("data-bficha"); state.bestFichaAberta[id] = !state.bestFichaAberta[id]; rerender(); });
+    on("[data-bcena]", "click", function(el){
+      var cri = bestCriatura(el.getAttribute("data-bcena")); if(!cri) return;
+      gravarEncontro(encontroNovo(cri)); rerender();
+    });
+    on("[data-brolcat]", "click", function(el){
+      var cri = bestCriatura(el.getAttribute("data-brolcat")); if(!cri) return;
+      state.bestRolCat[cri.id] = { dados:bestRolarPilha(cri.pilha), mostrado:false }; rerender();
+    });
+    on("[data-bmostrarcat]", "click", function(el){
+      var cri = bestCriatura(el.getAttribute("data-bmostrarcat")), rol = cri && state.bestRolCat[cri.id];
+      if(!rol || rol.mostrado) return;
+      rol.mostrado = true; el.disabled = true;
+      bestMostrarRolagem("Ameaça", bestPilhaTexto(cri.pilha), rol.dados, rerender);
+    });
+    on("[data-bdano]", "click", function(el){
+      (state.bestDano = state.bestDano || {})[el.getAttribute("data-bdkey")] = bestRolarExpr(el.getAttribute("data-bdano"));
+      rerender();
+    });
+    // Encontros
+    function comEnc(el, attr, fn){ var enc = encontroGet(el.getAttribute(attr)); if(enc){ enc = JSON.parse(JSON.stringify(enc)); fn(enc); } }
+    function trilhaDe(enc, el){ var ti = parseInt(el.getAttribute("data-btrilha"),10); return ti < 0 ? null : enc.trilhas[ti]; }
+    on("[data-bdelta]", "click", function(el){ comEnc(el, "data-bcont", function(enc){
+      var d = parseInt(el.getAttribute("data-bdelta"),10), t = trilhaDe(enc, el);
+      if(t) t.atual = clamp((t.atual||0)+d, 0, t.alvo); else enc.suc = clamp((enc.suc||0)+d, 0, enc.alvo);
+      gravarEncontro(enc); rerender();
+    }); });
+    on("[data-balvo]", "change", function(el){ comEnc(el, "data-bcont", function(enc){
+      var v = clamp(parseInt(el.value,10)||1, 1, 99), t = trilhaDe(enc, el);
+      if(t){ t.alvo = v; t.atual = Math.min(t.atual||0, v); } else { enc.alvo = v; enc.suc = Math.min(enc.suc||0, v); }
+      gravarEncontro(enc); rerender();
+    }); });
+    on("[data-btrmostrar]", "change", function(el){ comEnc(el, "data-btrmostrar", function(enc){
+      var t = trilhaDe(enc, el); if(t){ t.mostrar = el.checked; gravarEncontro(enc); rerender(); }
+    }); });
+    on("[data-bponto]", "click", function(el){ comEnc(el, "data-bponto", function(enc){
+      var k = el.getAttribute("data-bk"); enc.pontos = enc.pontos || {s:0,a:0,p:0};
+      enc.pontos[k] = Math.max(0, (enc.pontos[k]||0) + parseInt(el.getAttribute("data-bv"),10));
+      gravarEncontro(enc); rerender();
+    }); });
+    on("[data-bzerar]", "click", function(el){ comEnc(el, "data-bzerar", function(enc){ enc.pontos = {s:0,a:0,p:0}; gravarEncontro(enc); rerender(); }); });
+    on("[data-brolar]", "click", function(el){ comEnc(el, "data-brolar", function(enc){
+      var cri = bestCriatura(enc.criaturaId); if(!cri) return;
+      var dados = bestRolarPilha(cri.pilha), t = bestTotais(dados);
+      enc.pontos = enc.pontos || {s:0,a:0,p:0};
+      enc.pontos.s = (enc.pontos.s||0)+t.s; enc.pontos.a = (enc.pontos.a||0)+t.a; enc.pontos.p = (enc.pontos.p||0)+t.p;
+      enc.rolagem = { dados:dados.map(function(d){ return {sides:d.sides, face:d.face, s:d.s, a:d.a, p:d.p}; }), mostrado:false, ts:new Date().toISOString() };
+      gravarEncontro(enc); rerender();
+    }); });
+    on("[data-bmostrar]", "click", function(el){ comEnc(el, "data-bmostrar", function(enc){
+      var cri = bestCriatura(enc.criaturaId); if(!cri || !enc.rolagem || enc.rolagem.mostrado) return;
+      el.disabled = true;
+      enc.rolagem.mostrado = true; gravarEncontro(enc);
+      bestMostrarRolagem(enc.revelada ? enc.nome : "Ameaça", bestPilhaTexto(cri.pilha), enc.rolagem.dados, rerender);
+    }); });
+    on("[data-bpagar]", "click", function(el){ comEnc(el, "data-bpagar", function(enc){
+      var cri = bestCriatura(enc.criaturaId); if(!cri) return;
+      var a = cri.grupos[parseInt(el.getAttribute("data-bg"),10)].itens[parseInt(el.getAttribute("data-ba"),10)], c = a.c||{};
+      if(!["s","a","p"].every(function(k){ return (enc.pontos[k]||0) >= (c[k]||0); })) return;
+      ["s","a","p"].forEach(function(k){ enc.pontos[k] = (enc.pontos[k]||0) - (c[k]||0); });
+      gravarEncontro(enc); rerender();
+    }); });
+    on("[data-brevelar]", "change", function(el){ comEnc(el, "data-brevelar", function(enc){
+      enc.revelada = el.checked;
+      if(el.checked) enc.reveladaEm = new Date().toISOString();
+      gravarEncontro(enc); rerender();
+    }); });
+    on("[data-bprogresso]", "change", function(el){ comEnc(el, "data-bprogresso", function(enc){ enc.progresso = el.checked; gravarEncontro(enc); rerender(); }); });
+    on("[data-bnome]", "change", function(el){ comEnc(el, "data-bnome", function(enc){ enc.nome = el.value.trim() || enc.nome; gravarEncontro(enc); }); });
+    on("[data-bdesc]", "change", function(el){ comEnc(el, "data-bdesc", function(enc){ enc.descMesa = el.value; gravarEncontro(enc); }); });
+    on("[data-bencerrar]", "click", function(el){
+      var enc = encontroGet(el.getAttribute("data-bencerrar")); if(!enc) return;
+      askConfirm('Tirar "'+(enc.nome||"esta criatura")+'" de cena? Ela some também da tela dos jogadores.', function(){ gravarEncontro(enc, true); rerender(); });
+    });
+  }
+
+  // ----- O que os jogadores veem -----
+  function encontrosMesaLista(){
+    return (shared.encontrosMesa||[]).slice().sort(function(a,b){ return String(a.criadoEm||"").localeCompare(String(b.criadoEm||"")); });
+  }
+  function encontroMesaCardHtml(e, compacto){
+    var nome = e.revelada && e.nome ? e.nome : "Ameaça desconhecida";
+    var html = '<div class="best-mesa-card'+(compacto?' compacto':'')+'"><div class="best-enc-nome">'+esc(nome)+'</div>';
+    if(!compacto && e.revelada && e.desc) html += '<p class="item-nota" style="margin-top:2px">'+esc(e.desc)+'</p>';
+    if(e.progresso && e.alvo){
+      var linhas = [{nome:"Neutralizar", atual:e.suc||0, alvo:e.alvo}].concat(e.trilhas||[]);
+      linhas.forEach(function(t){
+        var pct = Math.min(100, Math.round(100*(t.atual||0)/t.alvo));
+        html += '<div class="best-cont'+((t.atual||0)>=t.alvo?' feito':'')+'"><div class="best-cont-cab"><span>'+esc(t.nome)+'</span><span class="best-cont-num">'+(t.atual||0)+' / '+t.alvo+'</span></div>' +
+          '<div class="best-barra"><span style="width:'+pct+'%"></span></div></div>';
+      });
+    }
+    return html + '</div>';
+  }
+  function encontrosMesaHtml(){
+    var lista = encontrosMesaLista();
+    if(!lista.length) return '';
+    return '<div class="card"><h2>Ameaças em cena</h2><div class="best-mesa-grid">'+lista.map(function(e){ return encontroMesaCardHtml(e, false); }).join('')+'</div></div>';
+  }
+  // Aviso no centro da tela quando o Assimilador revela uma criatura (só pra quem
+  // não é o Assimilador; na primeira carga só marca o que já estava revelado).
+  var bestRevVistos = {}, bestRevPronto = false;
+  function verificarRevelacoes(lista){
+    if(!bestRevPronto){ lista.forEach(function(e){ if(e.revelada) bestRevVistos[e.id] = e.reveladaEm; }); bestRevPronto = true; return; }
+    lista.forEach(function(e){
+      if(!e.revelada || bestRevVistos[e.id] === e.reveladaEm) return;
+      bestRevVistos[e.id] = e.reveladaEm;
+      var idade = Date.now() - (Date.parse(e.reveladaEm||"") || 0);
+      if(idade < 120000 && !temAcessoTotal()) mostrarRevelacao(e);
+    });
+  }
+  function mostrarRevelacao(e){
+    var velho = document.getElementById("assim-overlay"); if(velho) velho.remove();
+    var ov = document.createElement("div"); ov.id = "assim-overlay"; ov.className = "assim-ov";
+    ov.innerHTML = '<div class="assim-box destaque pressao best-revela" role="dialog" aria-live="polite" aria-label="Ameaça">' +
+      '<div class="assim-kicker">Ameaça</div><div class="assim-nome">'+esc(e.nome||"?")+'</div>' +
+      (e.desc ? '<p class="best-revela-desc">'+esc(e.desc)+'</p>' : '') +
+      '<button type="button" class="btn secondary assim-fechar">Fechar</button></div>';
+    document.body.appendChild(ov);
+    var auto;
+    function fechar(){ clearTimeout(auto); ov.classList.add("saindo"); setTimeout(function(){ if(ov.parentNode) ov.parentNode.removeChild(ov); }, 260); }
+    ov.querySelector(".assim-fechar").addEventListener("click", fechar);
+    ov.addEventListener("click", function(ev){ if(ev.target === ov) fechar(); });
+    auto = setTimeout(fechar, 12000);
   }
 
   // ----- CONFLITOS (só o Assimilador vê) -----
@@ -6800,6 +7450,7 @@
     var roster = loadChars();
     var html = topbar("gm");
     html += renderGmDryRoll();
+    html += tentarHtml("Bestiário", gmBestiarioHtml);
     html += renderGmConflitos();
     html += gmXpTodosHtml(roster);
     html += gmDocsHtml();
@@ -6833,6 +7484,7 @@
     app.innerHTML = html;
     bindGlobal();
     bindGmDryRoll();
+    tentar("Bestiário", function(){ bindGmBestiario(renderGmMesa); });
     bindGmConflitos();
     bindGmXp();
     bindGmDocs(renderGmMesa);
@@ -6964,7 +7616,8 @@
       fb.quandoUsuario(function(u){
         pararOuvintes();
         appPronto = false;
-        shared = { characters:[], testLog:[], resumos:[], documentos:[], documentosNotas:[] };
+        shared = { characters:[], testLog:[], resumos:[], documentos:[], documentosNotas:[], encontros:[], encontrosMesa:[] };
+        bestRevPronto = false; bestRevVistos = {};
         rolagensComuns = []; rolagensNpc = [];
         if(!u || u.isAnonymous){
           usuario = null;
@@ -6997,7 +7650,13 @@
         ouvintes.push(fb.ouvir("documentos", function(lista){
           shared.documentos = lista; agendarRender();
         }, function(e){ console.warn("[Pangea] documentos", e); }, mestre ? null : ["leitores", u.uid, "array-contains"]));
+        ouvintes.push(fb.ouvir("encontrosMesa", function(lista){
+          shared.encontrosMesa = lista; verificarRevelacoes(lista); agendarRender(); renderRollFeed();
+        }, function(e){ console.warn("[Pangea] ameaças em cena", e); }));
         if(mestre){
+          ouvintes.push(fb.ouvir("encontros", function(lista){
+            shared.encontros = lista; agendarRender();
+          }, function(e){ console.warn("[Pangea] bestiário", e); }));
           ouvintes.push(fb.ouvir("itensPool", function(lista){
             shared.itensPool = lista; agendarRender();
           }, function(e){ console.warn("[Pangea] itens achados", e); }));

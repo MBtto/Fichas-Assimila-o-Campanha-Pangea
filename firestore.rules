@@ -55,6 +55,15 @@ service cloud.firestore {
       allow read, delete: if mestre();
     }
 
+    // Bestiário: encontros em andamento (só o Assimilador) e o que ele liberou pra mesa (todos leem).
+    match /encontros/{id} {
+      allow read, write: if mestre();
+    }
+    match /encontrosMesa/{id} {
+      allow read: if logado();
+      allow write: if mestre();
+    }
+
     // Itens achados (pool): só o Assimilador lê e escreve; ao entregar, o item vai pro inventário do personagem.
     match /itensPool/{id} {
       allow read, write: if mestre();
