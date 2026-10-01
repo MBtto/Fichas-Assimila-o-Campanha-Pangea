@@ -4036,6 +4036,7 @@
       var q = it.qualidade!=null ? it.qualidade : 3;
       html += '<tr><td><b>'+esc(it.nome)+(it.qtd>1?' (x'+it.qtd+')':'')+'</b>' +
         (it.desc?'<br><span class="hint">'+esc(it.desc)+'</span>':'') +
+        (it.efeito?'<br><span class="hint"><b>Efeito:</b> '+esc(it.efeito)+'</span>':'') +
         (traitTxt.length?'<br><span class="hint">'+traitTxt.join(", ")+' · Escassez '+itemCusto(it.traits)+'</span>':'') +
         '</td><td>' +
           '<div class="row" style="flex-wrap:nowrap;gap:4px">' +
@@ -6026,7 +6027,7 @@
       .filter(function(t){ return EQUIP_TRAITS.some(function(x){ return x.id===t.id; }); });
   }
   function itemPoolDados(it){
-    return { id:it.id, nome:it.nome||"", desc:it.desc||"", nota:it.nota||"", local:it.local||"",
+    return { id:it.id, nome:it.nome||"", desc:it.desc||"", efeito:it.efeito||"", nota:it.nota||"", local:it.local||"",
       escassez:(it.escassez===null||it.escassez===undefined||it.escassez==="") ? null : clamp(parseInt(it.escassez,10)||0,0,6),
       traits:normalizarTraits(it.traits), qtd:Math.max(1, parseInt(it.qtd,10)||1), entregues:(it.entregues||[]).slice(),
       criadoEm:it.criadoEm||new Date().toISOString(), atualizadoEm:new Date().toISOString() };
@@ -6053,6 +6054,7 @@
         '<div class="field"><label>Local (onde pode ser achado)</label><input type="text" list="item-locais" data-ipf="local" value="'+esc(ed.local||"")+'" placeholder="ex.: Traúm">' +
         '<datalist id="item-locais">'+DOC_LOCAIS_ORDEM.filter(function(l){ return l.indexOf("Já lidos")!==0; }).map(function(l){ return '<option value="'+esc(l)+'">'; }).join('')+'</datalist></div></div>' +
         '<div class="field"><label>Descrição (o jogador lê no inventário)</label><textarea data-ipf="desc" style="min-height:60px">'+esc(ed.desc)+'</textarea></div>' +
+        '<div class="field"><label>Efeito em jogo (o jogador lê no inventário)</label><textarea data-ipf="efeito" style="min-height:50px" placeholder="ex.: 6 usos; cada uso cura 2 Pontos de Saúde">'+esc(ed.efeito||"")+'</textarea></div>' +
         '<div class="field"><label>Nota do Assimilador (só você vê)</label><textarea data-ipf="nota" style="min-height:50px">'+esc(ed.nota)+'</textarea></div>' +
         '<div class="grid cols-2"><div class="field"><label>Escassez</label><select data-ipf="escassez"><option value=""'+((ed.escassez===null||ed.escassez===undefined||ed.escassez==="")?' selected':'')+'>Automática pelas características ('+escAuto+' · '+ESCASSEZ_NOMES[escAuto]+')</option>' +
           [0,1,2,3,4,5,6].map(function(n){ return '<option value="'+n+'"'+(String(ed.escassez)===String(n)?' selected':'')+'>'+n+' · '+ESCASSEZ_NOMES[n]+'</option>'; }).join('')+'</select></div>' +
@@ -6105,6 +6107,7 @@
         ' <span class="badge-pill" style="vertical-align:middle">Escassez '+e+' · '+esc(ESCASSEZ_NOMES[e]||"")+'</span>' +
         (tr ? '<div class="hint" style="margin:2px 0 0">'+esc(tr)+'</div>' : '') +
         (it.desc ? '<div style="margin:3px 0 0;font-size:13.5px">'+esc(it.desc)+'</div>' : '') +
+        (it.efeito ? '<div style="margin:3px 0 0;font-size:13.5px"><b>Efeito:</b> '+esc(it.efeito)+'</div>' : '<div class="hint" style="margin:3px 0 0;color:var(--danger)">Sem efeito descrito.</div>') +
         (it.nota ? '<div class="hint" style="margin:2px 0 0"><i>Nota:</i> '+esc(it.nota)+'</div>' : '') +
         (nomes.length ? '<div class="hint" style="margin:2px 0 0">Entregue a: '+esc(nomes.join(", "))+'</div>' : '') +
       '</div><div class="row" style="gap:6px;flex:none;flex-wrap:wrap;justify-content:flex-end">' +
@@ -6147,7 +6150,7 @@
     raiz.querySelectorAll("[data-ipacao]").forEach(function(b){
       b.addEventListener("click", function(){
         var acao = b.getAttribute("data-ipacao");
-        if(acao === "novo"){ state.itemPoolEdit = { id:"it_"+uid(), nome:"", desc:"", nota:"", local:(state.itemFiltro||{}).local||"", escassez:"", traits:[], qtd:1, entregues:[] }; state.itemImportar = false; rerender(); }
+        if(acao === "novo"){ state.itemPoolEdit = { id:"it_"+uid(), nome:"", desc:"", efeito:"", nota:"", local:(state.itemFiltro||{}).local||"", escassez:"", traits:[], qtd:1, entregues:[] }; state.itemImportar = false; rerender(); }
         else if(acao === "cancelar"){ state.itemPoolEdit = null; rerender(); }
         else if(acao === "salvar"){
           if(!String(ed.nome||"").trim()){ alert("Dê um nome ao item."); return; }
@@ -6167,7 +6170,7 @@
             if(!x || !x.nome) return;
             var id = String(x.id||uid()); if(id.indexOf("it_")!==0) id = "it_"+id;
             var existente = itensPoolLista().filter(function(y){ return y.id===id; })[0];
-            var d = itemPoolDados({ id:id, nome:x.nome, desc:x.desc, nota:x.nota, local:x.local, escassez:x.escassez, traits:x.traits, qtd:x.qtd,
+            var d = itemPoolDados({ id:id, nome:x.nome, desc:x.desc, efeito:x.efeito, nota:x.nota, local:x.local, escassez:x.escassez, traits:x.traits, qtd:x.qtd,
               entregues: existente ? existente.entregues : [], criadoEm: existente ? existente.criadoEm : null });
             ops.push({ tipo:"set", col:"itensPool", id:id, data:d });
           });
@@ -6186,7 +6189,7 @@
           var sel = raiz.querySelector("[data-ippara]:checked"); if(!sel) return;
           var c = getChar(sel.getAttribute("data-ippara")); if(!c) return;
           var traits = normalizarTraits(it.traits);
-          var novo = novoItem(it.nome, it.desc, traits, { qtd:it.qtd||1, achadoId:it.id });
+          var novo = novoItem(it.nome, it.desc, traits, { qtd:it.qtd||1, achadoId:it.id, efeito:it.efeito||"" });
           if(!traits.length) novo.escassez = itemPoolEscassez(it);
           c.inventarioExtra = (c.inventarioExtra||[]).concat([novo]);
           updateChar(c);
