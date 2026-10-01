@@ -6008,6 +6008,195 @@
   function xpMotivoOptions(){
     return XP_MOTIVOS.map(function(m){ return '<option value="'+m[0]+'" data-qtd="'+m[2]+'">'+m[1]+'</option>'; }).join('');
   }
+  // ---------- ITENS ACHÁVEIS (pool do Assimilador) ----------
+  // Pedido do Marco (01/10/2026): uma pool de itens que o grupo pode achar,
+  // organizada por local e por Escassez, com sorteio. Ao entregar, o item entra
+  // direto no Inventário adicional do personagem. A coleção "itensPool" só o
+  // Assimilador lê e escreve (nada vaza pros jogadores antes da entrega).
+  function itensPoolLista(){ return (shared.itensPool||[]).slice().sort(function(a,b){ return String(a.nome||"").localeCompare(String(b.nome||"")); }); }
+  function itemPoolEscassez(it){
+    if(it.escassez !== null && it.escassez !== undefined && it.escassez !== "") return clamp(parseInt(it.escassez,10)||0, 0, 6);
+    return clamp(itemCusto(it.traits||[]), 0, 6);
+  }
+  function itemPoolTraitsTexto(traits){
+    return (traits||[]).map(function(s){ var d = EQUIP_TRAITS.filter(function(x){ return x.id===s.id; })[0]; return d ? d.nome+((s.qtd||1)>1?" x"+s.qtd:"") : s.id; }).join(", ");
+  }
+  function normalizarTraits(arr){
+    return (arr||[]).map(function(t){ return typeof t === "string" ? {id:t, qtd:1} : {id:t.id, qtd:t.qtd||1}; })
+      .filter(function(t){ return EQUIP_TRAITS.some(function(x){ return x.id===t.id; }); });
+  }
+  function itemPoolDados(it){
+    return { id:it.id, nome:it.nome||"", desc:it.desc||"", nota:it.nota||"", local:it.local||"",
+      escassez:(it.escassez===null||it.escassez===undefined||it.escassez==="") ? null : clamp(parseInt(it.escassez,10)||0,0,6),
+      traits:normalizarTraits(it.traits), qtd:Math.max(1, parseInt(it.qtd,10)||1), entregues:(it.entregues||[]).slice(),
+      criadoEm:it.criadoEm||new Date().toISOString(), atualizadoEm:new Date().toISOString() };
+  }
+  function gravarItensPool(ops){
+    if(!FB) return Promise.resolve();
+    return FB.escrever(ops).catch(function(e){ console.error("[Pangea] itens", e); alert("Não consegui salvar o item. Confira a conexão e se as regras do Firestore têm o bloco itensPool."); });
+  }
+  function itensPoolFiltrados(){
+    var f = state.itemFiltro || {};
+    return itensPoolLista().filter(function(it){
+      if(f.local && (it.local||"Sem local") !== f.local) return false;
+      if(f.esc !== undefined && f.esc !== "" && itemPoolEscassez(it) !== parseInt(f.esc,10)) return false;
+      if(f.naoEntregues && (it.entregues||[]).length) return false;
+      return true;
+    });
+  }
+  function gmItensHtml(){
+    var html = '<div class="card" id="gm-itens"><h2>Itens achados</h2>';
+    var ed = state.itemPoolEdit;
+    if(ed){
+      var escAuto = clamp(itemCusto(ed.traits||[]),0,6);
+      html += '<div class="grid cols-2"><div class="field"><label>Nome</label><input type="text" data-ipf="nome" value="'+esc(ed.nome)+'"></div>' +
+        '<div class="field"><label>Local (onde pode ser achado)</label><input type="text" list="item-locais" data-ipf="local" value="'+esc(ed.local||"")+'" placeholder="ex.: Traúm">' +
+        '<datalist id="item-locais">'+DOC_LOCAIS_ORDEM.filter(function(l){ return l.indexOf("Já lidos")!==0; }).map(function(l){ return '<option value="'+esc(l)+'">'; }).join('')+'</datalist></div></div>' +
+        '<div class="field"><label>Descrição (o jogador lê no inventário)</label><textarea data-ipf="desc" style="min-height:60px">'+esc(ed.desc)+'</textarea></div>' +
+        '<div class="field"><label>Nota do Assimilador (só você vê)</label><textarea data-ipf="nota" style="min-height:50px">'+esc(ed.nota)+'</textarea></div>' +
+        '<div class="grid cols-2"><div class="field"><label>Escassez</label><select data-ipf="escassez"><option value=""'+((ed.escassez===null||ed.escassez===undefined||ed.escassez==="")?' selected':'')+'>Automática pelas características ('+escAuto+' · '+ESCASSEZ_NOMES[escAuto]+')</option>' +
+          [0,1,2,3,4,5,6].map(function(n){ return '<option value="'+n+'"'+(String(ed.escassez)===String(n)?' selected':'')+'>'+n+' · '+ESCASSEZ_NOMES[n]+'</option>'; }).join('')+'</select></div>' +
+        '<div class="field"><label>Quantidade</label><input type="number" min="1" max="99" data-ipf="qtd" value="'+esc(String(ed.qtd||1))+'"></div></div>' +
+        '<p class="hint" style="margin:6px 0">Características (deixe sem nenhuma para um equipamento comum):</p>' +
+        '<div class="trait-list">'+renderTraitList(ed.traits, "pitem", false)+'</div>' +
+        '<div class="btn-row"><button type="button" class="btn secondary" data-ipacao="cancelar">Cancelar</button><button type="button" class="btn accent" data-ipacao="salvar">Salvar item</button></div>';
+      html += '</div>';
+      return html;
+    }
+    html += '<p class="hint">Itens que o grupo pode encontrar. Ao entregar, o item vai direto pro Inventário adicional do personagem. Os jogadores não veem esta lista.</p>';
+    html += '<div class="btn-row" style="justify-content:flex-start;gap:8px;flex-wrap:wrap"><button type="button" class="btn accent" data-ipacao="novo">+ Novo item</button><button type="button" class="btn secondary" data-ipacao="importar">Importar itens</button></div>';
+    if(state.itemImportar){
+      html += '<div class="field" style="margin-top:10px"><label>Cole o código de importação</label><textarea id="item-import" style="min-height:120px" placeholder="[ { &quot;nome&quot;: ... } ]"></textarea>' +
+        '<div class="btn-row" style="justify-content:flex-start;gap:8px"><button type="button" class="btn accent" data-ipacao="importar-ok">Importar</button><button type="button" class="btn secondary" data-ipacao="importar-cancelar">Cancelar</button></div></div>';
+    }
+    var todos = itensPoolLista();
+    if(!todos.length){ html += '<p class="hint" style="margin-top:12px">Nenhum item ainda.</p></div>'; return html; }
+    var f = state.itemFiltro || (state.itemFiltro = {});
+    var locais = docOrdemLocais(Object.keys(todos.reduce(function(m,it){ m[it.local||"Sem local"] = 1; return m; }, {})));
+    html += '<div class="row" style="gap:8px;margin-top:12px;flex-wrap:wrap;align-items:center">' +
+      '<select data-ipfiltro="local" style="max-width:240px"><option value="">Todos os locais</option>'+locais.map(function(l){ return '<option value="'+esc(l)+'"'+(f.local===l?' selected':'')+'>'+esc(l)+'</option>'; }).join('')+'</select>' +
+      '<select data-ipfiltro="esc" style="max-width:200px"><option value="">Toda Escassez</option>'+[0,1,2,3,4,5,6].map(function(n){ return '<option value="'+n+'"'+(String(f.esc)===String(n)?' selected':'')+'>'+n+' · '+ESCASSEZ_NOMES[n]+'</option>'; }).join('')+'</select>' +
+      '<label style="display:flex;align-items:center;gap:5px;text-transform:none;margin:0"><input type="checkbox" style="width:auto" data-ipfiltro="naoEntregues"'+(f.naoEntregues?' checked':'')+'> Só não entregues</label>' +
+      '<button type="button" class="btn accent" data-ipacao="sortear">🎲 Sortear item</button></div>';
+    var lista = itensPoolFiltrados();
+    if(state.itemSorteado){
+      var sorteado = todos.filter(function(it){ return it.id===state.itemSorteado; })[0];
+      if(sorteado) html += '<div class="card tight item-sorteado" style="margin-top:10px"><p class="hint" style="margin:0 0 4px">Sorteado:</p>'+itemPoolLinhaHtml(sorteado, true)+'</div>';
+    }
+    if(!lista.length) html += '<p class="hint" style="margin-top:10px">Nenhum item com esses filtros.</p>';
+    var grupos = {};
+    lista.forEach(function(it){ (grupos[it.local||"Sem local"] = grupos[it.local||"Sem local"] || []).push(it); });
+    if(!state.itemGruposAbertos) state.itemGruposAbertos = {};
+    docOrdemLocais(Object.keys(grupos)).forEach(function(local){
+      var itens = grupos[local].slice().sort(function(a,b){ return itemPoolEscassez(a)-itemPoolEscassez(b) || String(a.nome).localeCompare(String(b.nome)); });
+      var aberto = state.itemGruposAbertos[local] || !!f.local || itens.some(function(it){ return it.id===state.itemEntregar; });
+      html += '<details class="doc-grupo" data-ipgrupo="'+esc(local)+'"'+(aberto?' open':'')+'><summary><b>'+esc(local)+'</b> <span class="hint">· '+itens.length+' ite'+(itens.length>1?'ns':'m')+'</span></summary>';
+      itens.forEach(function(it){ html += itemPoolLinhaHtml(it, false); });
+      html += '</details>';
+    });
+    html += '</div>';
+    return html;
+  }
+  function itemPoolLinhaHtml(it, sorteado){
+    var e = itemPoolEscassez(it);
+    var nomes = (it.entregues||[]).map(function(x){ var ch = getChar(x.charId); return ch ? ch.nomePersonagem : null; }).filter(Boolean);
+    var tr = itemPoolTraitsTexto(it.traits);
+    var html = '<div class="doc-linha"><div class="doc-linha-topo"><div><b>'+esc(it.nome||"Sem nome")+'</b>'+((it.qtd||1)>1?' <span class="hint">x'+it.qtd+'</span>':'')+
+        ' <span class="badge-pill" style="vertical-align:middle">Escassez '+e+' · '+esc(ESCASSEZ_NOMES[e]||"")+'</span>' +
+        (tr ? '<div class="hint" style="margin:2px 0 0">'+esc(tr)+'</div>' : '') +
+        (it.desc ? '<div style="margin:3px 0 0;font-size:13.5px">'+esc(it.desc)+'</div>' : '') +
+        (it.nota ? '<div class="hint" style="margin:2px 0 0"><i>Nota:</i> '+esc(it.nota)+'</div>' : '') +
+        (nomes.length ? '<div class="hint" style="margin:2px 0 0">Entregue a: '+esc(nomes.join(", "))+'</div>' : '') +
+      '</div><div class="row" style="gap:6px;flex:none;flex-wrap:wrap;justify-content:flex-end">' +
+        '<button type="button" class="btn accent doc-btn" data-ipentregar="'+it.id+'">Entregar</button>' +
+        (sorteado ? '' : '<button type="button" class="btn secondary doc-btn" data-ipeditar="'+it.id+'">Editar</button><button type="button" class="btn secondary doc-btn" data-ipexcluir="'+it.id+'">Excluir</button>') +
+      '</div></div>';
+    if(state.itemEntregar === it.id && (sorteado || state.itemSorteado !== it.id)){
+      html += '<div class="doc-entrega"><p class="hint" style="margin:0 0 6px">Quem fica com o item?</p><div class="row" style="gap:6px 14px;flex-wrap:wrap">' +
+        loadChars().map(function(ch, i){ return '<label style="display:flex;align-items:center;gap:5px;text-transform:none;margin:0"><input type="radio" name="ippara" style="width:auto" data-ippara="'+ch.id+'"'+(i===0?' checked':'')+'>'+esc(ch.nomePersonagem||"Sem nome")+(ch.ehNpc?' <span class="hint">(NPC)</span>':'')+'</label>'; }).join('') +
+        '</div><div class="btn-row" style="justify-content:flex-start;gap:8px;margin-top:8px"><button type="button" class="btn accent doc-btn" data-ipacao="entregar-ok">Colocar no inventário</button><button type="button" class="btn secondary doc-btn" data-ipacao="entregar-cancelar">Cancelar</button></div></div>';
+    }
+    return html + '</div>';
+  }
+  function bindGmItens(rerender){
+    var raiz = app.querySelector("#gm-itens"); if(!raiz) return;
+    var ed = state.itemPoolEdit;
+    raiz.querySelectorAll("[data-ipf]").forEach(function(el){
+      el.addEventListener(el.tagName==="SELECT" ? "change" : "input", function(){ ed[el.getAttribute("data-ipf")] = el.value; });
+    });
+    if(ed) bindTraitList("pitem", ed.traits, rerender);
+    raiz.querySelectorAll("[data-ipfiltro]").forEach(function(el){
+      el.addEventListener("change", function(){
+        var k = el.getAttribute("data-ipfiltro");
+        state.itemFiltro[k] = el.type === "checkbox" ? el.checked : el.value;
+        state.itemSorteado = null; rerender();
+      });
+    });
+    raiz.querySelectorAll("[data-ipgrupo]").forEach(function(el){
+      el.addEventListener("toggle", function(){ state.itemGruposAbertos[el.getAttribute("data-ipgrupo")] = el.open; });
+    });
+    raiz.querySelectorAll("[data-ipentregar]").forEach(function(b){ b.addEventListener("click", function(){ state.itemEntregar = b.getAttribute("data-ipentregar"); rerender(); }); });
+    raiz.querySelectorAll("[data-ipeditar]").forEach(function(b){ b.addEventListener("click", function(){
+      var it = itensPoolLista().filter(function(x){ return x.id===b.getAttribute("data-ipeditar"); })[0]; if(!it) return;
+      state.itemPoolEdit = JSON.parse(JSON.stringify(it)); state.itemPoolEdit.traits = normalizarTraits(it.traits); rerender();
+    }); });
+    raiz.querySelectorAll("[data-ipexcluir]").forEach(function(b){ b.addEventListener("click", function(){
+      var id = b.getAttribute("data-ipexcluir"), it = itensPoolLista().filter(function(x){ return x.id===id; })[0];
+      askConfirm('Excluir "'+((it&&it.nome)||"este item")+'" da pool? (Quem já recebeu continua com ele no inventário.)', function(){ gravarItensPool([{ tipo:"del", col:"itensPool", id:id }]); });
+    }); });
+    raiz.querySelectorAll("[data-ipacao]").forEach(function(b){
+      b.addEventListener("click", function(){
+        var acao = b.getAttribute("data-ipacao");
+        if(acao === "novo"){ state.itemPoolEdit = { id:"it_"+uid(), nome:"", desc:"", nota:"", local:(state.itemFiltro||{}).local||"", escassez:"", traits:[], qtd:1, entregues:[] }; state.itemImportar = false; rerender(); }
+        else if(acao === "cancelar"){ state.itemPoolEdit = null; rerender(); }
+        else if(acao === "salvar"){
+          if(!String(ed.nome||"").trim()){ alert("Dê um nome ao item."); return; }
+          var existente = itensPoolLista().filter(function(x){ return x.id===ed.id; })[0];
+          if(existente){ ed.entregues = existente.entregues||[]; ed.criadoEm = existente.criadoEm; }
+          gravarItensPool([{ tipo:"set", col:"itensPool", id:ed.id, data:itemPoolDados(ed) }]);
+          state.itemPoolEdit = null; rerender();
+        }
+        else if(acao === "importar"){ state.itemImportar = true; rerender(); }
+        else if(acao === "importar-cancelar"){ state.itemImportar = false; rerender(); }
+        else if(acao === "importar-ok"){
+          var txt = (raiz.querySelector("#item-import")||{}).value || "", arr;
+          try{ arr = JSON.parse(txt); }catch(e){ alert("Código inválido: confira se copiou tudo."); return; }
+          if(!Array.isArray(arr)) arr = [arr];
+          var ops = [];
+          arr.forEach(function(x){
+            if(!x || !x.nome) return;
+            var id = String(x.id||uid()); if(id.indexOf("it_")!==0) id = "it_"+id;
+            var existente = itensPoolLista().filter(function(y){ return y.id===id; })[0];
+            var d = itemPoolDados({ id:id, nome:x.nome, desc:x.desc, nota:x.nota, local:x.local, escassez:x.escassez, traits:x.traits, qtd:x.qtd,
+              entregues: existente ? existente.entregues : [], criadoEm: existente ? existente.criadoEm : null });
+            ops.push({ tipo:"set", col:"itensPool", id:id, data:d });
+          });
+          if(!ops.length){ alert("Nenhum item encontrado no código."); return; }
+          gravarItensPool(ops); state.itemImportar = false; rerender();
+        }
+        else if(acao === "sortear"){
+          var lista = itensPoolFiltrados();
+          if(!lista.length){ alert("Nenhum item com esses filtros pra sortear."); return; }
+          state.itemSorteado = lista[Math.floor(Math.random()*lista.length)].id;
+          state.itemEntregar = null; rerender();
+        }
+        else if(acao === "entregar-cancelar"){ state.itemEntregar = null; rerender(); }
+        else if(acao === "entregar-ok"){
+          var it = itensPoolLista().filter(function(x){ return x.id===state.itemEntregar; })[0]; if(!it) return;
+          var sel = raiz.querySelector("[data-ippara]:checked"); if(!sel) return;
+          var c = getChar(sel.getAttribute("data-ippara")); if(!c) return;
+          var traits = normalizarTraits(it.traits);
+          var novo = novoItem(it.nome, it.desc, traits, { qtd:it.qtd||1, achadoId:it.id });
+          if(!traits.length) novo.escassez = itemPoolEscassez(it);
+          c.inventarioExtra = (c.inventarioExtra||[]).concat([novo]);
+          updateChar(c);
+          if(caps.mode==="mesa"){ clearTimeout(publishTimer); doPublish(); }
+          gravarItensPool([{ tipo:"update", col:"itensPool", id:it.id, data:{ entregues:(it.entregues||[]).concat([{ charId:c.id, ts:new Date().toISOString() }]), atualizadoEm:new Date().toISOString() } }]);
+          state.itemEntregar = null; state.itemSorteado = null; rerender();
+        }
+      });
+    });
+  }
   function gmXpTodosHtml(roster){
     // Todos os personagens aparecem (inclusive os que ainda vão refazer a ficha no
     // sistema oficial: a Experiência fica guardada e vale depois do refazer).
@@ -6151,6 +6340,7 @@
     html += renderGmConflitos();
     html += gmXpTodosHtml(roster);
     html += gmDocsHtml();
+    html += tentarHtml("Itens achados", gmItensHtml);
     html += '<h2 style="margin:20px 0 10px">Personagens da Mesa</h2>';
     if(!roster.length){
       html += '<div class="card"><p class="hint">Nenhum personagem criado ainda nesta mesa.</p></div>';
@@ -6182,6 +6372,7 @@
     bindGmConflitos();
     bindGmXp();
     bindGmDocs(renderGmMesa);
+    tentar("Itens achados", function(){ bindGmItens(renderGmMesa); });
     app.querySelectorAll('[data-gmnpc]').forEach(function(el){
       el.addEventListener("click", function(e){ e.stopPropagation(); });
       el.addEventListener("change", function(){
@@ -6342,6 +6533,9 @@
           shared.documentos = lista; agendarRender();
         }, function(e){ console.warn("[Pangea] documentos", e); }, mestre ? null : ["leitores", u.uid, "array-contains"]));
         if(mestre){
+          ouvintes.push(fb.ouvir("itensPool", function(lista){
+            shared.itensPool = lista; agendarRender();
+          }, function(e){ console.warn("[Pangea] itens achados", e); }));
           ouvintes.push(fb.ouvir("documentosNotas", function(lista){
             shared.documentosNotas = lista; agendarRender();
           }, function(e){ console.warn("[Pangea] notas dos documentos", e); }));

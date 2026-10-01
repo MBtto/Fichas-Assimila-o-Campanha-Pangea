@@ -55,6 +55,11 @@ service cloud.firestore {
       allow read, delete: if mestre();
     }
 
+    // Itens achados (pool): só o Assimilador lê e escreve; ao entregar, o item vai pro inventário do personagem.
+    match /itensPool/{id} {
+      allow read, write: if mestre();
+    }
+
     // Documentos da campanha: só quem recebeu (conta dona do personagem) lê; só o Assimilador escreve.
     match /documentos/{id} {
       allow read: if mestre() || (logado() && request.auth.uid in resource.data.get('leitores', []));
