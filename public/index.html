@@ -445,6 +445,9 @@
   .assim-box.destaque .assim-die{ border-color:var(--accent); }
   .assim-box.destaque .assim-face{ color:var(--accent); }
   .assim-die.solto.parou{ opacity:.35; }
+  .assim-die.parou.so-numero .assim-face{ font-size:30px; color:var(--ink); }
+  .assim-soma{ font-family:"Oswald",sans-serif; font-size:20px; letter-spacing:.04em; min-height:4px; }
+  .assim-soma b{ font-size:26px; color:var(--accent); }
   .assim-die.d6{ border-radius:8px; }
   .assim-tag.destaque{ background:var(--accent); }
   .rollfeed-entry.destaque{ border-left:3px solid var(--accent); padding-left:8px; margin-left:-4px; background:linear-gradient(90deg, color-mix(in srgb, var(--accent) 14%, transparent), transparent 80%); }
@@ -4493,7 +4496,9 @@
       '<div class="assim-dados">' + dados.map(function(d){
         return '<div class="assim-die d'+d.sides+(d.kept===false?' solto':'')+'" data-lados="'+d.sides+'"><span class="assim-face">?</span><span class="assim-tipo">d'+d.sides+'</span></div>';
       }).join('') + '</div>' +
-      '<div class="assim-res" hidden>' + resultBadges(e.totS||0, e.totA||0, e.totP||0) +
+      '<div class="assim-res" hidden>' + (e.exibicao === "numeros"
+          ? '<div class="assim-soma">'+((e.dados||[]).filter(function(d){ return d.kept!==false; }).length > 1 ? 'Soma <b>'+(e.somaFaces||0)+'</b>' : '')+'</div>'
+          : resultBadges(e.totS||0, e.totA||0, e.totP||0)) +
         (e.cartas ? '<p class="assim-cartas">'+esc(assimCartasTexto(e.cartas))+'</p>' : '') + '</div>' +
       '<button type="button" class="btn secondary assim-fechar">Fechar</button>' +
     '</div>';
@@ -4509,7 +4514,7 @@
       if(revelado) return; revelado = true;
       clearInterval(tick);
       var res = ov.querySelector(".assim-res"); res.hidden = false; res.classList.add("aparece");
-      if(e.totP) ov.querySelector(".assim-box").classList.add("pressao");
+      if(e.totP && e.exibicao !== "numeros") ov.querySelector(".assim-box").classList.add("pressao");
       if(aoRevelar) tentar("Teste de Assimilação", aoRevelar);
       auto = setTimeout(fechar, 10000);
     }
@@ -4525,7 +4530,14 @@
     dados.forEach(function(d, i){
       setTimeout(function(){
         var el = dieEls[i]; if(!el || revelado) return;
-        el.classList.add("parou"); if(d.p) el.classList.add("tem-p");
+        el.classList.add("parou");
+        if(e.exibicao === "numeros"){
+          el.classList.add("so-numero");
+          el.querySelector(".assim-face").textContent = String(d.face);
+          el.querySelector(".assim-tipo").textContent = "d"+d.sides;
+          return;
+        }
+        if(d.p) el.classList.add("tem-p");
         var r = diceResultHtml(d);
         el.querySelector(".assim-face").innerHTML = (r === "em branco" ? '<span style="opacity:.5">—</span>' : r);
         el.querySelector(".assim-tipo").textContent = "d"+d.sides+" · "+d.face;
@@ -5850,7 +5862,14 @@
     if(!state.gmDryRoll) state.gmDryRoll = { label:"", d6:2, d10:0, d12:0, results:[], rolling:false, rollingCount:0 };
     var t = state.gmDryRoll;
     var totalDados = (t.d6||0)+(t.d10||0)+(t.d12||0);
-    var body = '<div class="field" style="max-width:320px"><input type="text" data-gmdry="label" value="'+esc(t.label)+'" placeholder="ex: Lobo Mutante - Mordida" '+(t.rolling?"disabled":"")+'></div>';
+    // Exibição de resultados: símbolos (Sucesso/Adaptação/Pressão) ou só o número
+    // que caiu em cada dado, como um dado comum (pedido do Marco, 01/10/2026).
+    if(!t.exibicao) t.exibicao = loadLS("pangea:gm:exibicao", "simbolos");
+    var numeros = t.exibicao === "numeros";
+    var body = '<div class="row" style="gap:6px;align-items:center;margin-bottom:10px;flex-wrap:wrap"><span class="hint" style="margin:0">Exibição dos resultados:</span>' +
+      '<button type="button" class="btn '+(numeros?'secondary':'accent')+' doc-btn" data-gmdryexib="simbolos">Símbolos</button>' +
+      '<button type="button" class="btn '+(numeros?'accent':'secondary')+' doc-btn" data-gmdryexib="numeros">Números dos dados</button></div>';
+    body += '<div class="field" style="max-width:320px"><input type="text" data-gmdry="label" value="'+esc(t.label)+'" placeholder="ex: Lobo Mutante - Mordida" '+(t.rolling?"disabled":"")+'></div>';
     body += '<div class="grid cols-3">';
     body += stepperField("gmdry", "Dados d6", "", "d6", t.d6, 0, 12, t.rolling);
     body += stepperField("gmdry", "Dados d10", "", "d10", t.d10, 0, 12, t.rolling);
@@ -5873,10 +5892,11 @@
         '<p class="hint">Todos os dados contam por padrão. Clique num dado pra soltá-lo (ou clicar de novo pra mantê-lo).</p>' +
         '<div class="row" style="flex-wrap:wrap;gap:8px">';
       t.results.forEach(function(d, idx){
-        body += '<button type="button" class="btn secondary" data-gmdrytoggle="'+idx+'" style="font-family:\'IBM Plex Mono\',monospace'+(d.kept?'':';opacity:.4;text-decoration:line-through')+'">d'+d.sides+':'+d.face+' ('+diceResultHtml(d)+')</button>';
+        body += '<button type="button" class="btn secondary" data-gmdrytoggle="'+idx+'" style="font-family:\'IBM Plex Mono\',monospace'+(d.kept?'':';opacity:.4;text-decoration:line-through')+'">d'+d.sides+': <b>'+d.face+'</b>'+(numeros?'':' ('+diceResultHtml(d)+')')+'</button>';
       });
       body += '</div>';
-      body += '<div class="budget ok" style="margin-top:12px"><span>'+(t.mostrado?'Resultado (mostrado para a mesa)':'Resultado (só você vê)')+'</span><span class="num">'+resultBadges(totS,totA,totP)+'</span></div>';
+      var somaFaces = sum(kept.map(function(d){ return d.face; }));
+      body += '<div class="budget ok" style="margin-top:12px"><span>'+(t.mostrado?'Resultado (mostrado para a mesa)':'Resultado (só você vê)')+'</span><span class="num">'+(numeros ? 'Mantidos: '+(kept.map(function(d){ return d.face; }).join(", ")||"-")+' · Soma '+somaFaces : resultBadges(totS,totA,totP))+'</span></div>';
       body += '<div class="row" style="gap:8px;align-items:center;flex-wrap:wrap"><button type="button" class="btn accent" data-gmdryaction="mostrar"'+(t.mostrado?' disabled':'')+'>'+(t.mostrado?'Mostrado para a mesa ✓':'📣 Mostrar para a mesa')+'</button>' +
         '<span class="hint" style="margin:0">Abre a animação no centro da tela de todo mundo e entra no Histórico de Rolagens. Solte os dados que não contam antes de mostrar.</span></div>';
       body += '</div>';
@@ -5932,6 +5952,9 @@
         renderGm();
       });
     });
+    app.querySelectorAll('[data-gmdryexib]').forEach(function(b){
+      b.addEventListener("click", function(){ t.exibicao = b.getAttribute("data-gmdryexib"); saveLS("pangea:gm:exibicao", t.exibicao); renderGm(); });
+    });
     var clearBtn = app.querySelector('[data-gmdryaction="clear"]');
     if(clearBtn) clearBtn.addEventListener("click", function(){
       t.results = []; t.mostrado = false;
@@ -5953,6 +5976,10 @@
         totS: sum(kept.map(function(d){return d.s;})), totA: sum(kept.map(function(d){return d.a;})), totP: sum(kept.map(function(d){return d.p;})),
         dados: t.results.map(function(d){ return {sides:d.sides, face:d.face, s:d.s, a:d.a, p:d.p, kept:!!d.kept}; }) };
       entrada.resultado = entrada.totS+" Suc · "+entrada.totA+" Adap · "+entrada.totP+" Press";
+      if(t.exibicao === "numeros"){
+        entrada.exibicao = "numeros";
+        entrada.somaFaces = sum(kept.map(function(d){ return d.face; }));
+      }
       mostrarAnimAssim(entrada, function(){
         registrarTeste(entrada);
         assimVistos[entrada.id] = true;
