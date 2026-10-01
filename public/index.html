@@ -646,12 +646,14 @@
     --c-reverie:#3d2a8a; --c-traum:#8a2e00; --c-mriya:#2f5a00; --c-yugen:#00585a;
     --shadow:none; color-scheme:light;
   }
-  /* Cores seguras para daltonismo (paleta Okabe-Ito): Sucesso azul, Pressão vermelhão,
-     Determinação roxo, Assimilação amarelo escuro - nunca verde contra vermelho. */
+  /* Deuteranopia (verde fraco): nada de verde contra vermelho. Os três símbolos dos
+     dados se separam por cor E por claridade - Sucesso azul, Adaptação âmbar e Pressão
+     marrom bem escuro -, e o Cabo de Guerra usa azul (Determinação) contra amarelo
+     escuro (Assimilação). Conferido com simulação de deuteranopia (Machado 2009). */
   :root[data-theme="cvd"]{
-    --good:#0072b2; --danger:#d55e00; --blood:#a63d00; --royal:#6a3d9a; --assim:#8a6d00;
-    --suscet:#009e9e; --suscet-rgb:0,158,158; --accent:#b35a00;
-    --c-reverie:#6a3d9a; --c-traum:#d55e00; --c-mriya:#8a6d00; --c-yugen:#0072b2;
+    --good:#005fb8; --accent:#b06a00; --accent-ink:#fff; --danger:#4a1f00; --blood:#6b2a00;
+    --royal:#3b4fd0; --assim:#9a7a00; --suscet:#3fa7e6; --suscet-rgb:63,167,230;
+    --c-reverie:#6a5b9e; --c-traum:#b06a00; --c-mriya:#8a7300; --c-yugen:#005fb8;
   }
   :root[data-theme="hc-dark"] .card, :root[data-theme="hc-light"] .card,
   :root[data-theme="hc-dark"] .btn, :root[data-theme="hc-light"] .btn{ border-width:2px; }
@@ -3139,7 +3141,7 @@
     ["auto","Automático (segue o aparelho)",["#efe7d3","#161209","#b5502c"]],
     ["hc-dark","Alto contraste escuro",["#000","#fff","#ffd400"]],
     ["hc-light","Alto contraste claro",["#fff","#000","#0038b8"]],
-    ["cvd","Cores para daltonismo",["#0072b2","#d55e00","#6a3d9a"]]
+    ["cvd","Daltonismo (deuteranopia)",["#005fb8","#b06a00","#4a1f00"]]
   ];
   var TEMAS_ESTILO = [
     ["light","Papel (claro)",["#efe7d3","#2a2318","#b5502c"]],
