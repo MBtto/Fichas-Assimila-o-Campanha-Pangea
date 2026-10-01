@@ -721,6 +721,9 @@
   :root[data-cantos="redondos"] .btn{ border-radius:8px; }
   :root[data-anim="reduzidas"] *, :root[data-anim="reduzidas"] *::before, :root[data-anim="reduzidas"] *::after{ animation-duration:.01ms !important; animation-iteration-count:1 !important; transition:none !important; }
   .aparencia-painel{ max-height:calc(100vh - 90px); overflow-y:auto; }
+  /* Com o texto ampliado (zoom na página), a altura da tela "encolhe" na mesma proporção. */
+  :root[data-texto="grande"] .aparencia-painel{ max-height:calc((100vh - 90px) / 1.15); bottom:calc(64px / 1.15); }
+  :root[data-texto="maior"] .aparencia-painel{ max-height:calc((100vh - 90px) / 1.3); bottom:calc(64px / 1.3); }
   .aparencia-sub{ font-size:11px; color:var(--ink-muted); margin:6px 0 4px; }
   .aparencia-grade{ display:grid; grid-template-columns:repeat(3,1fr); gap:6px; }
   .aparencia-grade button{ justify-content:center; text-align:center; padding:6px 4px; }
