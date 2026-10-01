@@ -838,7 +838,7 @@
     --border:color-mix(in srgb, var(--camp-tema) 50%, #d6c9a8); --border-strong:color-mix(in srgb, var(--camp-tema) 60%, #6d6250);
     --accent:var(--camp-tema); --accent-ink:#fff; color-scheme:light;
   }
-  :root[data-textura="papel"] .card, :root[data-textura="papel"] .item-card{ background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .45 0 0 0 0 .38 0 0 0 0 .25 0 0 0 .09 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
+  :root[data-textura="papel"] .card, :root[data-textura="papel"] .item-card{ background-image:radial-gradient(ellipse at 18% 12%, rgba(120,90,40,.10), transparent 55%), radial-gradient(ellipse at 85% 90%, rgba(120,90,40,.12), transparent 60%), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.7' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .42 0 0 0 0 .33 0 0 0 0 .2 0 0 0 .24 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
   :root[data-numeros="grandes"] td.num, :root[data-numeros="grandes"] .budget .num, :root[data-numeros="grandes"] .stat .val,
   :root[data-numeros="grandes"] .evol-item span b, :root[data-numeros="grandes"] .rbadge{ font-size:1.3em; }
   :root[data-numeros="grandes"] .tug-num, :root[data-numeros="grandes"] .stepper input{ font-size:1.25em; }
