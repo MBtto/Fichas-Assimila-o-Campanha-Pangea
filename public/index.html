@@ -845,6 +845,8 @@
   .aparencia-painel{ width:min(340px, calc(100vw - 24px)); }
   .aparencia-painel details{ border-top:1px solid var(--border); padding-top:6px; margin-top:8px; }
   .aparencia-painel summary{ cursor:pointer; font-family:"Oswald",sans-serif; text-transform:uppercase; letter-spacing:.06em; font-size:13px; font-weight:600; padding:2px 0; }
+  .best-previa{ margin-top:6px; padding:8px 10px; border:1px dashed var(--border-strong); border-radius:var(--radius); }
+  .best-previa .btn{ margin-top:6px; }
   .aparencia-dupla{ display:grid; grid-template-columns:1fr 1fr; gap:6px; }
   .aparencia-dupla button{ font-size:12.5px; padding:6px; }
   :root[data-fonte="mono"] body{ font-family:"IBM Plex Mono", ui-monospace, monospace; }
@@ -6688,11 +6690,28 @@
     if(!FB) return;
     FB.escrever(ops).catch(function(e){ console.error("[Pangea] bestiário", e); alert("Não consegui salvar a criatura em cena. Confira a conexão e se as regras do Firestore têm os blocos encontros e encontrosMesa."); });
   }
+  // Descrição personalizada de uma criatura (o que os jogadores leem ao revelar):
+  // fica guardada em "documentosNotas" com o id "bestdesc_<criatura>", coleção que
+  // só o Assimilador lê. Vale como padrão pra toda vez que ela entrar em cena.
+  function bestDescCustom(criId){
+    var n = (shared.documentosNotas||[]).filter(function(x){ return x.id === "bestdesc_"+criId; })[0];
+    return n && typeof n.descMesa === "string" ? n : null;
+  }
+  function bestDescMesa(cri){ var n = bestDescCustom(cri.id); return n ? n.descMesa : (cri.desc||""); }
+  function gravarBestDesc(criId, texto){
+    var id = "bestdesc_"+criId;
+    var lista = (shared.documentosNotas||[]).filter(function(x){ return x.id !== id; });
+    if(texto !== null) lista.push({ id:id, descMesa:texto });
+    shared.documentosNotas = lista;
+    if(!FB) return;
+    FB.escrever([ texto === null ? { tipo:"del", col:"documentosNotas", id:id } : { tipo:"set", col:"documentosNotas", id:id, data:{ id:id, descMesa:texto, atualizadoEm:new Date().toISOString() } } ])
+      .catch(function(e){ console.error("[Pangea] bestiário", e); alert("Não consegui salvar a descrição."); });
+  }
   function encontroNovo(cri){
     var mesmos = (shared.encontros||[]).filter(function(e){ return e.criaturaId===cri.id; }).length;
     return { id:uid(), criaturaId:cri.id, nome:cri.nome+(mesmos?" "+(mesmos+1):""), suc:0, alvo:cri.suc,
       trilhas:(cri.trilhas||[]).map(function(t){ return { nome:t.nome, alvo:t.alvo, atual:0, mostrar:false }; }),
-      pontos:{s:0,a:0,p:0}, revelada:false, progresso:false, descMesa:cri.desc||"", rolagem:null,
+      pontos:{s:0,a:0,p:0}, revelada:false, progresso:false, descMesa:bestDescMesa(cri), rolagem:null,
       criadoEm:new Date().toISOString() };
   }
 
@@ -6766,8 +6785,13 @@
     html += '<div class="best-mesa"><p class="best-grupo-tit" style="margin-top:0">O que os jogadores veem</p>' +
       '<label class="best-check"><input type="checkbox" data-brevelar="'+enc.id+'"'+(enc.revelada?' checked':'')+'> Revelar criatura (nome e descrição, com aviso na tela de todos)</label>' +
       '<label class="best-check"><input type="checkbox" data-bprogresso="'+enc.id+'"'+(enc.progresso?' checked':'')+'> Mostrar o progresso para Neutralizar</label>' +
-      '<div class="grid cols-2" style="margin-top:6px"><div class="field" style="margin:0"><label>Nome mostrado</label><input type="text" data-bnome="'+enc.id+'" value="'+esc(enc.nome)+'"></div></div>' +
-      '<div class="field" style="margin:6px 0 0"><label>Descrição para os jogadores</label><textarea data-bdesc="'+enc.id+'" style="min-height:54px">'+esc(enc.descMesa||"")+'</textarea></div>' +
+      ((state.bestEditEnc||{})[enc.id]
+        ? '<div class="best-edit"><div class="field" style="margin:6px 0 0"><label>Nome mostrado</label><input type="text" data-bnome="'+enc.id+'" value="'+esc(enc.nome)+'"></div>' +
+          '<div class="field" style="margin:6px 0 0"><label>Descrição para os jogadores</label><textarea data-bdesc="'+enc.id+'" style="min-height:90px">'+esc(enc.descMesa||"")+'</textarea></div>' +
+          '<label class="best-check"><input type="checkbox" data-bdescpadrao="'+enc.id+'"> Usar esta descrição como padrão da criatura (próximas vezes em cena)</label>' +
+          '<div class="row" style="gap:6px;margin-top:6px"><button type="button" class="btn accent doc-btn" data-bsalvaredit="'+enc.id+'">Salvar</button><button type="button" class="btn secondary doc-btn" data-bcanceledit="'+enc.id+'">Cancelar</button></div></div>'
+        : '<div class="best-previa"><div class="best-enc-nome">'+esc(enc.nome)+'</div><p class="item-nota" style="margin-top:2px">'+(enc.descMesa ? esc(enc.descMesa) : '<i>Sem descrição.</i>')+'</p>' +
+          '<button type="button" class="btn secondary doc-btn" data-beditenc="'+enc.id+'">✏️ Editar o que os jogadores veem</button></div>') +
       '<p class="hint" style="margin:4px 0 0">'+(enc.revelada||enc.progresso ? 'Visível na aba Mesa e no Histórico flutuante.' : 'Escondida: os jogadores não veem nada desta criatura.')+'</p></div>';
     html += '<div class="btn-row" style="margin-top:8px"><span></span><button type="button" class="btn secondary doc-btn" data-bencerrar="'+enc.id+'">Tirar de cena</button></div>';
     return html + '</details>';
@@ -6791,7 +6815,13 @@
             '<button type="button" class="btn secondary doc-btn" data-brolcat="'+cri.id+'">🎲 Rolar Ativação</button></div>' +
           bestRolagemHtml(rolCat[cri.id], 'data-bmostrarcat="'+cri.id+'"');
         if(fichas[cri.id]){
-          html += '<div class="best-ficha"><p class="item-nota" style="margin-top:0"><b>Descrição (jogadores):</b> '+esc(cri.desc)+'</p>' +
+          var editCat = (state.bestEditCat||{})[cri.id], custom = bestDescCustom(cri.id);
+          html += '<div class="best-ficha">' + (editCat
+            ? '<div class="field" style="margin:0"><label>Descrição para os jogadores (padrão desta criatura)</label><textarea data-bdesccat="'+cri.id+'" style="min-height:90px">'+esc(bestDescMesa(cri))+'</textarea></div>' +
+              '<div class="row" style="gap:6px;margin:6px 0 8px;flex-wrap:wrap"><button type="button" class="btn accent doc-btn" data-bsalvacat="'+cri.id+'">Salvar</button><button type="button" class="btn secondary doc-btn" data-bcancelcat="'+cri.id+'">Cancelar</button>' +
+              (custom ? '<button type="button" class="btn secondary doc-btn" data-brestauracat="'+cri.id+'">Voltar ao texto original</button>' : '') + '</div>'
+            : '<p class="item-nota" style="margin-top:0"><b>Descrição (jogadores'+(custom?', editada':'')+'):</b> '+esc(bestDescMesa(cri))+'</p>' +
+              '<button type="button" class="btn secondary doc-btn" data-beditcat="'+cri.id+'" style="margin-bottom:6px">✏️ Editar descrição</button>') +
             (cri.trilhas ? '<p class="item-nota">'+cri.trilhas.map(function(t){ return '<b>'+esc(t.nome)+':</b> '+t.alvo+' Sucessos'; }).join(' · ')+'</p>' : '') +
             bestCondHtml(cri, "c"+cri.id) + bestAtivacoesHtml(cri, "c"+cri.id, null) +
             (cri.nota ? '<p class="item-nota">'+bestTextoHtml(cri.nota, "c"+cri.id+"-nota")+'</p>' : '') + '</div>';
@@ -6900,8 +6930,28 @@
       gravarEncontro(enc); rerender();
     }); });
     on("[data-bprogresso]", "change", function(el){ comEnc(el, "data-bprogresso", function(enc){ enc.progresso = el.checked; gravarEncontro(enc); rerender(); }); });
-    on("[data-bnome]", "change", function(el){ comEnc(el, "data-bnome", function(enc){ enc.nome = el.value.trim() || enc.nome; gravarEncontro(enc); }); });
-    on("[data-bdesc]", "change", function(el){ comEnc(el, "data-bdesc", function(enc){ enc.descMesa = el.value; gravarEncontro(enc); }); });
+    // Editar o que os jogadores veem (nome e descrição): só salva no "Salvar".
+    on("[data-beditenc]", "click", function(el){ (state.bestEditEnc = state.bestEditEnc || {})[el.getAttribute("data-beditenc")] = true; rerender(); });
+    on("[data-bcanceledit]", "click", function(el){ delete (state.bestEditEnc||{})[el.getAttribute("data-bcanceledit")]; rerender(); });
+    on("[data-bsalvaredit]", "click", function(el){ comEnc(el, "data-bsalvaredit", function(enc){
+      var nome = raiz.querySelector('[data-bnome="'+enc.id+'"]'), desc = raiz.querySelector('[data-bdesc="'+enc.id+'"]'), pad = raiz.querySelector('[data-bdescpadrao="'+enc.id+'"]');
+      if(nome) enc.nome = nome.value.trim() || enc.nome;
+      if(desc) enc.descMesa = desc.value;
+      if(pad && pad.checked) gravarBestDesc(enc.criaturaId, enc.descMesa);
+      delete (state.bestEditEnc||{})[enc.id];
+      gravarEncontro(enc); rerender();
+    }); });
+    on("[data-beditcat]", "click", function(el){ (state.bestEditCat = state.bestEditCat || {})[el.getAttribute("data-beditcat")] = true; rerender(); });
+    on("[data-bcancelcat]", "click", function(el){ delete (state.bestEditCat||{})[el.getAttribute("data-bcancelcat")]; rerender(); });
+    on("[data-bsalvacat]", "click", function(el){
+      var id = el.getAttribute("data-bsalvacat"), ta = raiz.querySelector('[data-bdesccat="'+id+'"]');
+      if(ta) gravarBestDesc(id, ta.value);
+      delete (state.bestEditCat||{})[id]; rerender();
+    });
+    on("[data-brestauracat]", "click", function(el){
+      var id = el.getAttribute("data-brestauracat");
+      gravarBestDesc(id, null); delete (state.bestEditCat||{})[id]; rerender();
+    });
     on("[data-bencerrar]", "click", function(el){
       var enc = encontroGet(el.getAttribute("data-bencerrar")); if(!enc) return;
       askConfirm('Tirar "'+(enc.nome||"esta criatura")+'" de cena? Ela some também da tela dos jogadores.', function(){ gravarEncontro(enc, true); rerender(); });
