@@ -6,7 +6,7 @@
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
 <title>Fichas de Pangea</title>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&amp;family=IBM+Plex+Mono:wght@400;500;600&amp;display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&amp;family=IBM+Plex+Mono:wght@400;500;600&amp;family=IBM+Plex+Sans:ital,wght@0,400;0,600;1,400&amp;display=swap">
 <style>
   :root{
     --bg:#efe7d3;
@@ -88,10 +88,33 @@
   body{
     background:var(--bg);
     color:var(--ink);
-    font-family:"IBM Plex Mono", ui-monospace, monospace;
+    font-family:"IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
     font-size:15px;
     line-height:1.55;
   }
+  /* Texto corrido sempre alinhado à esquerda, com respiro entre linhas. */
+  p, .hint, .trait .txt span{ text-align:left; hyphens:manual; }
+  .hint{ line-height:1.45; }
+
+  /* ===== Item (inventário do jogador e pool do Assimilador) ===== */
+  .item-card{ border:1px solid var(--border); border-radius:10px; background:var(--surface); padding:10px 12px; margin-bottom:8px; }
+  .item-topo{ display:flex; align-items:baseline; justify-content:space-between; gap:8px; flex-wrap:wrap; }
+  .item-nome{ font-family:"Oswald",sans-serif; font-size:16px; font-weight:600; letter-spacing:.02em; color:var(--ink); }
+  .item-nome .item-qtd{ font-family:"IBM Plex Mono",monospace; font-size:12px; color:var(--ink-muted); font-weight:500; margin-left:4px; }
+  .item-chips{ display:flex; gap:4px; flex-wrap:wrap; }
+  .item-chip{ font-family:"IBM Plex Mono",monospace; font-size:10.5px; padding:1px 7px; border-radius:99px; border:1px solid var(--border-strong); background:var(--surface-2); color:var(--ink); white-space:nowrap; cursor:default; }
+  .item-chip.esc{ border-color:var(--accent); color:var(--accent); background:transparent; }
+  .item-desc{ font-style:italic; color:var(--ink-muted); font-size:13.5px; margin:4px 0 0; line-height:1.45; }
+  .item-efeito{ margin:8px 0 0; padding:6px 10px; border-left:3px solid var(--accent); background:var(--surface-2); border-radius:0 6px 6px 0; font-size:13.5px; line-height:1.5; }
+  .item-efeito b{ font-family:"Oswald",sans-serif; text-transform:uppercase; letter-spacing:.05em; font-size:11.5px; color:var(--accent); margin-right:4px; }
+  .item-card p{ max-width:none; }
+  .item-nota{ margin:6px 0 0; font-size:12.5px; color:var(--ink-muted); line-height:1.45; }
+  .item-nota b{ font-weight:600; }
+  .item-controles{ display:flex; gap:6px 14px; flex-wrap:wrap; align-items:center; margin-top:10px; padding-top:8px; border-top:1px dashed var(--border); font-size:12.5px; }
+  .item-controles .grupo{ display:flex; gap:4px; align-items:center; }
+  .item-controles .rot{ color:var(--ink-muted); font-size:11.5px; text-transform:uppercase; letter-spacing:.04em; font-family:"Oswald",sans-serif; }
+  .item-controles .btn{ padding:1px 7px; font-size:11px; }
+  .item-controles .fim{ margin-left:auto; }
   .wrap{ max-width:920px; margin:0 auto; padding-inline:16px; padding-block:20px 60px; }
   h1,h2,h3{ font-family:"Oswald", "Arial Narrow", sans-serif; text-transform:uppercase; letter-spacing:.03em; text-wrap:balance; margin:0; }
   h1{ font-size:26px; font-weight:700; }
@@ -3220,20 +3243,7 @@
         '<button class="btn secondary" data-action="clear-personagens">Limpar personagens</button>' +
       '</div>';
     }
-    html += '<div class="card tight"><h2>Backup</h2>' +
-      '<p class="hint">Guarde uma cópia de todos os seus personagens antes de fechar, ou restaure num aparelho novo.</p>' +
-      '<div class="row" style="align-items:flex-start">' +
-        '<div style="flex:1;min-width:220px">' +
-          '<button class="btn secondary" data-backup="export">Gerar código de backup</button>' +
-          '<textarea class="code-box" id="backup-export" readonly style="margin-top:8px;display:none"></textarea>' +
-          '<div class="row" id="backup-copy-row" style="margin-top:6px;display:none"><button class="btn secondary" data-backup="copy">Copiar código</button></div>' +
-        '</div>' +
-        '<div style="flex:1;min-width:220px">' +
-          '<textarea class="code-box" id="backup-import" placeholder="cole aqui um código de backup pra restaurar"></textarea>' +
-          '<div class="row" style="margin-top:6px"><button class="btn secondary" data-backup="import">Restaurar backup</button></div>' +
-        '</div>' +
-      '</div>' +
-    '</div>';
+    if(caps.mode !== "mesa") html += backupCardHtml();
     if(chars.length === 0){
       html += '<div class="card empty"><p>Nenhum personagem por aqui ainda.</p>' +
         '<button class="btn accent" data-nav="wizard-new">Criar meu primeiro Sobrevivente</button></div>';
@@ -3260,42 +3270,72 @@
     });
     var clearCharsBtn = app.querySelector('[data-action="clear-personagens"]');
     if(clearCharsBtn) clearCharsBtn.addEventListener("click", limparPersonagensDesbloqueados);
+    if(caps.mode !== "mesa") bindBackupCard(renderRoster);
 
-    var expBtn = app.querySelector('[data-backup="export"]');
-    if(expBtn) expBtn.addEventListener("click", function(){
-      var box = app.querySelector('#backup-export');
-      box.value = exportAllCode();
-      box.style.display = "block";
-      app.querySelector('#backup-copy-row').style.display = "flex";
-    });
-    var copyBtn = app.querySelector('[data-backup="copy"]');
-    if(copyBtn) copyBtn.addEventListener("click", function(){
-      var box = app.querySelector('#backup-export');
-      box.select();
-      try{ navigator.clipboard.writeText(box.value); copyBtn.textContent = "Copiado!"; setTimeout(function(){copyBtn.textContent="Copiar código";},1500); }
-      catch(e){ document.execCommand('copy'); }
-    });
-    var impBtn = app.querySelector('[data-backup="import"]');
-    if(impBtn) impBtn.addEventListener("click", function(){
-      if(!podeEditar()) return;
-      var code = app.querySelector('#backup-import').value;
-      var data = importAllCode(code);
-      if(!data || !Array.isArray(data)){ alert("Código inválido. Confira se copiou tudo certinho."); return; }
+  }
+
+  // ---------- BACKUP DA MESA (arquivo) ----------
+  // O plano gratuito do Firebase não guarda cópias: o Assimilador baixa um arquivo
+  // com todos os personagens e pode restaurar por ele (ou por um código antigo).
+  function backupCardHtml(){
+    return '<div class="card tight" id="backup-card"><h2>Backup da mesa</h2>' +
+      '<p class="hint">Baixe de vez em quando um arquivo com todos os personagens. Se uma ficha for apagada ou estragada por engano, é só restaurar por ele.</p>' +
+      '<div class="row" style="gap:8px;flex-wrap:wrap;align-items:center">' +
+        '<button class="btn accent" data-backup="baixar">Baixar backup da mesa</button>' +
+        '<label class="btn secondary" style="cursor:pointer;margin:0">Restaurar de um arquivo<input type="file" accept=".json,.txt,application/json,text/plain" data-backup="arquivo" style="display:none"></label>' +
+        '<button class="btn secondary" data-backup="colar">Colar código antigo</button>' +
+      '</div>' +
+      '<div id="backup-colar" style="display:none;margin-top:8px"><textarea class="code-box" id="backup-import" placeholder="cole aqui um código de backup"></textarea>' +
+        '<div class="row" style="margin-top:6px"><button class="btn secondary" data-backup="import">Restaurar</button></div></div>' +
+    '</div>';
+  }
+  function restaurarBackup(data, rerender){
+    if(!podeEditar()) return;
+    if(data && !Array.isArray(data) && Array.isArray(data.personagens)) data = data.personagens;
+    if(!data || !Array.isArray(data)){ alert("Arquivo ou código inválido."); return; }
+    askConfirm("Restaurar "+data.length+" personagem(ns) do backup? Fichas com o mesmo código serão substituídas pela versão do backup.", function(){
       var list = loadChars();
       data.forEach(function(nc){
         var idx = list.findIndex(function(x){return x.id===nc.id;});
-        // Backup vindo do artefato antigo não sabe de contas Google: se a ficha já
-        // estava vinculada a alguém aqui no site, o vínculo é mantido.
+        // Backup sem vínculo de conta mantém o vínculo que a ficha já tinha aqui.
         if(idx>-1 && list[idx].donoUid && !nc.donoUid){
           nc.donoUid = list[idx].donoUid; nc.donoEmail = list[idx].donoEmail||null; nc.donoNome = list[idx].donoNome||null;
         }
         if(idx>-1) list[idx] = nc; else list.push(nc);
         marcarComoMeu(nc.id);
-        if(caps.mode === "mesa" && usuario && !ehMestre()){ nc.donoUid = usuario.uid; nc.donoEmail = usuario.email||null; nc.donoNome = usuario.displayName||null; }
         if(caps.mode === "mesa") marcarCharSujo(nc.id);
       });
       saveChars(list);
-      renderRoster();
+      if(caps.mode === "mesa"){ clearTimeout(publishTimer); doPublish(); }
+      rerender();
+    });
+  }
+  function bindBackupCard(rerender){
+    var raiz = app.querySelector("#backup-card"); if(!raiz) return;
+    raiz.querySelector('[data-backup="baixar"]').addEventListener("click", function(){
+      var dados = { tipo:"backup-pangea", geradoEm:new Date().toISOString(), personagens:visibleChars() };
+      var blob = new Blob([JSON.stringify(dados, null, 1)], { type:"application/json" });
+      var a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "backup-pangea-" + new Date().toISOString().slice(0,10) + ".json";
+      document.body.appendChild(a); a.click();
+      setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+    });
+    raiz.querySelector('[data-backup="arquivo"]').addEventListener("change", function(e){
+      var f = e.target.files && e.target.files[0]; if(!f) return;
+      var r = new FileReader();
+      r.onload = function(){
+        var txt = String(r.result||""), data = null;
+        try{ data = JSON.parse(txt); }catch(_){ data = importAllCode(txt); }
+        restaurarBackup(data, rerender);
+      };
+      r.readAsText(f);
+    });
+    raiz.querySelector('[data-backup="colar"]').addEventListener("click", function(){ raiz.querySelector("#backup-colar").style.display = "block"; });
+    raiz.querySelector('[data-backup="import"]').addEventListener("click", function(){
+      var txt = raiz.querySelector('#backup-import').value, data = null;
+      try{ data = JSON.parse(txt); }catch(_){ data = importAllCode(txt); }
+      restaurarBackup(data, rerender);
     });
   }
 
@@ -3787,11 +3827,13 @@
   // pra decidir perto de qual seção mostrar o botão "Confirmar alterações"
   // (pendingSectionBannerHtml); a confirmação em si sempre publica o personagem inteiro
   // de uma vez (não dá granularidade por campo no modelo atual).
+  // No site com Firebase cada ficha grava sozinha e as outras telas só atualizam
+  // o necessário, então não precisa mais juntar mudanças e "Confirmar alterações"
+  // (isso existia por causa do Artefato do Claude). Tudo salva automaticamente.
   function marcarPendenteOuSalvar(c, secao){
-    if(caps.mode !== "mesa"){ updateChar(c); return; }
     if(!podeEditar()) return;
-    state.pendenteCharId = c.id;
-    if(secao) state.pendenteSecoes[secao] = true;
+    updateChar(c);
+    if(caps.mode === "mesa") schedulePublish();
   }
   function temPendente(c){ return state.pendenteCharId === c.id; }
   function temPendenteSecao(c, secao){ return state.pendenteCharId === c.id && !!state.pendenteSecoes[secao]; }
@@ -4009,11 +4051,6 @@
     // Notas
     html += sectionCard("notas", "Notas", '<textarea data-notas style="min-height:80px">'+esc(c.notas)+'</textarea>');
 
-    // Export / actions (no modo mesa o Assimilador já vê tudo ao vivo; isso fica só como backup manual)
-    html += sectionCard("exportar", "Exportar",
-      '<p class="hint">'+(caps.mode==="mesa"?'O Assimilador já acompanha essa ficha ao vivo. Esse código serve só como backup manual, se quiser.':'Copie o código abaixo e envie pro Assimilador (fora desta ferramenta) pra ele acompanhar sua ficha.')+'</p>' +
-      '<textarea class="code-box" readonly id="export-code">'+exportCode(c)+'</textarea>' +
-      '<div class="row" style="margin-top:8px"><button class="btn secondary" data-action="copy">Copiar código</button></div>');
 
     html += '<div class="btn-row"><button class="btn secondary" data-nav="roster">Voltar pros personagens</button>' +
       '<div class="row"><button class="btn accent" data-action="edit">Editar Ficha</button><button class="btn danger" data-action="delete">Excluir personagem</button></div></div>';
@@ -4025,38 +4062,39 @@
     bindSheet(c, maxNivel);
   }
 
+  // Cabeçalho + descrição + efeito de um item, igual no inventário e na pool.
+  function itemCorpoHtml(it, extraChips){
+    var chips = (it.traits||[]).map(function(s){
+      var d = EQUIP_TRAITS.filter(function(x){return x.id===s.id;})[0];
+      return '<span class="item-chip" title="'+esc(d ? d.txt : "")+'">'+esc(d ? d.nome+((s.qtd||1)>1?" x"+s.qtd:"") : s.id)+'</span>';
+    }).join('');
+    return '<div class="item-topo"><span class="item-nome">'+esc(it.nome||"Sem nome")+((it.qtd||1)>1?'<span class="item-qtd">x'+it.qtd+'</span>':'')+'</span>' +
+        '<span class="item-chips">'+(extraChips||'')+chips+'</span></div>' +
+      (it.desc ? '<p class="item-desc">'+esc(it.desc)+'</p>' : '') +
+      (it.efeito ? '<p class="item-efeito"><b>Efeito</b>'+esc(it.efeito)+'</p>' : '');
+  }
   function renderInventario(c){
     if(!c.inventarioExtra.length) return '<p class="hint">Nada além do Artefato inicial.</p>';
-    var html = '<div class="table-wrap"><table><thead><tr><th>Item</th><th>Qualidade</th><th class="num">Usos</th><th class="num">Espaço</th><th></th></tr></thead><tbody>';
+    var html = '';
     c.inventarioExtra.forEach(function(it, idx){
-      var traitTxt = (it.traits||[]).map(function(s){
-        var d = EQUIP_TRAITS.filter(function(x){return x.id===s.id;})[0];
-        return d ? d.nome+(s.qtd>1?" x"+s.qtd:"") : s.id;
-      });
       var q = it.qualidade!=null ? it.qualidade : 3;
-      html += '<tr><td><b>'+esc(it.nome)+(it.qtd>1?' (x'+it.qtd+')':'')+'</b>' +
-        (it.desc?'<br><span class="hint">'+esc(it.desc)+'</span>':'') +
-        (it.efeito?'<br><span class="hint"><b>Efeito:</b> '+esc(it.efeito)+'</span>':'') +
-        (traitTxt.length?'<br><span class="hint">'+traitTxt.join(", ")+' · Escassez '+itemCusto(it.traits)+'</span>':'') +
-        '</td><td>' +
-          '<div class="row" style="flex-wrap:nowrap;gap:4px">' +
-            '<button class="btn secondary" data-invq="menos" data-idx="'+idx+'" style="padding:1px 7px;font-size:11px" '+(q<=0?"disabled":"")+'>&minus;</button>' +
-            '<span style="min-width:96px;text-align:center" title="'+esc(QUALIDADE_BONUS[q]||"")+'">'+q+' · '+QUALIDADES[q]+'</span>' +
-            '<button class="btn secondary" data-invq="mais" data-idx="'+idx+'" style="padding:1px 7px;font-size:11px" '+(q>=6?"disabled":"")+'>+</button>' +
-            (q>0?'<button class="btn secondary" data-invp="mais" data-idx="'+idx+'" style="padding:1px 7px;font-size:11px" title="Pressão investida: '+(it.pressao||0)+' de '+qualidadeLimiar(it)+' pra cair um nível">+1 '+dadoHtml("p")+' <span class="hint" style="margin:0">('+(it.pressao||0)+'/'+qualidadeLimiar(it)+')</span></button>':'') +
-          '</div>' +
-        '</td><td class="num">' +
-          (it.usosMax ? '<div class="row" style="justify-content:flex-end;flex-wrap:nowrap;gap:4px">' +
-            '<button class="btn secondary" data-invuso="menos" data-idx="'+idx+'" style="padding:1px 7px;font-size:11px" '+((it.usosAtual||0)<=0?"disabled":"")+'>&minus;</button>' +
-            '<span style="min-width:34px;text-align:center">'+(it.usosAtual||0)+'/'+it.usosMax+'</span>' +
-            '<button class="btn secondary" data-invuso="mais" data-idx="'+idx+'" style="padding:1px 7px;font-size:11px" '+((it.usosAtual||0)>=it.usosMax?"disabled":"")+'>+</button>' +
-          '</div>' : '<span class="hint">-</span>') +
-        '</td><td class="num">'+it.espaco+'</td>' +
-        '<td><div class="row" style="justify-content:flex-end;flex-wrap:nowrap;gap:4px">' +
-          '<button class="btn secondary" data-inv="del" data-idx="'+idx+'" style="padding:2px 8px;font-size:11px">remover</button>' +
-        '</div></td></tr>';
+      var escN = (it.traits||[]).length ? clamp(itemCusto(it.traits),0,6) : (it.escassez!=null ? it.escassez : null);
+      html += '<div class="item-card">' + itemCorpoHtml(it, escN!=null ? '<span class="item-chip esc" title="Escassez">'+escN+' · '+esc(ESCASSEZ_NOMES[escN]||"")+'</span>' : '') +
+        '<div class="item-controles">' +
+          '<span class="grupo"><span class="rot">Qualidade</span>' +
+            '<button class="btn secondary" data-invq="menos" data-idx="'+idx+'" '+(q<=0?"disabled":"")+'>&minus;</button>' +
+            '<span title="'+esc(QUALIDADE_BONUS[q]||"")+'"><b>'+q+'</b> · '+QUALIDADES[q]+'</span>' +
+            '<button class="btn secondary" data-invq="mais" data-idx="'+idx+'" '+(q>=6?"disabled":"")+'>+</button>' +
+            (q>0?'<button class="btn secondary" data-invp="mais" data-idx="'+idx+'" title="Pressão investida: '+(it.pressao||0)+' de '+qualidadeLimiar(it)+' pra cair um nível">+1 '+dadoHtml("p")+' ('+(it.pressao||0)+'/'+qualidadeLimiar(it)+')</button>':'') +
+          '</span>' +
+          (it.usosMax ? '<span class="grupo"><span class="rot">Usos</span>' +
+            '<button class="btn secondary" data-invuso="menos" data-idx="'+idx+'" '+((it.usosAtual||0)<=0?"disabled":"")+'>&minus;</button>' +
+            '<span><b>'+(it.usosAtual||0)+'</b>/'+it.usosMax+'</span>' +
+            '<button class="btn secondary" data-invuso="mais" data-idx="'+idx+'" '+((it.usosAtual||0)>=it.usosMax?"disabled":"")+'>+</button></span>' : '') +
+          '<span class="grupo"><span class="rot">Espaço</span><span>'+it.espaco+'</span></span>' +
+          '<span class="grupo fim"><button class="btn secondary" data-inv="del" data-idx="'+idx+'">remover</button></span>' +
+        '</div></div>';
     });
-    html += '</tbody></table></div>';
     return html;
   }
 
@@ -6128,18 +6166,16 @@
   function itemPoolLinhaHtml(it, sorteado){
     var e = itemPoolEscassez(it);
     var nomes = (it.entregues||[]).map(function(x){ var ch = getChar(x.charId); return ch ? ch.nomePersonagem : null; }).filter(Boolean);
-    var tr = itemPoolTraitsTexto(it.traits);
-    var html = '<div class="doc-linha"><div class="doc-linha-topo"><div><b>'+esc(it.nome||"Sem nome")+'</b>'+((it.qtd||1)>1?' <span class="hint">x'+it.qtd+'</span>':'')+
-        ' <span class="badge-pill" style="vertical-align:middle">Escassez '+e+' · '+esc(ESCASSEZ_NOMES[e]||"")+'</span>' +
-        '<div class="hint" style="margin:2px 0 0">'+(tr ? esc(tr)+' · ' : '')+'Qualidade '+esc(itemQualTexto(it))+'</div>' +
-        (it.desc ? '<div style="margin:3px 0 0;font-size:13.5px">'+esc(it.desc)+'</div>' : '') +
-        (it.efeito ? '<div style="margin:3px 0 0;font-size:13.5px"><b>Efeito:</b> '+esc(it.efeito)+'</div>' : '<div class="hint" style="margin:3px 0 0;color:var(--danger)">Sem efeito descrito.</div>') +
-        (it.nota ? '<div class="hint" style="margin:2px 0 0"><i>Nota:</i> '+esc(it.nota)+'</div>' : '') +
-        (nomes.length ? '<div class="hint" style="margin:2px 0 0">Entregue a: '+esc(nomes.join(", "))+'</div>' : '') +
-      '</div><div class="row" style="gap:6px;flex:none;flex-wrap:wrap;justify-content:flex-end">' +
-        '<button type="button" class="btn accent doc-btn" data-ipentregar="'+it.id+'">Entregar</button>' +
-        (sorteado ? '' : '<button type="button" class="btn secondary doc-btn" data-ipeditar="'+it.id+'">Editar</button><button type="button" class="btn secondary doc-btn" data-ipexcluir="'+it.id+'">Excluir</button>') +
-      '</div></div>';
+    var html = '<div class="item-card">' +
+      itemCorpoHtml({ nome:it.nome, qtd:it.qtd, traits:normalizarTraits(it.traits), desc:it.desc, efeito:it.efeito },
+        '<span class="item-chip esc" title="Escassez">'+e+' · '+esc(ESCASSEZ_NOMES[e]||"")+'</span>') +
+      (!it.efeito ? '<p class="item-nota" style="color:var(--danger)">Sem efeito descrito.</p>' : '') +
+      '<p class="item-nota"><b>Qualidade:</b> '+esc(itemQualTexto(it))+(nomes.length ? ' · <b>Entregue a:</b> '+esc(nomes.join(", ")) : '')+'</p>' +
+      (it.nota ? '<p class="item-nota"><b>Nota:</b> '+esc(it.nota)+'</p>' : '') +
+      '<div class="item-controles"><span class="grupo fim">' +
+        '<button type="button" class="btn accent" data-ipentregar="'+it.id+'">Entregar</button>' +
+        (sorteado ? '' : '<button type="button" class="btn secondary" data-ipeditar="'+it.id+'">Editar</button><button type="button" class="btn secondary" data-ipexcluir="'+it.id+'">Excluir</button>') +
+      '</span></div>';
     if(state.itemEntregar === it.id && (sorteado || state.itemSorteado !== it.id)){
       html += '<div class="doc-entrega"><p class="hint" style="margin:0 0 6px">Quem fica com o item?</p><div class="row" style="gap:6px 14px;flex-wrap:wrap">' +
         loadChars().map(function(ch, i){ return '<label style="display:flex;align-items:center;gap:5px;text-transform:none;margin:0"><input type="radio" name="ippara" style="width:auto" data-ippara="'+ch.id+'"'+(i===0?' checked':'')+'>'+esc(ch.nomePersonagem||"Sem nome")+(ch.ehNpc?' <span class="hint">(NPC)</span>':'')+'</label>'; }).join('') +
@@ -6385,6 +6421,7 @@
     html += gmXpTodosHtml(roster);
     html += gmDocsHtml();
     html += tentarHtml("Itens achados", gmItensHtml);
+    html += backupCardHtml();
     html += '<h2 style="margin:20px 0 10px">Personagens da Mesa</h2>';
     if(!roster.length){
       html += '<div class="card"><p class="hint">Nenhum personagem criado ainda nesta mesa.</p></div>';
@@ -6417,6 +6454,7 @@
     bindGmXp();
     bindGmDocs(renderGmMesa);
     tentar("Itens achados", function(){ bindGmItens(renderGmMesa); });
+    tentar("Backup", function(){ bindBackupCard(renderGmMesa); });
     app.querySelectorAll('[data-gmnpc]').forEach(function(el){
       el.addEventListener("click", function(e){ e.stopPropagation(); });
       el.addEventListener("change", function(){
