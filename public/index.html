@@ -440,6 +440,16 @@
   @keyframes assimSobe{ from{transform:translateY(8px);opacity:0} to{transform:none;opacity:1} }
   @keyframes assimTreme{ 0%,100%{transform:translateX(0)} 20%{transform:translateX(-7px)} 40%{transform:translateX(7px)} 60%{transform:translateX(-4px)} 80%{transform:translateX(4px)} }
   @media (prefers-reduced-motion: reduce){ .assim-die, .assim-box, .assim-ov, .assim-res.aparece{ animation:none !important; } }
+  .assim-box.destaque{ border-color:var(--accent); box-shadow:0 0 0 6px color-mix(in srgb, var(--accent) 22%, transparent), 0 20px 60px rgba(0,0,0,.5); }
+  .assim-box.destaque .assim-kicker{ color:var(--accent); }
+  .assim-box.destaque .assim-die{ border-color:var(--accent); }
+  .assim-box.destaque .assim-face{ color:var(--accent); }
+  .assim-die.solto.parou{ opacity:.35; }
+  .assim-die.d6{ border-radius:8px; }
+  .assim-tag.destaque{ background:var(--accent); }
+  .rollfeed-entry.destaque{ border-left:3px solid var(--accent); padding-left:8px; margin-left:-4px; background:linear-gradient(90deg, color-mix(in srgb, var(--accent) 14%, transparent), transparent 80%); }
+  tr.log-destaque td{ background:color-mix(in srgb, var(--accent) 9%, transparent); }
+  tr.log-destaque td:first-child{ box-shadow:inset 3px 0 0 var(--accent); }
   .assim-tag{ display:inline-block; font-family:"Oswald",sans-serif; font-size:10px; letter-spacing:.06em; text-transform:uppercase;
     background:var(--assim); color:#fff; padding:1px 6px; border-radius:3px; margin-right:4px; vertical-align:middle; }
   .rollfeed-entry.assim{ border-left:3px solid var(--assim); padding-left:8px; margin-left:-4px;
@@ -4474,12 +4484,14 @@
     var velho = document.getElementById("assim-overlay"); if(velho) velho.remove();
     var dados = e.dados || [];
     var ov = document.createElement("div"); ov.id = "assim-overlay"; ov.className = "assim-ov";
-    ov.innerHTML = '<div class="assim-box" role="dialog" aria-live="polite" aria-label="Teste de Assimilação">' +
-      '<div class="assim-kicker">Teste de Assimilação</div>' +
+    var destaque = e.tipo === "destaque";
+    var kicker = destaque ? "Rolagem do Assimilador" : "Teste de Assimilação";
+    ov.innerHTML = '<div class="assim-box'+(destaque?' destaque':'')+'" role="dialog" aria-live="polite" aria-label="'+kicker+'">' +
+      '<div class="assim-kicker">'+kicker+'</div>' +
       '<div class="assim-nome">'+esc(e.nomePersonagem||"?")+'</div>' +
-      '<p class="assim-sub">'+esc((e.label||"").replace("Teste de Assimilação ",""))+(e.nomeJogador?' · '+esc(e.nomeJogador):'')+'</p>' +
+      '<p class="assim-sub">'+esc(destaque ? (e.subtitulo||"") : (e.label||"").replace("Teste de Assimilação ",""))+(e.nomeJogador?' · '+esc(e.nomeJogador):'')+'</p>' +
       '<div class="assim-dados">' + dados.map(function(d){
-        return '<div class="assim-die d'+d.sides+'"><span class="assim-face">?</span><span class="assim-tipo">d'+d.sides+'</span></div>';
+        return '<div class="assim-die d'+d.sides+(d.kept===false?' solto':'')+'" data-lados="'+d.sides+'"><span class="assim-face">?</span><span class="assim-tipo">d'+d.sides+'</span></div>';
       }).join('') + '</div>' +
       '<div class="assim-res" hidden>' + resultBadges(e.totS||0, e.totA||0, e.totP||0) +
         (e.cartas ? '<p class="assim-cartas">'+esc(assimCartasTexto(e.cartas))+'</p>' : '') + '</div>' +
@@ -4489,7 +4501,7 @@
     var dieEls = ov.querySelectorAll(".assim-die");
     var tick = setInterval(function(){
       Array.prototype.forEach.call(dieEls, function(el){
-        if(!el.classList.contains("parou")) el.querySelector(".assim-face").textContent = String(1 + Math.floor(Math.random()*(el.classList.contains("d12")?12:10)));
+        if(!el.classList.contains("parou")) el.querySelector(".assim-face").textContent = String(1 + Math.floor(Math.random()*(parseInt(el.getAttribute("data-lados"),10)||10)));
       });
     }, 80);
     var auto = null, revelado = false;
@@ -4509,7 +4521,7 @@
     }
     ov.querySelector(".assim-fechar").addEventListener("click", fechar);
     ov.addEventListener("click", function(ev){ if(ev.target === ov) fechar(); });
-    var base = reduz ? 200 : 1300, passo = reduz ? 0 : 500;
+    var base = reduz ? 200 : 1300, passo = reduz ? 0 : (dados.length > 6 ? 260 : 500);
     dados.forEach(function(d, i){
       setTimeout(function(){
         var el = dieEls[i]; if(!el || revelado) return;
@@ -4527,11 +4539,11 @@
   function verificarAssimNovos(lista){
     var vis = testLogVisivelPara(lista);
     if(!assimLogPronto){
-      vis.forEach(function(e){ if(e.tipo === "assim") assimVistos[e.id] = true; });
+      vis.forEach(function(e){ if(e.tipo === "assim" || e.tipo === "destaque") assimVistos[e.id] = true; });
       assimLogPronto = true; return;
     }
     vis.forEach(function(e){
-      if(e.tipo !== "assim" || assimVistos[e.id]) return;
+      if((e.tipo !== "assim" && e.tipo !== "destaque") || assimVistos[e.id]) return;
       assimVistos[e.id] = true;
       var idade = Date.now() - (Date.parse(e.ts||"") || 0);
       if(idade < 120000) mostrarAnimAssim(e);
@@ -5718,10 +5730,10 @@
     log.forEach(function(t){
       var quando = "";
       try{ quando = new Date(t.ts).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"}); }catch(e){ quando = ""; }
-      var ehAssim = t.tipo === "assim";
-      html += '<tr'+(ehAssim?' class="log-assim"':'')+'><td>'+esc(quando)+'</td>' +
+      var ehAssim = t.tipo === "assim", ehDest = t.tipo === "destaque";
+      html += '<tr'+(ehAssim?' class="log-assim"':ehDest?' class="log-destaque"':'')+'><td>'+esc(quando)+'</td>' +
         '<td><b>'+esc(t.nomePersonagem||"?")+'</b>'+(t.nomeJogador?'<br><span class="hint">'+esc(t.nomeJogador)+'</span>':'')+'</td>' +
-        '<td>'+(ehAssim?'<span class="assim-tag">Assimilação</span>':'')+esc(t.label||"")+(ehAssim&&t.cartas?'<br><span class="hint">'+esc(assimCartasTexto(t.cartas))+'</span>':'')+'</td>' +
+        '<td>'+(ehAssim?'<span class="assim-tag">Assimilação</span>':ehDest?'<span class="assim-tag destaque">Assimilador</span>':'')+esc(t.label||"")+(ehAssim&&t.cartas?'<br><span class="hint">'+esc(assimCartasTexto(t.cartas))+'</span>':'')+'</td>' +
         '<td>'+diceChipsHtml(t.dados)+'</td>' +
         '<td class="num">'+testeResultadoHtml(t)+'</td></tr>';
     });
@@ -5779,10 +5791,10 @@
       var lbl = diceResultLabel(d);
       return '<span class="rf-die'+(d.kept?" kept":"")+'">'+(lbl==="em branco"?"-":diceResultHtml(d))+'</span>';
     }).join('');
-    var ehAssim = t.tipo === "assim";
-    return '<div class="rollfeed-entry'+(ehAssim?' assim':'')+'">' +
+    var ehAssim = t.tipo === "assim", ehDest = t.tipo === "destaque";
+    return '<div class="rollfeed-entry'+(ehAssim?' assim':ehDest?' destaque':'')+'">' +
       '<div class="rollfeed-entry-head"><b>'+esc(t.nomePersonagem||"?")+'</b><span class="hint">'+esc(quando)+'</span></div>' +
-      '<div class="rollfeed-entry-label">'+(ehAssim?'<span class="assim-tag">Assimilação</span>':'')+esc(t.label||"")+(ehAssim&&t.cartas?' · '+esc(assimCartasTexto(t.cartas)):'')+'</div>' +
+      '<div class="rollfeed-entry-label">'+(ehAssim?'<span class="assim-tag">Assimilação</span>':ehDest?'<span class="assim-tag destaque">Assimilador</span>':'')+esc(t.label||"")+(ehAssim&&t.cartas?' · '+esc(assimCartasTexto(t.cartas)):'')+'</div>' +
       (diceHtml ? '<div class="rollfeed-dice">'+diceHtml+'</div>' : '') +
       '<div class="rollfeed-total">'+testeResultadoHtml(t)+'</div>' +
     '</div>';
@@ -5864,7 +5876,9 @@
         body += '<button type="button" class="btn secondary" data-gmdrytoggle="'+idx+'" style="font-family:\'IBM Plex Mono\',monospace'+(d.kept?'':';opacity:.4;text-decoration:line-through')+'">d'+d.sides+':'+d.face+' ('+diceResultHtml(d)+')</button>';
       });
       body += '</div>';
-      body += '<div class="budget ok" style="margin-top:12px"><span>Resultado (não vai pro histórico)</span><span class="num">'+resultBadges(totS,totA,totP)+'</span></div>';
+      body += '<div class="budget ok" style="margin-top:12px"><span>'+(t.mostrado?'Resultado (mostrado para a mesa)':'Resultado (só você vê)')+'</span><span class="num">'+resultBadges(totS,totA,totP)+'</span></div>';
+      body += '<div class="row" style="gap:8px;align-items:center;flex-wrap:wrap"><button type="button" class="btn accent" data-gmdryaction="mostrar"'+(t.mostrado?' disabled':'')+'>'+(t.mostrado?'Mostrado para a mesa ✓':'📣 Mostrar para a mesa')+'</button>' +
+        '<span class="hint" style="margin:0">Abre a animação no centro da tela de todo mundo e entra no Histórico de Rolagens. Solte os dados que não contam antes de mostrar.</span></div>';
       body += '</div>';
     }
     return sectionCard("gmdryroll", "Rolagem Seca (Criaturas e NPCs)", body);
@@ -5892,7 +5906,7 @@
       pararAnimacaoDados();
       t.rolling = true;
       t.rollingCount = total;
-      t.results = [];
+      t.results = []; t.mostrado = false;
       renderGm();
       diceAnimTimeout = setTimeout(function(){
         diceAnimTimeout = null;
@@ -5920,8 +5934,31 @@
     });
     var clearBtn = app.querySelector('[data-gmdryaction="clear"]');
     if(clearBtn) clearBtn.addEventListener("click", function(){
-      t.results = [];
+      t.results = []; t.mostrado = false;
       renderGm();
+    });
+    // Mostrar para a mesa: por drama ou impacto, o Assimilador revela uma rolagem
+    // do Painel com a mesma animação central dos Testes de Assimilação.
+    var mostrarBtn = app.querySelector('[data-gmdryaction="mostrar"]');
+    if(mostrarBtn) mostrarBtn.addEventListener("click", function(){
+      if(t.mostrado || !t.results.length) return;
+      t.mostrado = true; mostrarBtn.disabled = true;
+      var kept = t.results.filter(function(d){ return d.kept; });
+      var qtd = {}; t.results.forEach(function(d){ qtd[d.sides] = (qtd[d.sides]||0) + 1; });
+      var pilha = [6,10,12].filter(function(n){ return qtd[n]; }).map(function(n){ return qtd[n]+"d"+n; }).join(" + ");
+      var titulo = String(t.label||"").trim();
+      var entrada = { tipo:"destaque", nomePersonagem: titulo || "Rolagem do Assimilador", nomeJogador:"",
+        label: (titulo ? titulo+" · " : "")+pilha+(kept.length < t.results.length ? " (mantém "+kept.length+")" : ""),
+        subtitulo: pilha+(kept.length < t.results.length ? " · mantém "+kept.length : ""),
+        totS: sum(kept.map(function(d){return d.s;})), totA: sum(kept.map(function(d){return d.a;})), totP: sum(kept.map(function(d){return d.p;})),
+        dados: t.results.map(function(d){ return {sides:d.sides, face:d.face, s:d.s, a:d.a, p:d.p, kept:!!d.kept}; }) };
+      entrada.resultado = entrada.totS+" Suc · "+entrada.totA+" Adap · "+entrada.totP+" Press";
+      mostrarAnimAssim(entrada, function(){
+        registrarTeste(entrada);
+        assimVistos[entrada.id] = true;
+        if(caps.mode==="mesa"){ clearTimeout(publishTimer); doPublish(); }
+        if(state.view === "gm") renderGm();
+      });
     });
   }
 
