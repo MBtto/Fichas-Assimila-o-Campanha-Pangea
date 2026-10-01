@@ -5312,7 +5312,9 @@
   function editPassos(c){
     if(temAcessoTotal()) return [0,1,2,3,4,5,6];
     // Textos da ficha (Origem, Propósitos e Conexões) sempre editáveis pelo jogador.
-    return c.precisaRefazer ? [1,2,3,4,5,6] : [1,2,3,4,6];
+    // Características também editáveis pelo jogador (pedido do Marco, 30/09/2026);
+    // o limite de Experiência e os requisitos continuam valendo ao salvar.
+    return [1,2,3,4,5,6];
   }
   // ----- SHEET EDIT MODE (reaproveita a UI do assistente pra Instintos/Conh.Prat/Caracteristicas/Equipamento) -----
   function renderSheetEdit(){
