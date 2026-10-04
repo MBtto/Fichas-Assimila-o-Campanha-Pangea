@@ -5922,12 +5922,17 @@
     // debounce). Assim, a mesa só vê a mudança quando a pessoa termina de
     // escrever e sai do campo, mas dá pra digitar um texto inteiro sem
     // interrupção.
+    // Os dois campos podem não existir (seção Notas minimizada): sem eles, só pula.
     var jogadorInput = app.querySelector("[data-jogador]");
-    jogadorInput.addEventListener("input", function(e){ c.nomeJogador = e.target.value; });
-    jogadorInput.addEventListener("change", function(){ updateChar(c); });
+    if(jogadorInput){
+      jogadorInput.addEventListener("input", function(e){ c.nomeJogador = e.target.value; });
+      jogadorInput.addEventListener("change", function(){ updateChar(c); });
+    }
     var notasInput = app.querySelector("[data-notas]");
-    notasInput.addEventListener("input", function(e){ c.notas = e.target.value; });
-    notasInput.addEventListener("change", function(){ updateChar(c); });
+    if(notasInput){
+      notasInput.addEventListener("input", function(e){ c.notas = e.target.value; });
+      notasInput.addEventListener("change", function(){ updateChar(c); });
+    }
     var claimBtn = app.querySelector('[data-action="claim"]');
     if(claimBtn) claimBtn.addEventListener("click", function(){ marcarComoMeu(c.id); renderSheet(); });
     // Pode haver mais de um botão "Confirmar alterações" na tela ao mesmo tempo (uma
