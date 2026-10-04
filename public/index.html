@@ -5155,13 +5155,13 @@
   }
 
   // ----- ASSIMILAÇÃO: TESTE, CARTAS DE MUTAÇÃO E PRESSÃO (livro definitivo, Cap. 4) -----
-  // Pressão acumulada de verdade: soma, entre as mutações de Assimilações Inoportunas (H)
-  // já adquiridas, os C do custo de cada uma menos os já neutralizados por Clareza de
-  // Propósito (ver neutralizarPressao). Atingir 10 é perda de controle definitiva (pág. 124).
+  // Pressão acumulada de verdade: soma os C do custo de TODAS as mutações já adquiridas
+  // (Evolutivas, Adaptativas, Inoportunas e Singulares - decisão do Marco, 04/10/2026:
+  // Pressão investida em carta que não é Inoportuna também conta pro limite), menos os
+  // já neutralizados por Clareza de Propósito. Atingir 10 é perda de controle definitiva (pág. 124).
   function pressaoTotal(c){
     var t = 0;
     (c.mutAdquiridas||[]).forEach(function(m){
-      if(m.cat !== "H") return;
       var simb = custoSimbolos(m.custo);
       t += Math.max(0, simb.p - (m.neutralizadas||0));
     });
@@ -5404,13 +5404,13 @@
     if(perdido){
       body += '<div class="card tight" style="border-color:var(--blood);background:rgba(143,29,29,.08)">' +
         '<h2 style="color:var(--blood);margin-bottom:4px">Perdido(a) para a Assimilação</h2>' +
-        '<p class="hint" style="margin:0">A Pressão acumulada em Assimilações Inoportunas atingiu 10. O(a) jogador(a) perde o controle da personagem pra sempre: ela passa a ser controlada pelo(a) Assimilador(a).</p>' +
+        '<p class="hint" style="margin:0">A Pressão acumulada nas Assimilações atingiu 10. O(a) jogador(a) perde o controle da personagem pra sempre: ela passa a ser controlada pelo(a) Assimilador(a).</p>' +
       '</div>';
     }
 
     var pressaoClass = pressao>=10 ? "warn" : "";
     body += '<div class="row" style="justify-content:space-between;flex-wrap:wrap;gap:10px">' +
-      '<span class="gm-compact-line" style="margin:0">Pressão acumulada (Assimilações Inoportunas): <b'+(pressao>=7?' style="color:var(--danger)"':'')+'>'+pressao+'</b> / 10'+(pressao>=7&&pressao<10?' <span class="badge-pill warn">atenção</span>':'')+'</span>' +
+      '<span class="gm-compact-line" style="margin:0">Pressão acumulada (todas as Assimilações): <b'+(pressao>=7?' style="color:var(--danger)"':'')+'>'+pressao+'</b> / 10'+(pressao>=7&&pressao<10?' <span class="badge-pill warn">atenção</span>':'')+'</span>' +
     '</div>';
 
     if(pendentes>0 && !perdido){
@@ -7492,7 +7492,7 @@
       '</div>' +
       '<div class="stat"><div class="label">Saúde</div><div class="val">Nível '+(c.saudeNivel!=null?c.saudeNivel:"?")+'</div><div class="dots mini">'+diamonds(c.saudeNivel||0,6,"","c-saude","ns")+'</div></div>' +
       '<div class="stat"><div class="label">Pts/nível · total</div><div class="val">'+pontosPorNivel+' · '+(pontosPorNivel*6)+'</div></div>' +
-      '<div class="stat'+(pressaoGm>=7?" warn":"")+'"><div class="label">Pressão (Inoportunas)</div><div class="val">'+pressaoGm+' / 10</div>'+(perdidoGm?'<div class="hint" style="color:var(--danger)">perdido(a) p/ Assimilação</div>':(pendentesGm?'<div class="hint">'+pendentesGm+' Teste(s) de Assimilação pendente(s)</div>':''))+'</div>' +
+      '<div class="stat'+(pressaoGm>=7?" warn":"")+'"><div class="label">Pressão acumulada</div><div class="val">'+pressaoGm+' / 10</div>'+(perdidoGm?'<div class="hint" style="color:var(--danger)">perdido(a) p/ Assimilação</div>':(pendentesGm?'<div class="hint">'+pendentesGm+' Teste(s) de Assimilação pendente(s)</div>':''))+'</div>' +
     '</div>';
     if((c.mutAdquiridas||[]).length){
       html += '<p class="hint" style="margin-top:10px;margin-bottom:2px">Mutações de Assimilação ('+c.mutAdquiridas.length+')</p><div class="gm-carac-list">' +
