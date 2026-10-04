@@ -381,7 +381,7 @@
   .fnav-sentinela{ height:1px; margin:0; }
   .fnav{
     position:sticky; top:0; z-index:40;
-    display:grid; grid-template-columns:repeat(6, minmax(0,1fr)); gap:8px;
+    display:grid; grid-template-columns:repeat(5, minmax(0,1fr)); gap:8px;
     padding:10px; margin:0 0 16px;
     background:var(--surface); border:1px solid var(--border); border-radius:var(--radius, 10px);
     box-shadow:var(--shadow);
@@ -389,7 +389,7 @@
     transition:padding .2s ease, gap .2s ease;
   }
   /* Grudada no alto da tela: duas linhas de casas mais baixinhas (ícone ao lado do nome). */
-  .fnav.grudada{ grid-template-columns:repeat(var(--fnav-meia, 6), minmax(0,1fr)); padding:6px 8px; gap:5px; border-top-left-radius:0; border-top-right-radius:0; box-shadow:0 4px 14px rgba(0,0,0,.22); }
+  .fnav.grudada{ grid-template-columns:repeat(5, minmax(0,1fr)); padding:6px 8px; gap:5px; border-top-left-radius:0; border-top-right-radius:0; box-shadow:0 4px 14px rgba(0,0,0,.22); }
   .fnav-casa{
     position:relative; min-width:0; min-height:104px; cursor:pointer;
     display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px;
@@ -417,19 +417,17 @@
       box-shadow:0 10px 18px rgba(0,0,0,.28), 0 2px 0 var(--accent); }
     .fnav-casa.viz{ z-index:2; transform:translateY(-1px) scale(1.05) rotateX(7deg); box-shadow:0 4px 8px rgba(0,0,0,.16); }
   }
-  /* Telas médias: 7 por linha não cabe com o nome inteiro, então 4 por linha. */
+  /* 5 casas por linha em todos os tamanhos (pedido do Marco); telas médias só apertam o texto. */
   @media (max-width:900px){
-    .fnav{ grid-template-columns:repeat(4, minmax(0,1fr)); }
     .fnav.grudada .fnav-casa{ font-size:10.5px; gap:4px; padding:4px 4px; }
   }
-  /* Celular: grudada no alto vira uma linha só, com os ícones (o nome some pra não tapar a ficha). */
+  /* Celular: grudada no alto mostra só os ícones (o nome some pra não tapar a ficha). */
   @media (max-width:640px){
     .fnav{ gap:6px; padding:8px; }
-    .fnav{ grid-template-columns:repeat(3, minmax(0,1fr)); }
-    .fnav-casa{ min-height:90px; font-size:11.5px; padding:8px 3px 6px; }
-    .fnav-ico, .fnav-img{ height:50px; }
+    .fnav-casa{ min-height:84px; font-size:10.5px; padding:7px 2px 6px; gap:4px; }
+    .fnav-ico, .fnav-img{ height:44px; }
     /* grudada no celular: só os ícones, em duas linhas (mínimo de 20px por ícone) */
-    .fnav.grudada{ grid-template-columns:repeat(var(--fnav-meia, 6), minmax(0,1fr)); gap:4px; padding:5px; }
+    .fnav.grudada{ gap:4px; padding:5px; }
     .fnav.grudada .fnav-casa{ padding:5px 0; }
     .fnav.grudada .fnav-rot{ display:none; }
     .fnav.grudada .fnav-ico, .fnav.grudada .fnav-img{ height:38px; }
@@ -3378,7 +3376,9 @@
   // Clique (ou toque) rola até a seção e abre se estiver minimizada. No
   // computador, a casa sob o mouse cresce com efeito 3D e as vizinhas crescem
   // um pouco menos (desligado em "Animações reduzidas").
-  var FNAV_COLS = 6;
+  var FNAV_COLS = 5;
+  // Hifenização opcional (&shy;) pros nomes longos caberem em 5 colunas no celular.
+  var FNAV_ROT_HTML = { caracteristicas:"Caracte&shy;rísticas", assimilacao:"Assimi&shy;lações", documentos:"Docu&shy;mentos", inventario:"Inven&shy;tário", instintos:"Instin&shy;tos" };
   // Ícones das abas: só o traço (icones/aba_*_traco.png, sem fundo), usado como
   // máscara; a cor vem de --fnav-tinta: preto nos temas claros, branco nos escuros
   // (ver fnavAtualizarTinta). As versões com disco branco (aba_*.png) ficam guardadas.
@@ -3406,9 +3406,7 @@
       ["caracteristicas", "Características", fnavIco("caracteristicas")],
       ["evoluir", "Evoluir", fnavIco("evoluir")],
       ["saude", "Saúde", fnavIco("saude")],
-      ["determinacao", "Pontos", fnavIco("pontos")],
       ["assimilacao", "Assimilações", fnavIco("assimilacoes")],
-      ["equipamento", "Artefato", fnavIco("artefato")],
       ["inventario", "Inventário", fnavIco("inventario")],
       ["documentos", "Documentos", fnavIco("documentos")],
       ["notas", "Notas", fnavIco("notas")]
@@ -3424,7 +3422,7 @@
       var fechada = !!state.collapsed[x[0]];
       html += '<button type="button" class="fnav-casa'+(fechada?' fechada':'')+'" data-fnav="'+x[0]+'" data-fnavi="'+i+'" title="'+esc(x[1])+(fechada?' (minimizada: abre ao clicar)':'')+'" aria-label="'+esc(x[1])+'">' +
         '<span class="fnav-ico">'+x[2]+'</span>' +
-        '<span class="fnav-rot">'+esc(x[1])+'</span>' +
+        '<span class="fnav-rot">'+(FNAV_ROT_HTML[x[0]] || esc(x[1]))+'</span>' +
       '</button>';
     });
     return html + '</nav>';
@@ -5329,8 +5327,8 @@
   }
   // Clareza de Propósito (pág. 62 do livro definitivo): ao concluir um arco satisfatoriamente,
   // cumprir um Propósito ou algo maravilhoso/inesperado acontecer, o(a) Infectado(a) escolhe
-  // entre recuperar um Nível de Determinação completo OU anular 1 C de uma mutação Inoportuna
-  // já adquirida (uma C por vez; zerar todas as C daquela mutação cessa seus efeitos negativos,
+  // entre subir 1 Nível de Determinação (voltando 1 Nível de Assimilação) OU anular 1 C de
+  // qualquer mutação já adquirida (Inoportuna, Adaptativa, Singular...) (uma C por vez; zerar todas as C daquela mutação cessa seus efeitos negativos,
   // mesmo que a mutação física em si permaneça).
   function clarezaRecuperarNivel(c){
     var novoCaixa = clamp((c.determinacao.caixaAtual!=null?c.determinacao.caixaAtual:3) + 1, DET_CAIXA_FLOOR, 3);
@@ -5341,7 +5339,7 @@
   }
   function clarezaNeutralizarPressao(c, mutId){
     var m = (c.mutAdquiridas||[]).filter(function(x){return x.id===mutId;})[0];
-    if(!m || m.cat!=="H") return false;
+    if(!m) return false; // qualquer tipo de carta (decisão do Marco, 04/10/2026)
     var total = custoSimbolos(m.custo).p;
     if((m.neutralizadas||0) >= total) return false;
     m.neutralizadas = (m.neutralizadas||0) + 1;
@@ -5427,22 +5425,23 @@
     }
 
     if(clarezaAberta && !perdido){
-      var inoportunasComC = (c.mutAdquiridas||[]).filter(function(m){ return m.cat==="H" && (m.neutralizadas||0) < custoSimbolos(m.custo).p; });
+      var inoportunasComC = (c.mutAdquiridas||[]).filter(function(m){ return MUT_DECKS[m.cat] && (m.neutralizadas||0) < custoSimbolos(m.custo).p; });
+      var caixaClareza = c.determinacao && c.determinacao.caixaAtual!=null ? c.determinacao.caixaAtual : 3;
       body += '<div class="card tight" style="margin-top:10px;background:var(--surface-2)">' +
         '<p class="hint" style="margin-top:0">Ao concluir um arco satisfatoriamente, cumprir um Propósito ou algo maravilhoso/inesperado acontecer: escolha uma das opções abaixo.</p>' +
         '<div class="row" style="gap:10px;flex-wrap:wrap">' +
-          '<button type="button" class="btn secondary" data-action="assim-clareza-nivel">Recuperar 1 Nível de Determinação completo</button>' +
+          '<button type="button" class="btn secondary" data-action="assim-clareza-nivel"'+(caixaClareza>=3?' disabled title="Nenhum Nível de Assimilação pra voltar"':'')+'>Subir 1 Nível de Determinação (volta 1 Nível de Assimilação)</button>' +
         '</div>';
       if(inoportunasComC.length){
-        body += '<p class="hint" style="margin:10px 0 6px">Ou anule 1 Pressão ('+dadoHtml("p")+') de uma mutação Inoportuna já adquirida:</p><div class="row" style="gap:8px;flex-wrap:wrap">';
+        body += '<p class="hint" style="margin:10px 0 6px">Ou retire 1 Pressão ('+dadoHtml("p")+') acumulada de qualquer mutação já adquirida:</p><div class="row" style="gap:8px;flex-wrap:wrap">';
         inoportunasComC.forEach(function(m){
-          var card = MUT_DECKS.H[m.cardIdx]; var tier = card[2][m.tierIdx];
+          var card = MUT_DECKS[m.cat][m.cardIdx]; var tier = card[2][m.tierIdx];
           var total = custoSimbolos(m.custo).p;
           body += '<button type="button" class="btn secondary" data-action="assim-clareza-c" data-mutid="'+m.id+'">'+esc(card[0]+" — "+tier[1])+' ('+(total-(m.neutralizadas||0))+'/'+total+' '+dadoHtml("p")+')</button>';
         });
         body += '</div>';
       } else {
-        body += '<p class="hint" style="margin:10px 0 0">Nenhuma mutação Inoportuna com Pressão pra anular no momento.</p>';
+        body += '<p class="hint" style="margin:10px 0 0">Nenhuma mutação com Pressão pra retirar no momento.</p>';
       }
       body += '</div>';
     }
@@ -5491,10 +5490,8 @@
         lista.forEach(function(m){
           var card = MUT_DECKS[cat][m.cardIdx], tier = card[2][m.tierIdx];
           var pInfo = "";
-          if(cat==="H"){
-            var total = custoSimbolos(m.custo).p, neut = m.neutralizadas||0;
-            pInfo = neut>0 ? ' <span class="hint">('+(total-neut)+'/'+total+' '+dadoHtml("p")+' restantes'+(neut>=total?" · efeito cessado":"")+')</span>' : '';
-          }
+          var totalP = custoSimbolos(m.custo).p, neutP = m.neutralizadas||0;
+          if(totalP && neutP>0) pInfo = ' <span class="hint">('+(totalP-neutP)+'/'+totalP+' '+dadoHtml("p")+' restantes'+(cat==="H" && neutP>=totalP?" · efeito cessado":"")+')</span>';
           body += '<div class="trait" style="cursor:default;align-items:center"><span style="min-width:74px">'+custoChipHtml(m.custo)+'</span>' +
             '<span class="txt"><b>'+esc(card[0]+" — "+tier[1])+'</b>'+pInfo+'<span>'+formatEfeito(tier[2], true)+'</span></span>' +
             '<button type="button" class="btn secondary" style="flex:none" data-action="assim-remover" data-mutid="'+m.id+'">Remover</button></div>';
