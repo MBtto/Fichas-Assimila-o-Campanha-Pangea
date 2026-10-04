@@ -381,44 +381,60 @@
   .fnav-sentinela{ height:1px; margin:0; }
   .fnav{
     position:sticky; top:0; z-index:40;
-    display:grid; grid-template-columns:repeat(7, minmax(0,1fr)); gap:6px;
-    padding:8px; margin:0 0 16px;
+    display:grid; grid-template-columns:repeat(7, minmax(0,1fr)); gap:8px;
+    padding:10px; margin:0 0 16px;
     background:var(--surface); border:1px solid var(--border); border-radius:var(--radius, 10px);
     box-shadow:var(--shadow);
     perspective:700px;
     transition:padding .2s ease, gap .2s ease;
   }
-  .fnav.grudada{ padding:5px 6px; gap:4px; border-top-left-radius:0; border-top-right-radius:0; box-shadow:0 4px 14px rgba(0,0,0,.22); }
+  /* Grudada no alto da tela: duas linhas de casas mais baixinhas (ícone ao lado do nome). */
+  .fnav.grudada{ grid-template-columns:repeat(var(--fnav-meia, 6), minmax(0,1fr)); padding:6px 8px; gap:5px; border-top-left-radius:0; border-top-right-radius:0; box-shadow:0 4px 14px rgba(0,0,0,.22); }
   .fnav-casa{
-    position:relative; min-width:0; cursor:pointer;
-    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px;
-    padding:7px 4px; border-radius:8px;
+    position:relative; min-width:0; min-height:76px; cursor:pointer;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px;
+    padding:10px 4px 8px; border-radius:10px;
     border:1px solid var(--border); background:var(--surface-2); color:var(--ink);
-    font:inherit; font-size:12px; font-weight:700; line-height:1.15; text-align:center;
+    font:inherit; font-size:12.5px; font-weight:700; line-height:1.15; text-align:center;
     transform-origin:center bottom;
-    transition:transform .22s cubic-bezier(.2,.8,.3,1.2), box-shadow .22s ease, background .15s, border-color .15s, padding .2s;
+    transition:transform .22s cubic-bezier(.2,.8,.3,1.2), box-shadow .22s ease, background .15s, border-color .15s, padding .2s, min-height .2s;
     will-change:transform;
   }
-  .fnav-casa .fnav-rot{ display:block; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-  .fnav-curto{ display:none; }
-  .fnav-casa .fnav-info{ display:block; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:10.5px; font-weight:500; color:var(--ink-muted); }
-  .fnav.grudada .fnav-casa{ padding:4px 3px; font-size:11px; }
-  .fnav.grudada .fnav-info{ display:none; }
+  .fnav-ico{ display:flex; align-items:center; justify-content:center; height:28px; color:var(--ink); }
+  .fnav-ico .fnav-svg{ width:28px; height:28px; }
+  .fnav-ico .ico, .fnav-ico .dado{ font-size:26px; }
+  .fnav-par{ display:inline-flex; gap:2px; }
+  .fnav-par .ico{ font-size:22px; }
+  .fnav-rot{ display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; max-width:100%; overflow:hidden; }
+  .fnav.grudada .fnav-casa{ min-height:0; flex-direction:row; gap:6px; padding:4px 6px; font-size:11.5px; }
+  .fnav.grudada .fnav-ico{ height:22px; }
+  .fnav.grudada .fnav-ico .fnav-svg{ width:21px; height:21px; }
+  .fnav.grudada .fnav-ico .ico, .fnav.grudada .fnav-ico .dado{ font-size:20px; }
+  .fnav.grudada .fnav-par .ico{ font-size:20px; }
   .fnav-casa.atual{ border-color:var(--camp-color, var(--accent)); box-shadow:inset 0 -3px 0 var(--camp-color, var(--accent)); }
   .fnav-casa.fechada .fnav-rot::after{ content:" ▸"; color:var(--ink-muted); font-weight:500; }
   .fnav-casa:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
   @media (hover:hover) and (pointer:fine){
     .fnav-casa.foco{ z-index:3; background:var(--surface); border-color:var(--accent);
-      transform:translateY(-4px) scale(1.16) rotateX(14deg);
+      transform:translateY(-4px) scale(1.14) rotateX(14deg);
       box-shadow:0 10px 18px rgba(0,0,0,.28), 0 2px 0 var(--accent); }
-    .fnav-casa.viz{ z-index:2; transform:translateY(-1px) scale(1.06) rotateX(7deg); box-shadow:0 4px 8px rgba(0,0,0,.16); }
+    .fnav-casa.viz{ z-index:2; transform:translateY(-1px) scale(1.05) rotateX(7deg); box-shadow:0 4px 8px rgba(0,0,0,.16); }
   }
+  /* Telas médias: 7 por linha não cabe com o nome inteiro, então 4 por linha. */
+  @media (max-width:900px){
+    .fnav{ grid-template-columns:repeat(4, minmax(0,1fr)); }
+    .fnav.grudada .fnav-casa{ font-size:10.5px; gap:4px; padding:4px 4px; }
+  }
+  /* Celular: grudada no alto vira uma linha só, com os ícones (o nome some pra não tapar a ficha). */
   @media (max-width:640px){
-    .fnav{ gap:4px; padding:5px; }
-    .fnav-casa{ font-size:10.5px; padding:6px 2px; }
-    .fnav-info{ display:none !important; }
-    .fnav-longo{ display:none; }
-    .fnav-curto{ display:inline !important; }
+    .fnav{ gap:6px; padding:8px; }
+    .fnav{ grid-template-columns:repeat(3, minmax(0,1fr)); }
+    .fnav-casa{ min-height:64px; font-size:11.5px; padding:8px 3px 6px; }
+    /* grudada no celular: só os ícones, em duas linhas (mínimo de 20px por ícone) */
+    .fnav.grudada{ grid-template-columns:repeat(var(--fnav-meia, 6), minmax(0,1fr)); gap:4px; padding:5px; }
+    .fnav.grudada .fnav-casa{ padding:5px 0; }
+    .fnav.grudada .fnav-rot{ display:none; }
+    .fnav.grudada .fnav-ico .fnav-svg{ width:20px; height:20px; }
   }
   @media (prefers-reduced-motion: reduce){ .fnav, .fnav-casa{ transition:none !important; } .fnav-casa.foco, .fnav-casa.viz{ transform:none !important; } }
   :root[data-anim="reduzidas"] .fnav-casa.foco, :root[data-anim="reduzidas"] .fnav-casa.viz{ transform:none !important; }
@@ -3326,32 +3342,45 @@
   // computador, a casa sob o mouse cresce com efeito 3D e as vizinhas crescem
   // um pouco menos (desligado em "Animações reduzidas").
   var FNAV_COLS = 7;
-  var FNAV_CURTOS = {"origem": "Orig.", "instintos": "Instin.", "conhprat": "C/P", "testar": "Teste", "caracteristicas": "Carac.", "evoluir": "Evoluir", "saude": "Saúde", "determinacao": "D/A", "assimilacao": "Mutaç.", "equipamento": "Artef.", "inventario": "Invent.", "documentos": "Docs", "notas": "Notas"};
+  // Ícones desenhados (linha, cor do texto) pras abas que não têm ícone do livro.
+  function fnavSvg(corpo){ return '<svg class="fnav-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+corpo+'</svg>'; }
+  var FNAV_SVG = {
+    // pegada de animal: instinto
+    instintos: fnavSvg('<ellipse cx="12" cy="16" rx="4.2" ry="3.6"/><ellipse cx="6" cy="10.5" rx="1.7" ry="2.2"/><ellipse cx="9.6" cy="6.3" rx="1.7" ry="2.3"/><ellipse cx="14.4" cy="6.3" rx="1.7" ry="2.3"/><ellipse cx="18" cy="10.5" rx="1.7" ry="2.2"/>'),
+    // livro aberto: conhecimentos e práticas
+    conhprat: fnavSvg('<path d="M12 6.5C10 5 7 4.5 3.5 5v13c3.5-.5 6.5 0 8.5 1.5 2-1.5 5-2 8.5-1.5V5C17 4.5 14 5 12 6.5z"/><path d="M12 6.5v13"/>'),
+    // medalha: características
+    caracteristicas: fnavSvg('<circle cx="12" cy="9" r="5"/><path d="M12 6.6l.8 1.6 1.7.2-1.3 1.2.3 1.7-1.5-.8-1.5.8.3-1.7-1.3-1.2 1.7-.2z"/><path d="M8.8 13l-1.8 7 5-2.4 5 2.4-1.8-7"/>'),
+    // degraus com seta pra cima: evoluir
+    evoluir: fnavSvg('<path d="M3.5 20.5h5v-5h5v-5h5v-5"/><path d="M14.5 5.5h4v4"/>'),
+    // chave de boca: artefato assinatura
+    equipamento: fnavSvg('<path d="M14.7 6.3a4.5 4.5 0 0 0-5.9 5.9L3.6 17.4a1.6 1.6 0 0 0 2.3 2.3l5.2-5.2a4.5 4.5 0 0 0 5.9-5.9l-2.7 2.7-2.4-.6-.6-2.4z"/>'),
+    // mochila: inventário
+    inventario: fnavSvg('<path d="M9 5.5V4.5a3 3 0 0 1 6 0v1"/><rect x="5" y="5.5" width="14" height="15" rx="3.5"/><path d="M8.5 13h7v4h-7z"/><path d="M5 11h14"/>'),
+    // folha com dobra: documentos
+    documentos: fnavSvg('<path d="M14 3.5H7a1.5 1.5 0 0 0-1.5 1.5v14A1.5 1.5 0 0 0 7 20.5h10a1.5 1.5 0 0 0 1.5-1.5V8z"/><path d="M14 3.5V8h4.5"/><path d="M8.5 12h7M8.5 15h7M8.5 18h4"/>'),
+    // lápis: notas
+    notas: fnavSvg('<path d="M15.5 4.5l4 4L8.5 19.5l-5 1 1-5z"/><path d="M13.5 6.5l4 4"/>')
+  };
   function fichaNavCasas(c){
-    var nivelS = clamp(c.saudeNivel!=null ? c.saudeNivel : 6, 0, 6);
-    var caixa = clamp(c.determinacao && c.determinacao.caixaAtual!=null ? c.determinacao.caixaAtual : 3, DET_CAIXA_FLOOR, 3);
-    var nAssim = 3 - caixa;
-    var nMut = (c.mutAdquiridas||[]).length;
-    var nInv = (c.inventarioExtra||[]).length;
-    var nCarac = (c.caracComp||[]).length;
+    // [id da seção, nome, ícone]. Saúde e Determinação/Assimilação usam os ícones
+    // oficiais (Nível); Testes usa o dado de Sucesso e Assimilações o de Adaptação.
     var casas = [
-      ["origem", "Origem", "história"],
-      ["instintos", "Instintos", ""],
-      ["conhprat", "Conh./Práticas", ""],
-      ["testar", "Teste", "rolar dados"],
-      ["caracteristicas", "Características", nCarac ? nCarac+"" : "nenhuma"],
-      ["evoluir", "Evoluir", ""],
-      ["saude", "Saúde", nivelS>0 ? "Nível "+nivelS : "Morto"],
-      ["determinacao", "Det./Assim.", "D "+(10-nAssim)+" · A "+nAssim],
-      ["assimilacao", "Mutações", nMut ? nMut+"" : "nenhuma"],
-      ["equipamento", "Artefato", (c.equip && c.equip.nome) ? c.equip.nome : ""],
-      ["inventario", "Inventário", nInv ? nInv+" ite"+(nInv>1?"ns":"m") : "vazio"],
-      ["documentos", "Documentos", ""],
-      ["notas", "Notas", ""]
+      ["instintos", "Instintos", FNAV_SVG.instintos],
+      ["conhprat", "Con/Prá", FNAV_SVG.conhprat],
+      ["testar", "Testes", dadoHtml("s")],
+      ["caracteristicas", "Características", FNAV_SVG.caracteristicas],
+      ["evoluir", "Evoluir", FNAV_SVG.evoluir],
+      ["saude", "Saúde", icoHtml("ns")],
+      ["determinacao", "Det./Assim.", '<span class="fnav-par">'+icoHtml("nd")+icoHtml("na")+'</span>'],
+      ["assimilacao", "Assimilações", dadoHtml("a")],
+      ["equipamento", "Artefato Assinatura", FNAV_SVG.equipamento],
+      ["inventario", "Inventário", FNAV_SVG.inventario],
+      ["documentos", "Documentos", FNAV_SVG.documentos],
+      ["notas", "Notas", FNAV_SVG.notas]
     ];
     if(c.precisaRefazer) casas = casas.filter(function(x){ return x[0]!=="evoluir"; });
     if(caps.mode !== "mesa") casas = casas.filter(function(x){ return x[0]!=="documentos"; });
-    if(!c.precisaRefazer){ try{ var sx = xpSaldo(c); casas.forEach(function(x){ if(x[0]==="evoluir") x[2] = sx+" XP"; }); }catch(_){} }
     return casas;
   }
   function fichaNavHtml(c){
@@ -3359,9 +3388,9 @@
     var html = '<div class="fnav-sentinela" aria-hidden="true"></div><nav class="fnav" aria-label="Ir para uma seção da ficha">';
     casas.forEach(function(x, i){
       var fechada = !!state.collapsed[x[0]];
-      html += '<button type="button" class="fnav-casa'+(fechada?' fechada':'')+'" data-fnav="'+x[0]+'" data-fnavi="'+i+'" title="'+esc(x[1])+(fechada?' (minimizada: abre ao clicar)':'')+'">' +
-        '<span class="fnav-rot"><span class="fnav-longo">'+esc(x[1])+'</span><span class="fnav-curto">'+esc(FNAV_CURTOS[x[0]]||x[1])+'</span></span>' +
-        (x[2] ? '<span class="fnav-info">'+esc(x[2])+'</span>' : '<span class="fnav-info">&nbsp;</span>') +
+      html += '<button type="button" class="fnav-casa'+(fechada?' fechada':'')+'" data-fnav="'+x[0]+'" data-fnavi="'+i+'" title="'+esc(x[1])+(fechada?' (minimizada: abre ao clicar)':'')+'" aria-label="'+esc(x[1])+'">' +
+        '<span class="fnav-ico">'+x[2]+'</span>' +
+        '<span class="fnav-rot">'+esc(x[1])+'</span>' +
       '</button>';
     });
     return html + '</nav>';
@@ -3385,6 +3414,9 @@
     var nav = app.querySelector(".fnav");
     if(!nav) return;
     var casas = Array.prototype.slice.call(nav.querySelectorAll(".fnav-casa"));
+    nav.style.setProperty("--fnav-n", casas.length);
+    nav.style.setProperty("--fnav-meia", Math.ceil(casas.length / 2));
+    function colunas(){ try{ return getComputedStyle(nav).gridTemplateColumns.split(" ").length || FNAV_COLS; }catch(_){ return FNAV_COLS; } }
     function medir(){ document.documentElement.style.setProperty("--fnav-h", (nav.offsetHeight + 12) + "px"); }
     medir();
     // Grudada: um marcador invisível logo acima da faixa sai da tela quando ela gruda.
@@ -3403,10 +3435,10 @@
         limpar();
         if(fnavMovimentoReduzido()) return;
         b.classList.add("foco");
-        var lin = Math.floor(i / FNAV_COLS), col = i % FNAV_COLS;
+        var nc = colunas(), lin = Math.floor(i / nc), col = i % nc;
         casas.forEach(function(o, j){
           if(j===i) return;
-          var l2 = Math.floor(j / FNAV_COLS), c2 = j % FNAV_COLS;
+          var l2 = Math.floor(j / nc), c2 = j % nc;
           if(Math.abs(l2-lin)<=1 && Math.abs(c2-col)<=1) o.classList.add("viz");
         });
       });
