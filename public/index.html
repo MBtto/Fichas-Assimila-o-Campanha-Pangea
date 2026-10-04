@@ -376,6 +376,55 @@
     100%{ box-shadow:0 0 0 0 var(--camp-color, var(--accent)), var(--shadow); opacity:1; }
   }
   .sheet-reveal{ animation:sheetRevealPop .6s cubic-bezier(.2,.8,.3,1); }
+
+  /* ---------- Faixa de navegação da ficha (miniaturas das seções) ---------- */
+  .fnav-sentinela{ height:1px; margin:0; }
+  .fnav{
+    position:sticky; top:0; z-index:40;
+    display:grid; grid-template-columns:repeat(7, minmax(0,1fr)); gap:6px;
+    padding:8px; margin:0 0 16px;
+    background:var(--surface); border:1px solid var(--border); border-radius:var(--radius, 10px);
+    box-shadow:var(--shadow);
+    perspective:700px;
+    transition:padding .2s ease, gap .2s ease;
+  }
+  .fnav.grudada{ padding:5px 6px; gap:4px; border-top-left-radius:0; border-top-right-radius:0; box-shadow:0 4px 14px rgba(0,0,0,.22); }
+  .fnav-casa{
+    position:relative; min-width:0; cursor:pointer;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px;
+    padding:7px 4px; border-radius:8px;
+    border:1px solid var(--border); background:var(--surface-2); color:var(--ink);
+    font:inherit; font-size:12px; font-weight:700; line-height:1.15; text-align:center;
+    transform-origin:center bottom;
+    transition:transform .22s cubic-bezier(.2,.8,.3,1.2), box-shadow .22s ease, background .15s, border-color .15s, padding .2s;
+    will-change:transform;
+  }
+  .fnav-casa .fnav-rot{ display:block; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .fnav-curto{ display:none; }
+  .fnav-casa .fnav-info{ display:block; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:10.5px; font-weight:500; color:var(--ink-muted); }
+  .fnav.grudada .fnav-casa{ padding:4px 3px; font-size:11px; }
+  .fnav.grudada .fnav-info{ display:none; }
+  .fnav-casa.atual{ border-color:var(--camp-color, var(--accent)); box-shadow:inset 0 -3px 0 var(--camp-color, var(--accent)); }
+  .fnav-casa.fechada .fnav-rot::after{ content:" ▸"; color:var(--ink-muted); font-weight:500; }
+  .fnav-casa:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+  @media (hover:hover) and (pointer:fine){
+    .fnav-casa.foco{ z-index:3; background:var(--surface); border-color:var(--accent);
+      transform:translateY(-4px) scale(1.16) rotateX(14deg);
+      box-shadow:0 10px 18px rgba(0,0,0,.28), 0 2px 0 var(--accent); }
+    .fnav-casa.viz{ z-index:2; transform:translateY(-1px) scale(1.06) rotateX(7deg); box-shadow:0 4px 8px rgba(0,0,0,.16); }
+  }
+  @media (max-width:640px){
+    .fnav{ gap:4px; padding:5px; }
+    .fnav-casa{ font-size:10.5px; padding:6px 2px; }
+    .fnav-info{ display:none !important; }
+    .fnav-longo{ display:none; }
+    .fnav-curto{ display:inline !important; }
+  }
+  @media (prefers-reduced-motion: reduce){ .fnav, .fnav-casa{ transition:none !important; } .fnav-casa.foco, .fnav-casa.viz{ transform:none !important; } }
+  :root[data-anim="reduzidas"] .fnav-casa.foco, :root[data-anim="reduzidas"] .fnav-casa.viz{ transform:none !important; }
+  [data-secid]{ scroll-margin-top:var(--fnav-h, 70px); }
+  .fnav-alvo{ animation:fnavAlvo 1.1s ease-out; }
+  @keyframes fnavAlvo{ 0%{ box-shadow:0 0 0 0 var(--camp-color, var(--accent)), var(--shadow);} 30%{ box-shadow:0 0 0 4px var(--camp-color, var(--accent)), var(--shadow);} 100%{ box-shadow:0 0 0 0 var(--camp-color, var(--accent)), var(--shadow);} }
   .sheet-reveal > .card:first-child{ animation:sheetRevealGlow 1.1s ease-out; }
 
   /* Painel flutuante do Histórico de Rolagens: fica fixo no canto da tela em
@@ -3271,9 +3320,130 @@
     syncFalhou: false };
 
   // Card com título + botão de minimizar/expandir (lembra o estado entre renders e recarregamentos).
+  // ---------- FAIXA DE NAVEGAÇÃO DA FICHA ----------
+  // Miniaturas das seções no alto da ficha, grudadas no topo da tela ao rolar.
+  // Clique (ou toque) rola até a seção e abre se estiver minimizada. No
+  // computador, a casa sob o mouse cresce com efeito 3D e as vizinhas crescem
+  // um pouco menos (desligado em "Animações reduzidas").
+  var FNAV_COLS = 7;
+  var FNAV_CURTOS = {"origem": "Orig.", "instintos": "Instin.", "conhprat": "C/P", "testar": "Teste", "caracteristicas": "Carac.", "evoluir": "Evoluir", "saude": "Saúde", "determinacao": "D/A", "assimilacao": "Mutaç.", "equipamento": "Artef.", "inventario": "Invent.", "documentos": "Docs", "notas": "Notas"};
+  function fichaNavCasas(c){
+    var nivelS = clamp(c.saudeNivel!=null ? c.saudeNivel : 6, 0, 6);
+    var caixa = clamp(c.determinacao && c.determinacao.caixaAtual!=null ? c.determinacao.caixaAtual : 3, DET_CAIXA_FLOOR, 3);
+    var nAssim = 3 - caixa;
+    var nMut = (c.mutAdquiridas||[]).length;
+    var nInv = (c.inventarioExtra||[]).length;
+    var nCarac = (c.caracComp||[]).length;
+    var casas = [
+      ["origem", "Origem", "história"],
+      ["instintos", "Instintos", ""],
+      ["conhprat", "Conh./Práticas", ""],
+      ["testar", "Teste", "rolar dados"],
+      ["caracteristicas", "Características", nCarac ? nCarac+"" : "nenhuma"],
+      ["evoluir", "Evoluir", ""],
+      ["saude", "Saúde", nivelS>0 ? "Nível "+nivelS : "Morto"],
+      ["determinacao", "Det./Assim.", "D "+(10-nAssim)+" · A "+nAssim],
+      ["assimilacao", "Mutações", nMut ? nMut+"" : "nenhuma"],
+      ["equipamento", "Artefato", (c.equip && c.equip.nome) ? c.equip.nome : ""],
+      ["inventario", "Inventário", nInv ? nInv+" ite"+(nInv>1?"ns":"m") : "vazio"],
+      ["documentos", "Documentos", ""],
+      ["notas", "Notas", ""]
+    ];
+    if(c.precisaRefazer) casas = casas.filter(function(x){ return x[0]!=="evoluir"; });
+    if(caps.mode !== "mesa") casas = casas.filter(function(x){ return x[0]!=="documentos"; });
+    if(!c.precisaRefazer){ try{ var sx = xpSaldo(c); casas.forEach(function(x){ if(x[0]==="evoluir") x[2] = sx+" XP"; }); }catch(_){} }
+    return casas;
+  }
+  function fichaNavHtml(c){
+    var casas = fichaNavCasas(c);
+    var html = '<div class="fnav-sentinela" aria-hidden="true"></div><nav class="fnav" aria-label="Ir para uma seção da ficha">';
+    casas.forEach(function(x, i){
+      var fechada = !!state.collapsed[x[0]];
+      html += '<button type="button" class="fnav-casa'+(fechada?' fechada':'')+'" data-fnav="'+x[0]+'" data-fnavi="'+i+'" title="'+esc(x[1])+(fechada?' (minimizada: abre ao clicar)':'')+'">' +
+        '<span class="fnav-rot"><span class="fnav-longo">'+esc(x[1])+'</span><span class="fnav-curto">'+esc(FNAV_CURTOS[x[0]]||x[1])+'</span></span>' +
+        (x[2] ? '<span class="fnav-info">'+esc(x[2])+'</span>' : '<span class="fnav-info">&nbsp;</span>') +
+      '</button>';
+    });
+    return html + '</nav>';
+  }
+  var fnavObs = null, fnavScroll = null;
+  function fnavMovimentoReduzido(){
+    try{ return window.matchMedia("(prefers-reduced-motion: reduce)").matches || animacoesReduzidas(); }catch(_){ return false; }
+  }
+  function fnavIrPara(id){
+    var alvo = app.querySelector('[data-secid="'+id+'"]');
+    if(!alvo) return;
+    alvo.scrollIntoView({ behavior: fnavMovimentoReduzido() ? "auto" : "smooth", block:"start" });
+    if(!fnavMovimentoReduzido()){
+      alvo.classList.remove("fnav-alvo"); void alvo.offsetWidth; alvo.classList.add("fnav-alvo");
+      setTimeout(function(){ alvo.classList.remove("fnav-alvo"); }, 1200);
+    }
+  }
+  function bindFichaNav(){
+    if(fnavObs){ try{ fnavObs.disconnect(); }catch(_){} fnavObs = null; }
+    if(fnavScroll){ window.removeEventListener("scroll", fnavScroll); fnavScroll = null; }
+    var nav = app.querySelector(".fnav");
+    if(!nav) return;
+    var casas = Array.prototype.slice.call(nav.querySelectorAll(".fnav-casa"));
+    function medir(){ document.documentElement.style.setProperty("--fnav-h", (nav.offsetHeight + 12) + "px"); }
+    medir();
+    // Grudada: um marcador invisível logo acima da faixa sai da tela quando ela gruda.
+    var sent = app.querySelector(".fnav-sentinela");
+    if(sent && "IntersectionObserver" in window){
+      fnavObs = new IntersectionObserver(function(ents){
+        var grudou = !ents[0].isIntersecting && ents[0].boundingClientRect.top < 0;
+        if(nav.classList.contains("grudada") !== grudou){ nav.classList.toggle("grudada", grudou); setTimeout(medir, 220); }
+      }, { threshold:0 });
+      fnavObs.observe(sent);
+    }
+    // Efeito 3D: casa sob o mouse + vizinhas (lado, cima, baixo e diagonais).
+    function limpar(){ casas.forEach(function(b){ b.classList.remove("foco","viz"); }); }
+    casas.forEach(function(b, i){
+      b.addEventListener("mouseenter", function(){
+        limpar();
+        if(fnavMovimentoReduzido()) return;
+        b.classList.add("foco");
+        var lin = Math.floor(i / FNAV_COLS), col = i % FNAV_COLS;
+        casas.forEach(function(o, j){
+          if(j===i) return;
+          var l2 = Math.floor(j / FNAV_COLS), c2 = j % FNAV_COLS;
+          if(Math.abs(l2-lin)<=1 && Math.abs(c2-col)<=1) o.classList.add("viz");
+        });
+      });
+      b.addEventListener("click", function(){
+        var id = b.getAttribute("data-fnav");
+        limpar();
+        if(state.collapsed[id]){
+          state.collapsed[id] = false;
+          saveLS("pangea:collapsed", state.collapsed);
+          render();
+          setTimeout(function(){ fnavIrPara(id); }, 30);
+        } else fnavIrPara(id);
+      });
+    });
+    nav.addEventListener("mouseleave", limpar);
+    // Destaca a seção que está na tela agora.
+    var ticking = false;
+    function atualizarAtual(){
+      ticking = false;
+      if(!nav.isConnected) return;
+      var lim = nav.getBoundingClientRect().bottom + 40, atual = null, topoAtual = -Infinity;
+      casas.forEach(function(b){
+        var el = app.querySelector('[data-secid="'+b.getAttribute("data-fnav")+'"]');
+        if(!el) return;
+        var t = Math.round(el.getBoundingClientRect().top);
+        if(t <= lim && t > topoAtual){ atual = b; topoAtual = t; }
+      });
+      casas.forEach(function(b){ b.classList.toggle("atual", b===atual); });
+    }
+    fnavScroll = function(){ if(!ticking){ ticking = true; requestAnimationFrame(atualizarAtual); } };
+    window.addEventListener("scroll", fnavScroll, { passive:true });
+    atualizarAtual();
+  }
+
   function sectionCard(id, title, bodyHtml){
     var collapsed = !!state.collapsed[id];
-    return '<div class="card">' +
+    return '<div class="card" data-secid="'+id+'">' +
       '<div class="card-headrow">' +
         '<h2>'+title+'</h2>' +
         '<button type="button" class="card-toggle" data-collapse-toggle="'+id+'" title="'+(collapsed?"Expandir":"Minimizar")+'">'+(collapsed?"▸":"▾")+'</button>' +
@@ -4328,6 +4498,8 @@
       '</div>';
     }
 
+    html += tentarHtml("Navegação", function(){ return fichaNavHtml(c); });
+
     html += '<div class="grid cols-2">';
 
     // Origem / Propositos
@@ -4403,7 +4575,7 @@
     if(c.saudePontosAtuais==null) c.saudePontosAtuais = maxNivel;
     html += '<div class="grid cols-2">';
     var nivelS = clamp(c.saudeNivel!=null ? c.saudeNivel : 6, 0, 6);
-    html += '<div class="card"><h2>Saúde</h2>' +
+    html += '<div class="card" data-secid="saude"><h2>Saúde</h2>' +
       pendingSectionBannerHtml(c, "saude") +
       '<p class="hint">1 + Potência + Resolução = '+maxNivel+' pontos por Nível, 6 Níveis</p>' +
       '<div class="row"><label style="margin:0">Pontos atuais no nível:</label><div class="dots" data-dots="pontos">' + diamonds(c.saudePontosAtuais, maxNivel, "dsize-lg", "c-saude") + '</div></div>' +
@@ -4608,7 +4780,7 @@
     // porque os pontos do Nível atual acabaram de zerar e cascatear.
     var zerada = determinacaoZerada(c) || !!state.detFlash[c.id];
     var detEffect = detZeroEffectHtml(c, zerada);
-    return '<div class="card tug-card'+detEffect.cls+'">' +
+    return '<div class="card tug-card'+detEffect.cls+'" data-secid="determinacao">' +
       detEffect.stamp +
       '<h2>Determinação / Assimilação</h2>' +
       pendingSectionBannerHtml(c, "cabo") +
@@ -5462,6 +5634,7 @@
     tentar("Documentos", function(){ bindDocsFicha(); });
     tentar("Teste", function(){ bindSheetTest(c); });
     tentar("ficha", function(){ bindSheetCampos(c, maxNivel); });
+    tentar("Navegação", bindFichaNav);
   }
   function bindSheetCampos(c, maxNivel){
     // Nome do jogador e Notas: só atualizam o objeto local a cada tecla (sem
