@@ -436,6 +436,45 @@
   }
   @media (prefers-reduced-motion: reduce){ .fnav, .fnav-casa{ transition:none !important; } .fnav-casa.foco, .fnav-casa.viz{ transform:none !important; } }
   :root[data-anim="reduzidas"] .fnav-casa.foco, :root[data-anim="reduzidas"] .fnav-casa.viz{ transform:none !important; }
+
+  /* ---------- Origem em tópicos (texto abre numa caixa ao lado) ---------- */
+  .orig-lista{ display:flex; flex-direction:column; gap:6px; }
+  .orig-top{ display:grid; grid-template-columns:auto 1fr auto; align-items:baseline; gap:10px; width:100%;
+    padding:8px 10px; border:1px solid var(--border); border-radius:8px; background:var(--surface-2);
+    color:var(--ink); font:inherit; text-align:left; cursor:pointer; transition:border-color .15s, background .15s; }
+  .orig-top:hover, .orig-top.aberto{ border-color:var(--camp-color, var(--accent)); background:var(--surface); }
+  .orig-tit{ font-weight:700; white-space:nowrap; }
+  .orig-prev{ min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--ink-muted); font-size:.92em; }
+  .orig-seta{ color:var(--ink-muted); font-size:1.2em; line-height:1; }
+  .orig-top.aberto .orig-seta{ color:var(--camp-color, var(--accent)); }
+  .orig-pop{ position:absolute; z-index:60; max-height:min(60vh, 520px); display:flex; flex-direction:column;
+    background:var(--surface); color:var(--ink); border:1px solid var(--border-strong); border-left:5px solid var(--camp-color, var(--accent));
+    border-radius:10px; box-shadow:0 12px 32px rgba(0,0,0,.3); animation:origPop .16s ease-out; }
+  .orig-pop.sobre{ box-shadow:0 14px 40px rgba(0,0,0,.4); animation-name:origPopDesce; }
+  @keyframes origPopDesce{ from{ opacity:0; transform:translateY(-6px); } to{ opacity:1; transform:none; } }
+  .orig-pop.centro{ position:fixed; left:16px !important; right:16px; top:50% !important; transform:translateY(-50%); width:auto !important; max-height:70vh; }
+  .orig-pop-cab{ display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 12px 8px 14px; border-bottom:1px solid var(--border); }
+  .orig-pop-x{ border:1px solid var(--border); background:var(--surface-2); color:var(--ink); border-radius:6px; width:28px; height:28px; font-size:18px; line-height:1; cursor:pointer; }
+  .orig-pop-corpo{ padding:10px 14px 14px; overflow:auto; white-space:pre-wrap; line-height:1.5; }
+  .orig-pop-corpo p{ margin:0; }
+  .orig-pop-corpo ol{ margin:0; padding-left:20px; }
+  .orig-pop-corpo li + li{ margin-top:8px; }
+  @keyframes origPop{ from{ opacity:0; transform:translateX(8px); } to{ opacity:1; transform:none; } }
+  .orig-pop.centro{ animation:none; }
+  :root[data-anim="reduzidas"] .orig-pop{ animation:none; }
+  @media (prefers-reduced-motion: reduce){ .orig-pop{ animation:none; } }
+  /* ---------- Bônus de Assimilação dentro de Instintos ---------- */
+  .bonus-assim{ margin-top:12px; border:1px dashed var(--border-strong); border-radius:8px; padding:6px 10px; }
+  .bonus-cab{ display:flex; justify-content:space-between; align-items:center; gap:8px; width:100%; padding:4px 0; border:0; background:none; color:var(--ink); font:inherit; font-weight:700; cursor:pointer; text-align:left; }
+  .bonus-sub{ margin:10px 0 4px; font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-muted); }
+  .bonus-grade{ display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:4px 14px; }
+  .bonus-lin{ display:flex; align-items:center; justify-content:space-between; gap:6px; font-size:14px; }
+  .bonus-lin > span:first-child{ min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .bonus-step{ flex:none; }
+  .bonus-step{ display:inline-flex; align-items:center; gap:3px; }
+  .bonus-step .stepper-btn{ width:26px; height:26px; padding:0; }
+  .bonus-step input{ width:36px; height:26px; padding:0 2px; text-align:center; }
+  @media (max-width:420px){ .bonus-grade{ grid-template-columns:1fr; } }
   [data-secid]{ scroll-margin-top:var(--fnav-h, 70px); }
   .fnav-alvo{ animation:fnavAlvo 1.1s ease-out; }
   @keyframes fnavAlvo{ 0%{ box-shadow:0 0 0 0 var(--camp-color, var(--accent)), var(--shadow);} 30%{ box-shadow:0 0 0 4px var(--camp-color, var(--accent)), var(--shadow);} 100%{ box-shadow:0 0 0 0 var(--camp-color, var(--accent)), var(--shadow);} }
@@ -3469,6 +3508,120 @@
     atualizarAtual();
   }
 
+  // ---------- ORIGEM EM TÓPICOS + CAIXA AO LADO ----------
+  function origemTopicos(c){
+    var o = c.origem || {}, pi = c.propIndividuais || [], pr = c.propRelacionais || [];
+    return [
+      { k:"geracao", titulo:"Geração", itens:[o.geracao] },
+      { k:"evento", titulo:"Evento Marcante", itens:[o.evento] },
+      { k:"ocupacao", titulo:"Ocupação", itens:[o.ocupacao] },
+      { k:"propositos", titulo:"Propósitos individuais", itens:[pi[0], pi[1]], lista:true },
+      { k:"conexoes", titulo:"Conexões", itens:[pr[0], pr[1]], lista:true }
+    ];
+  }
+  function fecharOrigemPop(){
+    state.origemPop = null;
+    var el = document.getElementById("orig-pop");
+    if(el) el.remove();
+    if(typeof app !== "undefined" && app) app.querySelectorAll(".orig-top.aberto").forEach(function(b){ b.classList.remove("aberto"); });
+  }
+  function abrirOrigemPop(c, k){
+    var t = origemTopicos(c).filter(function(x){ return x.k===k; })[0];
+    var btn = app.querySelector('[data-origtop="'+k+'"]');
+    var card = app.querySelector('[data-secid="origem"]');
+    if(!t || !btn || !card){ fecharOrigemPop(); return; }
+    state.origemPop = k;
+    app.querySelectorAll(".orig-top").forEach(function(b){ b.classList.toggle("aberto", b===btn); });
+    var el = document.getElementById("orig-pop");
+    if(!el){ el = document.createElement("div"); el.id = "orig-pop"; el.className = "orig-pop"; el.setAttribute("role","dialog"); document.body.appendChild(el); }
+    var corpo;
+    if(t.lista){
+      var itens = t.itens.filter(function(x){ return x && String(x).trim(); });
+      corpo = itens.length ? '<ol>'+itens.map(function(x){ return '<li>'+esc(x)+'</li>'; }).join('')+'</ol>' : '<p class="hint">Em branco.</p>';
+    } else {
+      corpo = (t.itens[0] && String(t.itens[0]).trim()) ? '<p>'+esc(t.itens[0])+'</p>' : '<p class="hint">Em branco.</p>';
+    }
+    el.setAttribute("aria-label", t.titulo);
+    el.innerHTML = '<div class="orig-pop-cab"><b>'+esc(t.titulo)+'</b><button type="button" class="orig-pop-x" aria-label="Fechar">×</button></div><div class="orig-pop-corpo">'+corpo+'</div>';
+    el.querySelector(".orig-pop-x").addEventListener("click", fecharOrigemPop);
+    posicionarOrigemPop();
+  }
+  // Fica à esquerda do cartão quando cabe; se não couber (tela estreita), abre por
+  // cima do próprio cartão, alinhada à esquerda dele. No celular, centralizada.
+  function posicionarOrigemPop(){
+    var el = document.getElementById("orig-pop");
+    var btn = state.origemPop && app.querySelector('[data-origtop="'+state.origemPop+'"]');
+    var card = app.querySelector('[data-secid="origem"]');
+    if(!el || !btn || !card) return;
+    var vw = document.documentElement.clientWidth;
+    if(vw <= 640){ el.classList.add("centro"); el.style.left = ""; el.style.top = ""; el.style.width = ""; return; }
+    el.classList.remove("centro");
+    var rc = card.getBoundingClientRect(), rb = btn.getBoundingClientRect();
+    var espaco = rc.left - 26; // espaço livre à esquerda do cartão (com margens)
+    var larg, esquerda, sobre = espaco < 260;
+    if(!sobre){ larg = Math.min(380, espaco); esquerda = rc.left - larg - 14; }
+    else { larg = Math.min(460, rc.width - 16); esquerda = rc.left + 8; }
+    el.classList.toggle("sobre", sobre);
+    el.style.width = larg + "px";
+    el.style.left = (esquerda + window.scrollX) + "px";
+    // Sem espaço à esquerda: abre logo abaixo do tópico clicado, dentro da coluna do cartão.
+    var topo = sobre ? rb.bottom + window.scrollY + 6 : rb.top + window.scrollY - 8;
+    var alt = el.offsetHeight, maxTopo = window.scrollY + window.innerHeight - alt - 12;
+    if(topo > maxTopo) topo = Math.max(window.scrollY + 12, maxTopo);
+    el.style.top = topo + "px";
+  }
+  function bindOrigemTopicos(c){
+    app.querySelectorAll("[data-origtop]").forEach(function(b){
+      b.addEventListener("click", function(ev){
+        ev.stopPropagation();
+        var k = b.getAttribute("data-origtop");
+        if(state.origemPop === k) fecharOrigemPop(); else abrirOrigemPop(c, k);
+      });
+    });
+    if(state.origemPop) abrirOrigemPop(c, state.origemPop); // re-render: reabre com o texto atualizado
+  }
+  document.addEventListener("click", function(ev){
+    if(!state.origemPop) return;
+    var el = document.getElementById("orig-pop");
+    if(el && el.contains(ev.target)) return;
+    if(ev.target.closest && ev.target.closest("[data-origtop]")) return;
+    fecharOrigemPop();
+  });
+  document.addEventListener("keydown", function(ev){ if(ev.key === "Escape" && state.origemPop) fecharOrigemPop(); });
+  window.addEventListener("resize", function(){ if(state.origemPop) posicionarOrigemPop(); });
+
+  // ---------- BÔNUS DE ASSIMILAÇÃO (dentro do cartão de Instintos) ----------
+  // Quando uma Assimilação aumenta um Instinto/Conhecimento/Prática além do normal.
+  // Soma direto na base em todo lugar (valorInstinto/valorCP). Usa os mesmos
+  // data-* dos steppers (instbonus/cpbonus), então bindSheetCampos continua valendo.
+  function bonusAssimHtml(c){
+    var ib = c.instintosAssimBonus || {}, cb = c.conhPratAssimBonus || {};
+    var total = 0;
+    INSTINTOS.forEach(function(i){ total += ib[i[0]]||0; });
+    CONH_PRAT.forEach(function(p){ total += cb[p[0]]||0; });
+    var aberto = !!state.collapsed["assimbonus-aberto"];
+    function linha(kind, id, rot, v){
+      return '<div class="bonus-lin"><span title="'+rot+'">'+rot+'</span><span class="bonus-step">' +
+        '<button type="button" class="stepper-btn" data-stepbtn="'+kind+'" data-id="'+id+'" data-dir="-1" aria-label="Menos '+rot+'">&minus;</button>' +
+        '<input type="number" min="0" max="99" data-'+kind+'="'+id+'" value="'+v+'" aria-label="Bônus em '+rot+'">' +
+        '<button type="button" class="stepper-btn" data-stepbtn="'+kind+'" data-id="'+id+'" data-dir="1" aria-label="Mais '+rot+'">+</button>' +
+      '</span></div>';
+    }
+    var html = '<div class="bonus-assim'+(aberto?' aberto':'')+'">' +
+      '<button type="button" class="bonus-cab" data-bonustoggle aria-expanded="'+aberto+'">' +
+        '<span>Bônus de Assimilação</span><span class="hint" style="margin:0">'+(total ? '+'+total+' no total' : 'nenhum')+' · '+(aberto?'▾':'▸')+'</span>' +
+      '</button>';
+    if(aberto){
+      html += '<p class="hint" style="margin:6px 0 8px">Quando uma Assimilação aumenta um Instinto, Conhecimento ou Prática além do normal. Soma em cima da base em todo lugar (tabelas, testes, Painel).</p>';
+      html += '<p class="bonus-sub">Instintos</p><div class="bonus-grade">';
+      INSTINTOS.forEach(function(i){ html += linha("instbonus", i[0], i[1], ib[i[0]]||0); });
+      html += '</div><p class="bonus-sub">Conhecimentos &amp; Práticas</p><div class="bonus-grade">';
+      CONH_PRAT.forEach(function(p){ html += linha("cpbonus", p[0], p[1], cb[p[0]]||0); });
+      html += '</div>';
+    }
+    return html + '</div>';
+  }
+
   function sectionCard(id, title, bodyHtml){
     var collapsed = !!state.collapsed[id];
     return '<div class="card" data-secid="'+id+'">' +
@@ -3481,6 +3634,7 @@
   }
 
   function goto(view, extra){
+    fecharOrigemPop();
     // Sair da ficha (ou de qualquer tela) confirma sozinha uma pendência de
     // Saúde/Cabo de Guerra/Equipamento-Inventário ainda não confirmada (ver
     // marcarPendenteOuSalvar) - assim ela nunca fica esquecida pra trás.
@@ -4532,12 +4686,17 @@
     html += '<div class="grid cols-2">';
 
     // Origem / Propositos
+    // Cada tópico é só uma linha (título + começo do texto); o texto inteiro abre
+    // numa caixa ao lado (ver abrirOrigemPop), pra o cartão não crescer.
     html += sectionCard("origem", "Origem, Propósitos &amp; Conexões",
-      '<p><b>Geração:</b> '+esc(c.origem.geracao)+'</p>' +
-      '<p><b>Evento Marcante:</b> '+esc(c.origem.evento)+'</p>' +
-      '<p><b>Ocupação:</b> '+esc(c.origem.ocupacao)+'</p>' +
-      '<p><b>Propósitos individuais:</b> '+esc(c.propIndividuais[0])+'; '+esc(c.propIndividuais[1])+'</p>' +
-      '<p><b>Conexões:</b> '+esc(c.propRelacionais[0])+'; '+esc(c.propRelacionais[1])+'</p>');
+      '<div class="orig-lista">' + origemTopicos(c).map(function(t){
+        var prev = t.itens.filter(Boolean).join(" · ");
+        return '<button type="button" class="orig-top'+(state.origemPop===t.k?' aberto':'')+'" data-origtop="'+t.k+'" aria-haspopup="dialog">' +
+          '<span class="orig-tit">'+esc(t.titulo)+'</span>' +
+          '<span class="orig-prev">'+(prev ? esc(prev) : '<i>em branco</i>')+'</span>' +
+          '<span class="orig-seta" aria-hidden="true">›</span>' +
+        '</button>';
+      }).join('') + '</div>');
 
     // Instintos (valor mostrado já inclui o Bônus de Assimilação, ver valorInstinto; a
     // divisão "base+bônus" só aparece como dica quando existe algum bônus, pra não poluir
@@ -4549,6 +4708,7 @@
       instintosBody += '<tr><td>'+i[1]+'</td><td class="num">'+(baseInstDisp+bonusInstDisp)+(bonusInstDisp?' <span class="hint">('+baseInstDisp+'+'+bonusInstDisp+')</span>':'')+'</td></tr>';
     });
     instintosBody += '</tbody></table>';
+    instintosBody += bonusAssimHtml(c);
     html += sectionCard("instintos", "Instintos", instintosBody);
 
     html += '</div>'; // end grid-2
@@ -4564,21 +4724,6 @@
     cpBody += '</tbody></table></div>';
     html += sectionCard("conhprat", "Conhecimentos &amp; Práticas", cpBody);
 
-    // Bônus de Assimilação: pra campanhas de nível mais alto, onde Assimilações aumentam
-    // Instintos/Conhecimentos/Práticas além do teto normal de criação (3). Fica separado da
-    // base; valorInstinto/valorCP somam isso automaticamente em todo lugar que importa
-    // (tabelas acima, o testador, o Painel do Assimilador). Sem limite fixo de valor.
-    var assimBonusBody = '<p class="hint">Quando uma Assimilação aumenta um Instinto, Conhecimento ou Prática além do normal, registre aqui: o valor soma direto em cima da base em todo lugar (tabelas acima, testes, Painel do Assimilador), sem contar no orçamento de pontos da criação.</p>';
-    assimBonusBody += '<h3 style="margin-bottom:8px">Instintos</h3><div class="grid cols-3">';
-    INSTINTOS.forEach(function(i){
-      assimBonusBody += stepperField("instbonus", i[1], "", i[0], (c.instintosAssimBonus&&c.instintosAssimBonus[i[0]])||0, 0, 99, false);
-    });
-    assimBonusBody += '</div><h3 style="margin:14px 0 8px">Conhecimentos &amp; Práticas</h3><div class="grid cols-3">';
-    CONH_PRAT.forEach(function(p){
-      assimBonusBody += stepperField("cpbonus", p[1], "", p[0], (c.conhPratAssimBonus&&c.conhPratAssimBonus[p[0]])||0, 0, 99, false);
-    });
-    assimBonusBody += '</div>';
-    html += sectionCard("assimbonus", "Bônus de Assimilação", assimBonusBody);
 
     // Teste (rolador integrado, puxa Instinto + Prática/Conhecimento direto da ficha)
     if(!state.sheetTest || state.sheetTest.charId !== c.id){
@@ -5664,6 +5809,15 @@
     tentar("Teste", function(){ bindSheetTest(c); });
     tentar("ficha", function(){ bindSheetCampos(c, maxNivel); });
     tentar("Navegação", bindFichaNav);
+    tentar("Origem", function(){ bindOrigemTopicos(c); });
+    tentar("Bônus de Assimilação", function(){
+      var bt = app.querySelector("[data-bonustoggle]");
+      if(bt) bt.addEventListener("click", function(){
+        state.collapsed["assimbonus-aberto"] = !state.collapsed["assimbonus-aberto"];
+        saveLS("pangea:collapsed", state.collapsed);
+        render();
+      });
+    });
   }
   function bindSheetCampos(c, maxNivel){
     // Nome do jogador e Notas: só atualizam o objeto local a cada tecla (sem
