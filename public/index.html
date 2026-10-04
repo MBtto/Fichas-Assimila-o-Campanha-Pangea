@@ -407,7 +407,6 @@
   .fnav-rot{ display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; max-width:100%; overflow:hidden; }
   .fnav.grudada .fnav-casa{ min-height:0; flex-direction:row; gap:5px; padding:4px 5px; font-size:11px; }
   .fnav.grudada .fnav-ico, .fnav.grudada .fnav-img{ height:34px; }
-  .fnav-casa.atual{ border-color:var(--camp-color, var(--accent)); box-shadow:inset 0 -3px 0 var(--camp-color, var(--accent)); }
   .fnav-casa.fechada .fnav-rot::after{ content:" ▸"; color:var(--ink-muted); font-weight:500; }
   .fnav-casa:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
   @media (hover:hover) and (pointer:fine){
@@ -3432,7 +3431,10 @@
   }
   function fichaNavHtml(c){
     var casas = fichaNavCasas(c);
-    var html = '<div class="fnav-sentinela" aria-hidden="true"></div><nav class="fnav" aria-label="Ir para uma seção da ficha">';
+    // Mantém o estado "grudada" entre re-renderizações (abrir uma seção re-desenha a
+    // ficha inteira): sem isso a faixa aparecia aberta por um quadro e a tela piscava.
+    var grud = !!state.fnavGrudada;
+    var html = '<div class="fnav-sentinela" aria-hidden="true"></div><nav class="fnav'+(grud?' grudada':'')+'"'+(grud && state.fnavMargem ? ' style="margin-bottom:'+state.fnavMargem+'px"' : '')+' aria-label="Ir para uma seção da ficha">';
     casas.forEach(function(x, i){
       var fechada = !!state.collapsed[x[0]];
       html += '<button type="button" class="fnav-casa'+(fechada?' fechada':'')+'" data-fnav="'+x[0]+'" data-fnavi="'+i+'" title="'+esc(x[1])+(fechada?' (minimizada: abre ao clicar)':'')+'" aria-label="'+esc(x[1])+'">' +
@@ -3442,7 +3444,7 @@
     });
     return html + '</nav>';
   }
-  var fnavObs = null, fnavScroll = null;
+  var fnavObs = null;
   function fnavMovimentoReduzido(){
     try{ return window.matchMedia("(prefers-reduced-motion: reduce)").matches || animacoesReduzidas(); }catch(_){ return false; }
   }
@@ -3457,7 +3459,6 @@
   }
   function bindFichaNav(){
     if(fnavObs){ try{ fnavObs.disconnect(); }catch(_){} fnavObs = null; }
-    if(fnavScroll){ window.removeEventListener("scroll", fnavScroll); fnavScroll = null; }
     var nav = app.querySelector(".fnav");
     if(!nav) return;
     fnavAtualizarTinta();
@@ -3479,7 +3480,8 @@
           var hAntes = nav.offsetHeight;
           nav.style.marginBottom = "";
           nav.classList.toggle("grudada", grudou);
-          if(grudou){ var hDepois = nav.offsetHeight; nav.style.marginBottom = (16 + Math.max(0, hAntes - hDepois)) + "px"; }
+          state.fnavGrudada = grudou;
+          if(grudou){ var hDepois = nav.offsetHeight; state.fnavMargem = 16 + Math.max(0, hAntes - hDepois); nav.style.marginBottom = state.fnavMargem + "px"; }
           medir();
         }
       }, { threshold:0 });
@@ -3511,23 +3513,6 @@
       });
     });
     nav.addEventListener("mouseleave", limpar);
-    // Destaca a seção que está na tela agora.
-    var ticking = false;
-    function atualizarAtual(){
-      ticking = false;
-      if(!nav.isConnected) return;
-      var lim = nav.getBoundingClientRect().bottom + 40, atual = null, topoAtual = -Infinity;
-      casas.forEach(function(b){
-        var el = app.querySelector('[data-secid="'+b.getAttribute("data-fnav")+'"]');
-        if(!el) return;
-        var t = Math.round(el.getBoundingClientRect().top);
-        if(t <= lim && t > topoAtual){ atual = b; topoAtual = t; }
-      });
-      casas.forEach(function(b){ b.classList.toggle("atual", b===atual); });
-    }
-    fnavScroll = function(){ if(!ticking){ ticking = true; requestAnimationFrame(atualizarAtual); } };
-    window.addEventListener("scroll", fnavScroll, { passive:true });
-    atualizarAtual();
   }
 
   // ---------- ORIGEM EM TÓPICOS + CAIXA AO LADO ----------
@@ -3726,6 +3711,7 @@
   }
 
   function goto(view, extra){
+    state.fnavGrudada = false; // tela nova começa no topo, com a faixa aberta
     fecharOrigemPop();
     fecharBonusPop();
     // Sair da ficha (ou de qualquer tela) confirma sozinha uma pendência de
