@@ -381,7 +381,7 @@
   .fnav-sentinela{ height:1px; margin:0; }
   .fnav{
     position:sticky; top:0; z-index:40;
-    display:grid; grid-template-columns:repeat(7, minmax(0,1fr)); gap:8px;
+    display:grid; grid-template-columns:repeat(6, minmax(0,1fr)); gap:8px;
     padding:10px; margin:0 0 16px;
     background:var(--surface); border:1px solid var(--border); border-radius:var(--radius, 10px);
     box-shadow:var(--shadow);
@@ -401,9 +401,12 @@
     will-change:transform;
   }
   .fnav-ico{ display:flex; align-items:center; justify-content:center; height:58px; }
-  .fnav-img{ height:58px; width:auto; display:block; pointer-events:none; user-select:none; }
+  .fnav-img{ display:block; height:58px; aspect-ratio:387/355; pointer-events:none; user-select:none;
+    background-color:var(--fnav-tinta, var(--ink));
+    -webkit-mask-size:contain; mask-size:contain; -webkit-mask-repeat:no-repeat; mask-repeat:no-repeat; -webkit-mask-position:center; mask-position:center; }
+  @media (forced-colors: active){ .fnav-img{ forced-color-adjust:none; background-color:CanvasText; } }
   .fnav-rot{ display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; max-width:100%; overflow:hidden; }
-  .fnav.grudada .fnav-casa{ min-height:0; flex-direction:row; gap:6px; padding:4px 6px; font-size:11.5px; }
+  .fnav.grudada .fnav-casa{ min-height:0; flex-direction:row; gap:5px; padding:4px 5px; font-size:11px; }
   .fnav.grudada .fnav-ico, .fnav.grudada .fnav-img{ height:34px; }
   .fnav-casa.atual{ border-color:var(--camp-color, var(--accent)); box-shadow:inset 0 -3px 0 var(--camp-color, var(--accent)); }
   .fnav-casa.fechada .fnav-rot::after{ content:" ▸"; color:var(--ink-muted); font-weight:500; }
@@ -3336,10 +3339,26 @@
   // Clique (ou toque) rola até a seção e abre se estiver minimizada. No
   // computador, a casa sob o mouse cresce com efeito 3D e as vizinhas crescem
   // um pouco menos (desligado em "Animações reduzidas").
-  var FNAV_COLS = 7;
-  // Ícones das abas (icones/aba_*.png): traço preto dentro de um círculo
-  // desenhado à mão, com fundo branco, então aparecem em qualquer tema.
-  function fnavIco(nome){ return '<img class="fnav-img" src="icones/aba_'+nome+'.png" alt="" draggable="false">'; }
+  var FNAV_COLS = 6;
+  // Ícones das abas: só o traço (icones/aba_*_traco.png, sem fundo), usado como
+  // máscara; a cor vem de --fnav-tinta: preto nos temas claros, branco nos escuros
+  // (ver fnavAtualizarTinta). As versões com disco branco (aba_*.png) ficam guardadas.
+  function fnavIco(nome){ var u = 'url(icones/aba_'+nome+'_traco.png)'; return '<span class="fnav-img" style="-webkit-mask-image:'+u+';mask-image:'+u+'" aria-hidden="true"></span>'; }
+  function fnavAtualizarTinta(){
+    try{
+      var raiz = document.documentElement;
+      var v = getComputedStyle(raiz).getPropertyValue("--surface-2").trim();
+      var r, g, b, m;
+      if((m = v.match(/^#([0-9a-f]{3}|[0-9a-f]{6})$/i))){
+        var h = m[1].length === 3 ? m[1].replace(/./g, "$&$&") : m[1];
+        r = parseInt(h.slice(0,2),16); g = parseInt(h.slice(2,4),16); b = parseInt(h.slice(4,6),16);
+      } else if((m = v.match(/rgba?\(\s*(\d+)[ ,]+(\d+)[ ,]+(\d+)/))){ r = +m[1]; g = +m[2]; b = +m[3]; }
+      else return;
+      var lum = (0.2126*r + 0.7152*g + 0.0722*b) / 255;
+      raiz.style.setProperty("--fnav-tinta", lum < 0.5 ? "#ffffff" : "#111111");
+    }catch(_){}
+  }
+  try{ window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", function(){ setTimeout(fnavAtualizarTinta, 0); }); }catch(_){}
   function fichaNavCasas(c){
     var casas = [
       ["instintos", "Instintos", fnavIco("instintos")],
@@ -3389,6 +3408,7 @@
     if(fnavScroll){ window.removeEventListener("scroll", fnavScroll); fnavScroll = null; }
     var nav = app.querySelector(".fnav");
     if(!nav) return;
+    fnavAtualizarTinta();
     var casas = Array.prototype.slice.call(nav.querySelectorAll(".fnav-casa"));
     nav.style.setProperty("--fnav-n", casas.length);
     nav.style.setProperty("--fnav-meia", Math.ceil(casas.length / 2));
@@ -3542,6 +3562,7 @@
       if(v === ajustePadrao(a[0])) raiz.removeAttribute("data-"+a[0]); else raiz.setAttribute("data-"+a[0], v);
     });
     aplicarCorAcampamento();
+    if(typeof fnavAtualizarTinta === "function") fnavAtualizarTinta();
   }
   function animacoesReduzidas(){ return document.documentElement.getAttribute("data-anim") === "reduzidas"; }
   function montarAparencia(){
