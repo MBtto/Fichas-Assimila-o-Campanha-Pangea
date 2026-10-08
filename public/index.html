@@ -186,7 +186,9 @@
   .grid.cols-2{ grid-template-columns:repeat(2,minmax(0,1fr)); }
   .grid.cols-3{ grid-template-columns:repeat(3,minmax(0,1fr)); }
   .grid.cols-4{ grid-template-columns:repeat(4,minmax(0,1fr)); }
-  @media (max-width:640px){ .grid.cols-2,.grid.cols-3,.grid.cols-4{ grid-template-columns:1fr; } }
+  @media (max-width:640px){ .grid.cols-2,.grid.cols-3,.grid.cols-4{ grid-template-columns:minmax(0,1fr); } }
+  /* Celular com texto ampliado: nada pode alargar a página (antes Saúde e o Cabo de Guerra empurravam ~90px pra fora). */
+  .card{ min-width:0; }
 
   .roster-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:14px; }
   .char-card{
@@ -352,6 +354,8 @@
   .badge-pill.good{ background:rgba(76,122,76,.18); color:var(--good); }
   .badge-pill.warn{ background:rgba(162,58,58,.18); color:var(--danger); }
 
+  .aviso-fan{ flex:1 1 100%; margin:0; font-size:11.5px; line-height:1.5; color:var(--ink-muted); opacity:.9; }
+  .aviso-fan b{ font-weight:600; }
   .footer-note{ margin-top:36px; padding-top:14px; border-top:1px solid var(--border); font-size:12px; color:var(--ink-muted); display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; }
   .gm-link{ font-size:11.5px; color:var(--ink-muted); text-decoration:underline; background:none; border:none; padding:0; }
 
@@ -433,37 +437,87 @@
   @media (prefers-reduced-motion: reduce){ .fnav, .fnav-casa{ transition:none !important; } .fnav-casa.foco, .fnav-casa.viz{ transform:none !important; } }
   :root[data-anim="reduzidas"] .fnav-casa.foco, :root[data-anim="reduzidas"] .fnav-casa.viz{ transform:none !important; }
 
-  /* ---------- Origem em tópicos (texto abre numa caixa ao lado) ---------- */
-  .orig-lista{ display:flex; flex-direction:column; gap:6px; }
-  .orig-top{ display:grid; grid-template-columns:auto 1fr auto; align-items:baseline; gap:10px; width:100%;
+  /* ---------- Linha + caixa ao lado (componente único) ---------- */
+  .lx-lista{ display:flex; flex-direction:column; gap:6px; }
+  .lx{ display:grid; grid-template-columns:auto minmax(0,1fr) auto auto; align-items:center; gap:4px 10px; width:100%;
     padding:8px 10px; border:1px solid var(--border); border-radius:8px; background:var(--surface-2);
     color:var(--ink); font:inherit; text-align:left; cursor:pointer; transition:border-color .15s, background .15s; }
-  .orig-top:hover, .orig-top.aberto{ border-color:var(--camp-color, var(--accent)); background:var(--surface); }
-  .orig-tit{ font-weight:700; white-space:nowrap; }
-  .orig-prev{ min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--ink-muted); font-size:.92em; }
-  .orig-seta{ color:var(--ink-muted); font-size:1.2em; line-height:1; }
-  .orig-top.aberto .orig-seta{ color:var(--camp-color, var(--accent)); }
-  .orig-pop{ position:absolute; z-index:60; max-height:min(60vh, 520px); display:flex; flex-direction:column;
+  .lx:hover, .lx.aberto{ border-color:var(--camp-color, var(--accent)); background:var(--surface); }
+  .lx:focus-visible{ outline:3px solid var(--camp-color, var(--accent)); outline-offset:2px; }
+  .lx-tit{ font-weight:700; min-width:0; overflow-wrap:anywhere; }
+  .lx-prev{ min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--ink-muted); font-size:.92em; }
+  .lx-prev:empty{ display:none; }
+  .lx-extra{ display:inline-flex; flex-wrap:wrap; gap:4px; justify-content:flex-end; align-items:center; font-size:.88em; }
+  .lx-seta{ color:var(--ink-muted); font-size:1.25em; line-height:1; }
+  .lx.aberto .lx-seta{ color:var(--camp-color, var(--accent)); }
+  .lx-sel{ display:inline-flex; align-items:center; gap:3px; padding:1px 7px; border-radius:999px; border:1px solid var(--border);
+    background:var(--surface); color:var(--ink-muted); white-space:nowrap; font-size:12px; line-height:1.5; }
+  .lx-sel.forte{ color:var(--ink); border-color:var(--border-strong); }
+  .lx-sel.alerta{ color:var(--danger); border-color:var(--danger); }
+  .lx .result-badges{ display:inline-flex; gap:3px; }
+  /* Em telas estreitas, a prévia vai pra linha de baixo e os selos ficam ao lado do título. */
+  @media (max-width:560px){
+    .lx{ grid-template-columns:minmax(0,1fr) auto auto; }
+    .lx-prev{ grid-column:1 / -1; grid-row:2; white-space:normal; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; }
+  }
+  .lx-sub{ margin:12px 0 6px; font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-muted); }
+  .lx-sub:first-child{ margin-top:0; }
+  .caixa{ position:absolute; z-index:55; display:flex; flex-direction:column; box-sizing:border-box;
     background:var(--surface); color:var(--ink); border:1px solid var(--border-strong); border-left:5px solid var(--camp-color, var(--accent));
-    border-radius:10px; box-shadow:0 12px 32px rgba(0,0,0,.3); animation:origPop .16s ease-out; }
-  .orig-pop.sobre{ box-shadow:0 14px 40px rgba(0,0,0,.4); animation-name:origPopDesce; }
-  @keyframes origPopDesce{ from{ opacity:0; transform:translateY(-6px); } to{ opacity:1; transform:none; } }
-  .orig-pop.centro{ position:fixed; left:16px !important; right:16px; top:50% !important; transform:translateY(-50%); width:auto !important; max-height:70vh; }
-  .orig-pop-cab{ display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 12px 8px 14px; border-bottom:1px solid var(--border); }
-  .orig-pop-x{ border:1px solid var(--border); background:var(--surface-2); color:var(--ink); border-radius:6px; width:28px; height:28px; font-size:18px; line-height:1; cursor:pointer; }
-  .orig-pop-corpo{ padding:10px 14px 14px; overflow:auto; white-space:pre-wrap; line-height:1.5; }
-  .orig-pop-corpo p{ margin:0; }
-  .orig-pop-corpo ol{ margin:0; padding-left:20px; }
-  .orig-pop-corpo li + li{ margin-top:8px; }
-  @keyframes origPop{ from{ opacity:0; transform:translateX(8px); } to{ opacity:1; transform:none; } }
-  .orig-pop.centro{ animation:none; }
-  :root[data-anim="reduzidas"] .orig-pop{ animation:none; }
-  @media (prefers-reduced-motion: reduce){ .orig-pop{ animation:none; } }
+    border-radius:10px; box-shadow:0 12px 32px rgba(0,0,0,.3); text-align:left; }
+  .caixa.lado-esquerda{ border-left-width:1px; border-right:5px solid var(--camp-color, var(--accent)); }
+  .caixa.abaixo, .caixa.acima{ box-shadow:0 14px 40px rgba(0,0,0,.4); }
+  .caixa.centro{ position:fixed; z-index:58; }
+  .caixa-fundo{ position:fixed; inset:0; z-index:57; background:rgba(0,0,0,.45); }
+  .caixa-fundo[hidden]{ display:none; }
+  .caixa-cab{ display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 12px 8px 14px; border-bottom:1px solid var(--border); flex:none; }
+  .caixa-cab b{ min-width:0; overflow-wrap:anywhere; }
+  .caixa-x{ flex:none; border:1px solid var(--border); background:var(--surface-2); color:var(--ink); border-radius:6px; width:30px; height:30px; font-size:18px; line-height:1; cursor:pointer; }
+  .caixa-x:focus-visible{ outline:3px solid var(--camp-color, var(--accent)); outline-offset:2px; }
+  .caixa-corpo{ padding:10px 14px 14px; overflow:auto; line-height:1.5; overscroll-behavior:contain; }
+  .caixa-corpo > :first-child{ margin-top:0; }
+  .caixa-corpo > :last-child{ margin-bottom:0; }
+  .caixa-corpo .cx-pre{ white-space:pre-wrap; margin:0; }
+  .caixa-corpo ol{ margin:0; padding-left:20px; }
+  .caixa-corpo li + li{ margin-top:8px; }
+  .caixa-corpo .item-controles{ margin-top:10px; }
+  .caixa-corpo .item-controles .grupo{ flex-wrap:wrap; max-width:100%; }
+  .caixa-corpo .item-controles .grupo > span:not(.rot){ white-space:nowrap; }
+  .caixa-corpo .row{ flex-wrap:wrap; }
+  .caixa-corpo{ overflow-wrap:anywhere; }
+  .caixa-corpo .btn-row{ margin-top:10px; }
+  .cx-traits{ margin:8px 0 0; padding-left:18px; font-size:.95em; }
+  .cx-traits li + li{ margin-top:4px; }
+  .item-card.no-caixa{ border:none; background:none; padding:0; margin:0; }
+  .caixa-corpo .item-topo .item-nome{ display:none; }
+  .caixa-corpo .item-topo{ justify-content:flex-start; }
+  .mesa-lx-img{ width:24px; height:24px; vertical-align:middle; margin-right:8px; }
+  .mesa-lx .lx{ border-left:5px solid var(--camp-color, var(--border)); }
+  .cx-acoes{ display:flex; flex-wrap:wrap; gap:6px; margin-top:12px; }
+  .caixa.entra{ animation:caixaEntra .16s ease-out; }
+  .caixa.entra.lado-esquerda{ animation-name:caixaEntraEsq; }
+  .caixa.entra.abaixo, .caixa.entra.acima{ animation-name:caixaEntraDesce; }
+  .caixa.entra.centro{ animation-name:caixaEntraCentro; }
+  @keyframes caixaEntra{ from{ opacity:0; transform:translateX(-8px); } to{ opacity:1; transform:none; } }
+  @keyframes caixaEntraEsq{ from{ opacity:0; transform:translateX(8px); } to{ opacity:1; transform:none; } }
+  @keyframes caixaEntraDesce{ from{ opacity:0; transform:translateY(-6px); } to{ opacity:1; transform:none; } }
+  @keyframes caixaEntraCentro{ from{ opacity:0; transform:scale(.97); } to{ opacity:1; transform:none; } }
+  :root[data-anim="reduzidas"] .caixa{ animation:none !important; }
+  @media (prefers-reduced-motion: reduce){ .caixa{ animation:none !important; } }
+  /* Fundo animado ("poros de assimilação") e texturas do fundo da página */
+  #fundo-poros{ position:fixed; inset:0; width:100%; height:100%; z-index:-1; pointer-events:none; display:block; }
+  :root[data-fundotex="granulado"] body{ background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.5 0 0 0 0 0.45 0 0 0 0 0.35 0 0 0 .22 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); background-attachment:fixed; }
+  :root[data-fundotex="vinheta"] body{ background-image:radial-gradient(ellipse at 50% 40%, transparent 45%, rgba(0,0,0,.22) 100%); background-attachment:fixed; }
+  /* Abas simples (Documentos: A entregar / Já entregues) */
+  .abas{ display:flex; gap:0; border-bottom:2px solid var(--border); flex-wrap:wrap; }
+  .aba{ appearance:none; border:none; background:none; color:var(--ink-muted); font:inherit; font-weight:700; cursor:pointer;
+    padding:8px 14px; margin-bottom:-2px; border-bottom:3px solid transparent; display:inline-flex; align-items:center; gap:8px; }
+  .aba:hover{ color:var(--ink); }
+  .aba[aria-selected="true"]{ color:var(--ink); border-bottom-color:var(--accent); }
+  .aba:focus-visible{ outline:3px solid var(--accent); outline-offset:-3px; }
+  .aba-n{ min-width:22px; padding:0 7px; border-radius:999px; background:var(--surface-2); border:1px solid var(--border); font-size:12px; line-height:20px; text-align:center; }
+  .aba[aria-selected="true"] .aba-n{ background:var(--accent); border-color:var(--accent); color:var(--bg); }
   /* ---------- Bônus de Assimilação dentro de Instintos ---------- */
-  .bonus-top{ margin-top:12px; }
-  .bonus-pop-corpo{ white-space:normal; }
-  .orig-pop.direita{ border-left:1px solid var(--border-strong); border-right:5px solid var(--camp-color, var(--accent)); animation-name:origPopDir; }
-  @keyframes origPopDir{ from{ opacity:0; transform:translateX(-8px); } to{ opacity:1; transform:none; } }
   .bonus-sub{ margin:10px 0 4px; font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-muted); }
   .bonus-grade{ display:grid; grid-template-columns:repeat(auto-fill, minmax(185px,1fr)); gap:4px 14px; }
   .bonus-lin{ display:flex; align-items:center; justify-content:space-between; gap:6px; font-size:14px; }
@@ -2490,10 +2544,19 @@
         html += '<div class="field" style="margin-top:10px"><label>Cole o código de importação</label><textarea id="doc-import" style="min-height:120px" placeholder="[ { &quot;titulo&quot;: ... } ]"></textarea>' +
           '<div class="btn-row" style="justify-content:flex-start;gap:8px"><button type="button" class="btn accent" data-docacao="importar-ok">Importar</button><button type="button" class="btn secondary" data-docacao="importar-cancelar">Cancelar</button></div></div>';
       }
-      var lista = docsLista();
-      if(!lista.length) html += '<p class="hint" style="margin-top:12px">Nenhum documento ainda.</p>';
+      var todosDocs = docsLista();
+      if(!todosDocs.length) html += '<p class="hint" style="margin-top:12px">Nenhum documento ainda.</p>';
       var chars = loadChars();
       var porSessao = state.docAgrupar === "sessao";
+      // Abas: "A entregar" (ninguém recebeu ainda) e "Já entregues" (pelo menos um personagem).
+      var docEntregue = function(d){ return (d.entregues||[]).length > 0; };
+      var aba = state.docAba === "entregues" ? "entregues" : "aentregar";
+      var nEntregues = todosDocs.filter(docEntregue).length, nAEntregar = todosDocs.length - nEntregues;
+      var lista = todosDocs.filter(function(d){ return aba === "entregues" ? docEntregue(d) : !docEntregue(d); });
+      if(todosDocs.length) html += '<div class="abas" role="tablist" style="margin-top:14px">' +
+        '<button type="button" role="tab" class="aba" data-docaba="aentregar" aria-selected="'+(aba==="aentregar")+'">A entregar <span class="aba-n">'+nAEntregar+'</span></button>' +
+        '<button type="button" role="tab" class="aba" data-docaba="entregues" aria-selected="'+(aba==="entregues")+'">Já entregues <span class="aba-n">'+nEntregues+'</span></button></div>';
+      if(todosDocs.length && !lista.length) html += '<p class="hint" style="margin-top:10px">'+(aba==="entregues" ? 'Nenhum documento entregue ainda.' : 'Todos os documentos já foram entregues.')+'</p>';
       if(lista.length) html += '<div class="row" style="gap:6px;margin-top:12px;align-items:center"><span class="hint" style="margin:0">Organizar por:</span>' +
         '<button type="button" class="btn '+(porSessao?'secondary':'accent')+' doc-btn" data-docagrupar="local">Local</button>' +
         '<button type="button" class="btn '+(porSessao?'accent':'secondary')+' doc-btn" data-docagrupar="sessao">Sessão prevista</button></div>';
@@ -2596,6 +2659,9 @@
           state.docEntregar = null; rerender();
         }
       });
+    });
+    raiz.querySelectorAll("[data-docaba]").forEach(function(b){
+      b.addEventListener("click", function(){ state.docAba = b.getAttribute("data-docaba"); state.docEntregar = null; rerender(); });
     });
     raiz.querySelectorAll("[data-docagrupar]").forEach(function(b){
       b.addEventListener("click", function(){ state.docAgrupar = b.getAttribute("data-docagrupar"); rerender(); });
@@ -2992,7 +3058,7 @@
       '<h1 style="margin-bottom:6px">Fichas de Pangea</h1>' +
       '<p class="hint" style="margin:0 auto 18px">Entre com sua conta Google pra abrir a sua ficha. Na primeira vez, digite em qualquer lugar da página o nome do personagem junto com o seu nome de jogador pra vincular a ficha à sua conta - depois disso ela abre sozinha, em qualquer aparelho.</p>' +
       '<button type="button" class="btn accent" data-action="entrar-google" style="margin:0 auto">Entrar com Google</button>' +
-    '</div>';
+    '</div>' + '<div class="footer-note" style="max-width:460px;margin:24px auto 0">'+avisoFanMadeHtml()+'</div>';
     var b = app.querySelector('[data-action="entrar-google"]');
     b.addEventListener("click", function(){
       b.disabled = true; b.textContent = "Abrindo o login…";
@@ -3533,7 +3599,190 @@
     atualizarAtual();
   }
 
-  // ---------- ORIGEM EM TÓPICOS + CAIXA AO LADO ----------
+  // ---------- CAIXA AO LADO (componente único) ----------
+  // Uma linha clicável (data-caixa="tipo|arg") abre uma caixa com o conteúdo completo.
+  // Só existe uma caixa aberta por vez (state.caixa). A caixa é desenhada junto com a
+  // tela (caixaHtml no fim do app.innerHTML), então os botões dentro dela recebem as
+  // mesmas ligações da tela; depois de cada desenho, posicionarCaixa a coloca no lugar.
+  // Posição: do lado escolhido do cartão (só se ali for margem livre, fora da coluna
+  // de conteúdo); senão do outro lado; senão logo abaixo (ou acima) da linha; no
+  // celular, centralizada. Tudo é medido na tela, então funciona com o zoom do
+  // "Tamanho do texto" (Grande/Maior) e nunca sai da tela.
+  var CAIXAS = {};
+  var caixaRaf = 0;
+  function caixaAttr(tipo, arg){ return 'data-caixa="'+esc(tipo+"|"+(arg==null?"":arg))+'"'; }
+  function caixaAberta(tipo, arg){ return !!state.caixa && state.caixa === tipo+"|"+(arg==null?"":arg); }
+  // Linha padrão: título, prévia (texto cortado com "…"), selos opcionais e a seta.
+  function caixaLinha(tipo, arg, titulo, previa, extras, classe){
+    return '<button type="button" class="lx'+(classe?' '+classe:'')+(caixaAberta(tipo,arg)?' aberto':'')+'" '+caixaAttr(tipo,arg)+' aria-haspopup="dialog" aria-expanded="'+caixaAberta(tipo,arg)+'">' +
+      '<span class="lx-tit">'+titulo+'</span>' +
+      '<span class="lx-prev">'+(previa||'')+'</span>' +
+      (extras ? '<span class="lx-extra">'+extras+'</span>' : '') +
+      '<span class="lx-seta" aria-hidden="true">›</span></button>';
+  }
+  function caixaDados(){
+    if(!state.caixa) return null;
+    var i = state.caixa.indexOf("|"), tipo = state.caixa.slice(0, i), arg = state.caixa.slice(i+1);
+    var fn = CAIXAS[tipo]; if(!fn) return null;
+    var d = null;
+    try{ d = fn(arg); }catch(e){ console.warn("[Pangea] caixa", e); d = null; }
+    return d;
+  }
+  function caixaHtml(){
+    var d = caixaDados();
+    if(!d){ state.caixa = null; return ''; }
+    if(!d.cor && state.view === "sheet"){ var cf = fichaAtual(); if(cf && cf.acampamento && CAMPS[cf.acampamento]) d.cor = CAMPS[cf.acampamento].cor; }
+    if(caixaRaf) cancelAnimationFrame(caixaRaf);
+    caixaRaf = requestAnimationFrame(function(){ caixaRaf = 0; posicionarCaixa(); });
+    return '<div class="caixa-fundo" id="caixa-fundo" hidden></div>' +
+      '<div id="caixa" class="caixa'+(d.classe?' '+d.classe:'')+'" role="dialog" aria-label="'+esc(d.tituloTexto||String(d.titulo).replace(/<[^>]+>/g,""))+'" style="visibility:hidden'+(d.cor?';--camp-color:'+d.cor:'')+'">' +
+      '<div class="caixa-cab"><b>'+d.titulo+'</b><button type="button" class="caixa-x" aria-label="Fechar">×</button></div>' +
+      '<div class="caixa-corpo">'+d.corpo+'</div></div>';
+  }
+  function fecharCaixa(){
+    state.caixa = null; state.caixaAnim = null;
+    ["caixa","caixa-fundo"].forEach(function(id){ var el = document.getElementById(id); if(el) el.remove(); });
+    if(typeof app !== "undefined" && app) app.querySelectorAll("[data-caixa].aberto").forEach(function(b){ b.classList.remove("aberto"); b.setAttribute("aria-expanded","false"); });
+  }
+  function abrirCaixa(chave){
+    state.caixa = chave;
+    render();
+    // Se a tela não desenhou a caixa (alguma tela que não usa caixaHtml), desenha aqui.
+    if(state.caixa && !document.getElementById("caixa")) app.insertAdjacentHTML("beforeend", caixaHtml());
+  }
+  // Escala da tela (zoom do Tamanho do texto): px "de CSS" dentro da caixa x px na tela.
+  function caixaEscala(el){
+    el.style.width = "400px";
+    var w = el.getBoundingClientRect().width;
+    return w > 0 ? w / 400 : 1;
+  }
+  function posicionarCaixa(){
+    var el = document.getElementById("caixa"), fundo = document.getElementById("caixa-fundo");
+    if(!el || !state.caixa) return;
+    var ancora = null;
+    app.querySelectorAll("[data-caixa]").forEach(function(b){ if(b.getAttribute("data-caixa") === state.caixa) ancora = b; });
+    if(!ancora || !ancora.getClientRects().length){ fecharCaixa(); return; }
+    var d = caixaDados() || {};
+    app.querySelectorAll("[data-caixa]").forEach(function(b){ var on = b === ancora; b.classList.toggle("aberto", on); b.setAttribute("aria-expanded", String(on)); });
+    var M = 12, GAP = 12;
+    var vw = document.documentElement.clientWidth, vh = window.innerHeight;
+    var primeira = state.caixaAnim !== state.caixa;
+    // Não deixa a caixa embaixo da faixa de navegação grudada no topo.
+    var topo = M, faixa = app.querySelector(".fnav");
+    if(faixa){ var rf = faixa.getBoundingClientRect(); if(rf.top <= 2 && rf.bottom > 0) topo = Math.max(M, rf.bottom + 6); }
+    el.classList.remove("centro","lado-direita","lado-esquerda","abaixo","acima");
+    el.style.left = "0px"; el.style.top = "0px"; el.style.maxHeight = "";
+    var s = caixaEscala(el);
+    var prefCss = d.largura || 420;
+    if(vw <= 640){
+      // Celular: centralizada, com o fundo escurecido.
+      el.classList.add("centro");
+      if(fundo) fundo.hidden = false;
+      el.style.width = ((vw - 2*M) / s) + "px";
+      el.style.maxHeight = ((vh * 0.8) / s) + "px";
+      var r0c = el.getBoundingClientRect();
+      var hc = r0c.height;
+      el.style.left = ((M - r0c.left) / s) + "px";
+      el.style.top = (((vh - hc) / 2 - r0c.top) / s) + "px";
+    } else {
+      if(fundo) fundo.hidden = true;
+      var ref = (d.ref && ancora.closest(d.ref)) || ancora.closest(".card") || ancora;
+      var rc = ref.getBoundingClientRect(), ra = ancora.getBoundingClientRect(), rw = app.getBoundingClientRect();
+      var minV = 260 * s;
+      // Margem livre de cada lado: só conta se o cartão encosta na borda da coluna
+      // (assim a caixa nunca cobre o cartão vizinho).
+      var livreDir = rc.right >= rw.right - 40 ? vw - M - (rc.right + GAP) : 0;
+      var livreEsq = rc.left <= rw.left + 40 ? rc.left - GAP - M : 0;
+      var ordem = d.lado === "esquerda" ? ["esquerda","direita"] : ["direita","esquerda"];
+      var lado = null;
+      ordem.some(function(l){ if((l === "direita" ? livreDir : livreEsq) >= minV){ lado = l; return true; } return false; });
+      var maxH = Math.min(vh * 0.8, vh - M - topo);
+      el.style.maxHeight = (maxH / s) + "px";
+      var X, Y, larg;
+      if(lado){
+        larg = Math.min(prefCss * s, lado === "direita" ? livreDir : livreEsq);
+        el.style.width = (larg / s) + "px";
+        var h = el.getBoundingClientRect().height;
+        X = lado === "direita" ? rc.right + GAP : rc.left - GAP - larg;
+        Y = Math.max(topo, Math.min(ra.top - 8, vh - M - h));
+        el.classList.add("lado-"+lado);
+      } else {
+        larg = Math.min(Math.max(prefCss, 460) * s, rc.width - 16, vw - 2*M);
+        el.style.width = (larg / s) + "px";
+        var h2 = el.getBoundingClientRect().height;
+        X = Math.max(M, Math.min(ra.left, vw - M - larg));
+        if(ra.bottom + 6 + h2 > vh - M && ra.top - 6 - h2 < topo && primeira){
+          // Não cabe embaixo nem em cima: rola a página (só ao abrir) pra caber embaixo.
+          var falta = (ra.bottom + 6 + h2) - (vh - M), folga = ra.top - topo;
+          var rolar = Math.max(0, Math.min(falta, folga));
+          if(rolar > 0){ window.scrollBy(0, rolar); ra = ancora.getBoundingClientRect(); }
+        }
+        if(ra.bottom + 6 + h2 <= vh - M){ Y = ra.bottom + 6; el.classList.add("abaixo"); }
+        else if(ra.top - 6 - h2 >= topo){ Y = ra.top - 6 - h2; el.classList.add("acima"); }
+        else { Y = Math.max(topo, Math.min(ra.bottom + 6, vh - M - h2)); el.classList.add("abaixo"); }
+      }
+      var r0 = el.getBoundingClientRect();
+      el.style.left = ((X - r0.left) / s) + "px";
+      el.style.top = ((Y - r0.top) / s) + "px";
+      // Conferência final: nunca deixa a caixa passar da borda da tela.
+      var r1 = el.getBoundingClientRect(), dx = 0;
+      if(r1.right > vw - M) dx = (vw - M) - r1.right;
+      if(r1.left + dx < M) dx = M - r1.left;
+      if(dx) el.style.left = (parseFloat(el.style.left) + dx / s) + "px";
+    }
+    if(state.caixaAnim !== state.caixa){ el.classList.add("entra"); state.caixaAnim = state.caixa; }
+    el.style.visibility = "";
+    if(!el._ligada){
+      el._ligada = true;
+      if(typeof d.bind === "function"){ try{ d.bind(el); }catch(e){ console.warn("[Pangea] caixa", e); } }
+      var x = el.querySelector(".caixa-x");
+      if(x) x.addEventListener("click", function(ev){ ev.stopPropagation(); fecharCaixa(); });
+    }
+    if(fundo) fundo.onclick = fecharCaixa;
+  }
+  // Raiz de ligações que também enxerga os botões dentro da caixa aberta (para os
+  // cartões do Painel, que ligam os botões só dentro do próprio cartão).
+  function comCaixa(raiz){
+    if(!raiz) return raiz;
+    function lista(sel){
+      var a = Array.prototype.slice.call(raiz.querySelectorAll(sel));
+      var cx = document.getElementById("caixa");
+      if(cx && !raiz.contains(cx)) a = a.concat(Array.prototype.slice.call(cx.querySelectorAll(sel)));
+      return a;
+    }
+    return {
+      querySelectorAll: lista,
+      querySelector: function(sel){ return lista(sel)[0] || null; },
+      contains: function(n){ var cx = document.getElementById("caixa"); return raiz.contains(n) || !!(cx && cx.contains(n)); }
+    };
+  }
+  document.addEventListener("click", function(ev){
+    var alvo = ev.target && ev.target.closest ? ev.target.closest("[data-caixa]") : null;
+    if(alvo && app.contains(alvo)){
+      ev.preventDefault();
+      var chave = alvo.getAttribute("data-caixa");
+      if(state.caixa === chave) fecharCaixa(); else { state.caixaAnim = null; abrirCaixa(chave); }
+      return;
+    }
+    if(!state.caixa) return;
+    // Clique dentro da caixa (mesmo que a tela tenha sido redesenhada pelo clique).
+    var caminho = ev.composedPath ? ev.composedPath() : [];
+    if(caminho.some(function(n){ return n && (n.id === "caixa" || n.id === "confirm-overlay"); })) return;
+    var cx = document.getElementById("caixa");
+    if(cx && cx.contains(ev.target)) return;
+    if(ev.target && ev.target.closest && ev.target.closest(".aparencia-painel, .aparencia-btn, .pdoc-overlay")) return;
+    fecharCaixa();
+  });
+  document.addEventListener("keydown", function(ev){
+    if(ev.key === "Escape" && state.caixa && !document.querySelector(".pdoc-overlay")){
+      var chave = state.caixa; fecharCaixa();
+      var b = null; app.querySelectorAll("[data-caixa]").forEach(function(x){ if(x.getAttribute("data-caixa") === chave) b = x; });
+      if(b) b.focus();
+    }
+  });
+  window.addEventListener("resize", function(){ if(state.caixa) posicionarCaixa(); });
+
+  // ---------- ORIGEM EM TÓPICOS ----------
   function origemTopicos(c){
     var o = c.origem || {}, pi = c.propIndividuais || [], pr = c.propRelacionais || [];
     return [
@@ -3544,81 +3793,24 @@
       { k:"conexoes", titulo:"Conexões", itens:[pr[0], pr[1]], lista:true }
     ];
   }
-  function fecharOrigemPop(){
-    state.origemPop = null;
-    var el = document.getElementById("orig-pop");
-    if(el) el.remove();
-    if(typeof app !== "undefined" && app) app.querySelectorAll(".orig-top.aberto").forEach(function(b){ b.classList.remove("aberto"); });
-  }
-  function abrirOrigemPop(c, k){
-    var t = origemTopicos(c).filter(function(x){ return x.k===k; })[0];
-    var btn = app.querySelector('[data-origtop="'+k+'"]');
-    var card = app.querySelector('[data-secid="origem"]');
-    if(!t || !btn || !card){ fecharOrigemPop(); return; }
-    state.origemPop = k;
-    app.querySelectorAll(".orig-top").forEach(function(b){ b.classList.toggle("aberto", b===btn); });
-    var el = document.getElementById("orig-pop");
-    if(!el){ el = document.createElement("div"); el.id = "orig-pop"; el.className = "orig-pop"; el.setAttribute("role","dialog"); document.body.appendChild(el); }
+  function fichaAtual(){ return state.view === "sheet" && state.charId ? getChar(state.charId) : null; }
+  CAIXAS.orig = function(k){
+    var c = fichaAtual(); if(!c) return null;
+    var t = origemTopicos(c).filter(function(x){ return x.k===k; })[0]; if(!t) return null;
     var corpo;
     if(t.lista){
       var itens = t.itens.filter(function(x){ return x && String(x).trim(); });
       corpo = itens.length ? '<ol>'+itens.map(function(x){ return '<li>'+esc(x)+'</li>'; }).join('')+'</ol>' : '<p class="hint">Em branco.</p>';
     } else {
-      corpo = (t.itens[0] && String(t.itens[0]).trim()) ? '<p>'+esc(t.itens[0])+'</p>' : '<p class="hint">Em branco.</p>';
+      corpo = (t.itens[0] && String(t.itens[0]).trim()) ? '<p class="cx-pre">'+esc(t.itens[0])+'</p>' : '<p class="hint">Em branco.</p>';
     }
-    el.setAttribute("aria-label", t.titulo);
-    el.innerHTML = '<div class="orig-pop-cab"><b>'+esc(t.titulo)+'</b><button type="button" class="orig-pop-x" aria-label="Fechar">×</button></div><div class="orig-pop-corpo">'+corpo+'</div>';
-    el.querySelector(".orig-pop-x").addEventListener("click", fecharOrigemPop);
-    posicionarOrigemPop();
-  }
-  // Fica à esquerda do cartão quando cabe; se não couber (tela estreita), abre por
-  // cima do próprio cartão, alinhada à esquerda dele. No celular, centralizada.
-  function posicionarOrigemPop(){
-    var el = document.getElementById("orig-pop");
-    var btn = state.origemPop && app.querySelector('[data-origtop="'+state.origemPop+'"]');
-    var card = app.querySelector('[data-secid="origem"]');
-    if(!el || !btn || !card) return;
-    var vw = document.documentElement.clientWidth;
-    if(vw <= 640){ el.classList.add("centro"); el.style.left = ""; el.style.top = ""; el.style.width = ""; return; }
-    el.classList.remove("centro");
-    var rc = card.getBoundingClientRect(), rb = btn.getBoundingClientRect();
-    var espaco = rc.left - 26; // espaço livre à esquerda do cartão (com margens)
-    var larg, esquerda, sobre = espaco < 260;
-    if(!sobre){ larg = Math.min(380, espaco); esquerda = rc.left - larg - 14; }
-    else { larg = Math.min(460, rc.width - 16); esquerda = rc.left + 8; }
-    el.classList.toggle("sobre", sobre);
-    el.style.width = larg + "px";
-    el.style.left = (esquerda + window.scrollX) + "px";
-    // Sem espaço à esquerda: abre logo abaixo do tópico clicado, dentro da coluna do cartão.
-    var topo = sobre ? rb.bottom + window.scrollY + 6 : rb.top + window.scrollY - 8;
-    var alt = el.offsetHeight, maxTopo = window.scrollY + window.innerHeight - alt - 12;
-    if(topo > maxTopo) topo = Math.max(window.scrollY + 12, maxTopo);
-    el.style.top = topo + "px";
-  }
-  function bindOrigemTopicos(c){
-    app.querySelectorAll("[data-origtop]").forEach(function(b){
-      b.addEventListener("click", function(ev){
-        ev.stopPropagation();
-        var k = b.getAttribute("data-origtop");
-        if(state.origemPop === k) fecharOrigemPop(); else { fecharBonusPop(); abrirOrigemPop(c, k); }
-      });
-    });
-    if(state.origemPop) abrirOrigemPop(c, state.origemPop); // re-render: reabre com o texto atualizado
-  }
-  document.addEventListener("click", function(ev){
-    if(!state.origemPop) return;
-    var el = document.getElementById("orig-pop");
-    if(el && el.contains(ev.target)) return;
-    if(ev.target.closest && ev.target.closest("[data-origtop]")) return;
-    fecharOrigemPop();
-  });
-  document.addEventListener("keydown", function(ev){ if(ev.key === "Escape" && state.origemPop) fecharOrigemPop(); });
-  window.addEventListener("resize", function(){ if(state.origemPop) posicionarOrigemPop(); });
+    return { titulo:esc(t.titulo), corpo:corpo, lado:"esquerda", largura:380 };
+  };
 
-  // ---------- BÔNUS DE ASSIMILAÇÃO (caixa à direita do cartão de Instintos) ----------
+  // ---------- BÔNUS DE ASSIMILAÇÃO (linha no cartão de Instintos) ----------
   // Quando uma Assimilação aumenta um Instinto/Conhecimento/Prática além do normal.
   // Soma direto na base em todo lugar (valorInstinto/valorCP). No cartão fica só uma
-  // linha com o total; os ajustes abrem numa caixa ao lado (espelho da Origem).
+  // linha com o total; os ajustes abrem na caixa.
   function bonusAssimTotal(c){
     var ib = c.instintosAssimBonus || {}, cb = c.conhPratAssimBonus || {}, total = 0;
     INSTINTOS.forEach(function(i){ total += ib[i[0]]||0; });
@@ -3631,10 +3823,7 @@
     var lista = [];
     INSTINTOS.forEach(function(i){ if(ib[i[0]]) lista.push(i[1]+" +"+ib[i[0]]); });
     CONH_PRAT.forEach(function(p){ if(cb[p[0]]) lista.push(p[1]+" +"+cb[p[0]]); });
-    return '<button type="button" class="orig-top bonus-top'+(state.bonusPop?' aberto':'')+'" data-bonustop aria-haspopup="dialog">' +
-      '<span class="orig-tit">Bônus de Assimilação</span>' +
-      '<span class="orig-prev">'+(total ? esc(lista.join(" · ")) : '<i>nenhum</i>')+'</span>' +
-      '<span class="orig-seta" aria-hidden="true">›</span></button>';
+    return '<div class="lx-lista" style="margin-top:12px">'+caixaLinha("bonus", "", "Bônus de Assimilação", total ? esc(lista.join(" · ")) : '<i>nenhum</i>')+'</div>';
   }
   function bonusPopCorpo(c){
     var ib = c.instintosAssimBonus || {}, cb = c.conhPratAssimBonus || {};
@@ -3652,70 +3841,27 @@
     CONH_PRAT.forEach(function(p){ html += linha("cp", p[0], p[1], cb[p[0]]||0); });
     return html + '</div>';
   }
-  function fecharBonusPop(){
-    state.bonusPop = false;
-    var el = document.getElementById("bonus-pop"); if(el) el.remove();
-    if(typeof app !== "undefined" && app){ var b = app.querySelector("[data-bonustop]"); if(b) b.classList.remove("aberto"); }
-  }
-  function abrirBonusPop(c){
-    var btn = app.querySelector("[data-bonustop]"), card = app.querySelector('[data-secid="instintos"]');
-    if(!btn || !card){ fecharBonusPop(); return; }
-    state.bonusPop = true; btn.classList.add("aberto");
-    var el = document.getElementById("bonus-pop");
-    if(!el){ el = document.createElement("div"); el.id = "bonus-pop"; el.className = "orig-pop bonus-pop"; el.setAttribute("role","dialog"); el.setAttribute("aria-label","Bônus de Assimilação"); document.body.appendChild(el); }
-    el.innerHTML = '<div class="orig-pop-cab"><b>Bônus de Assimilação</b><button type="button" class="orig-pop-x" aria-label="Fechar">×</button></div><div class="orig-pop-corpo bonus-pop-corpo">'+bonusPopCorpo(c)+'</div>';
-    el.querySelector(".orig-pop-x").addEventListener("click", fecharBonusPop);
-    function gravar(){ updateChar(c); renderSheet(); }
-    el.querySelectorAll("[data-bpk]").forEach(function(b){
-      b.addEventListener("click", function(){
-        var alvo = b.getAttribute("data-bpk") === "inst" ? (c.instintosAssimBonus = c.instintosAssimBonus || {}) : (c.conhPratAssimBonus = c.conhPratAssimBonus || {});
-        var id = b.getAttribute("data-bpid");
-        alvo[id] = clamp((alvo[id]||0) + parseInt(b.getAttribute("data-bpdir"),10), 0, 99);
-        gravar();
+  CAIXAS.bonus = function(){
+    var c = fichaAtual(); if(!c) return null;
+    return { titulo:"Bônus de Assimilação", corpo:bonusPopCorpo(c), lado:"direita", largura:420, bind:function(el){
+      function gravar(){ updateChar(c); renderSheet(); }
+      el.querySelectorAll("[data-bpk]").forEach(function(b){
+        b.addEventListener("click", function(){
+          var alvo = b.getAttribute("data-bpk") === "inst" ? (c.instintosAssimBonus = c.instintosAssimBonus || {}) : (c.conhPratAssimBonus = c.conhPratAssimBonus || {});
+          var id = b.getAttribute("data-bpid");
+          alvo[id] = clamp((alvo[id]||0) + parseInt(b.getAttribute("data-bpdir"),10), 0, 99);
+          gravar();
+        });
       });
-    });
-    el.querySelectorAll("[data-bpin]").forEach(function(inp){
-      inp.addEventListener("change", function(){
-        var alvo = inp.getAttribute("data-bpin") === "inst" ? (c.instintosAssimBonus = c.instintosAssimBonus || {}) : (c.conhPratAssimBonus = c.conhPratAssimBonus || {});
-        alvo[inp.getAttribute("data-bpid")] = clamp(parseInt(inp.value,10)||0, 0, 99);
-        gravar();
+      el.querySelectorAll("[data-bpin]").forEach(function(inp){
+        inp.addEventListener("change", function(){
+          var alvo = inp.getAttribute("data-bpin") === "inst" ? (c.instintosAssimBonus = c.instintosAssimBonus || {}) : (c.conhPratAssimBonus = c.conhPratAssimBonus || {});
+          alvo[inp.getAttribute("data-bpid")] = clamp(parseInt(inp.value,10)||0, 0, 99);
+          gravar();
+        });
       });
-    });
-    posicionarBonusPop();
-  }
-  // À direita do cartão de Instintos quando cabe; senão logo abaixo da linha, dentro
-  // da coluna do cartão; no celular, centralizada (mesma lógica da Origem, espelhada).
-  function posicionarBonusPop(){
-    var el = document.getElementById("bonus-pop");
-    var btn = app.querySelector("[data-bonustop]"), card = app.querySelector('[data-secid="instintos"]');
-    if(!el || !btn || !card) return;
-    var vw = document.documentElement.clientWidth;
-    if(vw <= 640){ el.classList.add("centro"); el.style.left = ""; el.style.top = ""; el.style.width = ""; return; }
-    el.classList.remove("centro");
-    var rc = card.getBoundingClientRect(), rb = btn.getBoundingClientRect();
-    var espaco = vw - rc.right - 26;
-    var larg, esquerda, sobre = espaco < 260;
-    if(!sobre){ larg = Math.min(420, espaco); esquerda = rc.right + 14; }
-    else { larg = Math.min(460, rc.width - 16); esquerda = rc.right - larg - 8; }
-    el.classList.toggle("sobre", sobre);
-    el.classList.toggle("direita", !sobre);
-    el.style.width = larg + "px";
-    el.style.left = (esquerda + window.scrollX) + "px";
-    var topo = sobre ? rb.bottom + window.scrollY + 6 : rc.top + window.scrollY;
-    var alt = el.offsetHeight, maxTopo = window.scrollY + window.innerHeight - alt - 12;
-    if(!sobre && topo > maxTopo) topo = Math.max(window.scrollY + 12, maxTopo);
-    el.style.top = topo + "px";
-  }
-  document.addEventListener("click", function(ev){
-    if(!state.bonusPop) return;
-    var caminho = ev.composedPath ? ev.composedPath() : [];
-    var el = document.getElementById("bonus-pop");
-    if(caminho.some(function(n){ return n && n.id === "bonus-pop"; }) || (el && el.contains(ev.target))) return;
-    if(ev.target.closest && ev.target.closest("[data-bonustop]")) return;
-    fecharBonusPop();
-  });
-  document.addEventListener("keydown", function(ev){ if(ev.key === "Escape" && state.bonusPop) fecharBonusPop(); });
-  window.addEventListener("resize", function(){ if(state.bonusPop) posicionarBonusPop(); });
+    }};
+  };
 
   function sectionCard(id, title, bodyHtml){
     var collapsed = !!state.collapsed[id];
@@ -3730,8 +3876,7 @@
 
   function goto(view, extra){
     state.fnavGrudada = false; // tela nova começa no topo, com a faixa aberta
-    fecharOrigemPop();
-    fecharBonusPop();
+    fecharCaixa();
     // Sair da ficha (ou de qualquer tela) confirma sozinha uma pendência de
     // Saúde/Cabo de Guerra/Equipamento-Inventário ainda não confirmada (ver
     // marcarPendenteOuSalvar) - assim ela nunca fica esquecida pra trás.
@@ -3786,9 +3931,167 @@
     ["densidade","Espaçamento",[["compacta","Compacto"],["padrao","Normal"],["ampla","Amplo"]]],
     ["cantos","Cantos",[["quadrados","Quadrados"],["padrao","Suaves"],["redondos","Arredondados"]]],
     ["textura","Fundo dos cartões",[["padrao","Liso"],["papel","Papel antigo"]]],
-    ["anim","Animações",[["padrao","Normais"],["reduzidas","Reduzidas"]]]
+    ["anim","Animações",[["padrao","Normais"],["reduzidas","Reduzidas"]]],
+    ["fundo","Efeitos de fundo",[["padrao","Sutil"],["normal","Normal"],["desligado","Desligado"]]],
+    ["fundotex","Textura do fundo",[["padrao","Lisa"],["granulado","Granulado"],["vinheta","Vinheta"]]]
   ];
-  var AJUSTES_SECOES = [["Texto",["texto","fonte","numeros"]],["Layout",["densidade","cantos","textura"]],["Movimento",["anim"]]];
+  var AJUSTES_SECOES = [["Texto",["texto","fonte","numeros"]],["Layout",["densidade","cantos","textura"]],["Fundo",["fundo","fundotex"]],["Movimento",["anim"]]];
+  // ---------- FUNDO ANIMADO: "poros de assimilação" ----------
+  // Células e esporos orgânicos, quase transparentes, subindo e derivando bem devagar
+  // atrás de todo o conteúdo. Cor tirada do tema ativo (--ink e --accent). Opção em
+  // Aparência > Fundo: Sutil (padrão) / Normal / Desligado. Com "Animações reduzidas"
+  // ou prefers-reduced-motion o desenho fica parado. Pausa com a aba escondida e usa
+  // menos partículas no celular. Limitado a ~30 quadros por segundo.
+  var fundoPoros = (function(){
+    var cv = null, ctx = null, poros = [], rodando = false, ultimo = 0, raf = 0, dpr = 1, W = 0, H = 0, cores = null, modo = null;
+    function rnd(a, b){ return a + Math.random()*(b-a); }
+    function corDoTema(nome, padrao){
+      var v = getComputedStyle(document.documentElement).getPropertyValue(nome).trim();
+      if(!v) return padrao;
+      // Converte qualquer cor CSS (inclusive color-mix) pra rgb usando o próprio navegador.
+      var t = document.createElement("span"); t.style.color = v; t.style.display = "none"; document.body.appendChild(t);
+      var c = getComputedStyle(t).color; t.remove();
+      var m = c.match(/[\d.]+/g);
+      return m && m.length >= 3 ? [Math.round(+m[0]), Math.round(+m[1]), Math.round(+m[2])] : padrao;
+    }
+    function movimentoReduzido(){
+      var mq = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      return mq || document.documentElement.getAttribute("data-anim") === "reduzidas";
+    }
+    function modoAtual(){ return document.documentElement.getAttribute("data-fundo") || "sutil"; }
+    // Desenha uma célula num canvas pequeno, uma vez só (depois é só copiar e mover).
+    function sprite(r, cor, tipo){
+      var pad = 6, tam = Math.ceil((r*1.35 + pad)*2), c = document.createElement("canvas");
+      c.width = c.height = Math.ceil(tam*dpr);
+      var g = c.getContext("2d"); g.scale(dpr, dpr); g.translate(tam/2, tam/2);
+      var rgb = cor.join(","), n = 9 + Math.floor(Math.random()*5), fase = Math.random()*6.28, pts = [];
+      for(var i=0;i<n;i++){
+        var a = i/n*Math.PI*2, k = 1 + 0.16*Math.sin(a*3 + fase) + rnd(-0.07, 0.07);
+        pts.push([Math.cos(a)*r*k, Math.sin(a)*r*k]);
+      }
+      // Contorno orgânico (curvas passando pelos pontos médios).
+      g.beginPath();
+      for(var j=0;j<n;j++){
+        var p = pts[j], q = pts[(j+1)%n], mx = (p[0]+q[0])/2, my = (p[1]+q[1])/2;
+        if(j===0){ var u = pts[n-1]; g.moveTo((u[0]+p[0])/2, (u[1]+p[1])/2); }
+        g.quadraticCurveTo(p[0], p[1], mx, my);
+      }
+      g.closePath();
+      var grad = g.createRadialGradient(0, 0, r*0.1, 0, 0, r*1.2);
+      grad.addColorStop(0, "rgba("+rgb+",0.05)");
+      grad.addColorStop(0.7, "rgba("+rgb+",0.22)");
+      grad.addColorStop(1, "rgba("+rgb+",0.42)");
+      g.fillStyle = grad; g.fill();
+      g.lineWidth = Math.max(1, r*0.07); g.strokeStyle = "rgba("+rgb+",0.75)"; g.stroke();
+      if(tipo !== "esporo"){
+        // Núcleo e alguns poros por dentro.
+        g.beginPath(); g.arc(rnd(-r*0.2, r*0.2), rnd(-r*0.2, r*0.2), r*rnd(0.18, 0.28), 0, Math.PI*2);
+        g.fillStyle = "rgba("+rgb+",0.55)"; g.fill();
+        var np = 2 + Math.floor(Math.random()*4);
+        for(var k2=0;k2<np;k2++){
+          var aa = Math.random()*6.28, dd = r*rnd(0.45, 0.75);
+          g.beginPath(); g.arc(Math.cos(aa)*dd, Math.sin(aa)*dd, r*rnd(0.06, 0.12), 0, Math.PI*2);
+          g.strokeStyle = "rgba("+rgb+",0.6)"; g.lineWidth = 1; g.stroke();
+        }
+      }
+      return { img:c, tam:tam };
+    }
+    function criar(){
+      var celular = W < 640;
+      var normal = modo === "normal";
+      var qtd = Math.round((normal ? 36 : 22) * (celular ? 0.5 : 1));
+      poros = [];
+      for(var i=0;i<qtd;i++){
+        var esporo = Math.random() < 0.45;
+        var r = esporo ? rnd(5, 11) : rnd(14, 34);
+        var cor = Math.random() < 0.3 ? cores.acc : cores.ink;
+        var sp = sprite(r, cor, esporo ? "esporo" : "celula");
+        poros.push({
+          sp:sp, x:Math.random()*W, y:Math.random()*H,
+          // atravessa a tela em 40 a 90 s
+          vy:-(H + 80) / rnd(40, 90), amp:rnd(8, 30), freq:rnd(0.02, 0.06), fase:Math.random()*6.28,
+          rot:Math.random()*6.28, vrot:rnd(-0.05, 0.05), pulso:rnd(0.15, 0.35), fasePulso:Math.random()*6.28,
+          alfa:(normal ? rnd(0.10, 0.16) : rnd(0.06, 0.10)) * (esporo ? 1.1 : 1)
+        });
+      }
+    }
+    function medir(){
+      var r = cv.getBoundingClientRect();
+      dpr = Math.min(2, window.devicePixelRatio || 1);
+      W = Math.max(1, r.width); H = Math.max(1, r.height);
+      cv.width = Math.round(W*dpr); cv.height = Math.round(H*dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+    function desenhar(t){
+      ctx.clearRect(0, 0, W, H);
+      var s = t/1000;
+      poros.forEach(function(p){
+        var esc2 = 1 + 0.06*Math.sin(s*p.pulso*2 + p.fasePulso);
+        var x = p.x + Math.sin(s*p.freq*6.28 + p.fase)*p.amp;
+        ctx.save();
+        ctx.globalAlpha = p.alfa;
+        ctx.translate(x, p.y); ctx.rotate(p.rot + s*p.vrot); ctx.scale(esc2, esc2);
+        ctx.drawImage(p.sp.img, -p.sp.tam/2, -p.sp.tam/2, p.sp.tam, p.sp.tam);
+        ctx.restore();
+      });
+    }
+    function passo(t){
+      raf = 0;
+      if(!rodando) return;
+      var dt = ultimo ? Math.min(0.1, (t - ultimo)/1000) : 0;
+      if(t - ultimo >= 32 || !ultimo){ // ~30 quadros por segundo
+        ultimo = t;
+        poros.forEach(function(p){
+          p.y += p.vy*dt;
+          if(p.y < -p.sp.tam){ p.y = H + p.sp.tam*0.6; p.x = Math.random()*W; }
+        });
+        desenhar(t);
+      }
+      raf = requestAnimationFrame(passo);
+    }
+    function parar(){ rodando = false; if(raf){ cancelAnimationFrame(raf); raf = 0; } }
+    function iniciar(){
+      if(rodando) return;
+      rodando = true; ultimo = 0;
+      raf = requestAnimationFrame(passo);
+    }
+    function atualizar(){
+      modo = modoAtual();
+      if(modo === "desligado"){
+        parar();
+        if(cv){ cv.remove(); cv = null; ctx = null; }
+        return;
+      }
+      if(!cv){
+        cv = document.createElement("canvas");
+        cv.id = "fundo-poros"; cv.setAttribute("aria-hidden", "true");
+        document.body.insertBefore(cv, document.body.firstChild);
+        ctx = cv.getContext("2d");
+      }
+      parar();
+      medir();
+      cores = { ink:corDoTema("--ink", [42,35,24]), acc:corDoTema("--accent", [181,80,44]) };
+      criar();
+      if(movimentoReduzido() || document.hidden){ desenhar(performance.now()); return; }
+      iniciar();
+    }
+    var tResize = 0;
+    window.addEventListener("resize", function(){
+      if(!cv) return;
+      clearTimeout(tResize);
+      tResize = setTimeout(function(){ var w0 = W; medir(); if(Math.abs(W - w0) > 120) criar(); if(!rodando) desenhar(performance.now()); }, 150);
+    });
+    document.addEventListener("visibilitychange", function(){
+      if(!cv) return;
+      if(document.hidden) parar(); else if(!movimentoReduzido()) iniciar();
+    });
+    if(window.matchMedia){
+      var mqr = window.matchMedia("(prefers-reduced-motion: reduce)");
+      if(mqr.addEventListener) mqr.addEventListener("change", function(){ if(cv) atualizar(); });
+    }
+    return { atualizar:atualizar };
+  })();
+
   // Tema "Cores do Acampamento": pega a cor do acampamento da ficha aberta.
   function aplicarCorAcampamento(){
     var raiz = document.documentElement;
@@ -3814,6 +4117,7 @@
     });
     aplicarCorAcampamento();
     if(typeof fnavAtualizarTinta === "function") fnavAtualizarTinta();
+    if(fundoPoros && document.body) tentar("Fundo", fundoPoros.atualizar);
   }
   function animacoesReduzidas(){ return document.documentElement.getAttribute("data-anim") === "reduzidas"; }
   function montarAparencia(){
@@ -3985,6 +4289,11 @@
     return html;
   }
 
+  // Aviso de direitos (pedido do Marco, 08/10/2026): projeto de fã, sem vínculo com a editora.
+  // Créditos conferidos no livro básico novo: "Publicado pela Editora Assimilar, Campinas — SP".
+  function avisoFanMadeHtml(){
+    return '<p class="aviso-fan">Projeto fan-made, não oficial. <b>Assimilação RPG</b> é uma criação da Editora Assimilar (Campinas — SP): textos, regras, ilustrações e marcas pertencem à editora e aos seus autores, com todos os direitos reservados a eles. Este site não tem vínculo com a Editora Assimilar.</p>';
+  }
   function footer(){
     var msg;
     if(caps.mode === "mesa"){
@@ -3994,7 +4303,7 @@
     } else {
       msg = 'Seus personagens ficam salvos só neste navegador. Use "Backup" pra guardar uma cópia, ou "Exportar" numa ficha pra enviar ela pra outra pessoa.';
     }
-    return '<div class="footer-note"><span>'+msg+'</span></div>';
+    return '<div class="footer-note"><span>'+msg+'</span>'+avisoFanMadeHtml()+'</div>';
   }
 
   // ---------- EASTER EGG (acesso discreto a uma área extra) ----------
@@ -4123,7 +4432,7 @@
       html += '</div><div class="btn-row"><span></span><button class="btn accent" data-nav="wizard-new">+ Novo Personagem</button></div>';
     }
     html += footer();
-    app.innerHTML = html;
+    app.innerHTML = html + caixaHtml();
     bindGlobal();
     app.querySelectorAll("[data-open]").forEach(function(el){
       el.addEventListener("click", function(){ goto("sheet", {charId: el.getAttribute("data-open")}); });
@@ -4225,7 +4534,7 @@
     html += step < WIZ_STEPS.length-1 ? '<button class="btn accent" data-wiz="next">Avançar</button>' : '<button class="btn accent" data-wiz="finish">Concluir Ficha</button>';
     html += '</div>';
     html += '</div>';
-    app.innerHTML = html;
+    app.innerHTML = html + caixaHtml();
     bindGlobal();
     bindWizardStep(c, step);
 
@@ -4748,7 +5057,7 @@
         '<p class="hint">Se você já exportou um código de backup, ele continua guardado fora daqui. Sem um backup, não tem como recuperar essa ficha depois.</p>' +
         '<div class="btn-row"><button class="btn secondary" data-action="cancel-delete">Cancelar</button><button class="btn danger" data-action="confirm-delete">Sim, excluir definitivamente</button></div>' +
       '</div></div>';
-      app.innerHTML = html;
+      app.innerHTML = html + caixaHtml();
       bindGlobal();
       app.querySelector('[data-action="cancel-delete"]').addEventListener("click", function(){ state.deleteConfirm = false; render(); });
       app.querySelector('[data-action="confirm-delete"]').addEventListener("click", function(){ deleteChar(c.id); state.deleteConfirm = false; goto("roster"); });
@@ -4786,13 +5095,9 @@
     // Cada tópico é só uma linha (título + começo do texto); o texto inteiro abre
     // numa caixa ao lado (ver abrirOrigemPop), pra o cartão não crescer.
     html += sectionCard("origem", "Origem, Propósitos &amp; Conexões",
-      '<div class="orig-lista">' + origemTopicos(c).map(function(t){
+      '<div class="lx-lista">' + origemTopicos(c).map(function(t){
         var prev = t.itens.filter(Boolean).join(" · ");
-        return '<button type="button" class="orig-top'+(state.origemPop===t.k?' aberto':'')+'" data-origtop="'+t.k+'" aria-haspopup="dialog">' +
-          '<span class="orig-tit">'+esc(t.titulo)+'</span>' +
-          '<span class="orig-prev">'+(prev ? esc(prev) : '<i>em branco</i>')+'</span>' +
-          '<span class="orig-seta" aria-hidden="true">›</span>' +
-        '</button>';
+        return caixaLinha("orig", t.k, esc(t.titulo), prev ? esc(prev) : '<i>em branco</i>');
       }).join('') + '</div>');
 
     // Instintos (valor mostrado já inclui o Bônus de Assimilação, ver valorInstinto; a
@@ -4829,11 +5134,13 @@
     html += tentarHtml("Teste", function(){ return renderSheetTest(c); });
 
     // Caracteristicas
+    // Cada Característica é uma linha (nome, custo e começo do texto); o texto inteiro
+    // abre na caixa ao lado (ver CAIXAS.carac).
     var caracDetalhes = c.caracComp.map(function(id){ return CARACTERISTICAS.filter(function(x){return x.id===id;})[0]; }).filter(Boolean);
     var caracBody;
     if(caracDetalhes.length){
-      caracBody = '<div class="trait-list">' + caracDetalhes.map(function(d){
-        return '<div class="trait" style="cursor:default"><span class="cost">+'+d.custo+'pt</span><span class="txt"><b>'+esc(d.nome)+'</b><span>'+iconizarTexto(esc(d.txt))+'</span></span></div>';
+      caracBody = '<div class="lx-lista">' + caracDetalhes.map(function(d){
+        return caixaLinha("carac", d.id, esc(d.nome), esc(d.txt), '<span class="lx-sel forte">'+d.custo+' pt</span>');
       }).join('') + '</div>';
     } else {
       caracBody = '<p class="hint">Nenhuma característica única comprada.</p>';
@@ -4865,25 +5172,19 @@
     html += tentarHtml("Assimilação", function(){ return renderMutacoesCard(c); });
 
     // Equipamento
+    // Artefato: uma linha (nome, Escassez, Qualidade) que abre a caixa com a descrição,
+    // as características e a Qualidade; os Usos ficam à mão, logo abaixo da linha.
     var equipBody;
     if(!c.equip.nome && !c.equip.traits.length){
       equipBody = '<p class="hint">Esse personagem não tem Artefato inicial.</p>';
     } else {
-      equipBody = '<p><b>'+esc(c.equip.nome||"(sem nome)")+':</b> '+esc(c.equip.desc)+' <span class="hint">· Escassez '+equipCusto(c)+'</span></p>';
-      if(c.equip.traits.length){
-        var equipTraitDetails = c.equip.traits.map(function(s){
-          var d = EQUIP_TRAITS.filter(function(x){return x.id===s.id;})[0];
-          if(!d) return "";
-          return '<div class="trait" style="cursor:default"><span class="cost">'+(d.custo>0?"+":"")+d.custo+'</span><span class="txt"><b>'+d.nome+(s.qtd>1?" ("+s.qtd+"x)":"")+'</b><span>'+iconizarTexto(d.txt)+'</span></span></div>';
-        }).join("");
-        equipBody += '<p class="hint" style="margin-bottom:6px">Utilidade das características escolhidas:</p><div class="trait-list">'+equipTraitDetails+'</div>';
-      } else {
-        equipBody += '<p class="hint">Sem características especiais.</p>';
-      }
-      equipBody += '<div style="margin-top:10px">'+qualidadeHtml(c.equip, "equip")+'</div>' +
-        (c.equip.usosMax ? '<div class="row" style="margin-top:8px"><label style="margin:0">Usos:</label><div class="dots" data-dots="equipusos">'+dotsRow(c.equip.usosAtual||0, c.equip.usosMax, "")+'</div>' +
-          '<button class="btn secondary" data-equipuso="repor">Repor usos</button></div>' : '') +
-        '<p class="hint">Espaço de inventário ocupado: '+c.equip.espaco+'</p>';
+      var qEq = c.equip.qualidade!=null ? c.equip.qualidade : 3;
+      var nomesTraitsEq = c.equip.traits.map(function(s){ var d = EQUIP_TRAITS.filter(function(x){return x.id===s.id;})[0]; return d ? d.nome+(s.qtd>1?" x"+s.qtd:"") : ""; }).filter(Boolean);
+      equipBody = '<div class="lx-lista">' + caixaLinha("equip", "", esc(c.equip.nome||"(sem nome)"),
+          esc(nomesTraitsEq.length ? nomesTraitsEq.join(" · ") : (c.equip.desc||"")),
+          '<span class="lx-sel">Esc. '+equipCusto(c)+'</span><span class="lx-sel'+(qEq<=1?' alerta':'')+'" title="Qualidade">Q'+qEq+' · '+QUALIDADES[qEq]+'</span>') + '</div>' +
+        (c.equip.usosMax ? '<div class="row" style="margin-top:10px"><label style="margin:0">Usos:</label><div class="dots" data-dots="equipusos">'+dotsRow(c.equip.usosAtual||0, c.equip.usosMax, "")+'</div>' +
+          '<button class="btn secondary" data-equipuso="repor">Repor usos</button></div>' : '');
     }
     html += sectionCard("equipamento", "Artefato inicial", pendingSectionBannerHtml(c, "equip") + equipBody);
 
@@ -4910,7 +5211,7 @@
 
     html += '</div>';
 
-    app.innerHTML = html;
+    app.innerHTML = html + caixaHtml();
     bindGlobal();
     bindSheet(c, maxNivel);
   }
@@ -4926,30 +5227,67 @@
       (it.desc ? '<p class="item-desc">'+esc(it.desc)+'</p>' : '') +
       (it.efeito ? '<p class="item-efeito"><b>Efeito</b>'+esc(it.efeito)+'</p>' : '');
   }
+  // Inventário: cada item é uma linha (nome, quantidade, Qualidade e usos); a
+  // descrição, o efeito e os controles abrem na caixa (ver CAIXAS.inv).
   function renderInventario(c){
     if(!c.inventarioExtra.length) return '<p class="hint">Nada além do Artefato inicial.</p>';
-    var html = '';
-    c.inventarioExtra.forEach(function(it, idx){
+    return '<div class="lx-lista">' + c.inventarioExtra.map(function(it, idx){
       var q = it.qualidade!=null ? it.qualidade : 3;
-      var escN = (it.traits||[]).length ? clamp(itemCusto(it.traits),0,6) : (it.escassez!=null ? it.escassez : null);
-      html += '<div class="item-card">' + itemCorpoHtml(it, escN!=null ? '<span class="item-chip esc" title="Escassez">'+escN+' · '+esc(ESCASSEZ_NOMES[escN]||"")+'</span>' : '') +
-        '<div class="item-controles">' +
-          '<span class="grupo"><span class="rot">Qualidade</span>' +
-            '<button class="btn secondary" data-invq="menos" data-idx="'+idx+'" '+(q<=0?"disabled":"")+'>&minus;</button>' +
-            '<span title="'+esc(QUALIDADE_BONUS[q]||"")+'"><b>'+q+'</b> · '+QUALIDADES[q]+'</span>' +
-            '<button class="btn secondary" data-invq="mais" data-idx="'+idx+'" '+(q>=6?"disabled":"")+'>+</button>' +
-            (q>0?'<button class="btn secondary" data-invp="mais" data-idx="'+idx+'" title="Pressão investida: '+(it.pressao||0)+' de '+qualidadeLimiar(it)+' pra cair um nível">+1 '+dadoHtml("p")+' ('+(it.pressao||0)+'/'+qualidadeLimiar(it)+')</button>':'') +
-          '</span>' +
-          (it.usosMax ? '<span class="grupo"><span class="rot">Usos</span>' +
-            '<button class="btn secondary" data-invuso="menos" data-idx="'+idx+'" '+((it.usosAtual||0)<=0?"disabled":"")+'>&minus;</button>' +
-            '<span><b>'+(it.usosAtual||0)+'</b>/'+it.usosMax+'</span>' +
-            '<button class="btn secondary" data-invuso="mais" data-idx="'+idx+'" '+((it.usosAtual||0)>=it.usosMax?"disabled":"")+'>+</button></span>' : '') +
-          '<span class="grupo"><span class="rot">Espaço</span><span>'+it.espaco+'</span></span>' +
-          '<span class="grupo fim"><button class="btn secondary" data-inv="del" data-idx="'+idx+'">remover</button></span>' +
-        '</div></div>';
-    });
+      var extras = (it.usosMax ? '<span class="lx-sel'+((it.usosAtual||0)<=0?' alerta':'')+'" title="Usos">'+(it.usosAtual||0)+'/'+it.usosMax+' usos</span>' : '') +
+        '<span class="lx-sel'+(q<=1?' alerta':'')+'" title="Qualidade: '+QUALIDADES[q]+'">Q'+q+'</span>';
+      return caixaLinha("inv", idx, esc(it.nome||"Sem nome")+((it.qtd||1)>1?' <span class="item-qtd">x'+it.qtd+'</span>':''), esc(it.desc||it.efeito||""), extras);
+    }).join('') + '</div>';
+  }
+  function inventarioItemCaixaHtml(it, idx){
+    var q = it.qualidade!=null ? it.qualidade : 3;
+    var escN = (it.traits||[]).length ? clamp(itemCusto(it.traits),0,6) : (it.escassez!=null ? it.escassez : null);
+    var html = itemCorpoHtml(it, escN!=null ? '<span class="item-chip esc" title="Escassez">'+escN+' · '+esc(ESCASSEZ_NOMES[escN]||"")+'</span>' : '');
+    var traitsTxt = (it.traits||[]).map(function(s){
+      var d = EQUIP_TRAITS.filter(function(x){return x.id===s.id;})[0];
+      return d ? '<li><b>'+esc(d.nome)+((s.qtd||1)>1?" x"+s.qtd:"")+':</b> '+iconizarTexto(esc(d.txt))+'</li>' : '';
+    }).join('');
+    if(traitsTxt) html += '<ul class="cx-traits">'+traitsTxt+'</ul>';
+    html += '<div class="item-controles">' +
+      '<span class="grupo"><span class="rot">Qualidade</span>' +
+        '<button class="btn secondary" data-invq="menos" data-idx="'+idx+'" '+(q<=0?"disabled":"")+'>&minus;</button>' +
+        '<span title="'+esc(QUALIDADE_BONUS[q]||"")+'"><b>'+q+'</b> · '+QUALIDADES[q]+'</span>' +
+        '<button class="btn secondary" data-invq="mais" data-idx="'+idx+'" '+(q>=6?"disabled":"")+'>+</button>' +
+        (q>0?'<button class="btn secondary" data-invp="mais" data-idx="'+idx+'" title="Pressão investida: '+(it.pressao||0)+' de '+qualidadeLimiar(it)+' pra cair um nível">+1 '+dadoHtml("p")+' ('+(it.pressao||0)+'/'+qualidadeLimiar(it)+')</button>':'') +
+      '</span>' +
+      (it.usosMax ? '<span class="grupo"><span class="rot">Usos</span>' +
+        '<button class="btn secondary" data-invuso="menos" data-idx="'+idx+'" '+((it.usosAtual||0)<=0?"disabled":"")+'>&minus;</button>' +
+        '<span><b>'+(it.usosAtual||0)+'</b>/'+it.usosMax+'</span>' +
+        '<button class="btn secondary" data-invuso="mais" data-idx="'+idx+'" '+((it.usosAtual||0)>=it.usosMax?"disabled":"")+'>+</button></span>' : '') +
+      '<span class="grupo"><span class="rot">Espaço</span><span>'+it.espaco+'</span></span>' +
+      '<span class="grupo fim"><button class="btn secondary" data-inv="del" data-idx="'+idx+'">remover</button></span>' +
+    '</div>';
     return html;
   }
+  CAIXAS.inv = function(arg){
+    var c = fichaAtual(); if(!c) return null;
+    var idx = parseInt(arg,10), it = (c.inventarioExtra||[])[idx]; if(!it) return null;
+    return { titulo:esc(it.nome||"Sem nome"), corpo:inventarioItemCaixaHtml(it, idx), lado:"direita", largura:460 };
+  };
+  CAIXAS.equip = function(){
+    var c = fichaAtual(); if(!c || (!c.equip.nome && !c.equip.traits.length)) return null;
+    var corpo = (c.equip.desc ? '<p class="cx-pre">'+esc(c.equip.desc)+'</p>' : '') +
+      '<p class="hint" style="margin:8px 0">Escassez '+equipCusto(c)+' · Espaço de inventário ocupado: '+c.equip.espaco+'</p>';
+    if(c.equip.traits.length){
+      corpo += '<div class="trait-list">' + c.equip.traits.map(function(s){
+        var d = EQUIP_TRAITS.filter(function(x){return x.id===s.id;})[0];
+        if(!d) return "";
+        return '<div class="trait" style="cursor:default"><span class="cost">'+(d.custo>0?"+":"")+d.custo+'</span><span class="txt"><b>'+d.nome+(s.qtd>1?" ("+s.qtd+"x)":"")+(s.aptidao?' · '+esc(s.aptidao):'')+'</b><span>'+iconizarTexto(d.txt)+'</span></span></div>';
+      }).join("") + '</div>';
+    } else {
+      corpo += '<p class="hint">Sem características especiais.</p>';
+    }
+    corpo += '<div style="margin-top:10px">'+qualidadeHtml(c.equip, "equip")+'</div>';
+    return { titulo:esc(c.equip.nome||"Artefato inicial"), corpo:corpo, lado:"direita", largura:460 };
+  };
+  CAIXAS.carac = function(id){
+    var d = carDef(id); if(!d) return null;
+    return { titulo:esc(d.nome)+' <span class="hint" style="font-weight:400">· '+d.custo+' pt</span>', tituloTexto:d.nome, corpo:'<p>'+iconizarTexto(esc(d.txt))+'</p>', lado:"direita", largura:400 };
+  };
 
   // ----- Formulário de item genérico do inventário -----
   function newItemDraft(){ return { nome:"", desc:"", traits:[] }; }
@@ -5585,15 +5923,12 @@
       MUT_CATS.forEach(function(cat){
         var lista = (c.mutAdquiridas||[]).filter(function(m){ return m.cat===cat; });
         if(!lista.length) return;
-        body += '<p class="hint" style="margin:8px 0 4px;text-transform:uppercase;letter-spacing:.05em">'+esc(MUT_SUITS[cat])+' ('+MUT_SIGLA[cat]+')</p><div class="trait-list">';
+        body += '<p class="lx-sub">'+esc(MUT_SUITS[cat])+' ('+MUT_SIGLA[cat]+')</p><div class="lx-lista">';
         lista.forEach(function(m){
           var card = MUT_DECKS[cat][m.cardIdx], tier = card[2][m.tierIdx];
-          var pInfo = "";
           var totalP = custoSimbolos(m.custo).p, neutP = m.neutralizadas||0;
-          if(totalP && neutP>0) pInfo = ' <span class="hint">('+(totalP-neutP)+'/'+totalP+' '+dadoHtml("p")+' restantes'+(cat==="H" && neutP>=totalP?" · efeito cessado":"")+')</span>';
-          body += '<div class="trait" style="cursor:default;align-items:center"><span style="min-width:74px">'+custoChipHtml(m.custo)+'</span>' +
-            '<span class="txt"><b>'+esc(card[0]+" — "+tier[1])+'</b>'+pInfo+'<span>'+formatEfeito(tier[2], true)+'</span></span>' +
-            '<button type="button" class="btn secondary" style="flex:none" data-action="assim-remover" data-mutid="'+m.id+'">Remover</button></div>';
+          var extra = custoChipHtml(m.custo) + (totalP && neutP>0 ? '<span class="lx-sel">'+(totalP-neutP)+'/'+totalP+' '+dadoHtml("p")+'</span>' : '');
+          body += caixaLinha("mut", m.id, esc(card[0]+" — "+tier[1]), formatEfeito(tier[2], false), extra);
         });
         body += '</div>';
       });
@@ -5601,6 +5936,17 @@
 
     return sectionCard("assimilacao", "Assimilação (Mutações)", body);
   }
+  CAIXAS.mut = function(id){
+    var c = fichaAtual(); if(!c) return null;
+    var m = (c.mutAdquiridas||[]).filter(function(x){ return x.id===id; })[0]; if(!m || !MUT_DECKS[m.cat]) return null;
+    var card = MUT_DECKS[m.cat][m.cardIdx], tier = card[2][m.tierIdx];
+    var totalP = custoSimbolos(m.custo).p, neutP = m.neutralizadas||0;
+    var corpo = '<p class="hint" style="margin:0 0 6px">'+esc(MUT_SUITS[m.cat])+' ('+MUT_SIGLA[m.cat]+') · custo '+custoChipHtml(m.custo)+'</p>' +
+      '<p>'+formatEfeito(tier[2], true)+'</p>' +
+      (totalP ? '<p class="hint">'+(totalP-neutP)+' de '+totalP+' '+dadoHtml("p")+' ainda contam'+(m.cat==="H" && neutP>=totalP?' · efeito cessado':'')+'. A Clareza de Propósito retira Pressão.</p>' : '') +
+      '<div class="cx-acoes"><button type="button" class="btn secondary" data-action="assim-remover" data-mutid="'+m.id+'">Remover mutação</button></div>';
+    return { titulo:esc(card[0]+" — "+tier[1]), corpo:corpo, lado:"direita", largura:420 };
+  };
   function bindMutacoesCard(c){
     app.querySelectorAll('[data-mutcardtoggle]').forEach(function(el){
       el.addEventListener("click", function(){
@@ -5727,14 +6073,30 @@
         '<button type="button" class="btn secondary evol-btn" data-evolxp="1">Dar</button>' +
         '<button type="button" class="btn secondary evol-btn" data-evolxp="-1">Retirar</button></div>';
     }
-    if(x.historico.length){
-      html += '<details style="margin:6px 0 12px"><summary class="hint" style="cursor:pointer">Histórico ('+x.historico.length+')</summary><ul class="hint" style="margin:6px 0 0 18px;padding:0">' +
-        x.historico.slice().reverse().map(function(e){
-          return '<li>'+esc((e.ts||"").slice(0,10).split("-").reverse().join("/"))+' · '+(e.qtd?(e.qtd>0?'+':'')+e.qtd+' · ':'')+esc(e.motivo||"")+'</li>';
-        }).join('') + '</ul></details>';
-    }
+    // Cada grupo (Histórico, Conhecimentos e Práticas, Instintos, Características) é uma
+    // linha que abre na caixa ao lado com os botões de compra (ver CAIXAS.evol).
+    var pedidasN = (Array.isArray(c.caracPedidas) ? c.caracPedidas : []).length;
+    var baratoCP = Math.min.apply(null, CONH_PRAT.map(function(p){ return 2*(valorCPBase(c, p[0])+1); }));
+    var baratoI = Math.min.apply(null, INSTINTOS.map(function(i){ return 3*(instintoBase(c, i[0])+1); }));
+    html += '<div class="lx-lista" style="margin-top:6px">' +
+      caixaLinha("evol", "cp", "Conhecimentos e Práticas", "Custa o dobro do nível que vai atingir", '<span class="lx-sel'+(baratoCP<=saldo?' forte':'')+'">a partir de '+baratoCP+' XP</span>') +
+      caixaLinha("evol", "inst", "Instintos", (x.liberarInstinto ? "Liberado pelo Assimilador · custa o triplo do nível" : (gm ? "Ainda não liberado pro jogador" : "Só depois de uma sessão com mutação")), '<span class="lx-sel'+(x.liberarInstinto&&baratoI<=saldo?' forte':'')+'">'+(x.liberarInstinto||gm ? 'a partir de '+baratoI+' XP' : 'bloqueado')+'</span>') +
+      caixaLinha("evol", "carac", "Características", gm ? "Conceder ou devolver Características" : "Pedir ao Assimilador", pedidasN ? '<span class="lx-sel alerta">'+pedidasN+' pedido'+(pedidasN>1?'s':'')+'</span>' : '') +
+      (x.historico.length ? caixaLinha("evol", "hist", "Histórico", esc(x.historico.slice(-1)[0].motivo||""), '<span class="lx-sel">'+x.historico.length+'</span>') : '') +
+    '</div>';
+    return html;
+  }
+  function evolHistHtml(c){
+    var x = xpDados(c);
+    return '<ul class="hint" style="margin:0 0 0 18px;padding:0">' +
+      x.historico.slice().reverse().map(function(e){
+        return '<li>'+esc((e.ts||"").slice(0,10).split("-").reverse().join("/"))+' · '+(e.qtd?(e.qtd>0?'+':'')+e.qtd+' · ':'')+esc(e.motivo||"")+'</li>';
+      }).join('') + '</ul>';
+  }
+  function evolCpHtml(c){
+    var saldo = xpSaldo(c), gm = temAcessoTotal(), html = '';
     // Conhecimentos e Práticas: dobro do nível a atingir.
-    html += '<h3 style="margin:12px 0 6px">Conhecimentos e Práticas</h3><p class="hint" style="margin-top:0">Custa o dobro do nível que vai atingir (de 2 pra 3 custa 6, de 3 pra 4 custa 8).</p><div class="evol-grid">';
+    html += '<p class="hint" style="margin-top:0">Custa o dobro do nível que vai atingir (de 2 pra 3 custa 6, de 3 pra 4 custa 8).</p><div class="evol-grid">';
     CONH_PRAT.forEach(function(p){
       var atual = valorCPBase(c, p[0]), custo = 2*(atual+1);
       var podeDesfazer = gm && (c.caracAumentos||{})[p[0]] > ((c.conhPrat&&c.conhPrat[p[0]])||0);
@@ -5743,8 +6105,11 @@
         '<button type="button" class="btn secondary evol-btn" data-evol="cp" data-id="'+p[0]+'"'+(custo>saldo?" disabled":"")+'>+1 · '+custo+' XP</button></span></div>';
     });
     html += '</div>';
+    return html;
+  }
+  function evolInstHtml(c){
+    var x = xpDados(c), saldo = xpSaldo(c), gm = temAcessoTotal(), html = '';
     // Instintos: triplo, só depois de uma sessão com mutação (o Assimilador libera).
-    html += '<h3 style="margin:16px 0 6px">Instintos</h3>';
     if(x.liberarInstinto || gm){
       html += '<p class="hint" style="margin-top:0">Custa o triplo do nível que vai atingir (de 2 pra 3 custa 9).'+(x.liberarInstinto?' <b>Liberado pelo Assimilador.</b>':' Ainda não liberado pro jogador (só você, Assimilador, vê os botões).')+'</p><div class="evol-grid">';
       INSTINTOS.forEach(function(i){
@@ -5758,8 +6123,11 @@
     } else {
       html += '<p class="hint" style="margin-top:0">Humanos só aguçam Instintos depois de uma sessão em que passaram por mutação: o Assimilador libera quando for o caso.</p>';
     }
+    return html;
+  }
+  function evolCaracHtml(c){
+    var saldo = xpSaldo(c), gm = temAcessoTotal(), html = '';
     // Características: pedido do jogador, aprovação do Assimilador.
-    html += '<h3 style="margin:16px 0 6px">Características</h3>';
     var pedidas = Array.isArray(c.caracPedidas) ? c.caracPedidas : [];
     if(pedidas.length){
       html += pedidas.map(function(id){
@@ -5783,6 +6151,14 @@
       '</select><button type="button" class="btn accent" data-evolpedir>'+(gm?'Conceder':'Pedir ao Assimilador')+'</button></div>';
     return html;
   }
+  CAIXAS.evol = function(k){
+    var c = fichaAtual(); if(!c || c.precisaRefazer) return null;
+    var saldo = xpSaldo(c);
+    var tit = { cp:"Conhecimentos e Práticas", inst:"Instintos", carac:"Características", hist:"Histórico de Experiência" }[k];
+    var corpo = k==="cp" ? evolCpHtml(c) : k==="inst" ? evolInstHtml(c) : k==="carac" ? evolCaracHtml(c) : k==="hist" ? evolHistHtml(c) : null;
+    if(!tit || corpo == null) return null;
+    return { titulo:tit+' <span class="hint" style="font-weight:400">· '+saldo+' XP disponíveis</span>', tituloTexto:tit, corpo:corpo, lado:"direita", largura:440 };
+  };
   function bindEvoluir(c){
     function salvar(){ updateChar(c); if(caps.mode==="mesa"){ clearTimeout(publishTimer); doPublish(); } renderSheet(); }
     app.querySelectorAll('[data-evol]').forEach(function(btn){
@@ -5905,15 +6281,6 @@
     tentar("Teste", function(){ bindSheetTest(c); });
     tentar("ficha", function(){ bindSheetCampos(c, maxNivel); });
     tentar("Navegação", bindFichaNav);
-    tentar("Origem", function(){ bindOrigemTopicos(c); });
-    tentar("Bônus de Assimilação", function(){
-      var bt = app.querySelector("[data-bonustop]");
-      if(bt) bt.addEventListener("click", function(ev){
-        ev.stopPropagation();
-        if(state.bonusPop) fecharBonusPop(); else { fecharOrigemPop(); abrirBonusPop(c); }
-      });
-      if(state.bonusPop) abrirBonusPop(c); // re-render: reabre com os valores atualizados
-    });
   }
   function bindSheetCampos(c, maxNivel){
     // Nome do jogador e Notas: só atualizam o objeto local a cada tecla (sem
@@ -6061,6 +6428,7 @@
     app.querySelectorAll('[data-inv="del"]').forEach(function(btn){
       btn.addEventListener("click", function(){
         c.inventarioExtra.splice(parseInt(btn.getAttribute("data-idx"),10),1);
+        if(state.caixa && state.caixa.indexOf("inv|") === 0) fecharCaixa();
         marcarPendenteOuSalvar(c, "inv"); renderSheet();
       });
     });
@@ -6140,9 +6508,10 @@
     // ativa e clicável mesmo que o recurso tenha zerado depois.
     var agirIndisponivel = !t.agir && !agirPorInstintoDisponivel(c);
     var extraIndisponivel = !t.extraDado && !extraDadoDisponivel(c);
-    var extraLabel = "Manter +1 dado extra nesta rolagem — Empenho (declare antes de rolar; gasta 1 ponto de Determinação)";
+    var extraLabel = "Empenho: manter +1 dado extra <span class=\"hint\" style=\"margin:0\">(1 ponto de Determinação)</span>";
     var body = pendingSectionBannerHtml(c, "teste");
-    body += '<p class="hint">Escolha o Instinto e a Prática/Conhecimento do teste: a pilha de dados é montada automaticamente com os valores da ficha (1d6 por ponto de Instinto, 1d10 por ponto de Prática/Conhecimento). Ao Agir por Instinto, escolha dois Instintos no lugar de Instinto + Prática/Conhecimento (pode repetir o mesmo Instinto nos dois); os dados desses Instintos viram d12. Pra manter um dado a mais nessa rolagem, declare isso antes de rolar (abaixo): depois que os dados caírem só dá pra escolher entre os que já foram rolados, não pra manter mais um.</p>';
+    // As explicações ficam na caixa "Como funciona" (CAIXAS.testar); no cartão, só os controles.
+    body += '<div class="lx-lista" style="margin-bottom:12px">'+caixaLinha("testar", "", "Como funciona", "Instinto + Prática/Conhecimento, Agir por Instinto, dado extra")+'</div>';
     body += '<div class="grid cols-2">';
     body += '<div class="field"><label>Instinto</label><select data-test="instinto" '+(t.rolling?"disabled":"")+'>' +
       INSTINTOS.map(function(i){ return '<option value="'+i[0]+'"'+(t.instintoKey===i[0]?" selected":"")+'>'+i[1]+' ('+valorInstinto(c,i[0])+')</option>'; }).join('') +
@@ -6153,11 +6522,11 @@
         CONH_PRAT.map(function(p){ return '<option value="'+p[0]+'"'+(t.cpKey===p[0]?" selected":"")+'>'+p[1]+' ('+valorCP(c,p[0])+')</option>'; }).join('')) +
       '</select></div>';
     body += '</div>';
-    body += '<label style="display:flex;align-items:center;gap:8px;text-transform:none;font-size:13px;margin-bottom:10px"><input type="checkbox" style="width:auto" data-test="agir"'+(t.agir?" checked":"")+((t.rolling||agirIndisponivel)?" disabled":"")+'> Agir por Instinto — Rolagem Assimilada (usa dois Instintos no lugar de Instinto + Prática/Conhecimento; os dados desses Instintos viram d12 e mantém 1 dado a mais; gasta 1 ponto de Assimilação, ou 2 de Determinação em substituição caso não haja Assimilação disponível)</label>';
+    body += '<label style="display:flex;align-items:center;gap:8px;text-transform:none;font-size:13px;margin-bottom:10px"><input type="checkbox" style="width:auto" data-test="agir"'+(t.agir?" checked":"")+((t.rolling||agirIndisponivel)?" disabled":"")+'> Agir por Instinto <span class="hint" style="margin:0">(Rolagem Assimilada: 1 ponto de Assimilação ou 2 de Determinação)</span></label>';
     body += '<label style="display:flex;align-items:center;gap:8px;text-transform:none;font-size:13px;margin-bottom:10px"><input type="checkbox" style="width:auto" data-test="extra"'+(t.extraDado?" checked":"")+((t.rolling||extraIndisponivel)?" disabled":"")+'> '+extraLabel+'</label>';
     body += '<div class="budget ok"><span>Pilha calculada</span><span class="num">'+dInst+' d'+instintoDado+(d10?' + '+d10+' d10':'')+'</span></div>';
     body += '<div class="btn-row" style="margin-top:0"><button class="btn accent" data-testaction="roll" '+(t.rolling?'disabled':'')+'>'+(t.rolling?"Rolando…":"Rolar Teste")+'</button></div>';
-    if(!t.rolling && (agirIndisponivel || extraIndisponivel)) body += '<p class="hint">Os pontos de Agir por Instinto/dado extra já são gastos assim que a caixa é marcada (só voltam se for desmarcada antes de rolar) - por isso alguma dessas opções pode estar bloqueada se não sobrar recurso pra ela. Esse gasto só é sincronizado com a mesa quando o teste for confirmado no botão "Confirmar escolha e registrar no histórico".</p>';
+    if(!t.rolling && (agirIndisponivel || extraIndisponivel)) body += '<p class="hint">Alguma opção está bloqueada por falta de pontos. Veja em <b>Como funciona</b>.</p>';
 
     if(t.rolling){
       var n = Math.max(1, t.rollingCount||1);
@@ -6188,6 +6557,15 @@
     return sectionCard("testar", "Testar", body);
   }
 
+  CAIXAS.testar = function(){
+    var c = fichaAtual(); if(!c) return null;
+    var corpo = '<p>Escolha o <b>Instinto</b> e a <b>Prática ou Conhecimento</b> do teste: a pilha de dados é montada sozinha com os valores da ficha (1d6 por ponto de Instinto, 1d10 por ponto de Prática/Conhecimento).</p>' +
+      '<p><b>Agir por Instinto (Rolagem Assimilada):</b> escolha dois Instintos no lugar de Instinto + Prática/Conhecimento (pode repetir o mesmo nos dois). Os dados desses Instintos viram d12 e você mantém 1 dado a mais. Gasta 1 ponto de Assimilação, ou 2 de Determinação se não houver Assimilação disponível.</p>' +
+      '<p><b>Empenho (dado extra):</b> pra manter um dado a mais nessa rolagem, declare antes de rolar. Gasta 1 ponto de Determinação.</p>' +
+      '<p>Depois que os dados caírem, clique num dado pra manter ou soltar outro (ex.: tensionando uma Origem) e confirme pra registrar no histórico.</p>' +
+      '<p class="hint">Os pontos de Agir por Instinto e do dado extra são gastos assim que a caixa é marcada (só voltam se for desmarcada antes de rolar), por isso uma opção pode ficar bloqueada se não sobrar recurso pra ela. Esse gasto só vai pra mesa quando o teste é confirmado no botão "Confirmar escolha e registrar no histórico".</p>';
+    return { titulo:"Testar: como funciona", corpo:corpo, lado:"direita", largura:440 };
+  };
   function bindSheetTest(c){
     var t = state.sheetTest;
     if(t.rolling){ iniciarTickerDados(); }
@@ -6397,7 +6775,7 @@
     html += '<div class="btn-row"><button class="btn secondary" data-editaction="cancel">Cancelar edição</button><button class="btn accent" data-editaction="save">Salvar alterações</button></div>';
     html += '</div>';
 
-    app.innerHTML = html;
+    app.innerHTML = html + caixaHtml();
     bindGlobal();
 
     var nomeEdit = app.querySelector('[data-editnome]');
@@ -6499,6 +6877,35 @@
     '</div>';
   }
 
+  function mesaFichaDados(id){
+    var c = visibleChars().filter(function(x){ return x.id===id; })[0];
+    if(c) return { c:c, soLeitura:false };
+    var r = (shared.resumos||[]).filter(function(x){ return x.id===id && !x.ehNpc; })[0];
+    return r ? { c:r, soLeitura:true } : null;
+  }
+  function mesaLinhaHtml(c){
+    var camp = c.acampamento ? CAMPS[c.acampamento] : null;
+    var maxNivel = c.saudeMax != null ? c.saudeMax : (c.instintos ? saudePontosMax(c) : 1);
+    var nivelDet = c.determinacao ? nivelDetAtual(c) : 10;
+    var nS = c.saudeNivel!=null ? c.saudeNivel : 6;
+    var extras = '<span class="lx-sel'+(nS<=2?' alerta':'')+'" title="Saúde: nível e pontos">♥ '+nS+'/6 · '+(c.saudePontosAtuais||0)+'/'+maxNivel+'</span>' +
+      '<span class="lx-sel" title="Nível de Determinação">Det. '+nivelDet+'/10</span>';
+    return '<div class="mesa-lx" style="'+(camp?'--camp-color:'+camp.cor:'')+'">' +
+      caixaLinha("mesa", c.id, (camp ? '<img class="mesa-lx-img" src="'+camp.img+'" alt="">' : '')+esc(c.nomePersonagem||"Sem nome")+npcBadgeHtml(c),
+        esc((camp?camp.nome:"acampamento não definido")+(c.nomeJogador?" · "+c.nomeJogador:"")), extras) + '</div>';
+  }
+  CAIXAS.mesa = function(id){
+    if(state.view !== "mesa") return null;
+    var d = mesaFichaDados(id); if(!d) return null;
+    var c = d.c, camp = c.acampamento ? CAMPS[c.acampamento] : null;
+    var maxNivel = c.saudeMax != null ? c.saudeMax : (c.instintos ? saudePontosMax(c) : 1);
+    var corpo = '<p class="hint" style="margin:0 0 8px">'+(camp?camp.nome:"acampamento não definido")+(c.nomeJogador?" · jogador(a): "+esc(c.nomeJogador):"")+'</p>' +
+      '<div style="margin-bottom:10px"><span class="hint" style="display:block;margin-bottom:3px">Saúde (nível '+(c.saudeNivel!=null?c.saudeNivel:"?")+'/6'+(c.saudeNivel!=null&&NIVEIS_SAUDE[c.saudeNivel]?' · '+NIVEIS_SAUDE[c.saudeNivel]:'')+')</span>'+diamondsMini(c.saudePontosAtuais||0, maxNivel, "c-saude")+'</div>' +
+      tugMiniBarHtml(c) +
+      (d.soLeitura ? '<p class="hint" style="margin:10px 0 0">Ficha de outro jogador: só o resumo.</p>'
+        : '<div class="cx-acoes"><button type="button" class="btn accent" data-mesaopen="'+c.id+'">Abrir ficha</button></div>');
+    return { titulo:esc(c.nomePersonagem||"Sem nome")+npcBadgeHtml(c), tituloTexto:c.nomePersonagem||"Ficha", corpo:corpo, lado:"direita", largura:380, cor:camp?camp.cor:null };
+  };
   // Aba Mesa: no lugar do antigo rolador avulso de dados. Mostra o histórico geral
   // de rolagens (funciona tanto na mesa ao vivo quanto no modo local) e uma
   // mini-ficha de cada personagem, decorada com a cor do acampamento.
@@ -6522,14 +6929,16 @@
     if(!chars.length && !resumosOutros.length){
       html += '<div class="card"><p class="hint">Nenhum personagem criado ainda.</p></div>';
     } else {
-      html += '<div class="roster-grid">';
-      chars.forEach(function(c){ html += miniFichaCard(c); });
-      resumosOutros.forEach(function(r){ html += miniFichaCard(r, true); });
-      html += '</div>';
+      // Cada ficha é uma linha (nome, acampamento, Saúde e Determinação); o resumo
+      // completo abre na caixa ao lado (ver CAIXAS.mesa).
+      html += '<div class="card"><div class="lx-lista">';
+      chars.forEach(function(c){ html += mesaLinhaHtml(c); });
+      resumosOutros.forEach(function(r){ html += mesaLinhaHtml(r); });
+      html += '</div></div>';
     }
     html += '<div class="btn-row"><span></span><button class="btn secondary" data-nav="roster">Voltar</button></div>';
 
-    app.innerHTML = html;
+    app.innerHTML = html + caixaHtml();
     bindGlobal();
     app.querySelectorAll('[data-mesaopen]').forEach(function(el){
       el.addEventListener("click", function(){ goto("sheet", {charId: el.getAttribute("data-mesaopen")}); });
@@ -7125,7 +7534,7 @@
       '<button type="button" class="btn secondary doc-btn" data-bzerar="'+enc.id+'"'+((p.s||p.a||p.p)?'':' disabled')+' title="Pontos livres que não pagaram nem foram represados em nenhuma Ativação se perdem">Fim da rodada: descartar sobras</button></div>';
     html += '<p class="hint" style="margin:4px 0 0">A rolagem mantém todos os dados e soma aos pontos (Sucesso, Adaptação e Pressão). Todo ponto deve ser investido na rodada: <b>Pagar</b> uma Ativação ou <b>Represar</b> numa incompleta (fica guardado nela pra próxima rodada). O que não pagar nada se perde no fim da rodada.</p>';
     html += bestRolagemHtml(enc.rolagem, 'data-bmostrar="'+enc.id+'"', 'data-bfecharrol="'+enc.id+'"');
-    html += bestCondHtml(cri, "e"+enc.id);
+    if((cri.cond||[]).length) html += '<div class="lx-lista" style="margin:8px 0">'+caixaLinha("bcond", enc.id, "Condicionantes", esc(cri.cond.map(function(x){ return x.n; }).join(" · ")), '<span class="lx-sel">'+cri.cond.length+'</span>')+'</div>';
     html += '<div class="best-ativs">'+bestAtivacoesHtml(cri, "e"+enc.id, enc)+'</div>';
     html += bestDesgasteHtml(cri, enc, "e"+enc.id);
     if(cri.nota) html += '<p class="item-nota">'+bestTextoHtml(cri.nota, "e"+enc.id+"-nota")+'</p>';
@@ -7159,12 +7568,19 @@
           '<p class="item-nota" style="margin-top:2px">'+esc(cri.sub)+' · '+esc(cri.perfil)+'</p>' +
           '<div class="row" style="gap:6px;flex-wrap:wrap;margin-top:8px">' +
             '<button type="button" class="btn accent doc-btn" data-bcena="'+cri.id+'">⚔ Colocar em cena</button>' +
-            '<button type="button" class="btn secondary doc-btn" data-bficha="'+cri.id+'">'+(fichas[cri.id]?'Fechar ficha':'Ver ficha')+'</button>' +
+            '<button type="button" class="btn secondary doc-btn" '+caixaAttr("bficha", cri.id)+' aria-haspopup="dialog">Ver ficha ›</button>' +
             '<button type="button" class="btn secondary doc-btn" data-brolcat="'+cri.id+'">🎲 Rolar Ativação</button></div>' +
           bestRolagemHtml(rolCat[cri.id], 'data-bmostrarcat="'+cri.id+'"', 'data-bfecharrolcat="'+cri.id+'"');
-        if(fichas[cri.id]){
+        html += '</div>';
+      });
+      html += '</details>';
+    });
+    return html;
+  }
+  // Ficha completa da criatura do catálogo, na caixa ao lado (antes abria dentro do cartão).
+  function bestFichaCaixaHtml(cri){
           var editCat = (state.bestEditCat||{})[cri.id], custom = bestDescCustom(cri.id);
-          html += '<div class="best-ficha">' + (editCat
+          var html = '<div class="best-ficha">' + (editCat
             ? '<div class="field" style="margin:0"><label>Descrição para os jogadores (padrão desta criatura)</label><textarea data-bdesccat="'+cri.id+'" style="min-height:90px">'+esc(bestDescMesa(cri))+'</textarea></div>' +
               '<div class="row" style="gap:6px;margin:6px 0 8px;flex-wrap:wrap"><button type="button" class="btn accent doc-btn" data-bsalvacat="'+cri.id+'">Salvar</button><button type="button" class="btn secondary doc-btn" data-bcancelcat="'+cri.id+'">Cancelar</button>' +
               (custom ? '<button type="button" class="btn secondary doc-btn" data-brestauracat="'+cri.id+'">Voltar ao texto original</button>' : '') + '</div>'
@@ -7173,13 +7589,17 @@
             (cri.trilhas ? '<p class="item-nota">'+cri.trilhas.map(function(t){ return '<b>'+esc(t.nome)+':</b> '+t.alvo+' Sucessos'; }).join(' · ')+'</p>' : '') +
             bestCondHtml(cri, "c"+cri.id) + bestAtivacoesHtml(cri, "c"+cri.id, null) + bestDesgasteHtml(cri, null, "c"+cri.id) +
             (cri.nota ? '<p class="item-nota">'+bestTextoHtml(cri.nota, "c"+cri.id+"-nota")+'</p>' : '') + '</div>';
-        }
-        html += '</div>';
-      });
-      html += '</details>';
-    });
-    return html;
+            return html;
   }
+  CAIXAS.bficha = function(id){
+    var cri = bestCriatura(id); if(!cri || state.view !== "gm") return null;
+    return { titulo:esc(cri.nome)+' <span class="hint" style="font-weight:400">· '+bestPilhaTexto(cri.pilha)+' · '+cri.suc+' Sucessos</span>', tituloTexto:cri.nome, corpo:bestFichaCaixaHtml(cri), lado:"direita", largura:520, ref:".best-cri" };
+  };
+  CAIXAS.bcond = function(encId){
+    var enc = encontroGet(encId); if(!enc || state.view !== "gm") return null;
+    var cri = bestCriatura(enc.criaturaId); if(!cri || !(cri.cond||[]).length) return null;
+    return { titulo:"Condicionantes · "+esc(enc.nome), tituloTexto:"Condicionantes", corpo:bestCondHtml(cri, "e"+enc.id), lado:"direita", largura:440, ref:".best-enc" };
+  };
   function gmBestiarioHtml(){
     var encs = encontrosLista();
     var body = '<div id="gm-bestiario">';
@@ -7201,7 +7621,8 @@
     });
   }
   function bindGmBestiario(rerender){
-    var raiz = app.querySelector("#gm-bestiario"); if(!raiz) return;
+    var raizCard = app.querySelector("#gm-bestiario"); if(!raizCard) return;
+    var raiz = comCaixa(raizCard); // também liga os botões da ficha/condicionantes abertas na caixa
     function on(sel, ev, fn){ raiz.querySelectorAll(sel).forEach(function(el){ el.addEventListener(ev, function(e){ fn(el, e); }); }); }
     var busca = raiz.querySelector("#best-busca");
     if(busca){
@@ -7623,16 +8044,29 @@
       var itens = grupos[local].slice().sort(function(a,b){ return itemPoolEscassez(a)-itemPoolEscassez(b) || String(a.nome).localeCompare(String(b.nome)); });
       var aberto = state.itemGruposAbertos[local] || !!f.local || itens.some(function(it){ return it.id===state.itemEntregar; });
       html += '<details class="doc-grupo" data-ipgrupo="'+esc(local)+'"'+(aberto?' open':'')+'><summary><b>'+esc(local)+'</b> <span class="hint">· '+itens.length+' ite'+(itens.length>1?'ns':'m')+'</span></summary>';
-      itens.forEach(function(it){ html += itemPoolLinhaHtml(it, false); });
+      html += '<div class="lx-lista">';
+      itens.forEach(function(it){
+        var e = itemPoolEscassez(it), nEnt = (it.entregues||[]).length;
+        html += caixaLinha("ipool", it.id, esc(it.nome)+((it.qtd||1)>1?' <span class="item-qtd">x'+it.qtd+'</span>':''), esc(it.desc||it.efeito||""),
+          '<span class="lx-sel" title="Escassez">'+e+' · '+esc(ESCASSEZ_NOMES[e]||"")+'</span>' +
+          (!it.efeito ? '<span class="lx-sel alerta" title="Sem efeito descrito">sem efeito</span>' : '') +
+          (nEnt ? '<span class="lx-sel forte" title="Já entregue">✓ entregue</span>' : ''));
+      });
+      html += '</div>';
       html += '</details>';
     });
     html += '</div>';
     return html;
   }
-  function itemPoolLinhaHtml(it, sorteado){
+  CAIXAS.ipool = function(id){
+    if(state.view !== "gm" || state.itemPoolEdit) return null;
+    var it = itensPoolLista().filter(function(x){ return x.id===id; })[0]; if(!it) return null;
+    return { titulo:esc(it.nome), corpo:itemPoolLinhaHtml(it, false, true), lado:"direita", largura:460, ref:"#gm-itens" };
+  };
+  function itemPoolLinhaHtml(it, sorteado, naCaixa){
     var e = itemPoolEscassez(it);
     var nomes = (it.entregues||[]).map(function(x){ var ch = getChar(x.charId); return ch ? ch.nomePersonagem : null; }).filter(Boolean);
-    var html = '<div class="item-card">' +
+    var html = '<div class="item-card'+(naCaixa?' no-caixa':'')+'">' +
       itemCorpoHtml({ nome:it.nome, qtd:it.qtd, traits:normalizarTraits(it.traits), desc:it.desc, efeito:it.efeito },
         '<span class="item-chip esc" title="Escassez">'+e+' · '+esc(ESCASSEZ_NOMES[e]||"")+'</span>') +
       (!it.efeito ? '<p class="item-nota" style="color:var(--danger)">Sem efeito descrito.</p>' : '') +
@@ -7653,7 +8087,7 @@
     return html + '</div>';
   }
   function bindGmItens(rerender){
-    var raiz = app.querySelector("#gm-itens"); if(!raiz) return;
+    var raiz = comCaixa(app.querySelector("#gm-itens")); if(!raiz) return; // inclui a caixa do item aberto
     var ed = state.itemPoolEdit;
     raiz.querySelectorAll("[data-ipf]").forEach(function(el){
       el.addEventListener(el.tagName==="SELECT" ? "change" : "input", function(){ ed[el.getAttribute("data-ipf")] = el.value; });
@@ -7851,7 +8285,7 @@
     }
     html += '<div class="btn-row"><button class="btn secondary" data-nav="roster">Voltar</button></div>';
 
-    app.innerHTML = html;
+    app.innerHTML = html + caixaHtml();
     bindGlobal();
     bindGmDryRoll();
     bindGmConflitos();
@@ -7914,7 +8348,7 @@
     }
     html += '<div class="btn-row"><button class="btn secondary" data-nav="roster">Voltar</button></div>';
 
-    app.innerHTML = html;
+    app.innerHTML = html + caixaHtml();
     bindGlobal();
     bindGmDryRoll();
     tentar("Bestiário", function(){ bindGmBestiario(renderGmMesa); });
