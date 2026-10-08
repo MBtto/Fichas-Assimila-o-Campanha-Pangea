@@ -2713,9 +2713,16 @@
   var shared = { characters:[], testLog:[], resumos:[] }; // espelho em memória do banco (modo mesa)
   // Fase 3 (login): conta Google logada e quem é o Assimilador. A regra de verdade
   // fica no servidor (regras do Firestore); aqui é só pra montar a tela certa.
-  var MESTRE_EMAIL = "marcoa.barreto14@gmail.com";
+  // Campanhas (etapa A): tudo da mesa mora em campanhas/{id}/... e quem mestra é o
+  // DONO da campanha (campo donoUid), não mais um e-mail fixo. O e-mail abaixo só
+  // serve pra uma coisa: autorizar a migração única da mesa antiga para a
+  // campanha Pangea (ver migrarParaCampanhas).
+  var MIGRACAO_EMAIL = "marcoa.barreto14@gmail.com";
+  var CAMPANHA_PADRAO = "pangea";
+  var campanhaAtual = null; // documento campanhas/{id} da campanha aberta
   var usuario = null;
-  function ehMestre(){ return !!(usuario && usuario.email && usuario.email.toLowerCase() === MESTRE_EMAIL); }
+  function ehMestre(){ return !!(usuario && campanhaAtual && campanhaAtual.donoUid === usuario.uid); }
+  function ehMembro(){ return !!(usuario && campanhaAtual && (campanhaAtual.donoUid === usuario.uid || (campanhaAtual.membros||[]).indexOf(usuario.uid) > -1)); }
   var rolagensComuns = [], rolagensNpc = [];
 
   function loadChars(){
@@ -3079,6 +3086,166 @@
       return FB.escrever(ops);
     }).catch(function(err){ console.error("[Pangea] falha na semente", err); });
   }
+  // ---------- CAMPANHAS (etapa A) ----------
+  // Configuração da Pangea, guardada no documento da campanha. Por enquanto só
+  // registra como a Pangea já funciona hoje; a etapa C vai ler isso para ligar e
+  // desligar cada coisa por campanha.
+  var CONFIG_PANGEA = {
+    criacao: { acampamento: true, geracao: "texto", kitInicial: true },
+    automacoes: { qualidadeCaiComPressao: true, dadosMantidosAuto: true, bestiarioDesgasteAuto: true, qualidadePorLocal: true }
+  };
+  var COLECOES_ANTIGAS = ["personagens","resumos","rolagens","rolagensNpc","documentos","documentosNotas","encontros","encontrosMesa","itensPool","meta"];
+
+  // Depois do login: abre a campanha Pangea (a única por enquanto). Se ela ainda
+  // não existe, só a conta da migração vê o botão de migrar; os outros esperam.
+  function abrirCampanhaInicial(fb, u, aoAbrir){
+    app.innerHTML = '<p class="empty">Abrindo a campanha…</p>';
+    fb.lerDoc("/campanhas", CAMPANHA_PADRAO).then(function(cmp){
+      if(usuario !== u) return;
+      var ehDonoMigracao = !!(u.email && u.email.toLowerCase() === MIGRACAO_EMAIL);
+      if(!cmp){ return ehDonoMigracao ? mostrarMigracao(fb, u, aoAbrir, null) : mostrarAguardandoMigracao(); }
+      if(!cmp.migracao || cmp.migracao.etapa !== "ok"){
+        return cmp.donoUid === u.uid ? mostrarMigracao(fb, u, aoAbrir, cmp) : mostrarAguardandoMigracao();
+      }
+      campanhaAtual = cmp;
+      if(!ehMembro()){ campanhaAtual = null; return mostrarSemCampanha(); }
+      fb.abrirCampanha(cmp.id);
+      aoAbrir();
+    }).catch(function(err){
+      if(usuario !== u) return;
+      if(err && err.code === "permission-denied") return mostrarSemCampanha();
+      mostrarErroConexao(err);
+    });
+  }
+  function telaAvisoHtml(titulo, textoHtml, botoesHtml){
+    return '<div class="card" style="max-width:520px;margin:60px auto 0;text-align:center">' +
+      '<h1 style="margin-bottom:6px">'+titulo+'</h1>' +
+      '<div class="hint" style="margin:0 auto 18px">'+textoHtml+'</div>' +
+      '<div class="btn-row" style="justify-content:center;gap:8px;flex-wrap:wrap">'+(botoesHtml||'')+
+        '<button type="button" class="btn secondary" data-action="sair-aviso">Sair</button></div>' +
+    '</div>';
+  }
+  function ligarSairAviso(){
+    var b = app.querySelector('[data-action="sair-aviso"]');
+    if(b) b.addEventListener("click", function(){ if(FB) FB.sair(); });
+  }
+  function mostrarSemCampanha(){
+    document.getElementById("rollfeed").innerHTML = "";
+    app.innerHTML = telaAvisoHtml("Fichas de Pangea",
+      '<p>A conta <b>'+esc((usuario && usuario.email) || "")+'</b> ainda não participa de nenhuma campanha.</p><p>Peça ao mestre para te incluir na mesa.</p>');
+    ligarSairAviso();
+  }
+  function mostrarAguardandoMigracao(){
+    document.getElementById("rollfeed").innerHTML = "";
+    app.innerHTML = telaAvisoHtml("Mesa em atualização",
+      '<p>O mestre está passando a mesa para o novo formato de campanhas. Nada se perde.</p><p>Tente de novo em alguns minutos.</p>',
+      '<button type="button" class="btn accent" onclick="location.reload()">Tentar de novo</button>');
+    ligarSairAviso();
+  }
+  function mostrarMigracao(fb, u, aoAbrir, existente){
+    document.getElementById("rollfeed").innerHTML = "";
+    app.innerHTML = telaAvisoHtml("Passar a mesa para campanhas",
+      '<p>'+(existente ? 'A migração começou e não terminou. Dá pra continuar de onde parou.' : 'Esta é a primeira vez que o site abre no formato de campanhas.')+'</p>' +
+      '<p style="text-align:left">O que acontece:<br>• a mesa atual vira a campanha <b>Pangea</b>, com você como mestre;<br>• fichas, documentos, itens, criaturas e rolagens são copiados para dentro dela;<br>• cada ficha de jogador ganha também uma <b>ficha-base</b> na conta do jogador;<br>• NPCs ficam só na campanha, vistos só por você;<br>• nada é apagado: os dados antigos continuam guardados como estão.</p>' +
+      '<p>Faça um backup antes, se ainda não fez.</p><p id="mig-status" style="font-weight:600"></p>',
+      '<button type="button" class="btn accent" data-action="migrar">'+(existente ? 'Continuar a migração' : 'Migrar agora')+'</button>');
+    ligarSairAviso();
+    var botao = app.querySelector('[data-action="migrar"]');
+    var status = app.querySelector('#mig-status');
+    botao.addEventListener("click", function(){
+      botao.disabled = true;
+      migrarParaCampanhas(fb, u, function(txt){ status.textContent = txt; }).then(function(cmp){
+        if(usuario !== u) return;
+        campanhaAtual = cmp;
+        fb.abrirCampanha(cmp.id);
+        aoAbrir();
+      }).catch(function(err){
+        console.error("[Pangea] migração", err);
+        botao.disabled = false;
+        status.textContent = "Não deu certo: " + (err && (err.code || err.message) || "erro desconhecido") + ". Nada foi apagado; pode tentar de novo.";
+      });
+    });
+  }
+  // Migração única: copia as coleções antigas da raiz para campanhas/pangea/... e
+  // cria as fichas-base. Pode ser repetida sem estrago (as cópias são regravadas
+  // iguais); a última gravação cria as fichas-base e marca a campanha como pronta
+  // no mesmo lote, então ou tudo isso entra junto ou nada entra.
+  function migrarParaCampanhas(fb, u, aviso){
+    var cid = CAMPANHA_PADRAO;
+    var antigos = {};
+    var agora = new Date().toISOString();
+    aviso("Lendo a mesa atual…");
+    return Promise.all(COLECOES_ANTIGAS.map(function(col){
+      return fb.lerColecao("/"+col).then(function(l){ antigos[col] = l; });
+    })).then(function(){
+      var r = montarMigracao(antigos, u, cid, agora);
+      aviso("Criando a campanha Pangea…");
+      return fb.escrever([{ tipo:"set", col:"/campanhas", id:cid, data:r.campanha }]).then(function(){
+        fb.abrirCampanha(cid);
+        aviso("Copiando "+r.ops.length+" registros para a campanha…");
+        return fb.escrever(r.ops);
+      }).then(function(){
+        aviso("Criando as fichas-base dos jogadores…");
+        var fim = r.bases.slice();
+        fim.push({ tipo:"update", col:"/campanhas", id:cid, data:{ "migracao.etapa":"ok", "migracao.concluidaEm":new Date().toISOString() } });
+        return fb.escrever(fim);
+      }).then(function(){
+        aviso("Pronto.");
+        r.campanha.migracao.etapa = "ok";
+        return r.campanha;
+      });
+    });
+  }
+  // Monta (sem gravar nada) o que a migração vai escrever. Separado pra poder testar.
+  function montarMigracao(antigos, u, cid, agora){
+    var limpo = function(o){ return JSON.parse(JSON.stringify(o)); };
+    var pers = antigos.personagens || [];
+    var membros = [u.uid];
+    pers.forEach(function(p){
+      var d = p.data || {};
+      if(!d.ehNpc && d.donoUid && membros.indexOf(d.donoUid) < 0) membros.push(d.donoUid);
+    });
+    var contagem = {};
+    COLECOES_ANTIGAS.forEach(function(col){ contagem[col] = (antigos[col]||[]).length; });
+    var campanha = {
+      id: cid, nome: "Pangea", sistema: "assimilacao",
+      donoUid: u.uid, donoEmail: u.email || null, donoNome: u.displayName || null,
+      membros: membros, criadaEm: agora, config: limpo(CONFIG_PANGEA),
+      migracao: { etapa: "dados", iniciadaEm: agora, origem: "colecoes-da-raiz", contagem: contagem }
+    };
+    var npcs = {};
+    pers.forEach(function(p){ if(p.data && p.data.ehNpc) npcs[p.id] = true; });
+    var ops = [], bases = [];
+    pers.forEach(function(p){
+      var d = limpo(p.data || {});
+      d.id = d.id || p.id;
+      d.campanhaId = cid;
+      if(d.ehNpc){
+        // NPC: ficha da mesa, sem conta vinculada (só o mestre vê).
+        d.donoUid = null; d.donoEmail = null; d.donoNome = null; d.baseId = null;
+      } else if(d.donoUid){
+        d.baseId = p.id;
+        var base = limpo(p.data);
+        base.id = p.id; base.ehBase = true; base.origemCampanha = cid; base.campanhas = [cid];
+        base.baseCriadaEm = agora;
+        delete base.campanhaId; delete base.baseId;
+        bases.push({ tipo:"set", col:"/fichas", id:p.id, data:base });
+      } else {
+        d.baseId = null; // ficha de jogador ainda sem conta: ganha a base quando for vinculada
+      }
+      ops.push({ tipo:"set", col:"personagens", id:p.id, data:d });
+    });
+    (antigos.resumos || []).forEach(function(x){
+      var d = limpo(x.data || {});
+      if(npcs[x.id] || d.ehNpc){ d.donoUid = null; }
+      ops.push({ tipo:"set", col:"resumos", id:x.id, data:d });
+    });
+    ["rolagens","rolagensNpc","documentos","documentosNotas","encontros","encontrosMesa","itensPool","meta"].forEach(function(col){
+      (antigos[col] || []).forEach(function(x){ ops.push({ tipo:"set", col:col, id:x.id, data:limpo(x.data || {}) }); });
+    });
+    return { campanha: campanha, ops: ops, bases: bases };
+  }
+
   // Tela de erro quando não dá pra falar com o banco (ex.: sem internet, ou o login
   // anônimo desativado no console do Firebase). Mostra o código técnico pra ajudar.
   function mostrarErroConexao(err){
@@ -4613,7 +4780,9 @@
           if(!vf.ok){ alert(vf.msg); return; }
           if(!podeEditar()) return;
           c.atualizadoEm = new Date().toISOString();
-          if(caps.mode === "mesa" && usuario){ c.donoUid = usuario.uid; c.donoEmail = usuario.email||null; c.donoNome = usuario.displayName||null; }
+          // NPC é ficha da mesa: fica sem conta vinculada e só o mestre vê.
+          if(caps.mode === "mesa" && usuario && !c.ehNpc){ c.donoUid = usuario.uid; c.donoEmail = usuario.email||null; c.donoNome = usuario.displayName||null; }
+          if(c.ehNpc){ c.donoUid = null; c.donoEmail = null; c.donoNome = null; }
           var list = loadChars(); list.push(c);
           if(caps.mode === "mesa") marcarCharSujo(c.id);
           saveChars(list);
@@ -8381,7 +8550,7 @@
     html += gmDocsHtml();
     html += tentarHtml("Itens achados", gmItensHtml);
     html += backupCardHtml();
-    html += '<h2 style="margin:20px 0 10px">Personagens da Mesa</h2>';
+    html += '<div class="row" style="justify-content:space-between;align-items:center;margin:20px 0 10px;gap:8px;flex-wrap:wrap"><h2 style="margin:0">Personagens da Mesa</h2><button type="button" class="btn secondary" data-nav="wizard-npc">+ Novo NPC</button></div>';
     if(!roster.length){
       html += '<div class="card"><p class="hint">Nenhum personagem criado ainda nesta mesa.</p></div>';
     } else {
@@ -8420,10 +8589,21 @@
       el.addEventListener("change", function(){
         if(!temAcessoTotal()) return;
         var c = getChar(el.getAttribute("data-gmnpc")); if(!c) return;
-        c.ehNpc = el.checked;
-        updateChar(c);
-        if(caps.mode==="mesa"){ clearTimeout(publishTimer); doPublish(); }
-        renderGmMesa();
+        var marcar = el.checked;
+        var aplicar = function(){
+          c.ehNpc = marcar;
+          // NPC é ficha da mesa, vista só pelo mestre: sai da conta que estava vinculada.
+          if(c.ehNpc){ c.donoUid = null; c.donoEmail = null; c.donoNome = null; }
+          updateChar(c);
+          if(caps.mode==="mesa"){ clearTimeout(publishTimer); doPublish(); }
+          renderGmMesa();
+        };
+        if(marcar && c.donoUid){
+          el.checked = false; // só marca depois de confirmar
+          askConfirm("Marcar "+(c.nomePersonagem||"esta ficha")+" como NPC? Ela sai da conta "+(c.donoEmail||"vinculada")+" e passa a ser vista só por você.", aplicar);
+          return;
+        }
+        aplicar();
       });
     });
     app.querySelectorAll('[data-gmopen]').forEach(function(el){
@@ -8463,6 +8643,7 @@
       el.addEventListener("click", function(){
         var target = el.getAttribute("data-nav");
         if(target === "wizard-new"){ goto("wizard", {wizStep:0, draft:newCharacter()}); return; }
+        if(target === "wizard-npc"){ var npc = newCharacter(); npc.ehNpc = true; goto("wizard", {wizStep:0, draft:npc}); return; }
         goto(target);
       });
     });
@@ -8521,7 +8702,7 @@
 
   // ---------- INICIALIZAÇÃO (Fase 3: login com Google) ----------
   // Sem login, a ficha mostra só a tela "Entrar com Google". Depois do login:
-  //  - o Assimilador (MESTRE_EMAIL) ouve TODOS os personagens, os resumos e as
+  //  - o mestre (dono da campanha aberta) ouve TODOS os personagens, os resumos e as
   //    rolagens (inclusive as de NPC, em "rolagensNpc");
   //  - um jogador ouve só os personagens vinculados à conta dele (donoUid), os
   //    resumos dos outros que não são NPC e as rolagens comuns.
@@ -8546,6 +8727,7 @@
         rolagensComuns = []; rolagensNpc = [];
         if(!u || u.isAnonymous){
           usuario = null;
+          campanhaAtual = null; fb.abrirCampanha(null);
           caps.mode = "local"; caps.artifact = null; caps.isOwner = false;
           if(u && u.isAnonymous){ fb.sair(); return; } // sessões anônimas da Fase 1
           mostrarLogin();
@@ -8555,7 +8737,17 @@
         caps.artifact = fb;
         caps.mode = "mesa";
         caps.canEdit = true;
+        campanhaAtual = null; fb.abrirCampanha(null);
+        abrirCampanhaInicial(fb, u, ligarMesa);
+        function ligarMesa(){
         caps.isOwner = ehMestre();
+        // Mudanças no documento da campanha (membros, configurações) chegam ao vivo.
+        ouvintes.push(fb.ouvirDoc("/campanhas", campanhaAtual.id, function(cmp){
+          if(!cmp){ return; }
+          campanhaAtual = cmp;
+          if(!ehMembro()){ pararOuvintes(); mostrarSemCampanha(); return; }
+          agendarRender();
+        }, function(e){ console.warn("[Pangea] campanha", e); }));
         state.gmUnlocked = false; // o código antigo não vale mais: quem é Assimilador é a conta
         var mestre = ehMestre();
         var chegou = { p:false, res:false, r:false, rn:!mestre };
@@ -8603,6 +8795,7 @@
             chegou.rn = true; talvezRevelar(); agendarRender();
           }, mostrarErroConexao));
         }
+        } // fim de ligarMesa
       });
     }
     if(window.PANGEA_FB){ comFB(window.PANGEA_FB); return; }
@@ -8648,6 +8841,24 @@ try {
 
   const lista = (snap) => snap.docs.map((d) => d.data());
 
+  // Campanhas (etapa A): o resto da ficha continua chamando as coleções pelos nomes
+  // antigos ("personagens", "rolagens"...). Aqui elas viram subcoleções da campanha
+  // aberta: personagens -> campanhas/{id}/fichas, as outras com o mesmo nome.
+  // Um nome começando com "/" é um caminho direto (ex.: "/campanhas", "/fichas" ou
+  // as coleções antigas da raiz, lidas só na migração).
+  const DA_CAMPANHA = { personagens: "fichas", resumos: "resumos", rolagens: "rolagens", rolagensNpc: "rolagensNpc",
+    documentos: "documentos", documentosNotas: "documentosNotas", encontros: "encontros", encontrosMesa: "encontrosMesa",
+    itensPool: "itensPool", meta: "meta", notas: "notas", locais: "locais" };
+  let campanhaId = null;
+  const caminho = (col) => {
+    if (col.charAt(0) === "/") return col.slice(1);
+    if (DA_CAMPANHA[col]) {
+      if (!campanhaId) throw new Error("Nenhuma campanha aberta (" + col + ")");
+      return "campanhas/" + campanhaId + "/" + DA_CAMPANHA[col];
+    }
+    return col;
+  };
+
   window.PANGEA_FB = {
     quandoUsuario(cb) { return onAuthStateChanged(auth, cb); },
     async entrar() {
@@ -8662,24 +8873,35 @@ try {
     },
     sair() { return signOut(auth); },
     // filtro opcional: [campo, valor] => só documentos com campo == valor
+    abrirCampanha(id) { campanhaId = id || null; },
+    campanhaAberta() { return campanhaId; },
     ouvir(col, cb, erro, filtro) {
-      const ref = filtro ? query(collection(db, col), where(filtro[0], filtro[2] || "==", filtro[1])) : collection(db, col);
+      const c = caminho(col);
+      const ref = filtro ? query(collection(db, c), where(filtro[0], filtro[2] || "==", filtro[1])) : collection(db, c);
       return onSnapshot(ref, (snap) => cb(lista(snap)), erro);
     },
+    ouvirDoc(col, id, cb, erro) {
+      return onSnapshot(doc(db, caminho(col), id), (s) => cb(s.exists() ? s.data() : null), erro);
+    },
     ouvirRolagens(col, n, cb, erro) {
-      const q = query(collection(db, col), orderBy("ts", "desc"), limit(n));
+      const q = query(collection(db, caminho(col)), orderBy("ts", "desc"), limit(n));
       return onSnapshot(q, (snap) => cb(lista(snap)), erro);
     },
     async lerDoc(col, id) {
-      const s = await getDoc(doc(db, col, id));
+      const s = await getDoc(doc(db, caminho(col), id));
       return s.exists() ? s.data() : null;
+    },
+    // Lê uma coleção inteira com o id de cada documento (usado na migração).
+    async lerColecao(col) {
+      const snap = await getDocs(collection(db, caminho(col)));
+      return snap.docs.map((d) => ({ id: d.id, data: d.data() }));
     },
     // ops: [{tipo:"set"|"update"|"del", col, id, data}] — gravadas em lotes de até 400.
     async escrever(ops) {
       for (let i = 0; i < ops.length; i += 400) {
         const b = writeBatch(db);
         ops.slice(i, i + 400).forEach((o) => {
-          const ref = doc(db, o.col, o.id);
+          const ref = doc(db, caminho(o.col), o.id);
           if (o.tipo === "del") b.delete(ref);
           else if (o.tipo === "update") b.update(ref, o.data);
           else b.set(ref, o.data);
@@ -8688,7 +8910,7 @@ try {
       }
     },
     async limparColecao(col) {
-      const snap = await getDocs(collection(db, col));
+      const snap = await getDocs(collection(db, caminho(col)));
       await this.escrever(snap.docs.map((d) => ({ tipo: "del", col, id: d.id })));
     }
   };
