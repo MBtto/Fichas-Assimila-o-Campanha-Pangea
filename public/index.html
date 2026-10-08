@@ -190,6 +190,12 @@
   /* Celular com texto ampliado: nada pode alargar a página (antes Saúde e o Cabo de Guerra empurravam ~90px pra fora). */
   .card{ min-width:0; }
 
+  .lobby-sub{ font-size:14px; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-muted); margin:16px 0 8px; }
+  .lobby-cmp{ cursor:pointer; }
+  .lobby-opcoes{ display:flex; flex-direction:column; gap:8px; }
+  .lobby-opcao{ display:flex; gap:10px; align-items:flex-start; padding:10px 12px; border:1px solid var(--border-strong); border-radius:10px; cursor:pointer; text-transform:none; letter-spacing:0; font-size:inherit; margin:0; color:var(--ink); }
+  .lobby-opcao.sel{ border-color:var(--accent); background:var(--surface-2); }
+  .lobby-opcao input{ width:auto; margin-top:3px; flex:none; }
   .roster-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:14px; }
   .char-card{
     background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
@@ -2896,7 +2902,7 @@
     idsChars.forEach(function(id){ delete dirtyCharIds[id]; });
     idsDel.forEach(function(id){ delete dirtyDeletedCharIds[id]; });
     dirtyTestLogEntries = dirtyTestLogEntries.filter(function(e){ return entries.indexOf(e) === -1; });
-    FB.escrever(ops).then(function(){
+    return FB.escrever(ops).then(function(){
       if(state.syncFalhou){ state.syncFalhou = false; renderSyncBanner(); }
     }).catch(function(err){
       console.error("[Pangea] falha ao gravar no Firestore", err);
@@ -3096,27 +3102,6 @@
   };
   var COLECOES_ANTIGAS = ["personagens","resumos","rolagens","rolagensNpc","documentos","documentosNotas","encontros","encontrosMesa","itensPool","meta"];
 
-  // Depois do login: abre a campanha Pangea (a única por enquanto). Se ela ainda
-  // não existe, só a conta da migração vê o botão de migrar; os outros esperam.
-  function abrirCampanhaInicial(fb, u, aoAbrir){
-    app.innerHTML = '<p class="empty">Abrindo a campanha…</p>';
-    fb.lerDoc("/campanhas", CAMPANHA_PADRAO).then(function(cmp){
-      if(usuario !== u) return;
-      var ehDonoMigracao = !!(u.email && u.email.toLowerCase() === MIGRACAO_EMAIL);
-      if(!cmp){ return ehDonoMigracao ? mostrarMigracao(fb, u, aoAbrir, null) : mostrarAguardandoMigracao(); }
-      if(!cmp.migracao || cmp.migracao.etapa !== "ok"){
-        return cmp.donoUid === u.uid ? mostrarMigracao(fb, u, aoAbrir, cmp) : mostrarAguardandoMigracao();
-      }
-      campanhaAtual = cmp;
-      if(!ehMembro()){ campanhaAtual = null; return mostrarSemCampanha(); }
-      fb.abrirCampanha(cmp.id);
-      aoAbrir();
-    }).catch(function(err){
-      if(usuario !== u) return;
-      if(err && err.code === "permission-denied") return mostrarSemCampanha();
-      mostrarErroConexao(err);
-    });
-  }
   function telaAvisoHtml(titulo, textoHtml, botoesHtml){
     return '<div class="card" style="max-width:520px;margin:60px auto 0;text-align:center">' +
       '<h1 style="margin-bottom:6px">'+titulo+'</h1>' +
@@ -3128,19 +3113,6 @@
   function ligarSairAviso(){
     var b = app.querySelector('[data-action="sair-aviso"]');
     if(b) b.addEventListener("click", function(){ if(FB) FB.sair(); });
-  }
-  function mostrarSemCampanha(){
-    document.getElementById("rollfeed").innerHTML = "";
-    app.innerHTML = telaAvisoHtml("Fichas de Pangea",
-      '<p>A conta <b>'+esc((usuario && usuario.email) || "")+'</b> ainda não participa de nenhuma campanha.</p><p>Peça ao mestre para te incluir na mesa.</p>');
-    ligarSairAviso();
-  }
-  function mostrarAguardandoMigracao(){
-    document.getElementById("rollfeed").innerHTML = "";
-    app.innerHTML = telaAvisoHtml("Mesa em atualização",
-      '<p>O mestre está passando a mesa para o novo formato de campanhas. Nada se perde.</p><p>Tente de novo em alguns minutos.</p>',
-      '<button type="button" class="btn accent" onclick="location.reload()">Tentar de novo</button>');
-    ligarSairAviso();
   }
   function mostrarMigracao(fb, u, aoAbrir, existente){
     document.getElementById("rollfeed").innerHTML = "";
@@ -3156,9 +3128,7 @@
       botao.disabled = true;
       migrarParaCampanhas(fb, u, function(txt){ status.textContent = txt; }).then(function(cmp){
         if(usuario !== u) return;
-        campanhaAtual = cmp;
-        fb.abrirCampanha(cmp.id);
-        aoAbrir();
+        aoAbrir(cmp);
       }).catch(function(err){
         console.error("[Pangea] migração", err);
         botao.disabled = false;
@@ -3244,6 +3214,694 @@
       (antigos[col] || []).forEach(function(x){ ops.push({ tipo:"set", col:col, id:x.id, data:limpo(x.data || {}) }); });
     });
     return { campanha: campanha, ops: ops, bases: bases };
+  }
+
+  // ======================================================================
+  // CAMPANHAS (etapa B): tela inicial (Minhas campanhas / Minhas fichas),
+  // criar campanha, convite por link, pedido de entrada com a ficha escolhida,
+  // aprovação do mestre, e sair/remover com a ficha guardada na conta.
+  // No banco:
+  //  campanhas/{cid}                    dono, membros[], membrosInfo{uid:{nome,email}}, config
+  //  campanhas/{cid}/convites/{codigo}  link de convite (quem tem o código lê; o mestre cria/apaga)
+  //  campanhas/{cid}/pedidos/{uid}      pedido de quem abriu o link (o mestre aprova ou recusa)
+  //  fichas/{bid}                       ficha-base do jogador (na conta dele)
+  //  fichas/{bid}/guardadas/{fid}       cópia de uma campanha que a ficha deixou (volta com tudo)
+  // ======================================================================
+  // Site privado por enquanto: só esta conta cria campanhas (a regra do Firestore confere o mesmo).
+  var CRIADOR_EMAIL = MIGRACAO_EMAIL;
+  // Campanha nova: criação padrão do livro e o mínimo de automação. A etapa C vai
+  // ler isto para ligar/desligar cada coisa; até lá a criação segue a da Pangea.
+  var CONFIG_PADRAO = {
+    criacao: { acampamento: false, geracao: "livro", kitInicial: true },
+    automacoes: { qualidadeCaiComPressao: false, dadosMantidosAuto: false, bestiarioDesgasteAuto: false, qualidadePorLocal: false }
+  };
+  var CAMPANHA_ABERTA_KEY = "pangea:campanhaAberta"; // sessionStorage: recarregar a aba volta pra mesma campanha
+  var CONVITE_KEY = "pangea:convite";                 // localStorage: convite aberto e ainda não usado
+  var PEDIDOS_KEY = "pangea:pedidos";                 // localStorage: pedidos enviados por este aparelho
+  var CONHECIDAS_KEY = "pangea:campanhasConhecidas";  // localStorage: campanhas já abertas neste aparelho
+  var lobby = null;
+  var lobbyOuvintes = [];
+  var lobbyRenderAdiado = false;
+  var avisoLobby = null;
+
+  function clonar(o){ return JSON.parse(JSON.stringify(o)); }
+  function agoraIso(){ return new Date().toISOString(); }
+  function podeCriarCampanha(){ return !!(usuario && usuario.email && usuario.email.toLowerCase() === CRIADOR_EMAIL); }
+  function codigoAleatorio(n){
+    var abc = "abcdefghijkmnpqrstuvwxyz23456789", s = "", a = null;
+    try{ a = new Uint8Array(n); crypto.getRandomValues(a); }catch(e){ a = null; }
+    for(var i=0;i<n;i++) s += abc[(a ? a[i] : Math.floor(Math.random()*256)) % abc.length];
+    return s;
+  }
+  function pararLobby(){
+    lobbyOuvintes.forEach(function(f){ try{ f(); }catch(e){} });
+    lobbyOuvintes = [];
+  }
+  function limparMesaLocal(){
+    shared = { characters:[], testLog:[], resumos:[], documentos:[], documentosNotas:[], encontros:[], encontrosMesa:[], pedidos:[], convites:[] };
+    bestRevPronto = false; bestRevVistos = {};
+    rolagensComuns = []; rolagensNpc = [];
+    dirtyCharIds = {}; dirtyDeletedCharIds = {}; dirtyTestLogEntries = [];
+    clearTimeout(publishTimer); clearTimeout(retryTimer);
+    basesEmCurso = {};
+  }
+
+  // Link de convite: ?convite=<campanha>.<código>. Guardado até ser usado (sobrevive ao login).
+  (function lerConviteDaUrl(){
+    try{
+      var m = /[?&]convite=([A-Za-z0-9_-]+)\.([A-Za-z0-9]+)/.exec(location.search);
+      if(!m) return;
+      saveLS(CONVITE_KEY, { cid:m[1], codigo:m[2].toLowerCase() });
+      history.replaceState(null, "", location.pathname + location.hash);
+    }catch(e){}
+  })();
+  function conviteGuardado(){ var c = loadLS(CONVITE_KEY, null); return (c && c.cid && c.codigo) ? c : null; }
+  function esquecerConvite(){ try{ localStorage.removeItem(CONVITE_KEY); }catch(e){} }
+  function pedidosGuardados(){ var l = loadLS(PEDIDOS_KEY, []); return Array.isArray(l) ? l.filter(function(p){ return p && p.cid && p.uid === (usuario && usuario.uid); }) : []; }
+  function salvarPedidos(lista){
+    var outros = (loadLS(PEDIDOS_KEY, [])||[]).filter(function(p){ return p && p.uid !== (usuario && usuario.uid); });
+    saveLS(PEDIDOS_KEY, outros.concat(lista));
+  }
+  function linkConvite(cid, codigo){ return location.origin + location.pathname + "?convite=" + cid + "." + codigo; }
+
+  // Ficha-base a partir de uma cópia de campanha, e cópia de campanha a partir de uma base.
+  function baseDaCopia(c, cid){
+    var b = clonar(c);
+    b.ehBase = true; b.origemCampanha = cid; b.campanhas = [cid]; b.baseCriadaEm = agoraIso();
+    delete b.campanhaId; delete b.baseId; delete b.guardadaEm;
+    return b;
+  }
+  function copiaDaBase(base, cid, dono, complemento){
+    var c = clonar(base);
+    ["ehBase","origemCampanha","campanhas","baseCriadaEm","guardadaEm"].forEach(function(k){ delete c[k]; });
+    c.baseId = base.id; c.id = uid(); c.campanhaId = cid; c.ehNpc = false;
+    c.donoUid = dono.uid; c.donoEmail = dono.email || null; c.donoNome = dono.nome || null;
+    if(complemento && complemento.acampamento && !c.acampamento) c.acampamento = complemento.acampamento;
+    c.entrouNaCampanhaEm = agoraIso(); c.atualizadoEm = agoraIso();
+    return c;
+  }
+
+  // Toda ficha de jogador numa campanha tem a sua ficha-base na conta do dono.
+  // Cobre as fichas criadas na mesa e as vinculadas pela senha depois da migração.
+  var basesEmCurso = {};
+  function garantirBases(){
+    if(!FB || !usuario || !campanhaAtual) return;
+    var cid = campanhaAtual.id;
+    shared.characters.forEach(function(c){
+      if(c.ehNpc || c.baseId || c.donoUid !== usuario.uid || basesEmCurso[c.id]) return;
+      basesEmCurso[c.id] = true;
+      FB.escrever([{ tipo:"set", col:"/fichas", id:c.id, data:paraFirestore(baseDaCopia(c, cid)) }]).then(function(){
+        var atual = getChar(c.id);
+        if(!atual || FB.campanhaAberta() !== cid) return;
+        atual.baseId = c.id;
+        marcarCharSujo(c.id); schedulePublish();
+      }).catch(function(err){
+        console.warn("[Pangea] ficha-base", err);
+        delete basesEmCurso[c.id];
+      });
+    });
+  }
+
+  // ---------- TELA INICIAL ----------
+  function mostrarLobby(){
+    if(!FB || !usuario) return;
+    var u = usuario;
+    pararOuvintes(); pararLobby();
+    appPronto = false; caps.isOwner = false;
+    campanhaAtual = null; FB.abrirCampanha(null);
+    limparMesaLocal();
+    try{ sessionStorage.removeItem(CAMPANHA_ABERTA_KEY); }catch(e){}
+    document.getElementById("rollfeed").innerHTML = "";
+    lobby = { campanhas:null, bases:null, copias:{}, guardadas:{}, pedidos:{}, convite:null, extras:false,
+              form:{ escolha:null, acampamento:"" }, criando:false, ocupado:false };
+    renderLobby();
+    // Primeira vez no formato de campanhas: a conta da migração ainda vê o botão de migrar.
+    var antes = podeCriarCampanha()
+      ? FB.lerDoc("/campanhas", CAMPANHA_PADRAO).then(function(cmp){
+          if(usuario !== u) return true;
+          if(!cmp) { mostrarMigracao(FB, u, entrarNaCampanha, null); return true; }
+          if(!cmp.migracao || cmp.migracao.etapa !== "ok"){ mostrarMigracao(FB, u, entrarNaCampanha, cmp); return true; }
+          return false;
+        }).catch(function(){ return false; })
+      : Promise.resolve(false);
+    antes.then(function(desviou){
+      if(desviou || usuario !== u || !lobby) return;
+      lobbyOuvintes.push(FB.ouvir("/campanhas", function(lista){
+        if(usuario !== u || !lobby) return;
+        lobby.campanhas = lista.slice().sort(function(a,b){ return String(a.nome||"").localeCompare(String(b.nome||"")); });
+        carregarExtrasLobby();
+      }, function(e){
+        // Plano B se a lista for recusada: abre uma a uma as campanhas já conhecidas neste aparelho.
+        console.warn("[Pangea] campanhas", e);
+        var ids = (loadLS(CONHECIDAS_KEY, [])||[]).concat([CAMPANHA_PADRAO]).filter(function(x, i, a){ return a.indexOf(x) === i; });
+        Promise.all(ids.map(function(id){ return FB.lerDoc("/campanhas", id).catch(function(){ return null; }); })).then(function(l){
+          if(usuario !== u || !lobby) return;
+          lobby.campanhas = l.filter(function(c){ return c && ehMembroDe(c) && (!c.migracao || c.migracao.etapa === "ok"); });
+          carregarExtrasLobby();
+        });
+      }, ["membros", u.uid, "array-contains"]));
+      lobbyOuvintes.push(FB.ouvir("/fichas", function(lista){
+        if(usuario !== u || !lobby) return;
+        lobby.bases = lista.slice().sort(function(a,b){ return String(a.nomePersonagem||"").localeCompare(String(b.nomePersonagem||"")); });
+        carregarExtrasLobby();
+      }, function(e){ console.warn("[Pangea] fichas-base", e); if(lobby){ lobby.bases = []; carregarExtrasLobby(); } }, ["donoUid", u.uid]));
+    });
+  }
+  function ehMembroDe(cmp){ return !!(cmp && usuario && (cmp.donoUid === usuario.uid || (cmp.membros||[]).indexOf(usuario.uid) > -1)); }
+  function campanhaDoLobby(cid){ return lobby && lobby.campanhas ? lobby.campanhas.filter(function(c){ return c.id === cid; })[0] : null; }
+
+  // Lê o que as listas ao vivo não trazem: minhas cópias em cada campanha, as
+  // fichas guardadas, os pedidos enviados e o convite aberto.
+  var extrasSeq = 0;
+  function carregarExtrasLobby(){
+    if(!lobby) return;
+    if(lobby.campanhas === null || lobby.bases === null){ renderLobby(); return; }
+    var seq = ++extrasSeq, u = usuario;
+    var copias = {}, guardadas = {}, pedidos = {}, convite = null, pedidoDoConvite = null;
+    var ps = [];
+    lobby.campanhas.forEach(function(cmp){
+      ps.push(FB.lerConsulta("/campanhas/"+cmp.id+"/fichas", ["donoUid", u.uid])
+        .then(function(l){ copias[cmp.id] = l.map(function(x){ return x.data; }); })
+        .catch(function(){ copias[cmp.id] = []; }));
+    });
+    lobby.bases.forEach(function(b){
+      ps.push(FB.lerColecao("/fichas/"+b.id+"/guardadas")
+        .then(function(l){ guardadas[b.id] = l.map(function(x){ return x.data; }); })
+        .catch(function(){ guardadas[b.id] = []; }));
+    });
+    pedidosGuardados().forEach(function(p){
+      ps.push(FB.lerDoc("/campanhas/"+p.cid+"/pedidos", u.uid)
+        .then(function(d){ pedidos[p.cid] = d; })
+        .catch(function(){ pedidos[p.cid] = null; }));
+    });
+    var conv = conviteGuardado();
+    if(conv){
+      ps.push(FB.lerDoc("/campanhas/"+conv.cid+"/convites", conv.codigo)
+        .then(function(d){ convite = { cid:conv.cid, codigo:conv.codigo, doc:d }; })
+        .catch(function(){ convite = { cid:conv.cid, codigo:conv.codigo, doc:null }; }));
+      ps.push(FB.lerDoc("/campanhas/"+conv.cid+"/pedidos", u.uid)
+        .then(function(d){ pedidoDoConvite = d; }).catch(function(){}));
+    }
+    Promise.all(ps).then(function(){
+      if(seq !== extrasSeq || !lobby || usuario !== u) return;
+      // Um convite cujo pedido já foi enviado vira só um pedido acompanhado aqui.
+      var lista = pedidosGuardados();
+      if(convite && pedidoDoConvite && !campanhaDoLobby(convite.cid)){
+        if(!lista.some(function(p){ return p.cid === convite.cid; })) lista.push({ cid:convite.cid, uid:u.uid, nome:pedidoDoConvite.campanhaNome||"" });
+        pedidos[convite.cid] = pedidoDoConvite;
+        esquecerConvite(); convite = null;
+      }
+      // Pedidos resolvidos (aprovado = virou membro; cancelado/apagado) saem da lista.
+      lista = lista.filter(function(p){ return pedidos[p.cid] && !campanhaDoLobby(p.cid); });
+      salvarPedidos(lista);
+      lobby.copias = copias; lobby.guardadas = guardadas; lobby.pedidos = pedidos; lobby.convite = convite; lobby.extras = true;
+      renderLobby();
+    });
+  }
+
+  document.addEventListener("focusout", function(){
+    setTimeout(function(){ if(lobbyRenderAdiado && !estaDigitando()){ lobbyRenderAdiado = false; renderLobby(); } }, 50);
+  });
+
+  function lobbyCardCampanhaHtml(cmp, comoMestre){
+    var minhas = (lobby.copias[cmp.id]||[]).filter(function(c){ return !c.ehNpc; });
+    var nJog = (cmp.membros||[]).filter(function(x){ return x !== cmp.donoUid; }).length;
+    var mestreNome = cmp.donoNome || cmp.donoEmail || "mestre";
+    var html = '<div class="char-card lobby-cmp" data-abrircmp="'+esc(cmp.id)+'">' +
+      '<h3>'+esc(cmp.nome || "Campanha sem nome")+'</h3>' +
+      '<div class="camp-tag">'+(comoMestre ? 'Você é o mestre · '+nJog+' jogador'+(nJog===1?'':'es') : 'Mestre: '+esc(mestreNome))+'</div>';
+    if(minhas.length){
+      html += '<div class="hint" style="margin-top:6px">'+(comoMestre ? 'Suas fichas aqui: ' : 'Sua ficha: ')+minhas.map(function(c){ return '<b>'+esc(c.nomePersonagem||"Sem nome")+'</b>'; }).join(", ")+'</div>';
+    } else if(!comoMestre){
+      html += '<div class="hint" style="margin-top:6px">Ainda sem ficha nesta mesa.</div>';
+    }
+    html += '<div class="row" style="margin-top:12px;gap:8px">' +
+      '<button type="button" class="btn accent" data-abrircmp="'+esc(cmp.id)+'">Abrir</button>' +
+      (comoMestre ? '' : '<button type="button" class="btn secondary" data-saircmp="'+esc(cmp.id)+'">Sair da campanha</button>') +
+    '</div></div>';
+    return html;
+  }
+
+  function lobbyConviteHtml(){
+    var cv = lobby.convite;
+    if(!cv) return "";
+    var d = cv.doc;
+    if(!d || d.ativo !== true){
+      return '<div class="card" style="border-color:var(--danger)"><h2>Convite inválido</h2>' +
+        '<p class="hint" style="margin:0 0 12px">Este link de convite não vale mais (o mestre desativou ou o link veio incompleto). Peça um link novo ao mestre.</p>' +
+        '<button type="button" class="btn secondary" data-conv="dispensar">Dispensar</button></div>';
+    }
+    var cmp = campanhaDoLobby(cv.cid);
+    if(cmp){
+      return '<div class="card" style="border-color:var(--accent)"><h2>Convite: '+esc(d.campanhaNome||cmp.nome||"")+'</h2>' +
+        '<p class="hint" style="margin:0 0 12px">Você já participa desta campanha.</p>' +
+        '<div class="row" style="gap:8px"><button type="button" class="btn accent" data-abrircmp="'+esc(cv.cid)+'">Abrir</button><button type="button" class="btn secondary" data-conv="dispensar">Dispensar</button></div></div>';
+    }
+    var f = lobby.form;
+    var opcoes = [];
+    (lobby.bases||[]).forEach(function(b){
+      var g = (lobby.guardadas[b.id]||[]).filter(function(x){ return x.campanhaId === cv.cid; });
+      g.forEach(function(x){
+        opcoes.push({ valor:"g:"+b.id+":"+x.id, titulo:x.nomePersonagem||b.nomePersonagem||"Sem nome", detalhe:"volta com a ficha guardada desta campanha, do jeito que estava quando saiu", base:b, guardada:x });
+      });
+      opcoes.push({ valor:"b:"+b.id, titulo:b.nomePersonagem||"Sem nome", detalhe:(b.nomeJogador?esc(b.nomeJogador)+" · ":"")+(b.acampamento && CAMPS[b.acampamento] ? CAMPS[b.acampamento].nome : "sem acampamento")+" · leva a ficha-base como está", base:b });
+    });
+    opcoes.push({ valor:"nenhuma", titulo:"Sem ficha por enquanto", detalhe:"crio o personagem dentro da mesa depois de entrar" });
+    if(!f.escolha || !opcoes.some(function(o){ return o.valor === f.escolha; })) f.escolha = opcoes[0].valor;
+    var escolhida = opcoes.filter(function(o){ return o.valor === f.escolha; })[0];
+    var pedeAcamp = !!(d.pedeAcampamento && escolhida && escolhida.base && !escolhida.guardada && !escolhida.base.acampamento);
+    var html = '<div class="card" style="border-color:var(--accent)"><h2>Convite: '+esc(d.campanhaNome||"campanha")+'</h2>' +
+      '<p class="hint" style="margin:0 0 10px">Mestre: <b>'+esc(d.mestreNome||"")+'</b>. Escolha a ficha que vai levar. A campanha recebe uma cópia própria dela (Saúde, Determinação, inventário, XP e mutações daquela mesa); a sua ficha-base continua na sua conta. Você só entra depois que o mestre aprovar.</p>' +
+      '<div class="lobby-opcoes">';
+    opcoes.forEach(function(o){
+      html += '<label class="lobby-opcao'+(o.valor===f.escolha?' sel':'')+'"><input type="radio" name="conv-ficha" value="'+esc(o.valor)+'"'+(o.valor===f.escolha?' checked':'')+'>' +
+        '<span><b>'+esc(o.titulo)+'</b><br><span class="hint">'+o.detalhe+'</span></span></label>';
+    });
+    html += '</div>';
+    if(pedeAcamp){
+      html += '<div class="field" style="margin-top:10px"><label>Acampamento (esta campanha pede, e a ficha ainda não tem)</label><select data-conv="acampamento"><option value="">escolha…</option>' +
+        Object.keys(CAMPS).map(function(k){ return '<option value="'+k+'"'+(f.acampamento===k?' selected':'')+'>'+esc(CAMPS[k].nome)+'</option>'; }).join("") +
+        '</select></div>';
+    }
+    html += '<p class="hint" id="conv-status" style="font-weight:600;margin:10px 0 0"></p>' +
+      '<div class="row" style="gap:8px;margin-top:10px"><button type="button" class="btn accent" data-conv="enviar"'+(lobby.ocupado?' disabled':'')+'>Pedir para entrar</button><button type="button" class="btn secondary" data-conv="dispensar">Dispensar</button></div></div>';
+    lobby.formOpcoes = opcoes; lobby.formPedeAcamp = pedeAcamp;
+    return html;
+  }
+
+  function lobbyPedidosHtml(){
+    var lista = pedidosGuardados().filter(function(p){ return lobby.pedidos[p.cid]; });
+    if(!lista.length) return "";
+    var html = '<div class="card tight"><h2>Pedidos enviados</h2>';
+    lista.forEach(function(p){
+      var d = lobby.pedidos[p.cid];
+      var nome = esc(d.campanhaNome || p.nome || "campanha");
+      if(d.status === "recusado"){
+        html += '<div class="row" style="justify-content:space-between;gap:8px;margin:6px 0"><span>O mestre de <b>'+nome+'</b> recusou o pedido.</span><button type="button" class="btn secondary" data-pedido-ok="'+esc(p.cid)+'">OK</button></div>';
+      } else {
+        html += '<div class="row" style="justify-content:space-between;gap:8px;margin:6px 0"><span>Aguardando o mestre de <b>'+nome+'</b> aprovar'+(d.fichaNome?' (ficha: '+esc(d.fichaNome)+')':'')+'.</span><button type="button" class="btn secondary" data-pedido-cancelar="'+esc(p.cid)+'">Cancelar pedido</button></div>';
+      }
+    });
+    return html + '</div>';
+  }
+
+  function lobbyFichasHtml(){
+    var bases = lobby.bases || [];
+    var html = '<div class="row" style="justify-content:space-between;align-items:center;margin:24px 0 6px"><h2 style="margin:0">Minhas fichas</h2></div>' +
+      '<p class="hint" style="margin:0 0 12px">A ficha-base fica na sua conta. Cada campanha recebe uma cópia própria dela. Para levar uma ficha a outra campanha, abra o link de convite do mestre.</p>';
+    if(!bases.length){
+      return html + '<div class="card"><p class="hint" style="margin:0">Nenhuma ficha-base ainda. Ela nasce sozinha quando você cria um personagem dentro de uma campanha.</p></div>';
+    }
+    html += '<div class="roster-grid">';
+    bases.forEach(function(b){
+      var camp = b.acampamento ? CAMPS[b.acampamento] : null;
+      var emCampanhas = (lobby.campanhas||[]).filter(function(cmp){
+        return (lobby.copias[cmp.id]||[]).some(function(c){ return c.baseId === b.id; });
+      }).map(function(cmp){ return esc(cmp.nome||""); });
+      var guard = (lobby.guardadas[b.id]||[]).map(function(g){ return esc(g.campanhaNome || g.campanhaId || ""); });
+      html += '<div class="char-card" style="--camp-color:'+(camp?camp.cor:'var(--accent)')+';cursor:default">' +
+        (camp ? '<img class="badge" src="'+camp.img+'" alt="">' : '') +
+        '<h3>'+esc(b.nomePersonagem||"Sem nome")+'</h3>' +
+        '<div class="camp-tag">'+(camp?camp.nome:"sem acampamento")+(b.nomeJogador?" · "+esc(b.nomeJogador):"")+'</div>' +
+        '<div class="hint" style="margin-top:6px">'+(emCampanhas.length ? 'Em: <b>'+emCampanhas.join(", ")+'</b>' : 'Fora de campanhas no momento')+'</div>' +
+        (guard.length ? '<div class="hint">Guardada de: '+guard.join(", ")+'</div>' : '') +
+      '</div>';
+    });
+    return html + '</div>';
+  }
+
+  function renderLobby(){
+    if(!lobby || campanhaAtual) return;
+    var ativo = document.activeElement;
+    var digitando = ativo && app.contains(ativo) && (ativo.tagName === "TEXTAREA" || (ativo.tagName === "INPUT" && !/^(radio|checkbox|button)$/i.test(ativo.type||"")));
+    if(digitando){ lobbyRenderAdiado = true; return; }
+    var nomeCurto = esc(((usuario && (usuario.displayName || usuario.email)) || "").split(" ")[0]);
+    var html = '<header class="top"><div class="brand"><h1 id="brand-title">Fichas · Assimilação RPG</h1><small>suas campanhas e fichas · '+esc((usuario&&usuario.email)||"")+'</small></div>' +
+      '<nav class="tabs"><button type="button" class="btn secondary" data-action="sair">Sair ('+nomeCurto+')</button></nav></header>';
+    if(avisoLobby){
+      html += '<div class="card tight" style="border-color:var(--accent)"><div class="row" style="justify-content:space-between;gap:8px"><span>'+esc(avisoLobby)+'</span><button type="button" class="btn secondary" data-lobby="fechar-aviso">OK</button></div></div>';
+    }
+    if(lobby.campanhas === null || lobby.bases === null || !lobby.extras){
+      app.innerHTML = html + '<p class="empty">Carregando suas campanhas…</p>';
+      ligarLobby();
+      return;
+    }
+    html += lobbyConviteHtml();
+    html += lobbyPedidosHtml();
+    var mestro = lobby.campanhas.filter(function(c){ return c.donoUid === usuario.uid; });
+    var jogo = lobby.campanhas.filter(function(c){ return c.donoUid !== usuario.uid; });
+    html += '<div class="row" style="justify-content:space-between;align-items:center;margin:20px 0 10px;gap:8px"><h2 style="margin:0">Minhas campanhas</h2>' +
+      (podeCriarCampanha() && !lobby.criando ? '<button type="button" class="btn secondary" data-lobby="criar">+ Criar campanha</button>' : '') + '</div>';
+    if(lobby.criando){
+      html += '<div class="card"><h2>Nova campanha</h2>' +
+        '<div class="field"><label>Nome da campanha</label><input type="text" maxlength="60" data-lobby="nome-nova" placeholder="ex.: Pangea"></div>' +
+        '<p class="hint">Começa vazia, com você como mestre. Documentos, itens e criaturas são criados depois pelo Painel. Os jogadores entram por link de convite.</p>' +
+        '<p class="hint" id="criar-status" style="font-weight:600"></p>' +
+        '<div class="row" style="gap:8px"><button type="button" class="btn accent" data-lobby="confirmar-criar"'+(lobby.ocupado?' disabled':'')+'>Criar</button><button type="button" class="btn secondary" data-lobby="cancelar-criar">Cancelar</button></div></div>';
+    }
+    if(!lobby.campanhas.length){
+      html += '<div class="card"><p class="hint" style="margin:0">Você ainda não participa de nenhuma campanha. Para entrar numa mesa, peça ao mestre um link de convite e abra o link aqui.</p></div>';
+    }
+    if(mestro.length){
+      html += '<h3 class="lobby-sub">Como mestre</h3><div class="roster-grid">' + mestro.map(function(c){ return lobbyCardCampanhaHtml(c, true); }).join("") + '</div>';
+    }
+    if(jogo.length){
+      html += '<h3 class="lobby-sub">Como jogador</h3><div class="roster-grid">' + jogo.map(function(c){ return lobbyCardCampanhaHtml(c, false); }).join("") + '</div>';
+    }
+    html += lobbyFichasHtml();
+    html += '<div class="footer-note" style="margin-top:28px">'+avisoFanMadeHtml()+'</div>';
+    app.innerHTML = html;
+    ligarLobby();
+  }
+
+  function ligarLobby(){
+    var sairBtn = app.querySelector('[data-action="sair"]');
+    if(sairBtn) sairBtn.addEventListener("click", function(){ if(FB) FB.sair(); });
+    var fa = app.querySelector('[data-lobby="fechar-aviso"]');
+    if(fa) fa.addEventListener("click", function(){ avisoLobby = null; renderLobby(); });
+    app.querySelectorAll("[data-abrircmp]").forEach(function(el){
+      el.addEventListener("click", function(e){
+        if(el.classList.contains("lobby-cmp") && e.target.closest("button")) return;
+        e.stopPropagation();
+        var cmp = campanhaDoLobby(el.getAttribute("data-abrircmp"));
+        if(cmp){ if(lobby && lobby.convite && lobby.convite.cid === cmp.id) esquecerConvite(); entrarNaCampanha(cmp); }
+      });
+    });
+    app.querySelectorAll("[data-saircmp]").forEach(function(el){
+      el.addEventListener("click", function(e){
+        e.stopPropagation();
+        var cmp = campanhaDoLobby(el.getAttribute("data-saircmp")); if(!cmp) return;
+        askConfirm('Sair da campanha "'+(cmp.nome||"")+'"? Sua ficha desta mesa fica guardada na sua conta, com tudo (XP, inventário, mutações), e volta assim se você entrar de novo.', function(){
+          el.disabled = true;
+          sairDaCampanha(cmp).then(function(){
+            avisoLobby = 'Você saiu de "'+(cmp.nome||"")+'". A ficha ficou guardada na sua conta.';
+            carregarExtrasLobby();
+          }).catch(function(err){
+            console.error("[Pangea] sair da campanha", err);
+            alert("Não deu pra sair da campanha agora: " + (err && (err.code || err.message) || "erro desconhecido") + ". Nada foi apagado.");
+            renderLobby();
+          });
+        });
+      });
+    });
+    var criar = app.querySelector('[data-lobby="criar"]');
+    if(criar) criar.addEventListener("click", function(){ lobby.criando = true; renderLobby(); var i = app.querySelector('[data-lobby="nome-nova"]'); if(i) i.focus(); });
+    var cancelarCriar = app.querySelector('[data-lobby="cancelar-criar"]');
+    if(cancelarCriar) cancelarCriar.addEventListener("click", function(){ lobby.criando = false; renderLobby(); });
+    var confirmarCriar = app.querySelector('[data-lobby="confirmar-criar"]');
+    if(confirmarCriar) confirmarCriar.addEventListener("click", function(){
+      var nome = (app.querySelector('[data-lobby="nome-nova"]').value || "").trim();
+      var st = app.querySelector("#criar-status");
+      if(!nome){ st.textContent = "Dê um nome à campanha."; return; }
+      lobby.ocupado = true; confirmarCriar.disabled = true; st.textContent = "Criando…";
+      criarCampanha(nome).then(function(cmp){
+        lobby.ocupado = false;
+        entrarNaCampanha(cmp);
+      }).catch(function(err){
+        lobby.ocupado = false; confirmarCriar.disabled = false;
+        console.error("[Pangea] criar campanha", err);
+        st.textContent = "Não deu certo: " + (err && (err.code || err.message) || "erro desconhecido");
+      });
+    });
+    // convite
+    app.querySelectorAll('input[name="conv-ficha"]').forEach(function(r){
+      r.addEventListener("change", function(){ lobby.form.escolha = r.value; renderLobby(); });
+    });
+    var ac = app.querySelector('[data-conv="acampamento"]');
+    if(ac) ac.addEventListener("change", function(){ lobby.form.acampamento = ac.value; });
+    var disp = app.querySelector('[data-conv="dispensar"]');
+    if(disp) disp.addEventListener("click", function(){ esquecerConvite(); lobby.convite = null; renderLobby(); });
+    var env = app.querySelector('[data-conv="enviar"]');
+    if(env) env.addEventListener("click", function(){
+      var st = app.querySelector("#conv-status");
+      if(lobby.formPedeAcamp && !lobby.form.acampamento){ st.textContent = "Escolha o acampamento."; return; }
+      lobby.ocupado = true; env.disabled = true; st.textContent = "Enviando…";
+      enviarPedido().then(function(){
+        lobby.ocupado = false;
+        carregarExtrasLobby();
+      }).catch(function(err){
+        lobby.ocupado = false; env.disabled = false;
+        console.error("[Pangea] pedido", err);
+        st.textContent = (err && err.code === "permission-denied") ? "O convite não foi aceito (talvez o mestre tenha desativado o link)." : "Não deu certo: " + (err && (err.code || err.message) || "erro desconhecido");
+      });
+    });
+    app.querySelectorAll("[data-pedido-cancelar],[data-pedido-ok]").forEach(function(b){
+      b.addEventListener("click", function(){
+        var cid = b.getAttribute("data-pedido-cancelar") || b.getAttribute("data-pedido-ok");
+        b.disabled = true;
+        FB.escrever([{ tipo:"del", col:"/campanhas/"+cid+"/pedidos", id:usuario.uid }]).catch(function(e){ console.warn("[Pangea] apagar pedido", e); })
+          .then(function(){ salvarPedidos(pedidosGuardados().filter(function(p){ return p.cid !== cid; })); delete lobby.pedidos[cid]; renderLobby(); });
+      });
+    });
+  }
+
+  function criarCampanha(nome){
+    var cid = "c" + codigoAleatorio(12);
+    var cmp = {
+      id: cid, nome: nome, sistema: "assimilacao",
+      donoUid: usuario.uid, donoEmail: usuario.email || null, donoNome: usuario.displayName || null,
+      membros: [usuario.uid], membrosInfo: {}, criadaEm: agoraIso(), config: clonar(CONFIG_PADRAO)
+    };
+    return FB.escrever([{ tipo:"set", col:"/campanhas", id:cid, data:cmp }]).then(function(){ return cmp; });
+  }
+
+  function enviarPedido(){
+    var cv = lobby.convite, d = cv.doc;
+    var o = (lobby.formOpcoes||[]).filter(function(x){ return x.valor === lobby.form.escolha; })[0] || { valor:"nenhuma" };
+    var p = {
+      uid: usuario.uid, email: usuario.email || null, nome: usuario.displayName || null,
+      codigo: cv.codigo, campanhaId: cv.cid, campanhaNome: d.campanhaNome || "",
+      criadoEm: agoraIso(), status: "pendente",
+      fichaBaseId: o.base ? o.base.id : null,
+      fichaNome: o.guardada ? (o.guardada.nomePersonagem||"") : (o.base ? (o.base.nomePersonagem||"") : null),
+      retorno: !!o.guardada, guardadaId: o.guardada ? o.guardada.id : null,
+      ficha: (o.base && !o.guardada) ? paraFirestore(o.base) : null,
+      complemento: (lobby.formPedeAcamp && lobby.form.acampamento) ? { acampamento: lobby.form.acampamento } : {}
+    };
+    return FB.escrever([{ tipo:"set", col:"/campanhas/"+cv.cid+"/pedidos", id:usuario.uid, data:paraFirestore(p) }]).then(function(){
+      var lista = pedidosGuardados().filter(function(x){ return x.cid !== cv.cid; });
+      lista.push({ cid:cv.cid, uid:usuario.uid, nome:p.campanhaNome });
+      salvarPedidos(lista);
+      esquecerConvite();
+      lobby.convite = null; lobby.form = { escolha:null, acampamento:"" };
+    });
+  }
+
+  // O jogador deixa a campanha: cada ficha dele ali vira uma "guardada" na
+  // ficha-base (com tudo), as cópias saem da mesa e a conta sai dos membros.
+  function sairDaCampanha(cmp){
+    var u = usuario, cid = cmp.id;
+    var bases = {}; (lobby && lobby.bases || []).forEach(function(b){ bases[b.id] = true; });
+    return FB.lerConsulta("/campanhas/"+cid+"/fichas", ["donoUid", u.uid]).then(function(l){
+      var copias = l.map(function(x){ return x.data; });
+      var guardar = [], remover = [];
+      copias.forEach(function(c){
+        var bid = c.baseId && bases[c.baseId] ? c.baseId : null;
+        if(!bid){ bid = c.id; if(!bases[bid]) guardar.push({ tipo:"set", col:"/fichas", id:bid, data:paraFirestore(baseDaCopia(c, cid)) }); }
+        var g = clonar(c); g.campanhaId = cid; g.campanhaNome = cmp.nome || ""; g.guardadaEm = agoraIso(); g.baseId = bid;
+        guardar.push({ tipo:"set", col:"/fichas/"+bid+"/guardadas", id:c.id, data:paraFirestore(g) });
+        remover.push({ tipo:"del", col:"/campanhas/"+cid+"/fichas", id:c.id });
+        remover.push({ tipo:"del", col:"/campanhas/"+cid+"/resumos", id:c.id });
+      });
+      return FB.escrever(guardar).then(function(){ return FB.escrever(remover); });
+    }).then(function(){
+      return FB.lerDoc("/campanhas", cid);
+    }).then(function(atual){
+      var membros = ((atual && atual.membros) || []).filter(function(x){ return x !== u.uid; });
+      return FB.escrever([{ tipo:"update", col:"/campanhas", id:cid, data:{ membros: membros } }]);
+    });
+  }
+
+  // ---------- DENTRO DA CAMPANHA ----------
+  function entrarNaCampanha(cmp){
+    if(!FB || !usuario || !cmp) return;
+    pararLobby(); lobby = null;
+    pararOuvintes();
+    limparMesaLocal();
+    campanhaAtual = cmp;
+    if(!ehMembro()){ campanhaAtual = null; avisoLobby = "Você não participa mais dessa campanha."; mostrarLobby(); return; }
+    FB.abrirCampanha(cmp.id);
+    try{ sessionStorage.setItem(CAMPANHA_ABERTA_KEY, cmp.id); }catch(e){}
+    var conhecidas = loadLS(CONHECIDAS_KEY, []) || [];
+    if(conhecidas.indexOf(cmp.id) < 0){ conhecidas.push(cmp.id); saveLS(CONHECIDAS_KEY, conhecidas.slice(-20)); }
+    appPronto = false;
+    if(state.campanhaDaTela !== cmp.id){ state.view = "roster"; state.charId = null; }
+    state.campanhaDaTela = cmp.id;
+    document.getElementById("rollfeed").innerHTML = "";
+    app.innerHTML = '<p class="empty">Abrindo a campanha…</p>';
+    ligarMesa(FB, usuario);
+  }
+  function voltarAoLobby(){
+    flushPendente();
+    var p = temPendencias() ? (clearTimeout(publishTimer), doPublish()) : null;
+    Promise.resolve(p).then(function(){
+      if(state.syncFalhou){ alert("A última mudança ainda não foi salva no servidor. Espere a conexão voltar antes de trocar de campanha."); return; }
+      state.view = "roster"; state.charId = null;
+      mostrarLobby();
+    });
+  }
+
+  // ---------- PAINEL DO MESTRE: jogadores, pedidos e convites ----------
+  function nomeDoMembro(uidM){
+    var info = (campanhaAtual && campanhaAtual.membrosInfo || {})[uidM] || {};
+    var ficha = loadChars().filter(function(c){ return c.donoUid === uidM; })[0];
+    return {
+      nome: info.nome || (ficha && ficha.donoNome) || null,
+      email: info.email || (ficha && ficha.donoEmail) || null
+    };
+  }
+  function descricaoPedido(p){
+    var partes = [];
+    if(p.retorno) partes.push('Volta com a ficha guardada desta campanha: <b>'+esc(p.fichaNome||"")+'</b> (do jeito que estava quando saiu)');
+    else if(p.ficha){
+      var f = p.ficha, camp = f.acampamento && CAMPS[f.acampamento];
+      partes.push('Leva a ficha-base <b>'+esc(f.nomePersonagem||"Sem nome")+'</b>'+(f.nomeJogador?' ('+esc(f.nomeJogador)+')':'')+
+        ' · '+(camp?camp.nome:'sem acampamento')+' · XP recebida: '+(xpDados(f).recebida||0)+' · Saúde '+(f.saudeNivel!=null?f.saudeNivel:6)+'/6');
+    } else partes.push('Sem ficha por enquanto (vai criar o personagem na mesa)');
+    if(p.complemento && p.complemento.acampamento && CAMPS[p.complemento.acampamento]) partes.push('Acampamento escolhido agora: <b>'+CAMPS[p.complemento.acampamento].nome+'</b>');
+    return partes.join('<br>');
+  }
+  function gmJogadoresHtml(){
+    var cmp = campanhaAtual; if(!cmp) return "";
+    var pedidos = (shared.pedidos||[]).filter(function(p){ return p.status === "pendente"; });
+    var membros = (cmp.membros||[]).filter(function(x){ return x !== cmp.donoUid; });
+    var chars = loadChars();
+    var html = '<div class="card" id="gm-jogadores"><h2>Jogadores e convites'+(pedidos.length?' <span class="badge-pill" style="vertical-align:middle">'+pedidos.length+' pedido'+(pedidos.length>1?'s':'')+'</span>':'')+'</h2>';
+    if(pedidos.length){
+      html += '<h3 class="lobby-sub" style="margin-top:4px">Pedidos para entrar</h3>';
+      pedidos.forEach(function(p){
+        html += '<div class="card tight" style="margin:8px 0;border-color:var(--accent)">' +
+          '<div><b>'+esc(p.nome||p.email||"Sem nome")+'</b> <span class="hint">'+esc(p.email||"")+'</span></div>' +
+          '<div class="hint" style="margin-top:4px">'+descricaoPedido(p)+'</div>' +
+          '<div class="row" style="margin-top:8px;gap:8px"><button type="button" class="btn accent" data-gmaprovar="'+esc(p.uid)+'">Aprovar</button><button type="button" class="btn secondary" data-gmrecusar="'+esc(p.uid)+'">Recusar</button></div>' +
+        '</div>';
+      });
+    }
+    html += '<h3 class="lobby-sub">Na mesa</h3>';
+    if(!membros.length) html += '<p class="hint" style="margin:0 0 8px">Nenhum jogador ainda. Gere um link de convite abaixo.</p>';
+    membros.forEach(function(m){
+      var q = nomeDoMembro(m);
+      var fichas = chars.filter(function(c){ return c.donoUid === m; }).map(function(c){ return esc(c.nomePersonagem||"Sem nome"); });
+      html += '<div class="row gm-membro" style="justify-content:space-between;gap:8px;padding:6px 0;border-top:1px solid var(--border)">' +
+        '<div style="min-width:0;flex:1 1 200px"><b>'+esc(q.nome||q.email||"Conta sem nome")+'</b>'+(q.email && q.nome?' <span class="hint">'+esc(q.email)+'</span>':'')+
+          '<div class="hint">'+(fichas.length ? 'Ficha: '+fichas.join(", ") : 'Ainda sem ficha nesta mesa')+'</div></div>' +
+        '<button type="button" class="btn secondary" data-gmremover="'+esc(m)+'" style="padding:4px 10px;font-size:11px">remover da mesa</button>' +
+      '</div>';
+    });
+    html += '<h3 class="lobby-sub">Link de convite</h3>' +
+      '<p class="hint" style="margin:0 0 8px">Quem abrir o link entra com a conta Google, escolhe a ficha e manda um pedido. Só entra na mesa depois que você aprovar. Desative o link quando não precisar mais.</p>';
+    (shared.convites||[]).filter(function(c){ return c.ativo; }).forEach(function(c){
+      html += '<div class="row" style="gap:8px;margin:6px 0"><input type="text" readonly value="'+esc(linkConvite(cmp.id, c.codigo))+'" data-gmlink="'+esc(c.codigo)+'" style="flex:1 1 220px;min-width:0">' +
+        '<button type="button" class="btn secondary" data-gmcopiarconv="'+esc(c.codigo)+'">Copiar</button>' +
+        '<button type="button" class="btn secondary" data-gmdesativarconv="'+esc(c.codigo)+'">Desativar</button></div>';
+    });
+    html += '<div class="row" style="margin-top:8px"><button type="button" class="btn accent" data-gmnovoconv="1">'+((shared.convites||[]).some(function(c){ return c.ativo; }) ? 'Gerar outro link' : 'Gerar link de convite')+'</button></div>';
+    return html + '</div>';
+  }
+  function bindGmJogadores(rerender){
+    var raiz = app.querySelector("#gm-jogadores"); if(!raiz) return;
+    var falhou = function(oque){ return function(err){ console.error("[Pangea] "+oque, err); alert("Não deu pra "+oque+": " + (err && (err.code || err.message) || "erro desconhecido")); rerender(); }; };
+    var novo = raiz.querySelector("[data-gmnovoconv]");
+    if(novo) novo.addEventListener("click", function(){
+      novo.disabled = true;
+      var cfg = campanhaAtual.config || {};
+      var cod = codigoAleatorio(10);
+      FB.escrever([{ tipo:"set", col:"convites", id:cod, data:{
+        codigo: cod, campanhaId: campanhaAtual.id, campanhaNome: campanhaAtual.nome || "",
+        mestreNome: usuario.displayName || usuario.email || "", criadoEm: agoraIso(), ativo: true,
+        pedeAcampamento: !!(cfg.criacao && cfg.criacao.acampamento)
+      } }]).catch(falhou("gerar o link"));
+    });
+    raiz.querySelectorAll("[data-gmcopiarconv]").forEach(function(b){
+      b.addEventListener("click", function(){
+        var inp = raiz.querySelector('[data-gmlink="'+b.getAttribute("data-gmcopiarconv")+'"]');
+        var txt = inp ? inp.value : "";
+        var ok = function(){ b.textContent = "Copiado ✓"; setTimeout(function(){ b.textContent = "Copiar"; }, 1500); };
+        if(navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(ok, function(){ inp.select(); });
+        else { inp.select(); try{ document.execCommand("copy"); ok(); }catch(e){} }
+      });
+    });
+    raiz.querySelectorAll("[data-gmdesativarconv]").forEach(function(b){
+      b.addEventListener("click", function(){
+        askConfirm("Desativar este link? Quem ainda não mandou o pedido não vai conseguir entrar por ele.", function(){
+          FB.escrever([{ tipo:"del", col:"convites", id:b.getAttribute("data-gmdesativarconv") }]).catch(falhou("desativar o link"));
+        });
+      });
+    });
+    raiz.querySelectorAll("[data-gmaprovar]").forEach(function(b){
+      b.addEventListener("click", function(){
+        var p = (shared.pedidos||[]).filter(function(x){ return x.uid === b.getAttribute("data-gmaprovar"); })[0]; if(!p) return;
+        b.disabled = true;
+        aprovarPedido(p).catch(falhou("aprovar o pedido"));
+      });
+    });
+    raiz.querySelectorAll("[data-gmrecusar]").forEach(function(b){
+      b.addEventListener("click", function(){
+        var p = (shared.pedidos||[]).filter(function(x){ return x.uid === b.getAttribute("data-gmrecusar"); })[0]; if(!p) return;
+        askConfirm("Recusar o pedido de "+(p.nome||p.email||"esta conta")+"? A pessoa vê que foi recusado e pode pedir de novo pelo link, se ele ainda estiver ativo.", function(){
+          FB.escrever([{ tipo:"update", col:"pedidos", id:p.uid, data:{ status:"recusado", respondidoEm: agoraIso() } }]).catch(falhou("recusar o pedido"));
+        });
+      });
+    });
+    raiz.querySelectorAll("[data-gmremover]").forEach(function(b){
+      b.addEventListener("click", function(){
+        var m = b.getAttribute("data-gmremover"), q = nomeDoMembro(m);
+        askConfirm("Remover "+(q.nome||q.email||"este jogador")+" da mesa? As fichas dele saem desta campanha e ficam guardadas na conta dele, com tudo; voltam assim se ele entrar de novo.", function(){
+          b.disabled = true;
+          removerJogador(m).catch(falhou("remover o jogador"));
+        });
+      });
+    });
+  }
+  function aprovarPedido(p){
+    var cid = campanhaAtual.id;
+    var dono = { uid:p.uid, email:p.email, nome:p.nome };
+    var leitura = p.retorno ? FB.lerDoc("/fichas/"+p.fichaBaseId+"/guardadas", p.guardadaId) : Promise.resolve(null);
+    return leitura.then(function(g){
+      var ops = [], copia = null;
+      if(p.retorno){
+        if(!g) throw new Error("a ficha guardada não foi encontrada na conta do jogador");
+        copia = clonar(g);
+        delete copia.guardadaEm; delete copia.campanhaNome;
+        copia.campanhaId = cid; copia.ehNpc = false;
+        copia.donoUid = dono.uid; copia.donoEmail = dono.email || null; copia.donoNome = dono.nome || null;
+        copia.atualizadoEm = agoraIso();
+        ops.push({ tipo:"del", col:"/fichas/"+p.fichaBaseId+"/guardadas", id:p.guardadaId });
+      } else if(p.ficha){
+        copia = copiaDaBase(p.ficha, cid, dono, p.complemento);
+        copia.baseId = p.fichaBaseId || p.ficha.id;
+      }
+      if(copia){
+        copia = paraFirestore(copia);
+        ops.push({ tipo:"set", col:"personagens", id:copia.id, data:copia });
+        ops.push({ tipo:"set", col:"resumos", id:copia.id, data:montarResumo(copia) });
+      }
+      var membros = (campanhaAtual.membros||[]).slice();
+      if(membros.indexOf(p.uid) < 0) membros.push(p.uid);
+      var dados = { membros: membros };
+      dados["membrosInfo." + p.uid] = { nome: p.nome || null, email: p.email || null, entrouEm: agoraIso() };
+      ops.push({ tipo:"update", col:"/campanhas", id:cid, data:dados });
+      ops.push({ tipo:"del", col:"pedidos", id:p.uid });
+      return FB.escrever(ops);
+    });
+  }
+  function removerJogador(m){
+    var cid = campanhaAtual.id;
+    var copias = loadChars().filter(function(c){ return c.donoUid === m && !c.ehNpc; });
+    var guardar = [], remover = [];
+    copias.forEach(function(c){
+      var bid = c.baseId;
+      if(!bid){ bid = c.id; guardar.push({ tipo:"set", col:"/fichas", id:bid, data:paraFirestore(baseDaCopia(c, cid)) }); }
+      var g = clonar(c); g.campanhaId = cid; g.campanhaNome = campanhaAtual.nome || ""; g.guardadaEm = agoraIso(); g.baseId = bid;
+      guardar.push({ tipo:"set", col:"/fichas/"+bid+"/guardadas", id:c.id, data:paraFirestore(g) });
+      remover.push({ tipo:"del", col:"personagens", id:c.id });
+      remover.push({ tipo:"del", col:"resumos", id:c.id });
+    });
+    var membros = (campanhaAtual.membros||[]).filter(function(x){ return x !== m; });
+    var dados = { membros: membros };
+    dados["membrosInfo." + m] = null;
+    remover.push({ tipo:"update", col:"/campanhas", id:cid, data:dados });
+    return FB.escrever(guardar).then(function(){ return FB.escrever(remover); });
   }
 
   // Tela de erro quando não dá pra falar com o banco (ex.: sem internet, ou o login
@@ -4497,8 +5155,9 @@
       html += '<button type="button" class="gm-corner-btn'+(showGm?' unlocked':'')+'" data-nav="gm" '+(showGm?'':'disabled')+' title="'+(showGm?"Área do Assimilador":"Área bloqueada")+'">'+(showGm?"◉":"○")+'</button>';
     }
     html += '<header class="top">' +
-      '<div class="brand"><h1 id="brand-title">Fichas de Pangea</h1><small>calculadora de personagens · Assimilação RPG'+(caps.mode==="mesa"?" · mesa ao vivo":"")+(state.gmPreviewJogador?" · vendo como jogador":"")+'</small></div>' +
+      '<div class="brand"><h1 id="brand-title">'+(campanhaAtual ? 'Fichas de '+esc(campanhaAtual.nome||"campanha") : 'Fichas de Pangea')+'</h1><small>calculadora de personagens · Assimilação RPG'+(caps.mode==="mesa"?" · mesa ao vivo":"")+(state.gmPreviewJogador?" · vendo como jogador":"")+'</small></div>' +
       '<nav class="tabs">' +
+        (caps.mode==="mesa" && usuario ? '<button type="button" class="btn secondary" data-action="lobby" title="Minhas campanhas e fichas">⇦ Campanhas</button>' : "") +
         '<button data-nav="roster" aria-current="'+(active==="roster")+'">'+(caps.mode==="mesa"?"Personagens da Mesa":"Meus Personagens")+'</button>' +
         '<button data-nav="wizard-new" aria-current="'+(active==="wizard")+'">Criar Personagem</button>' +
         '<button data-nav="mesa" aria-current="'+(active==="mesa")+'">Mesa</button>' +
@@ -8543,6 +9202,7 @@
   function renderGmMesa(){
     var roster = loadChars();
     var html = topbar("gm");
+    html += tentarHtml("Jogadores e convites", gmJogadoresHtml);
     html += renderGmDryRoll();
     html += tentarHtml("Bestiário", gmBestiarioHtml);
     html += renderGmConflitos();
@@ -8577,6 +9237,7 @@
 
     app.innerHTML = html + caixaHtml();
     bindGlobal();
+    tentar("Jogadores e convites", function(){ bindGmJogadores(renderGmMesa); });
     bindGmDryRoll();
     tentar("Bestiário", function(){ bindGmBestiario(renderGmMesa); });
     bindGmConflitos();
@@ -8649,6 +9310,8 @@
     });
     var sairBtn = app.querySelector('[data-action="sair"]');
     if(sairBtn) sairBtn.addEventListener("click", function(){ flushPendente(); if(FB) FB.sair(); });
+    var lobbyBtn = app.querySelector('[data-action="lobby"]');
+    if(lobbyBtn) lobbyBtn.addEventListener("click", voltarAoLobby);
     var previewBtn = app.querySelector('[data-action="toggle-gm-preview"]');
     if(previewBtn) previewBtn.addEventListener("click", function(){
       state.gmPreviewJogador = !state.gmPreviewJogador;
@@ -8712,6 +9375,78 @@
     ouvintes.forEach(function(u){ try{ u(); }catch(e){} });
     ouvintes = [];
   }
+  // Liga a mesa da campanha aberta (campanhaAtual): ouvintes do banco e, quando
+  // tudo chegou, monta a ficha (boot).
+  function ligarMesa(fb, u){
+    caps.isOwner = ehMestre();
+    var cid = campanhaAtual.id;
+    // Mudanças no documento da campanha (membros, configurações) chegam ao vivo.
+    ouvintes.push(fb.ouvirDoc("/campanhas", cid, function(cmp){
+      if(usuario !== u || !campanhaAtual || campanhaAtual.id !== cid) return;
+      if(!cmp){ avisoLobby = "Essa campanha não existe mais."; mostrarLobby(); return; }
+      campanhaAtual = cmp;
+      if(!ehMembro()){ avisoLobby = 'Você não faz mais parte de "'+(cmp.nome||"")+'".'; mostrarLobby(); return; }
+      agendarRender();
+    }, function(e){
+      console.warn("[Pangea] campanha", e);
+      if(e && e.code === "permission-denied" && usuario === u){ avisoLobby = "Você não faz mais parte dessa campanha."; mostrarLobby(); }
+    }));
+    state.gmUnlocked = false; // o código antigo não vale mais: quem é Assimilador é a conta
+    var mestre = ehMestre();
+    var chegou = { p:false, res:false, r:false, rn:!mestre };
+    function talvezRevelar(){
+      if(appPronto || !chegou.p || !chegou.res || !chegou.r || !chegou.rn) return;
+      appPronto = true;
+      boot();
+      if(mestre) sincronizarResumos();
+      garantirBases();
+    }
+    ouvintes.push(fb.ouvir("personagens", function(lista){
+      aplicarSnapshotPersonagens(lista);
+      chegou.p = true; talvezRevelar();
+      if(appPronto && mestre){ sincronizarResumos(); sincronizarLeitoresDocs(); }
+      if(appPronto) garantirBases();
+      abrirFichaVinculadaSeChegou();
+      agendarRender();
+    }, mostrarErroConexao, mestre ? null : ["donoUid", u.uid]));
+    ouvintes.push(fb.ouvir("documentos", function(lista){
+      shared.documentos = lista; agendarRender();
+    }, function(e){ console.warn("[Pangea] documentos", e); }, mestre ? null : ["leitores", u.uid, "array-contains"]));
+    ouvintes.push(fb.ouvir("encontrosMesa", function(lista){
+      shared.encontrosMesa = lista; verificarRevelacoes(lista); agendarRender(); renderRollFeed();
+    }, function(e){ console.warn("[Pangea] ameaças em cena", e); }));
+    if(mestre){
+      ouvintes.push(fb.ouvir("encontros", function(lista){
+        shared.encontros = lista; agendarRender();
+      }, function(e){ console.warn("[Pangea] bestiário", e); }));
+      ouvintes.push(fb.ouvir("itensPool", function(lista){
+        shared.itensPool = lista; agendarRender();
+      }, function(e){ console.warn("[Pangea] itens achados", e); }));
+      ouvintes.push(fb.ouvir("documentosNotas", function(lista){
+        shared.documentosNotas = lista; agendarRender();
+      }, function(e){ console.warn("[Pangea] notas dos documentos", e); }));
+      ouvintes.push(fb.ouvir("pedidos", function(lista){
+        shared.pedidos = lista; agendarRender();
+      }, function(e){ console.warn("[Pangea] pedidos", e); }));
+      ouvintes.push(fb.ouvir("convites", function(lista){
+        shared.convites = lista; agendarRender();
+      }, function(e){ console.warn("[Pangea] convites", e); }));
+    }
+    ouvintes.push(fb.ouvir("resumos", function(lista){
+      shared.resumos = lista;
+      chegou.res = true; talvezRevelar(); agendarRender();
+    }, mostrarErroConexao, mestre ? null : ["ehNpc", false]));
+    ouvintes.push(fb.ouvirRolagens("rolagens", 60, function(lista){
+      rolagensComuns = lista; aplicarSnapshotRolagens();
+      chegou.r = true; talvezRevelar(); agendarRender();
+    }, mostrarErroConexao));
+    if(mestre){
+      ouvintes.push(fb.ouvirRolagens("rolagensNpc", 60, function(lista){
+        rolagensNpc = lista; aplicarSnapshotRolagens();
+        chegou.rn = true; talvezRevelar(); agendarRender();
+      }, mostrarErroConexao));
+    }
+  }
   function initCapabilities(){
     var iniciou = false;
     function comFB(fb){
@@ -8720,16 +9455,15 @@
       FB = fb;
       app.innerHTML = '<p class="empty">Conectando à mesa…</p>';
       fb.quandoUsuario(function(u){
-        pararOuvintes();
+        pararOuvintes(); pararLobby(); lobby = null;
         appPronto = false;
-        shared = { characters:[], testLog:[], resumos:[], documentos:[], documentosNotas:[], encontros:[], encontrosMesa:[] };
-        bestRevPronto = false; bestRevVistos = {};
-        rolagensComuns = []; rolagensNpc = [];
+        limparMesaLocal();
+        campanhaAtual = null; fb.abrirCampanha(null);
         if(!u || u.isAnonymous){
           usuario = null;
-          campanhaAtual = null; fb.abrirCampanha(null);
           caps.mode = "local"; caps.artifact = null; caps.isOwner = false;
           if(u && u.isAnonymous){ fb.sair(); return; } // sessões anônimas da Fase 1
+          try{ sessionStorage.removeItem(CAMPANHA_ABERTA_KEY); }catch(e){}
           mostrarLogin();
           return;
         }
@@ -8737,65 +9471,17 @@
         caps.artifact = fb;
         caps.mode = "mesa";
         caps.canEdit = true;
-        campanhaAtual = null; fb.abrirCampanha(null);
-        abrirCampanhaInicial(fb, u, ligarMesa);
-        function ligarMesa(){
-        caps.isOwner = ehMestre();
-        // Mudanças no documento da campanha (membros, configurações) chegam ao vivo.
-        ouvintes.push(fb.ouvirDoc("/campanhas", campanhaAtual.id, function(cmp){
-          if(!cmp){ return; }
-          campanhaAtual = cmp;
-          if(!ehMembro()){ pararOuvintes(); mostrarSemCampanha(); return; }
-          agendarRender();
-        }, function(e){ console.warn("[Pangea] campanha", e); }));
-        state.gmUnlocked = false; // o código antigo não vale mais: quem é Assimilador é a conta
-        var mestre = ehMestre();
-        var chegou = { p:false, res:false, r:false, rn:!mestre };
-        function talvezRevelar(){
-          if(appPronto || !chegou.p || !chegou.res || !chegou.r || !chegou.rn) return;
-          appPronto = true;
-          boot();
-          if(mestre) sincronizarResumos();
-        }
-        ouvintes.push(fb.ouvir("personagens", function(lista){
-          aplicarSnapshotPersonagens(lista);
-          chegou.p = true; talvezRevelar();
-          if(appPronto && mestre){ sincronizarResumos(); sincronizarLeitoresDocs(); }
-          abrirFichaVinculadaSeChegou();
-          agendarRender();
-        }, mostrarErroConexao, mestre ? null : ["donoUid", u.uid]));
-        ouvintes.push(fb.ouvir("documentos", function(lista){
-          shared.documentos = lista; agendarRender();
-        }, function(e){ console.warn("[Pangea] documentos", e); }, mestre ? null : ["leitores", u.uid, "array-contains"]));
-        ouvintes.push(fb.ouvir("encontrosMesa", function(lista){
-          shared.encontrosMesa = lista; verificarRevelacoes(lista); agendarRender(); renderRollFeed();
-        }, function(e){ console.warn("[Pangea] ameaças em cena", e); }));
-        if(mestre){
-          ouvintes.push(fb.ouvir("encontros", function(lista){
-            shared.encontros = lista; agendarRender();
-          }, function(e){ console.warn("[Pangea] bestiário", e); }));
-          ouvintes.push(fb.ouvir("itensPool", function(lista){
-            shared.itensPool = lista; agendarRender();
-          }, function(e){ console.warn("[Pangea] itens achados", e); }));
-          ouvintes.push(fb.ouvir("documentosNotas", function(lista){
-            shared.documentosNotas = lista; agendarRender();
-          }, function(e){ console.warn("[Pangea] notas dos documentos", e); }));
-        }
-        ouvintes.push(fb.ouvir("resumos", function(lista){
-          shared.resumos = lista;
-          chegou.res = true; talvezRevelar(); agendarRender();
-        }, mostrarErroConexao, mestre ? null : ["ehNpc", false]));
-        ouvintes.push(fb.ouvirRolagens("rolagens", 60, function(lista){
-          rolagensComuns = lista; aplicarSnapshotRolagens();
-          chegou.r = true; talvezRevelar(); agendarRender();
-        }, mostrarErroConexao));
-        if(mestre){
-          ouvintes.push(fb.ouvirRolagens("rolagensNpc", 60, function(lista){
-            rolagensNpc = lista; aplicarSnapshotRolagens();
-            chegou.rn = true; talvezRevelar(); agendarRender();
-          }, mostrarErroConexao));
-        }
-        } // fim de ligarMesa
+        // Depois do login vem sempre a tela inicial; só um recarregar da aba volta
+        // direto pra campanha que estava aberta nela.
+        var reabrir = null;
+        try{ reabrir = sessionStorage.getItem(CAMPANHA_ABERTA_KEY); }catch(e){}
+        if(!reabrir){ mostrarLobby(); return; }
+        app.innerHTML = '<p class="empty">Abrindo a campanha…</p>';
+        fb.lerDoc("/campanhas", reabrir).then(function(cmp){
+          if(usuario !== u) return;
+          if(cmp && (!cmp.migracao || cmp.migracao.etapa === "ok") && ehMembroDe(cmp)) entrarNaCampanha(cmp);
+          else mostrarLobby();
+        }).catch(function(){ if(usuario === u) mostrarLobby(); });
       });
     }
     if(window.PANGEA_FB){ comFB(window.PANGEA_FB); return; }
@@ -8848,7 +9534,7 @@ try {
   // as coleções antigas da raiz, lidas só na migração).
   const DA_CAMPANHA = { personagens: "fichas", resumos: "resumos", rolagens: "rolagens", rolagensNpc: "rolagensNpc",
     documentos: "documentos", documentosNotas: "documentosNotas", encontros: "encontros", encontrosMesa: "encontrosMesa",
-    itensPool: "itensPool", meta: "meta", notas: "notas", locais: "locais" };
+    itensPool: "itensPool", meta: "meta", notas: "notas", locais: "locais", convites: "convites", pedidos: "pedidos" };
   let campanhaId = null;
   const caminho = (col) => {
     if (col.charAt(0) === "/") return col.slice(1);
@@ -8894,6 +9580,12 @@ try {
     // Lê uma coleção inteira com o id de cada documento (usado na migração).
     async lerColecao(col) {
       const snap = await getDocs(collection(db, caminho(col)));
+      return snap.docs.map((d) => ({ id: d.id, data: d.data() }));
+    },
+    // Lê uma consulta (filtro [campo, valor, op?]) com o id de cada documento.
+    async lerConsulta(col, filtro) {
+      const q = query(collection(db, caminho(col)), where(filtro[0], filtro[2] || "==", filtro[1]));
+      const snap = await getDocs(q);
       return snap.docs.map((d) => ({ id: d.id, data: d.data() }));
     },
     // ops: [{tipo:"set"|"update"|"del", col, id, data}] — gravadas em lotes de até 400.

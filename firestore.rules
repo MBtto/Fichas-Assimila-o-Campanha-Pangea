@@ -5,8 +5,9 @@ service cloud.firestore {
     function logado() {
       return request.auth != null && request.auth.token.firebase.sign_in_provider == 'google.com';
     }
-    // O Assimilador é reconhecido pela conta Google.
-    function mestre() {
+    // Conta do Marco: autorizou a migração única e, enquanto o site é privado,
+    // é a única que cria campanhas novas.
+    function contaCriadora() {
       return logado()
         && request.auth.token.email == 'marcoa.barreto14@gmail.com'
         && request.auth.token.email_verified == true;
@@ -14,82 +15,30 @@ service cloud.firestore {
     function donoDe(dados) {
       return dados.get('donoUid', null) == request.auth.uid;
     }
-    // Experiência (campo "xp"): só o Assimilador dá. O jogador nunca cria nem muda esse campo.
+    // Experiência (campo "xp"): só o mestre dá. O jogador nunca cria nem muda esse campo.
     function xpIntacta() {
       return request.resource.data.get('xp', null) == resource.data.get('xp', null);
     }
 
-    // Fichas completas: o jogador só lê e grava as fichas vinculadas à conta dele.
-    match /personagens/{id} {
-      allow read: if mestre() || (logado() && donoDe(resource.data));
-      allow create: if mestre() || (logado() && donoDe(request.resource.data) && request.resource.data.get('xp', null) == null);
-      allow update: if mestre()
-        // o dono edita a própria ficha (e não pode passá-la pra outra conta)
-        || (logado() && donoDe(resource.data) && donoDe(request.resource.data) && xpIntacta())
-        // vínculo pela senha: só uma ficha sem dono e que não é NPC, e só os campos do dono
-        || (logado()
-            && resource.data.get('donoUid', null) == null
-            && resource.data.get('ehNpc', false) != true
-            && donoDe(request.resource.data)
-            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['donoUid', 'donoEmail', 'donoNome']));
-      allow delete: if mestre() || (logado() && donoDe(resource.data));
-    }
-
-    // Resumos (o que a aba Mesa mostra das fichas dos outros). NPC: só o Assimilador.
-    match /resumos/{id} {
-      allow read: if mestre() || (logado() && resource.data.ehNpc == false);
-      allow create, update: if mestre()
-        || (logado() && getAfter(/databases/$(database)/documents/personagens/$(id)).data.get('donoUid', null) == request.auth.uid);
-      allow delete: if mestre()
-        || (logado() && get(/databases/$(database)/documents/personagens/$(id)).data.get('donoUid', null) == request.auth.uid);
-    }
-
-    // Histórico de rolagens: todos veem; só o Assimilador apaga.
-    match /rolagens/{id} {
-      allow read, create: if logado();
-      allow delete: if mestre();
-    }
-    // Rolagens de NPC: só o Assimilador vê.
-    match /rolagensNpc/{id} {
-      allow create: if logado();
-      allow read, delete: if mestre();
-    }
-
-    // Itens achados (pool): só o Assimilador lê e escreve; ao entregar, o item vai pro inventário do personagem.
-    match /itensPool/{id} {
-      allow read, write: if mestre();
-    }
-
-    // Bestiário: criaturas em cena com o estado completo (pontos, rolagens), só o Assimilador.
-    match /encontros/{id} {
-      allow read, write: if mestre();
-    }
-    // O que a mesa vê das criaturas em cena (nome/descrição se revelada, progresso se mostrado).
-    match /encontrosMesa/{id} {
-      allow read: if logado();
-      allow write: if mestre();
-    }
-
-    // Documentos da campanha: só quem recebeu (conta dona do personagem) lê; só o Assimilador escreve.
-    match /documentos/{id} {
-      allow read: if mestre() || (logado() && request.auth.uid in resource.data.get('leitores', []));
-      allow write: if mestre();
-    }
-    // Onde é achado e nota do Assimilador: só o Assimilador.
-    match /documentosNotas/{id} {
-      allow read, write: if mestre();
-    }
-
-    match /meta/{id} {
-      allow read: if logado();
-      allow write: if mestre();
-    }
+    // ======================================================================
+    // COLEÇÕES ANTIGAS DA RAIZ (antes das campanhas). A migração para a
+    // campanha Pangea já foi confirmada (etapa A, 08/10/2026): ficam guardadas,
+    // só para leitura da conta do Marco, e ninguém grava mais nelas.
+    // ======================================================================
+    match /personagens/{id}     { allow read: if contaCriadora(); allow write: if false; }
+    match /resumos/{id}         { allow read: if contaCriadora(); allow write: if false; }
+    match /rolagens/{id}        { allow read: if contaCriadora(); allow write: if false; }
+    match /rolagensNpc/{id}     { allow read: if contaCriadora(); allow write: if false; }
+    match /itensPool/{id}       { allow read: if contaCriadora(); allow write: if false; }
+    match /encontros/{id}       { allow read: if contaCriadora(); allow write: if false; }
+    match /encontrosMesa/{id}   { allow read: if contaCriadora(); allow write: if false; }
+    match /documentos/{id}      { allow read: if contaCriadora(); allow write: if false; }
+    match /documentosNotas/{id} { allow read: if contaCriadora(); allow write: if false; }
+    match /meta/{id}            { allow read: if contaCriadora(); allow write: if false; }
 
     // ======================================================================
-    // CAMPANHAS (etapa A, 08/10/2026). Tudo da mesa mora em campanhas/{cid}/...
+    // CAMPANHAS. Tudo da mesa mora em campanhas/{cid}/...
     // O mestre é o dono da campanha (donoUid); jogadores estão em "membros".
-    // As coleções antigas da raiz (acima) ficam como estavam, só como guarda:
-    // o site novo não usa mais, e elas podem ser fechadas numa etapa futura.
     // ======================================================================
     function campanha(cid) {
       return get(/databases/$(database)/documents/campanhas/$(cid)).data;
@@ -105,14 +54,21 @@ service cloud.firestore {
       // Ler: membros. Um documento que ainda não existe pode ser consultado (tela de migração).
       allow get: if logado() && (resource == null || resource.data.donoUid == request.auth.uid
                                  || request.auth.uid in resource.data.get('membros', []));
-      allow list: if false;
-      // Criar: quem cria vira o dono e precisa estar na própria lista de membros.
-      allow create: if logado()
+      // Listar: só as campanhas em que a conta está (tela inicial: membros contém a conta).
+      allow list: if logado() && request.auth.uid in resource.data.membros;
+      // Criar: a conta criadora, que vira o dono e está na própria lista de membros.
+      allow create: if contaCriadora()
         && request.resource.data.donoUid == request.auth.uid
         && request.auth.uid in request.resource.data.get('membros', []);
-      // Alterar/apagar: só o dono, e ele não passa a campanha pra outra conta.
-      allow update: if logado() && resource.data.donoUid == request.auth.uid
-        && request.resource.data.donoUid == request.auth.uid;
+      allow update: if
+        // o dono altera (e não passa a campanha pra outra conta)
+        (logado() && resource.data.donoUid == request.auth.uid
+          && request.resource.data.donoUid == request.auth.uid)
+        // um jogador sai sozinho: só tira a própria conta de "membros"
+        || (logado() && resource.data.donoUid != request.auth.uid
+          && request.auth.uid in resource.data.get('membros', [])
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['membros'])
+          && request.resource.data.membros.toSet() == resource.data.membros.toSet().difference([request.auth.uid].toSet()));
       allow delete: if logado() && resource.data.donoUid == request.auth.uid;
 
       // Fichas-cópia da campanha (o site ainda as chama de "personagens").
@@ -158,12 +114,34 @@ service cloud.firestore {
         allow write: if mestreDe(cid);
       }
       // Só o mestre: notas dos documentos, criaturas com estado completo, itens achados,
-      // notas do mestre e locais (as duas últimas para as próximas etapas).
+      // notas do mestre e locais.
       match /documentosNotas/{id} { allow read, write: if mestreDe(cid); }
       match /encontros/{id}       { allow read, write: if mestreDe(cid); }
       match /itensPool/{id}       { allow read, write: if mestreDe(cid); }
       match /notas/{id}           { allow read, write: if mestreDe(cid); }
       match /locais/{id}          { allow read, write: if mestreDe(cid); }
+
+      // Convites (etapa B): quem tem o link (o código) consegue ler aquele convite;
+      // só o mestre lista, cria e apaga (apagar = desativar o link).
+      match /convites/{codigo} {
+        allow get: if logado();
+        allow list, write: if mestreDe(cid);
+      }
+      // Pedidos de entrada: o documento tem o id da conta que pede. Só nasce com um
+      // convite ativo desta campanha; o mestre vê, recusa ou aprova (e apaga).
+      function conviteAtivo(codigo) {
+        return get(/databases/$(database)/documents/campanhas/$(cid)/convites/$(codigo)).data.get('ativo', false) == true;
+      }
+      match /pedidos/{uidP} {
+        allow get: if logado() && (uidP == request.auth.uid || mestreDe(cid));
+        allow list: if mestreDe(cid);
+        allow create, update: if (logado() && uidP == request.auth.uid
+            && request.resource.data.uid == request.auth.uid
+            && request.resource.data.status == 'pendente'
+            && conviteAtivo(request.resource.data.codigo))
+          || (mestreDe(cid) && resource != null && request.resource.data.uid == resource.data.uid);
+        allow delete: if logado() && (uidP == request.auth.uid || mestreDe(cid));
+      }
     }
 
     // Fichas-base: a ficha do jogador na conta dele, fora de qualquer campanha.
@@ -173,10 +151,27 @@ service cloud.firestore {
       allow create: if logado() && (
         // o próprio jogador cria a sua
         donoDe(request.resource.data)
-        // ou o mestre gera a base a partir da cópia que está na campanha dele (migração)
+        // ou o mestre gera a base a partir da cópia que está na campanha dele
         || (mestreDe(request.resource.data.origemCampanha)
             && getAfter(/databases/$(database)/documents/campanhas/$(request.resource.data.origemCampanha)/fichas/$(id)).data.get('donoUid', null) == request.resource.data.donoUid)
       );
+
+      // Fichas guardadas (etapa B): a cópia de uma campanha que a ficha deixou.
+      // O dono da base mexe à vontade. O mestre da campanha de onde ela saiu pode
+      // guardá-la ao remover o jogador, ler e apagar ao aprovar a volta.
+      function donoDaBase() {
+        return getAfter(/databases/$(database)/documents/fichas/$(id)).data.get('donoUid', null);
+      }
+      match /guardadas/{gid} {
+        allow read, write: if logado() && get(/databases/$(database)/documents/fichas/$(id)).data.get('donoUid', null) == request.auth.uid;
+        allow create: if logado() && donoDaBase() == request.auth.uid;
+        allow get, delete: if logado() && mestreDe(resource.data.campanhaId);
+        allow create, update: if logado() && mestreDe(request.resource.data.campanhaId)
+          && request.resource.data.get('donoUid', null) == donoDaBase()
+          && request.resource.data.get('id', null) == gid
+          && (get(/databases/$(database)/documents/campanhas/$(request.resource.data.campanhaId)/fichas/$(gid)).data.get('baseId', null) == id
+              || (get(/databases/$(database)/documents/campanhas/$(request.resource.data.campanhaId)/fichas/$(gid)).data.get('baseId', null) == null && gid == id));
+      }
     }
   }
 }
