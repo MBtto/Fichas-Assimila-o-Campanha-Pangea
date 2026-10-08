@@ -4000,25 +4000,52 @@
       g.globalCompositeOperation = "source-in"; g.fillStyle = "rgb("+cor.join(",")+")"; g.fillRect(-tam/2, -tam/2, tam, tam);
       return { img:c, tam:tam };
     }
+    function embaralhar(a){ for(var i=a.length-1;i>0;i--){ var j = Math.floor(Math.random()*(i+1)), t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+    // Distribuição: a largura é dividida em faixas (uma por ícone) e a altura também, em
+    // ordem embaralhada; os tipos se revezam de faixa em faixa (Sucesso, Adaptação,
+    // Pressão...), então dois ícones iguais nunca ficam lado a lado. No easter egg são
+    // todos de Pressão, mas continuam espalhados.
     function criar(){
       var ks = Object.keys(imgs);
       pecas = [];
       if(!ks.length) return;
       var celular = W < 640, normal = modo === "normal", egg = emPressao() && imgs.pressao;
       var qtd = Math.round((normal ? 30 : 18) * (celular ? 0.5 : 1) * (egg ? 1.6 : 1));
+      var ordemTipos = embaralhar(ks.slice());
+      var linhas = embaralhar(Array.apply(null, Array(qtd)).map(function(_, i){ return i; }));
+      var faixa = W / qtd;
       for(var i=0;i<qtd;i++){
-        var k = egg ? "pressao" : ks[i % ks.length]; // as três em partes iguais
+        var k = egg ? "pressao" : ordemTipos[i % ordemTipos.length];
         var lado = egg ? rnd(26, 50) : rnd(22, 40);
         pecas.push({
-          sp:sprite(k, lado), x:Math.random()*W, y:Math.random()*H,
-          // atravessa a tela em 45 a 95 s (no easter egg, um pouco mais rápido)
-          vy:-(H + 120) / (egg ? rnd(30, 60) : rnd(45, 95)),
-          amp:rnd(10, 30), freq:rnd(0.02, 0.05), fase:Math.random()*6.28,
+          k:k, sp:sprite(k, lado),
+          x:faixa*(i + rnd(0.2, 0.8)), y:(H + 120)*(linhas[i] + rnd(0.15, 0.85))/qtd - 60,
+          // atravessa a tela em 55 a 80 s (no easter egg, um pouco mais rápido); a faixa
+          // de velocidade é estreita pra um ícone não alcançar e encostar no outro
+          vy:-(H + 120) / (egg ? rnd(32, 48) : rnd(55, 80)),
+          amp:rnd(6, 16), freq:rnd(0.02, 0.05), fase:Math.random()*6.28,
           // balançam em volta da posição em pé
           rot:rnd(-0.2, 0.2), oscila:egg ? 0.35 : 0.22, fOsc:rnd(0.15, 0.35),
           alfa:(normal ? rnd(0.16, 0.22) : rnd(0.10, 0.14)) * (egg ? 1.5 : 1)
         });
       }
+    }
+    // Quando um ícone sai por cima, volta por baixo no ponto mais "vazio": entre algumas
+    // posições sorteadas, fica a mais longe dos ícones do mesmo tipo e dos que estão
+    // perto da borda de baixo.
+    function reposicionar(p){
+      var yNovo = H + p.sp.tam*0.6, melhor = Math.random()*W, nota = -1;
+      for(var t=0;t<12;t++){
+        var x = rnd(p.sp.tam/2, W - p.sp.tam/2), menor = 1e9;
+        pecas.forEach(function(o){
+          if(o === p) return;
+          var dx = o.x - x, dy = (o.y - yNovo)*(o.k === p.k ? 0.6 : 1.4);
+          var d = Math.sqrt(dx*dx + dy*dy) * (o.k === p.k ? 1 : 1.8);
+          if(d < menor) menor = d;
+        });
+        if(menor > nota){ nota = menor; melhor = x; }
+      }
+      p.x = melhor; p.y = yNovo;
     }
     function medir(){
       var r = cv.getBoundingClientRect();
@@ -4047,7 +4074,7 @@
         ultimo = t;
         pecas.forEach(function(p){
           p.y += p.vy*dt;
-          if(p.y < -p.sp.tam){ p.y = H + p.sp.tam*0.6; p.x = Math.random()*W; }
+          if(p.y < -p.sp.tam) reposicionar(p);
         });
         desenhar(t);
       }
