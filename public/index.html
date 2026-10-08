@@ -504,8 +504,8 @@
   @keyframes caixaEntraCentro{ from{ opacity:0; transform:scale(.97); } to{ opacity:1; transform:none; } }
   :root[data-anim="reduzidas"] .caixa{ animation:none !important; }
   @media (prefers-reduced-motion: reduce){ .caixa{ animation:none !important; } }
-  /* Fundo animado ("poros de assimilação") e texturas do fundo da página */
-  #fundo-poros{ position:fixed; inset:0; width:100%; height:100%; z-index:-1; pointer-events:none; display:block; }
+  /* Fundo animado (símbolos dos dados: Sucesso, Adaptação, Pressão) e texturas do fundo da página */
+  #fundo-poros{ position:fixed; inset:0; width:100%; height:100%; z-index:-1; pointer-events:none; display:block; transition:opacity .6s ease; }
   :root[data-fundotex="granulado"] body{ background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.5 0 0 0 0 0.45 0 0 0 0 0.35 0 0 0 .22 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); background-attachment:fixed; }
   :root[data-fundotex="vinheta"] body{ background-image:radial-gradient(ellipse at 50% 40%, transparent 45%, rgba(0,0,0,.22) 100%); background-attachment:fixed; }
   /* Abas simples (Documentos: A entregar / Já entregues) */
@@ -3936,14 +3936,28 @@
     ["fundotex","Textura do fundo",[["padrao","Lisa"],["granulado","Granulado"],["vinheta","Vinheta"]]]
   ];
   var AJUSTES_SECOES = [["Texto",["texto","fonte","numeros"]],["Layout",["densidade","cantos","textura"]],["Fundo",["fundo","fundotex"]],["Movimento",["anim"]]];
-  // ---------- FUNDO ANIMADO: "poros de assimilação" ----------
-  // Células e esporos orgânicos, quase transparentes, subindo e derivando bem devagar
-  // atrás de todo o conteúdo. Cor tirada do tema ativo (--ink e --accent). Opção em
-  // Aparência > Fundo: Sutil (padrão) / Normal / Desligado. Com "Animações reduzidas"
-  // ou prefers-reduced-motion o desenho fica parado. Pausa com a aba escondida e usa
-  // menos partículas no celular. Limitado a ~30 quadros por segundo.
+  // ---------- FUNDO ANIMADO: símbolos dos dados de Assimilação RPG ----------
+  // Pedido do Marco (08/10/2026): o fundo usa só os três símbolos dos dados especiais do
+  // livro (besouro = Sucesso, cervo = Adaptação, máscara = Pressão), as mesmas silhuetas e
+  // cores que a ficha usa pra eles, bem transparentes e subindo devagar.
+  // Easter egg: quando um teste mantém 2 ou mais Pressões (ou um Teste de Assimilação sai
+  // com 2 ou mais Pressões), o fundo vira só máscaras de Pressão por um tempo (ver
+  // fundoPoros.pressao) e depois volta ao normal.
+  // Aparência > Fundo: Sutil (padrão) / Normal / Desligado. Com "Animações reduzidas" ou
+  // prefers-reduced-motion o desenho fica parado. Pausa com a aba escondida, metade das
+  // peças no celular, ~30 quadros por segundo.
   var fundoPoros = (function(){
-    var cv = null, ctx = null, poros = [], rodando = false, ultimo = 0, raf = 0, dpr = 1, W = 0, H = 0, cores = null, modo = null;
+    var cv = null, ctx = null, pecas = [], rodando = false, ultimo = 0, raf = 0, dpr = 1, W = 0, H = 0, cores = null, modo = null;
+    // As silhuetas vão embutidas aqui (menos de 1 KB cada): o fundo não depende de baixar
+    // nada, então funciona mesmo se a pasta icones/ não carregar (prévia, rede lenta).
+    var IMG_DADOS = {
+      sucesso:"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFkAAABQCAYAAAByBNlnAAAC/UlEQVR4nO2cW27EIAxFnaoLqKruf6vpRxUNZXga+9o8jlQ10iQZcnGMDWaun+8vOujyYd2AHTgiAzgiAzgiAzgiA/g0/O47OL7MWgHgWDIAS5GXtt4Qa0t+hL6LZ02OtcghFkLfwZ8a0gPfTf1u4KLXQ5auLwnh2vVIWvId/e8hFCm+vsXSei0yPle1kzy5ixScDmvpkIeLAG+BJ5Fjax7xk7lrTWJzSZG9+cU7OjZLfrQsWeM155B6I+DG4MVdoMI3k7fNg8izCMxup7TIpVAsBTIBkRhIWffQsORWoa0yPMQ1//DgLmaC5XIQIqcswXJCiPvdbJ+uJbK3mDmmJ/0exsJdzDKtKZa8HJ+cRtQQ0CJ7suKW+Q0iAdeHFNmTwDlUUvDjLvKIDd4okWe0YjF2t+ScsKIhqGZxS7h2VzqnxgxvQZGSyKmHG1kk5dBz7Uh5geqEfq8lP41JNaT0GRJ3M4FcdyE1u8YtAWilV3AVSiJrPrzG/Wo1H6Ouiw0nuqgto1u7ixFU2j4SXbQIjbac3LggEeWwsaxP1sRV2KcpsqsHrSARrmbZPeMrIWYkq7oLKWIfz6osPSL/UYunW5OapNCziIyMcWuCdyc43kXOvYKoELE2+DUNjoiB76J6ApO7TuIcc7xGF1OI14pXkUvEHeC+Q9AiL+MCevA+8EmTigyW2zPCjQZmStHfsCo4tMDMDXkc+BCdAu14jyIT9S9huUZT5NF9eS3Tj633rGWOqlhGFy2pcWoL8Chwy7dyF1fmeEm0RfYmoMmu1NWSkdw0pOngqC1ya6E1miX2VhPZC5ljmb3VqYp1b/4Zhoa7KG0J0F5GMi1iyaHxG0QP1ktHbtD4DSIiv/PGJh0rYckjO4Y0rboUzkE7eFRkqS1ZknXEqTaYlc0SyRaBS1lHqYq/9fzceeHvVkyV8SEaK9mBcIvmirxCzAuzZq+T9prA95HsKHKMutC7isxdYWGxq8hEQKF3FpnoDHww1GcIj8gv1IQ+IgM4IgM4IgP4BfR3kfBPnzviAAAAAElFTkSuQmCC",
+      adaptacao:"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGIAAABTCAYAAABkg9IGAAADT0lEQVR4nO2c644bIQxGPVUfoKr6/q86/VGlnaVcbMD2Z8ZHWu0qmiSMDxgwyV6/fv6gxJ9v3g1I/pAiQEgRIKQIEFIECN+9G/AC7sffV+uiHBH7uJmPVUkR69z0L+DswJekCBBSxDpl3p8aFSkChBRhS3O0pAhdmsvVkhShC3u+yA1dnTKA7J49oPk6IxGfBvVWBrsaiUCrB7fisI1earobf/euQ6cXaM591K5rjR5RXN6Ump6736vy+IdWr1/tcN3RZD1Z38UPGr1g9eSViO/NSkQr8D0hu4XVAqkx123fWe9o2ErutYR7r5JRIXp9yYiQBqp1/fX4aT3HQspoAcLpHJx2siTPpqaZQlct+JxGzoxMaVrrlbJX9hTuO2tJ46VSZ4LMaYfkvTmIOpBUxEzK2NnrZ4Owmuqkc5h4FI9E9PL47puVIr1Zi/a15r4hsxu6clM0ery8Zua9pM+rPUdLxvIKk5OatHaaFmjWwXqrPzHcESHpkRp1Ka1qqATV95Skppn0EB0z4dI5YkaGtzxpm11K/jOT9akjg1O+4CxGpphdNU3V3EGZrR9tZfU8wnsvsZPRgkD13nYfDM3WhbRppdNWe81XZQgndL3d+y4kVVSXM3hrEaOAXMVvtLIJ1KpJE+6nJWqrl5kSSO15O15bjJeIUTr6BKO3VNYIjtrydATSJ/1adRuNwPRSn1Wh8AtIIko0J1DJWbpWG75gLWI0CY8+c2RBrY3q6QptsrY8Q2jhUun1SE2RyiNmE7fXHIEuY9uBDxeE1OS+q0V4f89Vk0VpIwzey1fzFNDBtR0IqYnIt5wO0RG8R0QLq+B471n+giqCSF8GjAQinNTUQitlQUkgwh4RNZAm961EEFEr0K3IgBQZQcQHjRoQRFoiiiWihlTGs7QCI4Eonogdwet9pcwN9FUT0f+l8VqK4n51DGoUPIk2Impwz5l7Etwn8Cgidn/5RfLaJkQRQQQSMC0iiSA6WEY0EUR7ZcCIjSiCCCiAu4gq4jgiizhqVEQWcRTRRRwzKqKLWAWm5PF2ETCkCBDeLgJmjnm7CBhOEDHTq+E+hHCCCCKl/7NnySkiiHi9HFICUYyjUimwwe5x0ogITYoAIUWAkCJASBEg/AbBzaX6rKd0jwAAAABJRU5ErkJggg==",
+      pressao:"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGAAAABhCAYAAAApxKSdAAADT0lEQVR4nO2ca27cMAyE5aIHKIre/6rJnzViuLIlUkNxJPIDgqDFZi1xxIf1Ov79/VMSP355NyA6KYAzKYAzKYAzKYAzlgJ8fX6SFywFOD6/U4gXZoagFKGCtQDH7d8pwg2PJJwiXPCqgjIvfJghwD0MXQkvAsN7QGgRGAQoJbAIswR4C0MnIUVg8YCT3URo9uf3jFYI+Sp9HsPK1ejNfiAEOB+INNpqIqg9FyHAUep1/d2AR+Uzb1gIi6TVl652W4YgVDx/+57Z4vT2qbtdKAGkoxvF0zPRwkj6Jno20gO8RKhRa4dGFGl/xM9AhyAmEe5IvEXTB5XXWeQAZhFquLaV7UVsVdQ5x0oA1tLRgqG+okLQSiGHCpQHRBrxV4b7nTnAmV3fA2Yx/IKG9oCooajFo10sQlCK8MNRGvbIMtQO99nQqIgGX1ZBWNwn406iVUPqkJshCINoHfiKRQiKNvrviLZdZg6wodsL0AJEH/2lOC5JRkeViJEeEHn0u1dB2kmp1UVbbjq6tlkr9LQFQgDEZqWwQowKgA4h4URgfA8IJcKIAJYJNIwIWgFmVC8hRNCUoTNLR8t15pbAPc8dPscg9YARY7DU/L0V1xQPZEzCd1CG0JS65iJIBRhtkMYLEJ5Dm080OeB6DQ07HgNGxEgI0nZOc06MmaE2juYASxG8jT/l+YgkbCHCjAN+FCDPCWv/ljGnTGsLw2Qc291BUys11rkgJNRJn3kuCMmMpK/6e40Aqxn/5KndriFQmoRXNf7J9f4Jir5IBdjlGkqrdotnR0fK0FWNb4H7tpRowCb3olRBtESqgihZYUFma2YuSSYVJAKk8X+A2aJXgDS+ET0CpPHrQOzSEiCN/z/QBf63FzHEvZi7CnhdRDK7sIl+RwEByx3QkEK7nweFlQDIzVRsIkA9m9UDeo2+/MkaRgFqBu39v+XwuKrgyXCS0Vw77DcTWBiatR7QOqDX+x1vZd/IMqPb3iTrqwpqo1p9s4ji81IkXggRy+ruaMRntM9GVmDUu6NrMJw8QX6/eZXFWAUhQCfpo7TDqYpdBSjFrlKCesXOAtSgC0+7C1AzEtUL3O4CPEEjQlQBSiGZR4oswImrCCmAMymAMymAMymAM9+tf4A7ryHZ3wAAAABJRU5ErkJggg=="
+    };
+    var imgs = {}, imgsPedidas = false, filaImgs = [], imgsProntas = false;
+    var soPressaoAte = 0, tPressao = 0, tTroca = 0;
+    var DURACAO_PRESSAO = 25000; // ms com o fundo só de máscaras
     function rnd(a, b){ return a + Math.random()*(b-a); }
     function corDoTema(nome, padrao){
       var v = getComputedStyle(document.documentElement).getPropertyValue(nome).trim();
@@ -3959,59 +3973,50 @@
       return mq || document.documentElement.getAttribute("data-anim") === "reduzidas";
     }
     function modoAtual(){ return document.documentElement.getAttribute("data-fundo") || "sutil"; }
-    // Desenha uma célula num canvas pequeno, uma vez só (depois é só copiar e mover).
-    function sprite(r, cor, tipo){
-      var pad = 6, tam = Math.ceil((r*1.35 + pad)*2), c = document.createElement("canvas");
+    function emPressao(){ return Date.now() < soPressaoAte; }
+    // As mesmas silhuetas dos dados que a ficha usa (ícones do livro).
+    function carregarImagens(pronto){
+      if(imgsProntas){ pronto(); return; }
+      filaImgs.push(pronto);
+      if(imgsPedidas) return;
+      imgsPedidas = true;
+      var faltam = Object.keys(IMG_DADOS).length;
+      function fim(){ if(--faltam === 0){ imgsProntas = true; var f = filaImgs; filaImgs = []; f.forEach(function(fn){ fn(); }); } }
+      Object.keys(IMG_DADOS).forEach(function(k){
+        var im = new Image();
+        im.onload = function(){ imgs[k] = im; fim(); };
+        im.onerror = fim;
+        im.src = IMG_DADOS[k];
+      });
+    }
+    // Silhueta pintada na cor do tema, desenhada uma vez só num canvas pequeno.
+    function sprite(k, lado){
+      var im = imgs[k], cor = k === "sucesso" ? cores.good : k === "adaptacao" ? cores.acc : cores.danger;
+      var esc = lado / Math.max(im.width, im.height), w = im.width*esc, h = im.height*esc, tam = Math.ceil(Math.max(w, h) + 8);
+      var c = document.createElement("canvas");
       c.width = c.height = Math.ceil(tam*dpr);
       var g = c.getContext("2d"); g.scale(dpr, dpr); g.translate(tam/2, tam/2);
-      var rgb = cor.join(","), n = 9 + Math.floor(Math.random()*5), fase = Math.random()*6.28, pts = [];
-      for(var i=0;i<n;i++){
-        var a = i/n*Math.PI*2, k = 1 + 0.16*Math.sin(a*3 + fase) + rnd(-0.07, 0.07);
-        pts.push([Math.cos(a)*r*k, Math.sin(a)*r*k]);
-      }
-      // Contorno orgânico (curvas passando pelos pontos médios).
-      g.beginPath();
-      for(var j=0;j<n;j++){
-        var p = pts[j], q = pts[(j+1)%n], mx = (p[0]+q[0])/2, my = (p[1]+q[1])/2;
-        if(j===0){ var u = pts[n-1]; g.moveTo((u[0]+p[0])/2, (u[1]+p[1])/2); }
-        g.quadraticCurveTo(p[0], p[1], mx, my);
-      }
-      g.closePath();
-      var grad = g.createRadialGradient(0, 0, r*0.1, 0, 0, r*1.2);
-      grad.addColorStop(0, "rgba("+rgb+",0.05)");
-      grad.addColorStop(0.7, "rgba("+rgb+",0.22)");
-      grad.addColorStop(1, "rgba("+rgb+",0.42)");
-      g.fillStyle = grad; g.fill();
-      g.lineWidth = Math.max(1, r*0.07); g.strokeStyle = "rgba("+rgb+",0.75)"; g.stroke();
-      if(tipo !== "esporo"){
-        // Núcleo e alguns poros por dentro.
-        g.beginPath(); g.arc(rnd(-r*0.2, r*0.2), rnd(-r*0.2, r*0.2), r*rnd(0.18, 0.28), 0, Math.PI*2);
-        g.fillStyle = "rgba("+rgb+",0.55)"; g.fill();
-        var np = 2 + Math.floor(Math.random()*4);
-        for(var k2=0;k2<np;k2++){
-          var aa = Math.random()*6.28, dd = r*rnd(0.45, 0.75);
-          g.beginPath(); g.arc(Math.cos(aa)*dd, Math.sin(aa)*dd, r*rnd(0.06, 0.12), 0, Math.PI*2);
-          g.strokeStyle = "rgba("+rgb+",0.6)"; g.lineWidth = 1; g.stroke();
-        }
-      }
+      g.drawImage(im, -w/2, -h/2, w, h);
+      g.globalCompositeOperation = "source-in"; g.fillStyle = "rgb("+cor.join(",")+")"; g.fillRect(-tam/2, -tam/2, tam, tam);
       return { img:c, tam:tam };
     }
     function criar(){
-      var celular = W < 640;
-      var normal = modo === "normal";
-      var qtd = Math.round((normal ? 36 : 22) * (celular ? 0.5 : 1));
-      poros = [];
+      var ks = Object.keys(imgs);
+      pecas = [];
+      if(!ks.length) return;
+      var celular = W < 640, normal = modo === "normal", egg = emPressao() && imgs.pressao;
+      var qtd = Math.round((normal ? 30 : 18) * (celular ? 0.5 : 1) * (egg ? 1.6 : 1));
       for(var i=0;i<qtd;i++){
-        var esporo = Math.random() < 0.45;
-        var r = esporo ? rnd(5, 11) : rnd(14, 34);
-        var cor = Math.random() < 0.3 ? cores.acc : cores.ink;
-        var sp = sprite(r, cor, esporo ? "esporo" : "celula");
-        poros.push({
-          sp:sp, x:Math.random()*W, y:Math.random()*H,
-          // atravessa a tela em 40 a 90 s
-          vy:-(H + 80) / rnd(40, 90), amp:rnd(8, 30), freq:rnd(0.02, 0.06), fase:Math.random()*6.28,
-          rot:Math.random()*6.28, vrot:rnd(-0.05, 0.05), pulso:rnd(0.15, 0.35), fasePulso:Math.random()*6.28,
-          alfa:(normal ? rnd(0.10, 0.16) : rnd(0.06, 0.10)) * (esporo ? 1.1 : 1)
+        var k = egg ? "pressao" : ks[i % ks.length]; // as três em partes iguais
+        var lado = egg ? rnd(26, 50) : rnd(22, 40);
+        pecas.push({
+          sp:sprite(k, lado), x:Math.random()*W, y:Math.random()*H,
+          // atravessa a tela em 45 a 95 s (no easter egg, um pouco mais rápido)
+          vy:-(H + 120) / (egg ? rnd(30, 60) : rnd(45, 95)),
+          amp:rnd(10, 30), freq:rnd(0.02, 0.05), fase:Math.random()*6.28,
+          // balançam em volta da posição em pé
+          rot:rnd(-0.2, 0.2), oscila:egg ? 0.35 : 0.22, fOsc:rnd(0.15, 0.35),
+          alfa:(normal ? rnd(0.16, 0.22) : rnd(0.10, 0.14)) * (egg ? 1.5 : 1)
         });
       }
     }
@@ -4025,12 +4030,11 @@
     function desenhar(t){
       ctx.clearRect(0, 0, W, H);
       var s = t/1000;
-      poros.forEach(function(p){
-        var esc2 = 1 + 0.06*Math.sin(s*p.pulso*2 + p.fasePulso);
+      pecas.forEach(function(p){
         var x = p.x + Math.sin(s*p.freq*6.28 + p.fase)*p.amp;
         ctx.save();
-        ctx.globalAlpha = p.alfa;
-        ctx.translate(x, p.y); ctx.rotate(p.rot + s*p.vrot); ctx.scale(esc2, esc2);
+        ctx.globalAlpha = Math.min(1, p.alfa);
+        ctx.translate(x, p.y); ctx.rotate(p.rot + Math.sin(s*p.fOsc + p.fase)*p.oscila);
         ctx.drawImage(p.sp.img, -p.sp.tam/2, -p.sp.tam/2, p.sp.tam, p.sp.tam);
         ctx.restore();
       });
@@ -4041,7 +4045,7 @@
       var dt = ultimo ? Math.min(0.1, (t - ultimo)/1000) : 0;
       if(t - ultimo >= 32 || !ultimo){ // ~30 quadros por segundo
         ultimo = t;
-        poros.forEach(function(p){
+        pecas.forEach(function(p){
           p.y += p.vy*dt;
           if(p.y < -p.sp.tam){ p.y = H + p.sp.tam*0.6; p.x = Math.random()*W; }
         });
@@ -4054,6 +4058,23 @@
       if(rodando) return;
       rodando = true; ultimo = 0;
       raf = requestAnimationFrame(passo);
+    }
+    function montar(){
+      if(!cv) return;
+      parar();
+      medir();
+      cores = { ink:corDoTema("--ink", [42,35,24]), acc:corDoTema("--accent", [181,80,44]),
+        good:corDoTema("--good", [76,122,76]), danger:corDoTema("--danger", [162,58,58]) };
+      criar();
+      if(movimentoReduzido() || document.hidden){ desenhar(performance.now()); return; }
+      iniciar();
+    }
+    // Troca suave: some, redesenha e volta (o canvas tem transição de opacidade no CSS).
+    function trocarSuave(){
+      if(!cv) return;
+      clearTimeout(tTroca);
+      cv.style.opacity = "0";
+      tTroca = setTimeout(function(){ if(!cv) return; criar(); if(!rodando) desenhar(performance.now()); cv.style.opacity = ""; }, 600);
     }
     function atualizar(){
       modo = modoAtual();
@@ -4068,12 +4089,16 @@
         document.body.insertBefore(cv, document.body.firstChild);
         ctx = cv.getContext("2d");
       }
-      parar();
-      medir();
-      cores = { ink:corDoTema("--ink", [42,35,24]), acc:corDoTema("--accent", [181,80,44]) };
-      criar();
-      if(movimentoReduzido() || document.hidden){ desenhar(performance.now()); return; }
-      iniciar();
+      carregarImagens(montar);
+    }
+    // Easter egg: 2+ Pressões mantidas → só máscaras de Pressão por DURACAO_PRESSAO.
+    // Respeita o "Desligado" (não liga o fundo só pra isso).
+    function pressao(){
+      var ja = emPressao();
+      soPressaoAte = Date.now() + DURACAO_PRESSAO;
+      clearTimeout(tPressao);
+      tPressao = setTimeout(function(){ soPressaoAte = 0; trocarSuave(); }, DURACAO_PRESSAO);
+      if(!ja && cv) carregarImagens(trocarSuave);
     }
     var tResize = 0;
     window.addEventListener("resize", function(){
@@ -4089,8 +4114,10 @@
       var mqr = window.matchMedia("(prefers-reduced-motion: reduce)");
       if(mqr.addEventListener) mqr.addEventListener("change", function(){ if(cv) atualizar(); });
     }
-    return { atualizar:atualizar };
+    return { atualizar:atualizar, pressao:pressao, emPressao:emPressao };
   })();
+  // Chamado pelo teste da ficha e pelo Teste de Assimilação.
+  function fundoPressaoSe(totP){ if((totP||0) >= 2 && fundoPoros) tentar("Fundo", fundoPoros.pressao); }
 
   // Tema "Cores do Acampamento": pega a cor do acampamento da ficha aberta.
   function aplicarCorAcampamento(){
@@ -5693,6 +5720,7 @@
       clearInterval(tick);
       var res = ov.querySelector(".assim-res"); res.hidden = false; res.classList.add("aparece");
       if(e.totP && e.exibicao !== "numeros") ov.querySelector(".assim-box").classList.add("pressao");
+      if(e.tipo !== "destaque" && e.exibicao !== "numeros") fundoPressaoSe(e.totP); // easter egg do fundo
       if(aoRevelar) tentar("Teste de Assimilação", aoRevelar);
       auto = setTimeout(fechar, 10000);
     }
@@ -6685,6 +6713,8 @@
         t.results = results;
         t.rolling = false;
         renderSheet();
+        // Easter egg do fundo: 2+ Pressões nos dados mantidos.
+        fundoPressaoSe(sum(results.filter(function(d){ return d.kept; }).map(function(d){ return d.p; })));
       }, 650);
     });
     app.querySelectorAll('[data-testtoggle]').forEach(function(btn){
@@ -6693,6 +6723,7 @@
         var idx = parseInt(btn.getAttribute("data-testtoggle"),10);
         t.results[idx].kept = !t.results[idx].kept;
         renderSheet();
+        if(t.results[idx].kept && t.results[idx].p) fundoPressaoSe(sum(t.results.filter(function(d){ return d.kept; }).map(function(d){ return d.p; })));
       });
     });
     // Só quando o jogador confirma a escolha final de quais dados ficam mantidos
