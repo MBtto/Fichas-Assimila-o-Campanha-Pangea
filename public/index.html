@@ -2540,6 +2540,81 @@
     return { id:"doc_"+uid(), titulo:"", texto:"", escrita:"manuscrito", papel:"liso", condicao:"gasto", data:"", assinatura:"", carimbo:"", cabecalho:["",""], autor:"", achado:"", notaMestre:"", entregues:[], novo:true };
   }
   function selectOpts(lista, atual){ return lista.map(function(o){ return '<option value="'+o[0]+'"'+(o[0]===atual?" selected":"")+'>'+o[1]+'</option>'; }).join(''); }
+  // ----- Arquivos .json da campanha (exportar/importar documentos e itens) -----
+  function nomeArquivoCampanha(prefixo){
+    return prefixo+"_"+String((campanhaAtual && campanhaAtual.nome) || "campanha").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^a-z0-9]+/g,"_").replace(/^_+|_+$/g,"")+".json";
+  }
+  function baixarJson(dados, nomeArq){
+    var blob = new Blob([JSON.stringify(dados, null, 1)], { type:"application/json" });
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = nomeArq;
+    document.body.appendChild(a); a.click();
+    setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+  }
+  // Lê o texto de um arquivo exportado. Aceita o formato novo ({tipo, <chave>:[...]})
+  // e a lista pura (o código de importação antigo). Devolve a lista ou null (já avisou).
+  function lerListaArquivo(texto, tipoEsperado, chave, nomeCoisa){
+    var dados;
+    try{ dados = JSON.parse(texto); }catch(e){ alert("Esse arquivo não é um .json válido de "+nomeCoisa+"."); return null; }
+    if(dados && !Array.isArray(dados) && dados.tipo && dados.tipo !== tipoEsperado){
+      var outro = { "catalogo-criaturas-assimilacao":"criaturas (use Importar catálogo no Bestiário)", "documentos-assimilacao":"documentos (use Importar documentos)", "itens-assimilacao":"itens (use Importar itens)" }[dados.tipo];
+      alert("Esse arquivo é de "+(outro || "outra coisa")+", não de "+nomeCoisa+"."); return null;
+    }
+    var lista = Array.isArray(dados) ? dados : (dados && Array.isArray(dados[chave]) ? dados[chave] : (dados && typeof dados === "object" ? [dados] : null));
+    if(!lista || !lista.length){ alert("Não achei "+nomeCoisa+" nesse arquivo."); return null; }
+    return lista;
+  }
+  function idSeguro(id, prefixo){
+    var s = String(id == null || id === "" ? uid() : id).replace(/[\/\s]+/g,"_").slice(0,120);
+    return s.indexOf(prefixo) === 0 ? s : prefixo + s;
+  }
+  // Documentos: o arquivo leva texto, visual e as suas notas (autor, achado, nota,
+  // local, nome na lista, sessão). Não leva a quem foi entregue: numa campanha
+  // nova ele chega "A entregar"; na mesma campanha, quem já recebeu continua.
+  function exportarDocs(){
+    var docs = docsLista().map(function(d){
+      var n = docNota(d.id);
+      return { id:d.id, titulo:d.titulo||"", texto:d.texto||"", escrita:d.escrita||"manuscrito", papel:d.papel||"liso", condicao:d.condicao||"gasto",
+        data:d.data||"", assinatura:d.assinatura||"", carimbo:d.carimbo||"", cabecalho:(d.cabecalho||["",""]).slice(0,2),
+        autor:n.autor||"", achado:n.achado||"", achadoAlt:n.achadoAlt||"", notaMestre:n.notaMestre||"", local:n.local||"", rotulo:n.rotulo||"", sessao:n.sessao||"" };
+    });
+    baixarJson({ tipo:"documentos-assimilacao", versao:1, origem:(campanhaAtual && campanhaAtual.nome) || "", exportadoEm:new Date().toISOString(), documentos:docs }, nomeArquivoCampanha("documentos"));
+  }
+  // Monta as gravações de uma lista de documentos (arquivo ou código colado).
+  // Mesmo id = substitui o texto e as notas, mas mantém a quem já foi entregue.
+  function docsOpsImportar(arr){
+    var ops = [], n = 0, existentes = 0;
+    arr.forEach(function(x){
+      if(!x || typeof x !== "object") return;
+      var id = idSeguro(x.id, "doc_");
+      var existe = docsLista().some(function(y){ return y.id===id; });
+      if(!x.titulo && !x.texto){
+        // só o local de um documento que já existe: não mexe no texto nem nas suas edições
+        if((x.local || x.rotulo || x.sessao) && existe){
+          var n0 = docNota(id); ops.push({ tipo:"set", col:"documentosNotas", id:id, data:docDadosNotas({ id:id, autor:n0.autor, achado:n0.achado, achadoAlt:n0.achadoAlt, notaMestre:n0.notaMestre, local:x.local||n0.local, rotulo:x.rotulo||n0.rotulo, sessao:x.sessao||n0.sessao }) });
+          n++; existentes++;
+        }
+        return;
+      }
+      var existente = docsLista().filter(function(y){ return y.id===id; })[0];
+      var d = { id:id, titulo:x.titulo, texto:x.texto, escrita:x.escrita, papel:x.papel, condicao:x.condicao, data:x.data, assinatura:x.assinatura, carimbo:x.carimbo,
+        cabecalho:(x.cabecalho && x.cabecalho.length) ? x.cabecalho : ["",""], autor:x.autor, achado:x.achado, achadoAlt:x.achado_alt||x.achadoAlt,
+        notaMestre:x.nota_mestre||x.notaMestre, local:x.local||docNota(id).local||"", rotulo:x.rotulo||docNota(id).rotulo||"", sessao:x.sessao||docNota(id).sessao||"", entregues: existente ? existente.entregues : [], criadoEm: existente ? existente.criadoEm : new Date().toISOString() };
+      ops.push({ tipo:"set", col:"documentos", id:id, data:docDadosPublicos(d) }, { tipo:"set", col:"documentosNotas", id:id, data:docDadosNotas(d) });
+      n++; if(existente) existentes++;
+    });
+    return { ops:ops, n:n, existentes:existentes };
+  }
+  function importarDocsArquivo(texto, rerender){
+    var lista = lerListaArquivo(texto, "documentos-assimilacao", "documentos", "documentos"); if(!lista) return;
+    var r = docsOpsImportar(lista);
+    if(!r.ops.length){ alert("Não achei documentos com título ou texto nesse arquivo."); return; }
+    var nome = (campanhaAtual && campanhaAtual.nome) || "esta campanha";
+    askConfirm("Importar "+r.n+" documento"+(r.n>1?"s":"")+" para "+nome+"?"+(r.existentes?" "+r.existentes+" já existe"+(r.existentes>1?"m":"")+" e ser"+(r.existentes>1?"ão substituídos":"á substituído")+" (quem já recebeu continua recebendo).":""), function(){
+      gravarDocs(r.ops).then(function(){ if(rerender) rerender(); });
+    });
+  }
   function gmDocsHtml(){
     var html = '<div class="card" id="gm-docs"><h2>Documentos da campanha</h2>';
     var ed = state.docEdit;
@@ -2569,8 +2644,8 @@
         '<div class="btn-row"><button type="button" class="btn secondary" data-docacao="cancelar">Cancelar</button><button type="button" class="btn accent" data-docacao="salvar">Salvar documento</button></div>' +
         '</div><div class="doc-editor-previa"><p class="hint" style="margin:0 0 8px">Prévia (é assim que os jogadores veem):</p><div id="doc-previa">'+renderDocumento(ed)+'</div></div></div>';
     } else {
-      html += '<p class="hint">Crie os papéis que o grupo vai encontrar e entregue na hora certa. O jogador vê o documento na ficha, na seção <b>Documentos</b>; quem não recebeu não consegue ler.</p>';
-      html += '<div class="btn-row" style="justify-content:flex-start;gap:8px"><button type="button" class="btn accent" data-docacao="novo">+ Novo documento</button><button type="button" class="btn secondary" data-docacao="importar">Importar documentos</button></div>';
+      html += '<p class="hint">Crie os papéis que o grupo vai encontrar e entregue na hora certa. O jogador vê o documento na ficha, na seção <b>Documentos</b>; quem não recebeu não consegue ler. <b>Exportar</b> baixa um arquivo .json com todos os documentos e suas notas (sem as entregas), para guardar ou levar para outra campanha.</p>';
+      html += '<div class="btn-row" style="justify-content:flex-start;gap:8px;flex-wrap:wrap"><button type="button" class="btn accent" data-docacao="novo">+ Novo documento</button><button type="button" class="btn secondary" data-docacao="importar-arq">Importar documentos</button><button type="button" class="btn secondary" data-docacao="exportar"'+(docsLista().length?'':' disabled')+'>Exportar documentos</button><button type="button" class="btn secondary" data-docacao="importar">Colar código</button><input type="file" accept=".json,application/json" data-docimpfile style="display:none"></div>';
       if(state.docImportar){
         html += '<div class="field" style="margin-top:10px"><label>Cole o código de importação</label><textarea id="doc-import" style="min-height:120px" placeholder="[ { &quot;titulo&quot;: ... } ]"></textarea>' +
           '<div class="btn-row" style="justify-content:flex-start;gap:8px"><button type="button" class="btn accent" data-docacao="importar-ok">Importar</button><button type="button" class="btn secondary" data-docacao="importar-cancelar">Cancelar</button></div></div>';
@@ -2634,6 +2709,13 @@
   function bindGmDocs(rerender){
     var raiz = app.querySelector("#gm-docs"); if(!raiz) return;
     var ed = state.docEdit;
+    var arqDocs = raiz.querySelector("[data-docimpfile]");
+    if(arqDocs) arqDocs.addEventListener("change", function(){
+      var f = arqDocs.files && arqDocs.files[0]; if(!f) return;
+      var leitor = new FileReader();
+      leitor.onload = function(){ importarDocsArquivo(String(leitor.result||""), rerender); };
+      leitor.readAsText(f);
+    });
     function previa(){ var p = raiz.querySelector("#doc-previa"); if(p) p.innerHTML = renderDocumento(ed); }
     raiz.querySelectorAll("[data-docf]").forEach(function(el){
       el.addEventListener(el.tagName==="SELECT" ? "change" : "input", function(){ ed[el.getAttribute("data-docf")] = el.value; previa(); });
@@ -2653,29 +2735,15 @@
           gravarDocs([{ tipo:"set", col:"documentos", id:ed.id, data:docDadosPublicos(ed) }, { tipo:"set", col:"documentosNotas", id:ed.id, data:docDadosNotas(ed) }]);
           state.docEdit = null; rerender();
         }
-        else if(acao === "importar"){ state.docImportar = true; rerender(); }
+        else if(acao === "importar"){ state.docImportar = !state.docImportar; rerender(); }
+        else if(acao === "importar-arq"){ var arqD = raiz.querySelector("[data-docimpfile]"); if(arqD){ arqD.value = ""; arqD.click(); } }
+        else if(acao === "exportar"){ exportarDocs(); }
         else if(acao === "importar-cancelar"){ state.docImportar = false; rerender(); }
         else if(acao === "importar-ok"){
           var txt = (raiz.querySelector("#doc-import")||{}).value || "";
           var arr; try{ arr = JSON.parse(txt); }catch(e){ alert("Código inválido: confira se copiou tudo."); return; }
-          if(!Array.isArray(arr)) arr = [arr];
-          var ops = [];
-          arr.forEach(function(x){
-            if(!x) return;
-            var id = String(x.id||uid()); if(id.indexOf("doc_")!==0) id = "doc_"+id;
-            if(!x.titulo && !x.texto){
-              // só o local de um documento que já existe: não mexe no texto nem nas suas edições
-              if((x.local || x.rotulo || x.sessao) && docsLista().some(function(y){ return y.id===id; })){
-                var n0 = docNota(id); ops.push({ tipo:"set", col:"documentosNotas", id:id, data:docDadosNotas({ id:id, autor:n0.autor, achado:n0.achado, achadoAlt:n0.achadoAlt, notaMestre:n0.notaMestre, local:x.local||n0.local, rotulo:x.rotulo||n0.rotulo, sessao:x.sessao||n0.sessao }) });
-              }
-              return;
-            }
-            var existente = docsLista().filter(function(y){ return y.id===id; })[0];
-            var d = { id:id, titulo:x.titulo, texto:x.texto, escrita:x.escrita, papel:x.papel, condicao:x.condicao, data:x.data, assinatura:x.assinatura, carimbo:x.carimbo,
-              cabecalho:(x.cabecalho && x.cabecalho.length) ? x.cabecalho : ["",""], autor:x.autor, achado:x.achado, achadoAlt:x.achado_alt||x.achadoAlt,
-              notaMestre:x.nota_mestre||x.notaMestre, local:x.local||docNota(id).local||"", rotulo:x.rotulo||docNota(id).rotulo||"", sessao:x.sessao||docNota(id).sessao||"", entregues: existente ? existente.entregues : [], criadoEm: existente ? existente.criadoEm : new Date().toISOString() };
-            ops.push({ tipo:"set", col:"documentos", id:id, data:docDadosPublicos(d) }, { tipo:"set", col:"documentosNotas", id:id, data:docDadosNotas(d) });
-          });
+          if(!Array.isArray(arr)) arr = (arr && Array.isArray(arr.documentos)) ? arr.documentos : [arr];
+          var ops = docsOpsImportar(arr).ops;
           if(!ops.length){ alert("Nenhum documento encontrado no código."); return; }
           gravarDocs(ops); state.docImportar = false; rerender();
         }
@@ -9670,6 +9738,40 @@
     var t = itemQualTendencia(it.local);
     return 'sorteada ('+(t==="acampamento"?"acampamento: em geral Padrão ou melhor":t==="abandonado"?"abandonado: em geral gasto":"em geral Comprometido ou Padrão")+')';
   }
+  // Itens: o arquivo leva nome, textos, nota, local, Escassez, Qualidade,
+  // características e quantidade. Não leva a quem foi entregue.
+  function exportarItensPool(){
+    var itens = itensPoolLista().map(function(it){
+      return { id:it.id, nome:it.nome||"", desc:it.desc||"", efeito:it.efeito||"", nota:it.nota||"", local:it.local||"",
+        escassez:(it.escassez===undefined ? null : it.escassez), qualidade:(it.qualidade===undefined ? null : it.qualidade),
+        traits:normalizarTraits(it.traits), qtd:it.qtd||1 };
+    });
+    baixarJson({ tipo:"itens-assimilacao", versao:1, origem:(campanhaAtual && campanhaAtual.nome) || "", exportadoEm:new Date().toISOString(), itens:itens }, nomeArquivoCampanha("itens"));
+  }
+  // Mesmo id = substitui o item, mas mantém a quem já foi entregue.
+  function itensOpsImportar(arr){
+    var ops = [], existentes = 0;
+    arr.forEach(function(x){
+      if(!x || typeof x !== "object" || !String(x.nome||"").trim()) return;
+      var id = idSeguro(x.id, "it_");
+      var existente = itensPoolLista().filter(function(y){ return y.id===id; })[0];
+      if(existente) existentes++;
+      var d = itemPoolDados({ id:id, nome:x.nome, desc:x.desc, efeito:x.efeito, qualidade:x.qualidade, nota:x.nota, local:x.local, escassez:x.escassez, traits:x.traits, qtd:x.qtd,
+        entregues: existente ? existente.entregues : [], criadoEm: existente ? existente.criadoEm : null });
+      ops.push({ tipo:"set", col:"itensPool", id:id, data:d });
+    });
+    return { ops:ops, n:ops.length, existentes:existentes };
+  }
+  function importarItensArquivo(texto, rerender){
+    var lista = lerListaArquivo(texto, "itens-assimilacao", "itens", "itens"); if(!lista) return;
+    var r = itensOpsImportar(lista);
+    if(!r.ops.length){ alert("Não achei itens com nome nesse arquivo."); return; }
+    var nome = (campanhaAtual && campanhaAtual.nome) || "esta campanha";
+    askConfirm("Importar "+r.n+" ite"+(r.n>1?"ns":"m")+" para "+nome+"?"+(r.existentes?" "+r.existentes+" já existe"+(r.existentes>1?"m":"")+" e ser"+(r.existentes>1?"ão substituídos":"á substituído")+" (quem já recebeu continua com o seu).":""), function(){
+      var p = gravarItensPool(r.ops);
+      if(p && p.then) p.then(function(){ if(rerender) rerender(); });
+    });
+  }
   function gravarItensPool(ops){
     if(!FB) return Promise.resolve();
     return FB.escrever(ops).catch(function(e){ console.error("[Pangea] itens", e); alert("Não consegui salvar o item. Confira a conexão e se as regras do Firestore têm o bloco itensPool."); });
@@ -9705,8 +9807,8 @@
       html += '</div>';
       return html;
     }
-    html += '<p class="hint">Itens que o grupo pode encontrar. Ao entregar, o item vai direto pro Inventário adicional do personagem. Os jogadores não veem esta lista.</p>';
-    html += '<div class="btn-row" style="justify-content:flex-start;gap:8px;flex-wrap:wrap"><button type="button" class="btn accent" data-ipacao="novo">+ Novo item</button><button type="button" class="btn secondary" data-ipacao="importar">Importar itens</button></div>';
+    html += '<p class="hint">Itens que o grupo pode encontrar. Ao entregar, o item vai direto pro Inventário adicional do personagem. Os jogadores não veem esta lista. <b>Exportar</b> baixa um arquivo .json com todos os itens (sem as entregas), para guardar ou levar para outra campanha.</p>';
+    html += '<div class="btn-row" style="justify-content:flex-start;gap:8px;flex-wrap:wrap"><button type="button" class="btn accent" data-ipacao="novo">+ Novo item</button><button type="button" class="btn secondary" data-ipacao="importar-arq">Importar itens</button><button type="button" class="btn secondary" data-ipacao="exportar"'+(itensPoolLista().length?'':' disabled')+'>Exportar itens</button><button type="button" class="btn secondary" data-ipacao="importar">Colar código</button><input type="file" accept=".json,application/json" data-ipimpfile style="display:none"></div>';
     if(state.itemImportar){
       html += '<div class="field" style="margin-top:10px"><label>Cole o código de importação</label><textarea id="item-import" style="min-height:120px" placeholder="[ { &quot;nome&quot;: ... } ]"></textarea>' +
         '<div class="btn-row" style="justify-content:flex-start;gap:8px"><button type="button" class="btn accent" data-ipacao="importar-ok">Importar</button><button type="button" class="btn secondary" data-ipacao="importar-cancelar">Cancelar</button></div></div>';
@@ -9778,6 +9880,13 @@
   function bindGmItens(rerender){
     var raiz = comCaixa(app.querySelector("#gm-itens")); if(!raiz) return; // inclui a caixa do item aberto
     var ed = state.itemPoolEdit;
+    var arqItens = raiz.querySelector("[data-ipimpfile]");
+    if(arqItens) arqItens.addEventListener("change", function(){
+      var f = arqItens.files && arqItens.files[0]; if(!f) return;
+      var leitor = new FileReader();
+      leitor.onload = function(){ importarItensArquivo(String(leitor.result||""), rerender); };
+      leitor.readAsText(f);
+    });
     raiz.querySelectorAll("[data-ipf]").forEach(function(el){
       el.addEventListener(el.tagName==="SELECT" ? "change" : "input", function(){ ed[el.getAttribute("data-ipf")] = el.value; });
     });
@@ -9820,21 +9929,15 @@
           gravarItensPool([{ tipo:"set", col:"itensPool", id:ed.id, data:itemPoolDados(ed) }]);
           state.itemPoolEdit = null; rerender();
         }
-        else if(acao === "importar"){ state.itemImportar = true; rerender(); }
+        else if(acao === "importar"){ state.itemImportar = !state.itemImportar; rerender(); }
+        else if(acao === "importar-arq"){ var arqI = raiz.querySelector("[data-ipimpfile]"); if(arqI){ arqI.value = ""; arqI.click(); } }
+        else if(acao === "exportar"){ exportarItensPool(); }
         else if(acao === "importar-cancelar"){ state.itemImportar = false; rerender(); }
         else if(acao === "importar-ok"){
           var txt = (raiz.querySelector("#item-import")||{}).value || "", arr;
           try{ arr = JSON.parse(txt); }catch(e){ alert("Código inválido: confira se copiou tudo."); return; }
-          if(!Array.isArray(arr)) arr = [arr];
-          var ops = [];
-          arr.forEach(function(x){
-            if(!x || !x.nome) return;
-            var id = String(x.id||uid()); if(id.indexOf("it_")!==0) id = "it_"+id;
-            var existente = itensPoolLista().filter(function(y){ return y.id===id; })[0];
-            var d = itemPoolDados({ id:id, nome:x.nome, desc:x.desc, efeito:x.efeito, qualidade:x.qualidade, nota:x.nota, local:x.local, escassez:x.escassez, traits:x.traits, qtd:x.qtd,
-              entregues: existente ? existente.entregues : [], criadoEm: existente ? existente.criadoEm : null });
-            ops.push({ tipo:"set", col:"itensPool", id:id, data:d });
-          });
+          if(!Array.isArray(arr)) arr = (arr && Array.isArray(arr.itens)) ? arr.itens : [arr];
+          var ops = itensOpsImportar(arr).ops;
           if(!ops.length){ alert("Nenhum item encontrado no código."); return; }
           gravarItensPool(ops); state.itemImportar = false; rerender();
         }
