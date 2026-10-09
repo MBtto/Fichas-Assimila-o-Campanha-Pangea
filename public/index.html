@@ -2552,18 +2552,50 @@
     document.body.appendChild(a); a.click();
     setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 1000);
   }
-  // Lê o texto de um arquivo exportado. Aceita o formato novo ({tipo, <chave>:[...]})
-  // e a lista pura (o código de importação antigo). Devolve a lista ou null (já avisou).
-  function lerListaArquivo(texto, tipoEsperado, chave, nomeCoisa){
-    var dados;
-    try{ dados = JSON.parse(texto); }catch(e){ alert("Esse arquivo não é um .json válido de "+nomeCoisa+"."); return null; }
+  // Lê o texto de um arquivo exportado ou de um código colado. Aceita o formato novo
+  // ({tipo, <chave>:[...]}, que é também o do "Copiar código") e a lista pura (o código
+  // de importação antigo). Devolve a lista ou null (já avisou).
+  function lerListaArquivo(texto, tipoEsperado, chave, nomeCoisa, comoCodigo){
+    var dados, oque = comoCodigo ? "código" : "arquivo";
+    try{ dados = JSON.parse(texto); }catch(e){ alert(comoCodigo ? "Código inválido: confira se copiou tudo." : "Esse arquivo não é um .json válido de "+nomeCoisa+"."); return null; }
     if(dados && !Array.isArray(dados) && dados.tipo && dados.tipo !== tipoEsperado){
-      var outro = { "catalogo-criaturas-assimilacao":"criaturas (use Importar catálogo no Bestiário)", "documentos-assimilacao":"documentos (use Importar documentos)", "itens-assimilacao":"itens (use Importar itens)" }[dados.tipo];
-      alert("Esse arquivo é de "+(outro || "outra coisa")+", não de "+nomeCoisa+"."); return null;
+      var outro = (comoCodigo
+        ? { "catalogo-criaturas-assimilacao":"criaturas (cole no Colar código do Bestiário)", "documentos-assimilacao":"documentos (cole no Colar código de Documentos da campanha)", "itens-assimilacao":"itens (cole no Colar código de Itens achados)" }
+        : { "catalogo-criaturas-assimilacao":"criaturas (use Importar catálogo no Bestiário)", "documentos-assimilacao":"documentos (use Importar documentos)", "itens-assimilacao":"itens (use Importar itens)" })[dados.tipo];
+      alert("Esse "+oque+" é de "+(outro || "outra coisa")+", não de "+nomeCoisa+"."); return null;
     }
     var lista = Array.isArray(dados) ? dados : (dados && Array.isArray(dados[chave]) ? dados[chave] : (dados && typeof dados === "object" ? [dados] : null));
-    if(!lista || !lista.length){ alert("Não achei "+nomeCoisa+" nesse arquivo."); return null; }
+    if(!lista || !lista.length){ alert("Não achei "+nomeCoisa+" nesse "+oque+"."); return null; }
     return lista;
+  }
+  // Lista sem "tipo" (código antigo) que não serviu: tenta dizer de que ela parece ser.
+  function avisoTipoProvavel(lista, nomeCoisa, comoCodigo){
+    var x = (lista||[]).filter(function(o){ return o && typeof o === "object"; })[0] || {};
+    var parece = (x.pilha || x.grupos || x.suc != null) ? "criaturas" : (x.titulo != null || x.texto != null) ? "documentos" : (x.nome != null && (x.traits || x.escassez !== undefined || x.efeito != null || x.desc != null)) ? "itens" : null;
+    var oque = comoCodigo ? "código" : "arquivo";
+    if(parece && parece !== nomeCoisa){ alert("Esse "+oque+" parece ser de "+parece+", não de "+nomeCoisa+"."); return true; }
+    return false;
+  }
+  // "Copiar código" de um elemento só: o mesmo formato do arquivo exportado, com uma
+  // lista de um item. Serve no Colar código e, salvo como .json, no Importar.
+  function codigoDeUm(tipo, chave, elemento){
+    var dados = { tipo:tipo, versao:1, origem:(campanhaAtual && campanhaAtual.nome) || "", exportadoEm:new Date().toISOString() };
+    dados[chave] = [elemento];
+    return JSON.stringify(dados, null, 1);
+  }
+  function copiarTexto(texto, botao){
+    var rotulo = botao ? botao.textContent : "";
+    function ok(){ if(!botao) return; botao.textContent = "Copiado ✓"; setTimeout(function(){ botao.textContent = rotulo; }, 1500); }
+    function reserva(){
+      var ta = document.createElement("textarea");
+      ta.value = texto; ta.setAttribute("readonly", ""); ta.style.position = "fixed"; ta.style.top = "-1000px"; ta.style.opacity = "0";
+      document.body.appendChild(ta); ta.select();
+      var foi = false; try{ foi = document.execCommand("copy"); }catch(e){}
+      ta.remove();
+      if(foi) ok(); else alert("Não consegui copiar sozinho. Use Exportar e mande o arquivo.");
+    }
+    if(navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(texto).then(ok, reserva);
+    else reserva();
   }
   function idSeguro(id, prefixo){
     var s = String(id == null || id === "" ? uid() : id).replace(/[\/\s]+/g,"_").slice(0,120);
@@ -2572,13 +2604,14 @@
   // Documentos: o arquivo leva texto, visual e as suas notas (autor, achado, nota,
   // local, nome na lista, sessão). Não leva a quem foi entregue: numa campanha
   // nova ele chega "A entregar"; na mesma campanha, quem já recebeu continua.
+  function docExportavel(d){
+    var n = docNota(d.id);
+    return { id:d.id, titulo:d.titulo||"", texto:d.texto||"", escrita:d.escrita||"manuscrito", papel:d.papel||"liso", condicao:d.condicao||"gasto",
+      data:d.data||"", assinatura:d.assinatura||"", carimbo:d.carimbo||"", cabecalho:(d.cabecalho||["",""]).slice(0,2),
+      autor:n.autor||"", achado:n.achado||"", achadoAlt:n.achadoAlt||"", notaMestre:n.notaMestre||"", local:n.local||"", rotulo:n.rotulo||"", sessao:n.sessao||"" };
+  }
   function exportarDocs(){
-    var docs = docsLista().map(function(d){
-      var n = docNota(d.id);
-      return { id:d.id, titulo:d.titulo||"", texto:d.texto||"", escrita:d.escrita||"manuscrito", papel:d.papel||"liso", condicao:d.condicao||"gasto",
-        data:d.data||"", assinatura:d.assinatura||"", carimbo:d.carimbo||"", cabecalho:(d.cabecalho||["",""]).slice(0,2),
-        autor:n.autor||"", achado:n.achado||"", achadoAlt:n.achadoAlt||"", notaMestre:n.notaMestre||"", local:n.local||"", rotulo:n.rotulo||"", sessao:n.sessao||"" };
-    });
+    var docs = docsLista().map(docExportavel);
     baixarJson({ tipo:"documentos-assimilacao", versao:1, origem:(campanhaAtual && campanhaAtual.nome) || "", exportadoEm:new Date().toISOString(), documentos:docs }, nomeArquivoCampanha("documentos"));
   }
   // Monta as gravações de uma lista de documentos (arquivo ou código colado).
@@ -2606,12 +2639,16 @@
     });
     return { ops:ops, n:n, existentes:existentes };
   }
-  function importarDocsArquivo(texto, rerender){
-    var lista = lerListaArquivo(texto, "documentos-assimilacao", "documentos", "documentos"); if(!lista) return;
+  // Arquivo (Importar documentos) ou código colado (Colar código): mesma conferência
+  // de tipo e mesma confirmação. aoConfirmar roda logo depois de confirmar.
+  function importarDocsArquivo(texto, rerender, comoCodigo, aoConfirmar){
+    var lista = lerListaArquivo(texto, "documentos-assimilacao", "documentos", "documentos", comoCodigo); if(!lista) return;
     var r = docsOpsImportar(lista);
-    if(!r.ops.length){ alert("Não achei documentos com título ou texto nesse arquivo."); return; }
+    if(!r.ops.length){ if(!avisoTipoProvavel(lista, "documentos", comoCodigo)) alert("Não achei documentos com título ou texto nesse "+(comoCodigo?"código":"arquivo")+"."); return; }
     var nome = (campanhaAtual && campanhaAtual.nome) || "esta campanha";
-    askConfirm("Importar "+r.n+" documento"+(r.n>1?"s":"")+" para "+nome+"?"+(r.existentes?" "+r.existentes+" já existe"+(r.existentes>1?"m":"")+" e ser"+(r.existentes>1?"ão substituídos":"á substituído")+" (quem já recebeu continua recebendo).":""), function(){
+    var um = r.n === 1 && lista.length === 1 && (lista[0].rotulo || lista[0].titulo);
+    askConfirm((um ? 'Importar o documento "'+um+'" para '+nome+'?' : "Importar "+r.n+" documento"+(r.n>1?"s":"")+" para "+nome+"?")+(r.existentes?(um ? " Ele já existe e será substituído (quem já recebeu continua recebendo)." : " "+r.existentes+" já existe"+(r.existentes>1?"m":"")+" e ser"+(r.existentes>1?"ão substituídos":"á substituído")+" (quem já recebeu continua recebendo)."):""), function(){
+      if(aoConfirmar) aoConfirmar();
       gravarDocs(r.ops).then(function(){ if(rerender) rerender(); });
     });
   }
@@ -2644,10 +2681,10 @@
         '<div class="btn-row"><button type="button" class="btn secondary" data-docacao="cancelar">Cancelar</button><button type="button" class="btn accent" data-docacao="salvar">Salvar documento</button></div>' +
         '</div><div class="doc-editor-previa"><p class="hint" style="margin:0 0 8px">Prévia (é assim que os jogadores veem):</p><div id="doc-previa">'+renderDocumento(ed)+'</div></div></div>';
     } else {
-      html += '<p class="hint">Crie os papéis que o grupo vai encontrar e entregue na hora certa. O jogador vê o documento na ficha, na seção <b>Documentos</b>; quem não recebeu não consegue ler. <b>Exportar</b> baixa um arquivo .json com todos os documentos e suas notas (sem as entregas), para guardar ou levar para outra campanha.</p>';
+      html += '<p class="hint">Crie os papéis que o grupo vai encontrar e entregue na hora certa. O jogador vê o documento na ficha, na seção <b>Documentos</b>; quem não recebeu não consegue ler. <b>Exportar</b> baixa um arquivo .json com todos os documentos e suas notas (sem as entregas), para guardar ou levar para outra campanha. Para levar um só, use <b>Copiar código</b> no documento e <b>Colar código</b> na outra campanha.</p>';
       html += '<div class="btn-row" style="justify-content:flex-start;gap:8px;flex-wrap:wrap"><button type="button" class="btn accent" data-docacao="novo">+ Novo documento</button><button type="button" class="btn secondary" data-docacao="importar-arq">Importar documentos</button><button type="button" class="btn secondary" data-docacao="exportar"'+(docsLista().length?'':' disabled')+'>Exportar documentos</button><button type="button" class="btn secondary" data-docacao="importar">Colar código</button><input type="file" accept=".json,application/json" data-docimpfile style="display:none"></div>';
       if(state.docImportar){
-        html += '<div class="field" style="margin-top:10px"><label>Cole o código de importação</label><textarea id="doc-import" style="min-height:120px" placeholder="[ { &quot;titulo&quot;: ... } ]"></textarea>' +
+        html += '<div class="field" style="margin-top:10px"><label>Cole o código (do Copiar código ou de um arquivo exportado)</label><textarea id="doc-import" style="min-height:120px" placeholder="{ &quot;tipo&quot;: &quot;documentos-assimilacao&quot;, ... }"></textarea>' +
           '<div class="btn-row" style="justify-content:flex-start;gap:8px"><button type="button" class="btn accent" data-docacao="importar-ok">Importar</button><button type="button" class="btn secondary" data-docacao="importar-cancelar">Cancelar</button></div></div>';
       }
       var todosDocs = docsLista();
@@ -2681,10 +2718,11 @@
             '<div class="hint" style="margin:2px 0 0">'+(nomes.length ? 'Entregue a: '+esc(nomes.join(", ")) : 'Ainda não entregue')+'</div>' +
             (nota.achado ? '<div class="hint" style="margin:2px 0 0"><i>Achado:</i> '+esc(nota.achado)+'</div>' : '') +
             (nota.notaMestre ? '<div class="hint" style="margin:2px 0 0"><i>Nota:</i> '+esc(nota.notaMestre)+'</div>' : '') +
-          '</div><div class="row" style="gap:6px;flex:none;flex-wrap:wrap;justify-content:flex-end">' +
+          '</div><div class="row" style="gap:6px;flex:0 1 auto;max-width:100%;min-width:0;flex-wrap:wrap;justify-content:flex-end">' +
             '<button type="button" class="btn secondary doc-btn" data-docver="'+d.id+'">Ver</button>' +
             '<button type="button" class="btn secondary doc-btn" data-doceditar="'+d.id+'">Editar</button>' +
             '<button type="button" class="btn accent doc-btn" data-docentregar="'+d.id+'">Entregar</button>' +
+            '<button type="button" class="btn secondary doc-btn" data-doccopiar="'+d.id+'" title="Copia só este documento em código, para colar em outra campanha (sem as entregas)">Copiar código</button>' +
             '<button type="button" class="btn secondary doc-btn" data-docexcluir="'+d.id+'">Excluir</button>' +
           '</div></div>';
         if(state.docEntregar === d.id){
@@ -2740,12 +2778,9 @@
         else if(acao === "exportar"){ exportarDocs(); }
         else if(acao === "importar-cancelar"){ state.docImportar = false; rerender(); }
         else if(acao === "importar-ok"){
-          var txt = (raiz.querySelector("#doc-import")||{}).value || "";
-          var arr; try{ arr = JSON.parse(txt); }catch(e){ alert("Código inválido: confira se copiou tudo."); return; }
-          if(!Array.isArray(arr)) arr = (arr && Array.isArray(arr.documentos)) ? arr.documentos : [arr];
-          var ops = docsOpsImportar(arr).ops;
-          if(!ops.length){ alert("Nenhum documento encontrado no código."); return; }
-          gravarDocs(ops); state.docImportar = false; rerender();
+          var txt = String((raiz.querySelector("#doc-import")||{}).value || "").trim();
+          if(!txt){ alert("Cole o código primeiro."); return; }
+          importarDocsArquivo(txt, rerender, true, function(){ state.docImportar = false; });
         }
         else if(acao === "marcar-todos"){
           raiz.querySelectorAll("[data-docpara]").forEach(function(el){ var ch = getChar(el.getAttribute("data-docpara")); el.checked = !(ch && ch.ehNpc); });
@@ -2776,6 +2811,10 @@
       rerender(); var el = app.querySelector("#gm-docs"); if(el) el.scrollIntoView();
     }); });
     raiz.querySelectorAll("[data-docentregar]").forEach(function(b){ b.addEventListener("click", function(){ state.docEntregar = b.getAttribute("data-docentregar"); rerender(); }); });
+    raiz.querySelectorAll("[data-doccopiar]").forEach(function(b){ b.addEventListener("click", function(){
+      var d = docsLista().filter(function(x){ return x.id===b.getAttribute("data-doccopiar"); })[0]; if(!d) return;
+      copiarTexto(codigoDeUm("documentos-assimilacao", "documentos", docExportavel(d)), b);
+    }); });
     raiz.querySelectorAll("[data-docexcluir]").forEach(function(b){ b.addEventListener("click", function(){
       var id = b.getAttribute("data-docexcluir"), d = docsLista().filter(function(x){ return x.id===id; })[0];
       askConfirm('Excluir o documento "'+(d?d.titulo:"")+'"? Ele some também das fichas de quem recebeu.', function(){
@@ -9055,7 +9094,8 @@
             '<button type="button" class="btn accent doc-btn" data-bcena="'+cri.id+'">⚔ Colocar em cena</button>' +
             '<button type="button" class="btn secondary doc-btn" '+caixaAttr("bficha", cri.id)+' aria-haspopup="dialog">Ver ficha ›</button>' +
             '<button type="button" class="btn secondary doc-btn" data-brolcat="'+cri.id+'">🎲 Rolar Ativação</button>' +
-            '<button type="button" class="btn secondary doc-btn" data-beditar="'+cri.id+'">✏️ Editar</button></div>' +
+            '<button type="button" class="btn secondary doc-btn" data-beditar="'+cri.id+'">✏️ Editar</button>' +
+            '<button type="button" class="btn secondary doc-btn" data-bcopiar="'+cri.id+'" title="Copia só esta criatura em código, para colar em outra campanha">Copiar código</button></div>' +
           bestRolagemHtml(rolCat[cri.id], 'data-bmostrarcat="'+cri.id+'"', 'data-bfecharrolcat="'+cri.id+'"');
         html += '</div>';
       });
@@ -9284,9 +9324,10 @@
   }
 
   // ----- Importar / Exportar catálogo (arquivo .json) -----
+  function criaturaExportavel(c){ var x = JSON.parse(JSON.stringify(c)); delete x.atualizadoEm; return x; }
   function exportarCatalogo(){
     var dados = { tipo:"catalogo-criaturas-assimilacao", versao:1, origem:(campanhaAtual && campanhaAtual.nome) || "", exportadoEm:new Date().toISOString(),
-      criaturas:criaturasLista().map(function(c){ var x = JSON.parse(JSON.stringify(c)); delete x.atualizadoEm; return x; }) };
+      criaturas:criaturasLista().map(criaturaExportavel) };
     var blob = new Blob([JSON.stringify(dados, null, 1)], { type:"application/json" });
     var a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
@@ -9297,15 +9338,18 @@
   // Lê o arquivo e grava as criaturas na campanha aberta. Mesmo id = substitui.
   // Descrições já editadas nesta campanha pelo jeito antigo (documentosNotas
   // "bestdesc_<id>") passam para a criatura importada.
-  function importarCatalogo(texto, rerender){
-    var dados;
-    try{ dados = JSON.parse(texto); }catch(e){ alert("Esse arquivo não é um catálogo de criaturas (.json) válido."); return; }
-    var lista = Array.isArray(dados) ? dados : (dados && dados.criaturas);
-    if(!Array.isArray(lista) || !lista.length){ alert("Não achei criaturas nesse arquivo."); return; }
-    var validas = lista.filter(function(c){ return c && typeof c === "object" && String(c.nome||"").trim(); });
-    if(!validas.length){ alert("Não achei criaturas com nome nesse arquivo."); return; }
+  // Arquivo (Importar catálogo) ou código colado (Colar código, que aceita também o
+  // "Copiar código" de uma criatura). aoConfirmar roda logo depois de confirmar.
+  function importarCatalogo(texto, rerender, comoCodigo, aoConfirmar){
+    var oque = comoCodigo ? "código" : "arquivo";
+    var lista = lerListaArquivo(texto, "catalogo-criaturas-assimilacao", "criaturas", "criaturas", comoCodigo); if(!lista) return;
+    var validas = lista.filter(function(c){ return c && typeof c === "object" && String(c.nome||"").trim() && (c.pilha || c.grupos || c.suc != null || c.categoria || c.cat); });
+    if(!validas.length){ if(!avisoTipoProvavel(lista, "criaturas", comoCodigo)) alert("Não achei criaturas com nome nesse "+oque+"."); return; }
     var existentes = validas.filter(function(c){ return c.id && bestCriatura(c.id); }).length;
-    askConfirm("Importar "+validas.length+" criatura"+(validas.length>1?"s":"")+" para "+((campanhaAtual && campanhaAtual.nome) || "esta campanha")+"?"+(existentes?" "+existentes+" já existe"+(existentes>1?"m":"")+" com o mesmo nome interno e ser"+(existentes>1?"ão":"á")+" substituída"+(existentes>1?"s":"")+".":""), function(){
+    var nomeCmp = (campanhaAtual && campanhaAtual.nome) || "esta campanha";
+    var uma = validas.length === 1 && validas[0].nome;
+    askConfirm((uma ? 'Importar a criatura "'+uma+'" para '+nomeCmp+'?' : "Importar "+validas.length+" criatura"+(validas.length>1?"s":"")+" para "+nomeCmp+"?")+(existentes?(uma ? " Ela já existe com o mesmo nome interno e será substituída." : " "+existentes+" já existe"+(existentes>1?"m":"")+" com o mesmo nome interno e ser"+(existentes>1?"ão":"á")+" substituída"+(existentes>1?"s":"")+"."):""), function(){
+      if(aoConfirmar) aoConfirmar();
       var base = criaturasLista().reduce(function(m, x){ return Math.max(m, x.ordem||0); }, 0);
       var ops = [], novas = [];
       validas.forEach(function(orig, k){
@@ -9314,7 +9358,8 @@
         c.id = (orig.id && /^[a-z0-9_-]{1,60}$/i.test(orig.id)) ? orig.id : slugCriatura(c.nome);
         var antiga = (shared.documentosNotas||[]).filter(function(x){ return x.id === "bestdesc_"+c.id; })[0];
         if(antiga && typeof antiga.descMesa === "string") c.desc = antiga.descMesa;
-        c.ordem = orig.ordem != null ? orig.ordem : base + k + 1;
+        var jaTinha = bestCriatura(c.id);
+        c.ordem = orig.ordem != null ? orig.ordem : (jaTinha && jaTinha.ordem != null ? jaTinha.ordem : base + k + 1);
         c.importadaEm = new Date().toISOString();
         novas.push(c);
         ops.push({ tipo:"set", col:"criaturas", id:c.id, data:c });
@@ -9340,7 +9385,10 @@
           '<button type="button" class="btn accent doc-btn" data-bnova="1">+ Nova criatura</button>' +
           '<button type="button" class="btn secondary doc-btn" data-bimportar="1">Importar catálogo</button>' +
           '<button type="button" class="btn secondary doc-btn" data-bexportar="1"'+(criaturasLista().length?'':' disabled')+'>Exportar catálogo</button>' +
+          '<button type="button" class="btn secondary doc-btn" data-bcolar="1">Colar código</button>' +
           '<input type="file" accept=".json,application/json" data-bimpfile style="display:none"></div>' +
+        (state.bestColar ? '<div class="field" style="margin:0 0 10px"><label>Cole o código (do Copiar código de uma criatura ou de um catálogo exportado)</label><textarea id="best-colar" style="min-height:120px" placeholder="{ &quot;tipo&quot;: &quot;catalogo-criaturas-assimilacao&quot;, ... }"></textarea>' +
+          '<div class="btn-row" style="justify-content:flex-start;gap:8px"><button type="button" class="btn accent doc-btn" data-bcolarok="1">Importar</button><button type="button" class="btn secondary doc-btn" data-bcolarcancel="1">Cancelar</button></div></div>' : '') +
         '<div class="field" style="max-width:320px;margin:0 0 6px"><input type="search" id="best-busca" placeholder="Buscar criatura…" value="'+esc(state.bestBusca||"")+'"></div>';
       body += bestCatalogoHtml();
     }
@@ -9370,6 +9418,17 @@
       setTimeout(function(){ var e = app.querySelector("#best-editor"); if(e && e.scrollIntoView) e.scrollIntoView({block:"start"}); }, 0);
     });
     on("[data-bexportar]", "click", function(){ exportarCatalogo(); });
+    on("[data-bcopiar]", "click", function(el){
+      var cri = bestCriatura(el.getAttribute("data-bcopiar")); if(!cri) return;
+      copiarTexto(codigoDeUm("catalogo-criaturas-assimilacao", "criaturas", criaturaExportavel(cri)), el);
+    });
+    on("[data-bcolar]", "click", function(){ state.bestColar = !state.bestColar; rerender(); });
+    on("[data-bcolarcancel]", "click", function(){ state.bestColar = false; rerender(); });
+    on("[data-bcolarok]", "click", function(){
+      var txt = String((raiz.querySelector("#best-colar")||{}).value || "").trim();
+      if(!txt){ alert("Cole o código primeiro."); return; }
+      importarCatalogo(txt, rerender, true, function(){ state.bestColar = false; });
+    });
     var arq = raiz.querySelector("[data-bimpfile]");
     on("[data-bimportar]", "click", function(){ if(arq) arq.click(); });
     if(arq) arq.addEventListener("change", function(){
@@ -9740,12 +9799,13 @@
   }
   // Itens: o arquivo leva nome, textos, nota, local, Escassez, Qualidade,
   // características e quantidade. Não leva a quem foi entregue.
+  function itemExportavel(it){
+    return { id:it.id, nome:it.nome||"", desc:it.desc||"", efeito:it.efeito||"", nota:it.nota||"", local:it.local||"",
+      escassez:(it.escassez===undefined ? null : it.escassez), qualidade:(it.qualidade===undefined ? null : it.qualidade),
+      traits:normalizarTraits(it.traits), qtd:it.qtd||1 };
+  }
   function exportarItensPool(){
-    var itens = itensPoolLista().map(function(it){
-      return { id:it.id, nome:it.nome||"", desc:it.desc||"", efeito:it.efeito||"", nota:it.nota||"", local:it.local||"",
-        escassez:(it.escassez===undefined ? null : it.escassez), qualidade:(it.qualidade===undefined ? null : it.qualidade),
-        traits:normalizarTraits(it.traits), qtd:it.qtd||1 };
-    });
+    var itens = itensPoolLista().map(itemExportavel);
     baixarJson({ tipo:"itens-assimilacao", versao:1, origem:(campanhaAtual && campanhaAtual.nome) || "", exportadoEm:new Date().toISOString(), itens:itens }, nomeArquivoCampanha("itens"));
   }
   // Mesmo id = substitui o item, mas mantém a quem já foi entregue.
@@ -9762,12 +9822,14 @@
     });
     return { ops:ops, n:ops.length, existentes:existentes };
   }
-  function importarItensArquivo(texto, rerender){
-    var lista = lerListaArquivo(texto, "itens-assimilacao", "itens", "itens"); if(!lista) return;
+  function importarItensArquivo(texto, rerender, comoCodigo, aoConfirmar){
+    var lista = lerListaArquivo(texto, "itens-assimilacao", "itens", "itens", comoCodigo); if(!lista) return;
     var r = itensOpsImportar(lista);
-    if(!r.ops.length){ alert("Não achei itens com nome nesse arquivo."); return; }
+    if(!r.ops.length){ if(!avisoTipoProvavel(lista, "itens", comoCodigo)) alert("Não achei itens com nome nesse "+(comoCodigo?"código":"arquivo")+"."); return; }
     var nome = (campanhaAtual && campanhaAtual.nome) || "esta campanha";
-    askConfirm("Importar "+r.n+" ite"+(r.n>1?"ns":"m")+" para "+nome+"?"+(r.existentes?" "+r.existentes+" já existe"+(r.existentes>1?"m":"")+" e ser"+(r.existentes>1?"ão substituídos":"á substituído")+" (quem já recebeu continua com o seu).":""), function(){
+    var um = r.n === 1 && lista.length === 1 && lista[0].nome;
+    askConfirm((um ? 'Importar o item "'+um+'" para '+nome+'?' : "Importar "+r.n+" ite"+(r.n>1?"ns":"m")+" para "+nome+"?")+(r.existentes?(um ? " Ele já existe e será substituído (quem já recebeu continua com o seu)." : " "+r.existentes+" já existe"+(r.existentes>1?"m":"")+" e ser"+(r.existentes>1?"ão substituídos":"á substituído")+" (quem já recebeu continua com o seu)."):""), function(){
+      if(aoConfirmar) aoConfirmar();
       var p = gravarItensPool(r.ops);
       if(p && p.then) p.then(function(){ if(rerender) rerender(); });
     });
@@ -9807,10 +9869,10 @@
       html += '</div>';
       return html;
     }
-    html += '<p class="hint">Itens que o grupo pode encontrar. Ao entregar, o item vai direto pro Inventário adicional do personagem. Os jogadores não veem esta lista. <b>Exportar</b> baixa um arquivo .json com todos os itens (sem as entregas), para guardar ou levar para outra campanha.</p>';
+    html += '<p class="hint">Itens que o grupo pode encontrar. Ao entregar, o item vai direto pro Inventário adicional do personagem. Os jogadores não veem esta lista. <b>Exportar</b> baixa um arquivo .json com todos os itens (sem as entregas), para guardar ou levar para outra campanha. Para levar um só, abra o item, use <b>Copiar código</b> e <b>Colar código</b> na outra campanha.</p>';
     html += '<div class="btn-row" style="justify-content:flex-start;gap:8px;flex-wrap:wrap"><button type="button" class="btn accent" data-ipacao="novo">+ Novo item</button><button type="button" class="btn secondary" data-ipacao="importar-arq">Importar itens</button><button type="button" class="btn secondary" data-ipacao="exportar"'+(itensPoolLista().length?'':' disabled')+'>Exportar itens</button><button type="button" class="btn secondary" data-ipacao="importar">Colar código</button><input type="file" accept=".json,application/json" data-ipimpfile style="display:none"></div>';
     if(state.itemImportar){
-      html += '<div class="field" style="margin-top:10px"><label>Cole o código de importação</label><textarea id="item-import" style="min-height:120px" placeholder="[ { &quot;nome&quot;: ... } ]"></textarea>' +
+      html += '<div class="field" style="margin-top:10px"><label>Cole o código (do Copiar código ou de um arquivo exportado)</label><textarea id="item-import" style="min-height:120px" placeholder="{ &quot;tipo&quot;: &quot;itens-assimilacao&quot;, ... }"></textarea>' +
         '<div class="btn-row" style="justify-content:flex-start;gap:8px"><button type="button" class="btn accent" data-ipacao="importar-ok">Importar</button><button type="button" class="btn secondary" data-ipacao="importar-cancelar">Cancelar</button></div></div>';
     }
     var todos = itensPoolLista();
@@ -9865,7 +9927,7 @@
       (it.nota ? '<p class="item-nota"><b>Nota:</b> '+esc(it.nota)+'</p>' : '') +
       '<div class="item-controles"><span class="grupo fim">' +
         '<button type="button" class="btn accent" data-ipentregar="'+it.id+'">Entregar</button>' +
-        (sorteado ? '' : '<button type="button" class="btn secondary" data-ipeditar="'+it.id+'">Editar</button><button type="button" class="btn secondary" data-ipexcluir="'+it.id+'">Excluir</button>') +
+        (sorteado ? '' : '<button type="button" class="btn secondary" data-ipeditar="'+it.id+'">Editar</button><button type="button" class="btn secondary" data-ipcopiar="'+it.id+'" title="Copia só este item em código, para colar em outra campanha (sem as entregas)">Copiar código</button><button type="button" class="btn secondary" data-ipexcluir="'+it.id+'">Excluir</button>') +
       '</span></div>';
     if(state.itemEntregar === it.id && (sorteado || state.itemSorteado !== it.id)){
       html += '<div class="doc-entrega"><p class="hint" style="margin:0 0 6px">Quem fica com o item?</p><div class="row" style="gap:6px 14px;flex-wrap:wrap">' +
@@ -9913,6 +9975,10 @@
       var it = itensPoolLista().filter(function(x){ return x.id===b.getAttribute("data-ipeditar"); })[0]; if(!it) return;
       state.itemPoolEdit = JSON.parse(JSON.stringify(it)); state.itemPoolEdit.traits = normalizarTraits(it.traits); rerender();
     }); });
+    raiz.querySelectorAll("[data-ipcopiar]").forEach(function(b){ b.addEventListener("click", function(){
+      var it = itensPoolLista().filter(function(x){ return x.id===b.getAttribute("data-ipcopiar"); })[0]; if(!it) return;
+      copiarTexto(codigoDeUm("itens-assimilacao", "itens", itemExportavel(it)), b);
+    }); });
     raiz.querySelectorAll("[data-ipexcluir]").forEach(function(b){ b.addEventListener("click", function(){
       var id = b.getAttribute("data-ipexcluir"), it = itensPoolLista().filter(function(x){ return x.id===id; })[0];
       askConfirm('Excluir "'+((it&&it.nome)||"este item")+'" da pool? (Quem já recebeu continua com ele no inventário.)', function(){ gravarItensPool([{ tipo:"del", col:"itensPool", id:id }]); });
@@ -9934,12 +10000,9 @@
         else if(acao === "exportar"){ exportarItensPool(); }
         else if(acao === "importar-cancelar"){ state.itemImportar = false; rerender(); }
         else if(acao === "importar-ok"){
-          var txt = (raiz.querySelector("#item-import")||{}).value || "", arr;
-          try{ arr = JSON.parse(txt); }catch(e){ alert("Código inválido: confira se copiou tudo."); return; }
-          if(!Array.isArray(arr)) arr = (arr && Array.isArray(arr.itens)) ? arr.itens : [arr];
-          var ops = itensOpsImportar(arr).ops;
-          if(!ops.length){ alert("Nenhum item encontrado no código."); return; }
-          gravarItensPool(ops); state.itemImportar = false; rerender();
+          var txt = String((raiz.querySelector("#item-import")||{}).value || "").trim();
+          if(!txt){ alert("Cole o código primeiro."); return; }
+          importarItensArquivo(txt, rerender, true, function(){ state.itemImportar = false; });
         }
         else if(acao === "sortear"){
           var lista = itensPoolFiltrados();
