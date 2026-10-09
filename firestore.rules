@@ -1,4 +1,12 @@
 rules_version = '2';
+// Etapa G (09/10/2026). Base: claude/site/rascunho_campanhas_D/firestore.rules (no Console desde 08-09/10).
+// Mudanças:
+//  1. Sai o "vínculo pela senha" (jogador pegava uma ficha sem dono digitando
+//     nome do personagem + nome do jogador). A função saiu do site.
+//  2. Entra a passagem NPC -> jogador feita pelo mestre: ele cria a ficha-base na
+//     conta do jogador com um id novo e o campo "copiaId" apontando para a ficha
+//     da campanha, que no mesmo lote passa a ter esse jogador como dono e esse baseId.
+// Todo o resto é igual à etapa D.
 service cloud.firestore {
   match /databases/{database}/documents {
 
@@ -81,19 +89,15 @@ service cloud.firestore {
       allow delete: if logado() && resource.data.donoUid == request.auth.uid;
 
       // Fichas-cópia da campanha (o site ainda as chama de "personagens").
+      // Etapa G: saiu o "vínculo pela senha" (ficha sem dono pega pelo jogador).
+      // Quem dá uma ficha da mesa a um jogador agora é o mestre (update do mestre).
       match /fichas/{id} {
         allow read: if mestreDe(cid) || (membroDe(cid) && donoDe(resource.data));
         allow create: if mestreDe(cid)
           || (membroDe(cid) && donoDe(request.resource.data) && request.resource.data.get('xp', null) == null
               && xpInicialDaCampanha(cid));
         allow update: if mestreDe(cid)
-          || (membroDe(cid) && donoDe(resource.data) && donoDe(request.resource.data) && xpIntacta())
-          // vínculo pela senha: ficha sem dono e que não é NPC, só os campos do dono
-          || (membroDe(cid)
-              && resource.data.get('donoUid', null) == null
-              && resource.data.get('ehNpc', false) != true
-              && donoDe(request.resource.data)
-              && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['donoUid', 'donoEmail', 'donoNome']));
+          || (membroDe(cid) && donoDe(resource.data) && donoDe(request.resource.data) && xpIntacta());
         allow delete: if mestreDe(cid) || (membroDe(cid) && donoDe(resource.data));
       }
       match /resumos/{id} {
@@ -166,6 +170,16 @@ service cloud.firestore {
         // ou o mestre gera a base a partir da cópia que está na campanha dele
         || (mestreDe(request.resource.data.origemCampanha)
             && getAfter(/databases/$(database)/documents/campanhas/$(request.resource.data.origemCampanha)/fichas/$(id)).data.get('donoUid', null) == request.resource.data.donoUid)
+        // Etapa G: o mestre passa uma ficha da campanha (NPC ou sem conta) para um
+        // jogador que está na campanha. A base nasce com id novo e "copiaId" = id da
+        // ficha da campanha, que no mesmo lote fica com esse dono e com baseId = esta base.
+        || (mestreDe(request.resource.data.origemCampanha)
+            && request.resource.data.get('copiaId', null) is string
+            && request.resource.data.get('donoUid', null) is string
+            && request.resource.data.donoUid != request.auth.uid
+            && request.resource.data.donoUid in campanha(request.resource.data.origemCampanha).get('membros', [])
+            && getAfter(/databases/$(database)/documents/campanhas/$(request.resource.data.origemCampanha)/fichas/$(request.resource.data.copiaId)).data.get('donoUid', null) == request.resource.data.donoUid
+            && getAfter(/databases/$(database)/documents/campanhas/$(request.resource.data.origemCampanha)/fichas/$(request.resource.data.copiaId)).data.get('baseId', null) == id)
       );
 
       // Fichas guardadas (etapa B): a cópia de uma campanha que a ficha deixou.
