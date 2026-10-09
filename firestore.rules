@@ -1,12 +1,8 @@
 rules_version = '2';
-// Etapa G (09/10/2026). Base: claude/site/rascunho_campanhas_D/firestore.rules (no Console desde 08-09/10).
-// Mudanças:
-//  1. Sai o "vínculo pela senha" (jogador pegava uma ficha sem dono digitando
-//     nome do personagem + nome do jogador). A função saiu do site.
-//  2. Entra a passagem NPC -> jogador feita pelo mestre: ele cria a ficha-base na
-//     conta do jogador com um id novo e o campo "copiaId" apontando para a ficha
-//     da campanha, que no mesmo lote passa a ter esse jogador como dono e esse baseId.
-// Todo o resto é igual à etapa D.
+// Etapa H2 (09/10/2026). Base: claude/site/rascunho_G/firestore.rules (no Console desde a etapa G; a H não mudou regras).
+// Mudança única: em campanhas/{cid}/pedidos, quem JÁ É JOGADOR da campanha pode mandar um
+// pedido sem convite, marcado com membro: true, para levar mais uma ficha (o mestre aprova).
+// Todo o resto é igual à etapa G.
 service cloud.firestore {
   match /databases/{database}/documents {
 
@@ -143,8 +139,10 @@ service cloud.firestore {
         allow get: if logado();
         allow list, write: if mestreDe(cid);
       }
-      // Pedidos de entrada: o documento tem o id da conta que pede. Só nasce com um
-      // convite ativo desta campanha; o mestre vê, recusa ou aprova (e apaga).
+      // Pedidos: o documento tem o id da conta que pede. O mestre vê, recusa ou aprova (e apaga).
+      //  - quem ainda não está na campanha: só com um convite ativo desta campanha;
+      //  - etapa H2: quem já é jogador (está em "membros" e não é o mestre) pede sem
+      //    convite, com membro: true, para levar mais uma ficha.
       function conviteAtivo(codigo) {
         return get(/databases/$(database)/documents/campanhas/$(cid)/convites/$(codigo)).data.get('ativo', false) == true;
       }
@@ -152,6 +150,12 @@ service cloud.firestore {
         allow get: if logado() && (uidP == request.auth.uid || mestreDe(cid));
         allow list: if mestreDe(cid);
         allow create, update: if (logado() && uidP == request.auth.uid
+            && request.resource.data.uid == request.auth.uid
+            && request.resource.data.status == 'pendente'
+            && request.resource.data.get('membro', false) == true
+            && campanha(cid).donoUid != request.auth.uid
+            && request.auth.uid in campanha(cid).get('membros', []))
+          || (logado() && uidP == request.auth.uid
             && request.resource.data.uid == request.auth.uid
             && request.resource.data.status == 'pendente'
             && conviteAtivo(request.resource.data.codigo))
