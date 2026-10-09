@@ -275,6 +275,23 @@
     padding:14px; display:flex; gap:12px; align-items:flex-start; box-shadow:var(--shadow);
   }
   .camp-opt img{ width:46px; height:46px; flex:none; }
+  .cfg-sec{ border:1px solid var(--border); border-radius:10px; padding:8px 12px; margin:8px 0; background:var(--surface); }
+  .cfg-sec > summary{ cursor:pointer; padding:4px 0; }
+  .cfg-corpo{ padding:6px 0 4px; }
+  .cfg-bloco{ margin:4px 0 10px; }
+  .cfg-grade{ display:grid; grid-template-columns:repeat(auto-fill,minmax(min(100%,220px),1fr)); gap:0 12px; }
+  .cfg-num input{ max-width:120px; }
+  .cfg-chk{ display:flex; gap:8px; align-items:flex-start; text-transform:none; font-size:13.5px; margin:6px 0; cursor:pointer; }
+  .cfg-chk input{ width:auto; margin-top:3px; flex:none; }
+  .cfg-chk .hint{ display:block; margin:2px 0 0; font-weight:400; }
+  .cfg-linha{ display:flex; flex-wrap:wrap; gap:0 10px; align-items:flex-end; border-top:1px dashed var(--border); padding:8px 0 2px; }
+  .cfg-linha .field{ flex:1 1 180px; min-width:0; margin-bottom:8px; }
+  .cfg-linha .cfg-larga{ flex:2 1 260px; }
+  .cfg-linha .cfg-cor{ flex:0 1 200px; }
+  .cfg-linha .cfg-cor input[type=color]{ width:42px; min-width:42px; height:36px; padding:2px; flex:none; }
+  .cfg-linha .cfg-chk{ flex:0 0 auto; margin:0 0 14px; }
+  .cfg-acoes{ display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px; }
+  .camp-sem-img{ width:46px; height:46px; flex:none; border-radius:50%; display:inline-block; opacity:.85; }
   .camp-opt.selected{ border-color:var(--camp-color); background:var(--surface-2); }
   .camp-opt h3{ color:var(--camp-color); font-size:16px; margin-bottom:4px; }
   .camp-opt p{ font-size:12.5px; color:var(--ink-muted); margin-bottom:4px; }
@@ -2006,6 +2023,7 @@
       if(c.assimTesteAtual === undefined) c.assimTesteAtual = null;
       if(!Array.isArray(c.mutAdquiridas)) c.mutAdquiridas = [];
       if(c.assimPerdido == null) c.assimPerdido = false;
+      recalcularPerdaAntiga(c);
       // Fichas de antes da tag "NPC" (27/09/2026, ver newCharacter/testLogVisivelPara): sem
       // marcação salva, o personagem é tratado como jogador comum (rolagens visíveis a todos).
       if(c.ehNpc == null) c.ehNpc = false;
@@ -2467,10 +2485,10 @@
     return t ? (t.length > 42 ? t.slice(0,42).replace(/\s+\S*$/,"")+"…" : t) : "Sem título";
   }
   // Locais em ordem de viagem; os que você inventar entram no fim, em ordem alfabética.
-  var DOC_LOCAIS_ORDEM = ["Já lidos (sessão 1)","Cidade abandonada (shopping)","Centro (Cruzamento)","Rêverie","Traúm","Yūgen","Mriya","Estradas e postos dos exploradores","Território do D'lém","Ruínas pelo caminho","Caverna da Gaia","A qualquer momento"];
+  // Locais em ordem de viagem: vêm da configuração da campanha (etapa C).
   function docOrdemLocais(ls){
     return ls.slice().sort(function(a,b){
-      var ia = DOC_LOCAIS_ORDEM.indexOf(a), ib = DOC_LOCAIS_ORDEM.indexOf(b);
+      var ia = locaisOrdem().indexOf(a), ib = locaisOrdem().indexOf(b);
       if(a==="Sem local") ia = 999; if(b==="Sem local") ib = 999;
       if(ia<0) ia = 500; if(ib<0) ib = 500;
       return ia!==ib ? ia-ib : a.localeCompare(b);
@@ -2490,7 +2508,7 @@
     return docOrdemSessoes(Object.keys(s));
   }
   function docLocaisConhecidos(){
-    var s = {}; DOC_LOCAIS_ORDEM.forEach(function(l){ s[l]=1; });
+    var s = {}; locaisOrdem().forEach(function(l){ s[l]=1; });
     (shared.documentosNotas||[]).forEach(function(n){ if(n.local) s[n.local]=1; });
     return docOrdemLocais(Object.keys(s));
   }
@@ -3096,9 +3114,33 @@
   // Configuração da Pangea, guardada no documento da campanha. Por enquanto só
   // registra como a Pangea já funciona hoje; a etapa C vai ler isso para ligar e
   // desligar cada coisa por campanha.
+  // Etapa C: a configuração completa (criação, automações e locais) fica em
+  // campanhas/{id}.config. CONFIG_PANGEA é como a Pangea sempre funcionou.
   var CONFIG_PANGEA = {
-    criacao: { acampamento: true, geracao: "texto", kitInicial: true },
-    automacoes: { qualidadeCaiComPressao: true, dadosMantidosAuto: true, bestiarioDesgasteAuto: true, qualidadePorLocal: true }
+    criacao: {
+      acampamento: true,
+      grupo: { rotulo: "Acampamento", opcoes: ["reverie","traum","mriya","yugen"].map(function(k){
+        var x = CAMPS[k]; return { id:k, nome:x.nome, pron:x.pron, cor:x.cor, img:x.img, frase:x.frase, desc:x.desc };
+      }) },
+      geracao: "texto", propositos: "conexoes", artefato: true, kitInicial: true,
+      camposExtras: [],
+      valores: { instintoLivres:3, instintoMax:3, cpPontos:7, cpMax:2, xpInicial:7, escassezArtefato:3 }
+    },
+    automacoes: { qualidadeCaiComPressao: true, dadosMantidosAuto: true, bestiarioDesgasteAuto: true, qualidadePorLocal: true },
+    locais: [
+      {nome:"Já lidos (sessão 1)", tendencia:"geral"},
+      {nome:"Cidade abandonada (shopping)", tendencia:"abandonado"},
+      {nome:"Centro (Cruzamento)", tendencia:"acampamento"},
+      {nome:"Rêverie", tendencia:"acampamento"},
+      {nome:"Traúm", tendencia:"acampamento"},
+      {nome:"Yūgen", tendencia:"acampamento"},
+      {nome:"Mriya", tendencia:"acampamento"},
+      {nome:"Estradas e postos dos exploradores", tendencia:"abandonado"},
+      {nome:"Território do D'lém", tendencia:"abandonado"},
+      {nome:"Ruínas pelo caminho", tendencia:"abandonado"},
+      {nome:"Caverna da Gaia", tendencia:"abandonado"},
+      {nome:"A qualquer momento", tendencia:"geral"}
+    ]
   };
   var COLECOES_ANTIGAS = ["personagens","resumos","rolagens","rolagensNpc","documentos","documentosNotas","encontros","encontrosMesa","itensPool","meta"];
 
@@ -3232,9 +3274,76 @@
   // Campanha nova: criação padrão do livro e o mínimo de automação. A etapa C vai
   // ler isto para ligar/desligar cada coisa; até lá a criação segue a da Pangea.
   var CONFIG_PADRAO = {
-    criacao: { acampamento: false, geracao: "livro", kitInicial: true },
-    automacoes: { qualidadeCaiComPressao: false, dadosMantidosAuto: false, bestiarioDesgasteAuto: false, qualidadePorLocal: false }
+    criacao: {
+      acampamento: false, grupo: { rotulo: "Grupo", opcoes: [] },
+      geracao: "livro", propositos: "livro", artefato: true, kitInicial: true,
+      camposExtras: [],
+      valores: { instintoLivres:3, instintoMax:3, cpPontos:7, cpMax:2, xpInicial:7, escassezArtefato:3 }
+    },
+    automacoes: { qualidadeCaiComPressao: false, dadosMantidosAuto: false, bestiarioDesgasteAuto: false, qualidadePorLocal: false },
+    locais: []
   };
+  // ---------- CONFIGURAÇÃO DA CAMPANHA (etapa C) ----------
+  // Lê campanhaAtual.config completando o que faltar: a Pangea completa com o jeito
+  // dela; as outras, com a criação do livro. Fora de campanha vale a da Pangea.
+  var CAMPS_PANGEA = CAMPS;
+  var GERACOES_LIVRO = [
+    ["Geração pré-Colapso", "Nascidos e criados antes do Colapso."],
+    ["Geração-Colapso", "Passaram pelo Colapso entre os 5 e os 12 anos."],
+    ["Geração pós-Colapso", "Nasceram depois do Colapso ou tinham menos de 5 anos durante o evento."]
+  ];
+  var AUTOMACOES_INFO = [
+    ["qualidadeCaiComPressao", "A Qualidade do item cai com a Pressão acumulada", "Botão +1 Pressão no item; Frágil e Durável mudam quantas Pressões derrubam um nível. Desligado: a Qualidade só muda à mão (− / +)."],
+    ["dadosMantidosAuto", "Os dados mantidos são escolhidos sozinhos no teste", "O site já deixa marcados os melhores dados. Desligado: o jogador marca quais dados mantém."],
+    ["bestiarioDesgasteAuto", "O Bestiário soma o Desgaste e o Pagar desconta os pontos", "Rolar Ativação soma os Sucessos no Desgaste; Pagar e Represar descontam os pontos da criatura. Desligado: Desgaste e pontos só à mão."],
+    ["qualidadePorLocal", "A Qualidade do item achado é sorteada pelo local", "Item sem Qualidade fixa sai sorteado pela tendência do local. Desligado: sai em Padrão (3)."]
+  ];
+  var TENDENCIAS_LOCAL = [["acampamento","Acampamento (em geral Padrão ou melhor)"],["abandonado","Abandonado (em geral gasto)"],["geral","Geral (Comprometido ou Padrão)"]];
+  function configBase(cmp){ return (cmp && cmp.id === CAMPANHA_PADRAO) ? CONFIG_PANGEA : (cmp ? CONFIG_PADRAO : CONFIG_PANGEA); }
+  function completarConfig(cfg, base){
+    cfg = cfg ? clonar(cfg) : {};
+    base = clonar(base);
+    var cr = cfg.criacao || {}, bc = base.criacao;
+    Object.keys(bc).forEach(function(k){ if(cr[k] === undefined || cr[k] === null) cr[k] = bc[k]; });
+    cr.valores = cr.valores || {};
+    Object.keys(bc.valores).forEach(function(k){ var v = parseInt(cr.valores[k],10); cr.valores[k] = isNaN(v) ? bc.valores[k] : v; });
+    if(!cr.grupo || !Array.isArray(cr.grupo.opcoes)) cr.grupo = bc.grupo;
+    if(!cr.grupo.rotulo) cr.grupo.rotulo = bc.grupo.rotulo || "Grupo";
+    if(!Array.isArray(cr.camposExtras)) cr.camposExtras = [];
+    cfg.criacao = cr;
+    var au = cfg.automacoes || {};
+    Object.keys(base.automacoes).forEach(function(k){ if(typeof au[k] !== "boolean") au[k] = base.automacoes[k]; });
+    cfg.automacoes = au;
+    if(!Array.isArray(cfg.locais)) cfg.locais = base.locais;
+    return cfg;
+  }
+  var cfgCache = { chave:null, cfg:null };
+  function cfgCampanha(){
+    var chave = campanhaAtual ? campanhaAtual.id + "|" + JSON.stringify(campanhaAtual.config || null) : "-";
+    if(cfgCache.chave !== chave){ cfgCache.chave = chave; cfgCache.cfg = completarConfig(campanhaAtual && campanhaAtual.config, configBase(campanhaAtual)); }
+    return cfgCache.cfg;
+  }
+  function cfgCriacao(){ return cfgCampanha().criacao; }
+  function cfgValores(){ return cfgCriacao().valores; }
+  function autoLigada(k){ return !!cfgCampanha().automacoes[k]; }
+  function grupoLigado(){ return !!cfgCriacao().acampamento; }
+  function grupoRotulo(){ return cfgCriacao().grupo.rotulo || "Acampamento"; }
+  function grupoOpcoes(){ return grupoLigado() ? cfgCriacao().grupo.opcoes : []; }
+  // CAMPS vira as opções da campanha aberta, mais as da Pangea por baixo (uma ficha
+  // que veio da Pangea continua com a cor e o símbolo do acampamento dela).
+  function aplicarConfigCampanha(){
+    var m = {};
+    Object.keys(CAMPS_PANGEA).forEach(function(k){ m[k] = CAMPS_PANGEA[k]; });
+    (cfgCriacao().grupo.opcoes || []).forEach(function(o){
+      if(!o || !o.id) return;
+      m[o.id] = { nome:o.nome||o.id, pron:o.pron||"", cor:o.cor||"var(--accent)", img:o.img||"", frase:o.frase||"", desc:o.desc||"" };
+    });
+    CAMPS = m;
+  }
+  function xpInicialDe(c){ return (c && c.xpInicial != null) ? c.xpInicial : cfgValores().xpInicial; }
+  function escassezTetoInicial(){ return cfgValores().escassezArtefato; }
+  function locaisConfig(){ return cfgCampanha().locais || []; }
+  function locaisOrdem(){ return locaisConfig().map(function(l){ return l.nome; }); }
   var CAMPANHA_ABERTA_KEY = "pangea:campanhaAberta"; // sessionStorage: recarregar a aba volta pra mesma campanha
   var CONVITE_KEY = "pangea:convite";                 // localStorage: convite aberto e ainda não usado
   var PEDIDOS_KEY = "pangea:pedidos";                 // localStorage: pedidos enviados por este aparelho
@@ -3296,7 +3405,10 @@
     ["ehBase","origemCampanha","campanhas","baseCriadaEm","guardadaEm"].forEach(function(k){ delete c[k]; });
     c.baseId = base.id; c.id = uid(); c.campanhaId = cid; c.ehNpc = false;
     c.donoUid = dono.uid; c.donoEmail = dono.email || null; c.donoNome = dono.nome || null;
-    if(complemento && complemento.acampamento && !c.acampamento) c.acampamento = complemento.acampamento;
+    if(complemento && complemento.acampamento) c.acampamento = complemento.acampamento;
+    // A Experiência inicial é regra da campanha: a cópia não traz a da base (que o
+    // jogador pode mexer na conta dele); vale a da campanha que está recebendo.
+    delete c.xpInicial;
     c.entrouNaCampanhaEm = agoraIso(); c.atualizadoEm = agoraIso();
     return c;
   }
@@ -3469,7 +3581,12 @@
     opcoes.push({ valor:"nenhuma", titulo:"Sem ficha por enquanto", detalhe:"crio o personagem dentro da mesa depois de entrar" });
     if(!f.escolha || !opcoes.some(function(o){ return o.valor === f.escolha; })) f.escolha = opcoes[0].valor;
     var escolhida = opcoes.filter(function(o){ return o.valor === f.escolha; })[0];
-    var pedeAcamp = !!(d.pedeAcampamento && escolhida && escolhida.base && !escolhida.guardada && !escolhida.base.acampamento);
+    // Etapa C: o convite leva as opções do grupo da campanha (Acampamento ou outro nome).
+    // Convites antigos não têm a lista: valem os acampamentos da Pangea.
+    var opsConv = Array.isArray(d.grupoOpcoes) && d.grupoOpcoes.length ? d.grupoOpcoes : Object.keys(CAMPS_PANGEA).map(function(k){ return { id:k, nome:CAMPS_PANGEA[k].nome }; });
+    var rotConv = d.grupoRotulo || "Acampamento";
+    var baseCompat = escolhida && escolhida.base && opsConv.some(function(o){ return o.id === escolhida.base.acampamento; });
+    var pedeAcamp = !!(d.pedeAcampamento && escolhida && escolhida.base && !escolhida.guardada && !baseCompat);
     var html = '<div class="card" style="border-color:var(--accent)"><h2>Convite: '+esc(d.campanhaNome||"campanha")+'</h2>' +
       '<p class="hint" style="margin:0 0 10px">Mestre: <b>'+esc(d.mestreNome||"")+'</b>. Escolha a ficha que vai levar. A campanha recebe uma cópia própria dela (Saúde, Determinação, inventário, XP e mutações daquela mesa); a sua ficha-base continua na sua conta. Você só entra depois que o mestre aprovar.</p>' +
       '<div class="lobby-opcoes">';
@@ -3479,8 +3596,8 @@
     });
     html += '</div>';
     if(pedeAcamp){
-      html += '<div class="field" style="margin-top:10px"><label>Acampamento (esta campanha pede, e a ficha ainda não tem)</label><select data-conv="acampamento"><option value="">escolha…</option>' +
-        Object.keys(CAMPS).map(function(k){ return '<option value="'+k+'"'+(f.acampamento===k?' selected':'')+'>'+esc(CAMPS[k].nome)+'</option>'; }).join("") +
+      html += '<div class="field" style="margin-top:10px"><label>'+esc(rotConv)+' (esta campanha pede, e a ficha ainda não tem um que valha aqui)</label><select data-conv="acampamento"><option value="">escolha…</option>' +
+        opsConv.map(function(o){ return '<option value="'+esc(o.id)+'"'+(f.acampamento===o.id?' selected':'')+'>'+esc(o.nome||o.id)+'</option>'; }).join("") +
         '</select></div>';
     }
     html += '<p class="hint" id="conv-status" style="font-weight:600;margin:10px 0 0"></p>' +
@@ -3520,7 +3637,7 @@
       }).map(function(cmp){ return esc(cmp.nome||""); });
       var guard = (lobby.guardadas[b.id]||[]).map(function(g){ return esc(g.campanhaNome || g.campanhaId || ""); });
       html += '<div class="char-card" style="--camp-color:'+(camp?camp.cor:'var(--accent)')+';cursor:default">' +
-        (camp ? '<img class="badge" src="'+camp.img+'" alt="">' : '') +
+        (camp && camp.img ? '<img class="badge" src="'+esc(camp.img)+'" alt="">' : '') +
         '<h3>'+esc(b.nomePersonagem||"Sem nome")+'</h3>' +
         '<div class="camp-tag">'+(camp?camp.nome:"sem acampamento")+(b.nomeJogador?" · "+esc(b.nomeJogador):"")+'</div>' +
         '<div class="hint" style="margin-top:6px">'+(emCampanhas.length ? 'Em: <b>'+emCampanhas.join(", ")+'</b>' : 'Fora de campanhas no momento')+'</div>' +
@@ -3758,9 +3875,189 @@
       partes.push('Leva a ficha-base <b>'+esc(f.nomePersonagem||"Sem nome")+'</b>'+(f.nomeJogador?' ('+esc(f.nomeJogador)+')':'')+
         ' · '+(camp?camp.nome:'sem acampamento')+' · XP recebida: '+(xpDados(f).recebida||0)+' · Saúde '+(f.saudeNivel!=null?f.saudeNivel:6)+'/6');
     } else partes.push('Sem ficha por enquanto (vai criar o personagem na mesa)');
-    if(p.complemento && p.complemento.acampamento && CAMPS[p.complemento.acampamento]) partes.push('Acampamento escolhido agora: <b>'+CAMPS[p.complemento.acampamento].nome+'</b>');
+    if(p.complemento && p.complemento.acampamento && CAMPS[p.complemento.acampamento]) partes.push(esc(grupoRotulo())+' escolhido agora: <b>'+esc(CAMPS[p.complemento.acampamento].nome)+'</b>');
     return partes.join('<br>');
   }
+  // ---------- PAINEL DO MESTRE: configuração da campanha (etapa C) ----------
+  // Rascunho em state.cfgDraft; só grava no banco no "Salvar configuração".
+  function cfgDraftAtual(){
+    if(!state.cfgDraft || state.cfgDraftCid !== (campanhaAtual && campanhaAtual.id)){
+      state.cfgDraft = clonar(cfgCampanha()); state.cfgDraftCid = campanhaAtual && campanhaAtual.id; state.cfgSujo = false;
+    }
+    return state.cfgDraft;
+  }
+  function corParaPicker(cor){
+    cor = String(cor||"").trim();
+    var m = /^var\((--[a-z0-9-]+)\)$/i.exec(cor);
+    if(m){ try{ cor = getComputedStyle(document.documentElement).getPropertyValue(m[1]).trim(); }catch(e){} }
+    if(/^#[0-9a-f]{3}$/i.test(cor)) cor = "#"+cor[1]+cor[1]+cor[2]+cor[2]+cor[3]+cor[3];
+    return /^#[0-9a-f]{6}$/i.test(cor) ? cor : "#8a7a5c";
+  }
+  function gmConfigHtml(){
+    if(!campanhaAtual || !ehMestre()) return "";
+    var d = cfgDraftAtual(), cr = d.criacao, v = cr.valores, ab = state.cfgAbertos || (state.cfgAbertos = {});
+    function det(id, titulo, corpo){ return '<details class="cfg-sec" data-cfgdet="'+id+'"'+(ab[id]?' open':'')+'><summary><b>'+titulo+'</b></summary><div class="cfg-corpo">'+corpo+'</div></details>'; }
+    function chk(attr, lig, txt, ajuda){ return '<label class="cfg-chk"><input type="checkbox" '+attr+(lig?' checked':'')+'><span><b>'+txt+'</b>'+(ajuda?'<span class="hint">'+ajuda+'</span>':'')+'</span></label>'; }
+    function num(k, txt, min, max){ return '<div class="field cfg-num"><label>'+txt+'</label><input type="number" min="'+min+'" max="'+max+'" data-cfgval="'+k+'" value="'+v[k]+'"></div>'; }
+    // Criação
+    var grupo = '<div class="cfg-bloco">' + chk('data-cfggrupo', cr.acampamento, 'Pedir um grupo na criação', 'Como o Acampamento da Pangea: o jogador escolhe uma opção, e a cor e a imagem dela vão para a ficha.');
+    if(cr.acampamento){
+      grupo += '<div class="field" style="max-width:320px"><label>Nome do campo</label><input type="text" data-cfggruporot value="'+esc(cr.grupo.rotulo||"")+'" placeholder="ex.: Acampamento, Facção, Clã"></div>';
+      (cr.grupo.opcoes||[]).forEach(function(o, i){
+        grupo += '<div class="cfg-linha cfg-opcao">' +
+          '<div class="field"><label>Nome</label><input type="text" data-cfgop="'+i+'" data-k="nome" value="'+esc(o.nome||"")+'"></div>' +
+          '<div class="field cfg-cor"><label>Cor</label><span class="row" style="gap:6px;flex-wrap:nowrap"><input type="color" data-cfgopcor="'+i+'" value="'+corParaPicker(o.cor)+'"><input type="text" data-cfgop="'+i+'" data-k="cor" value="'+esc(o.cor||"")+'" placeholder="#a05a2c"></span></div>' +
+          '<div class="field"><label>Imagem (endereço)</label><input type="text" data-cfgop="'+i+'" data-k="img" value="'+esc(o.img||"")+'" placeholder="opcional: https://… ou logo.png"></div>' +
+          '<div class="field"><label>Frase</label><input type="text" data-cfgop="'+i+'" data-k="frase" value="'+esc(o.frase||"")+'" placeholder="opcional"></div>' +
+          '<div class="field cfg-larga"><label>Descrição</label><input type="text" data-cfgop="'+i+'" data-k="desc" value="'+esc(o.desc||"")+'" placeholder="opcional"></div>' +
+          '<div class="cfg-acoes"><button type="button" class="btn secondary doc-btn" data-cfgopmover="'+i+'" data-dir="-1"'+(i===0?' disabled':'')+' title="Subir">↑</button><button type="button" class="btn secondary doc-btn" data-cfgopmover="'+i+'" data-dir="1"'+(i===cr.grupo.opcoes.length-1?' disabled':'')+' title="Descer">↓</button><button type="button" class="btn secondary doc-btn" data-cfgopdel="'+i+'">Remover</button></div>' +
+        '</div>';
+      });
+      grupo += '<button type="button" class="btn secondary doc-btn" data-cfgopadd="1">+ Opção</button>';
+      grupo += '<p class="hint" style="margin:6px 0 0">Tirar uma opção não muda as fichas que já a escolheram.</p>';
+    }
+    grupo += '</div>';
+    var formatos = '<div class="cfg-bloco cfg-grade">' +
+      '<div class="field"><label>Geração</label><select data-cfgsel="geracao">' +
+        '<option value="texto"'+(cr.geracao==="texto"?' selected':'')+'>Texto livre (como na Pangea)</option>' +
+        '<option value="livro"'+(cr.geracao==="livro"?' selected':'')+'>Escolha entre as 3 gerações do livro</option></select></div>' +
+      '<div class="field"><label>Propósitos</label><select data-cfgsel="propositos">' +
+        '<option value="livro"'+(cr.propositos==="livro"?' selected':'')+'>Livro: 2 Pessoais + 1 Coletivo</option>' +
+        '<option value="conexoes"'+(cr.propositos==="conexoes"?' selected':'')+'>Pangea: 2 Individuais + 2 Conexões</option>' +
+        '<option value="desligado"'+(cr.propositos==="desligado"?' selected':'')+'>Sem esta etapa</option></select></div>' +
+      '</div><div class="cfg-bloco">' +
+      chk('data-cfgchk="artefato"', cr.artefato, 'Etapa do Artefato inicial') +
+      chk('data-cfgchk="kitInicial"', cr.kitInicial, 'Etapa do Pacote inicial (kit de equipamentos)') +
+      '</div>';
+    var valores = '<div class="cfg-bloco cfg-grade">' +
+      num("instintoLivres", "Pontos livres de Instinto", 0, 12) + num("instintoMax", "Máximo por Instinto na criação", 1, 6) +
+      num("cpPontos", "Pontos de Conhecimentos e Práticas", 0, 30) + num("cpMax", "Máximo por Conhecimento/Prática", 1, 6) +
+      num("xpInicial", "Experiência inicial", 0, 50) + num("escassezArtefato", "Escassez máxima do Artefato", 0, 6) +
+      '</div><p class="hint" style="margin:0">Livro: 3, 3, 7, 2, 7 e 3. A Experiência inicial fica gravada em cada ficha nova; mudar aqui não mexe nas fichas que já existem.</p>';
+    var extras = '<div class="cfg-bloco">';
+    if(!(cr.camposExtras||[]).length) extras += '<p class="hint" style="margin:0 0 8px">Nenhum campo extra. Eles aparecem no primeiro passo da criação e na Origem da ficha.</p>';
+    (cr.camposExtras||[]).forEach(function(f, i){
+      extras += '<div class="cfg-linha">' +
+        '<div class="field"><label>Nome do campo</label><input type="text" data-cfgex="'+i+'" data-k="rotulo" value="'+esc(f.rotulo||"")+'"></div>' +
+        '<div class="field"><label>Tipo</label><select data-cfgextipo="'+i+'"><option value="texto"'+(f.tipo!=="escolha"?' selected':'')+'>Texto livre</option><option value="escolha"'+(f.tipo==="escolha"?' selected':'')+'>Escolha entre opções</option></select></div>' +
+        (f.tipo === "escolha" ? '<div class="field cfg-larga"><label>Opções (separe com vírgula)</label><input type="text" data-cfgexops="'+i+'" value="'+esc((f.opcoes||[]).join(", "))+'"></div>' : '') +
+        '<div class="field cfg-larga"><label>Explicação para o jogador</label><input type="text" data-cfgex="'+i+'" data-k="ajuda" value="'+esc(f.ajuda||"")+'" placeholder="opcional"></div>' +
+        '<label class="cfg-chk"><input type="checkbox" data-cfgexobr="'+i+'"'+(f.obrigatorio?' checked':'')+'><span>Obrigatório</span></label>' +
+        '<div class="cfg-acoes"><button type="button" class="btn secondary doc-btn" data-cfgexdel="'+i+'">Remover</button></div>' +
+      '</div>';
+    });
+    extras += '<button type="button" class="btn secondary doc-btn" data-cfgexadd="1">+ Campo extra</button></div>';
+    var criacao = '<h3 class="lobby-sub" style="margin-top:4px">Grupo</h3>'+grupo+'<h3 class="lobby-sub">Formato e etapas</h3>'+formatos+
+      '<h3 class="lobby-sub">Valores das regras</h3>'+valores+'<h3 class="lobby-sub">Campos extras</h3>'+extras;
+    // Automações
+    var autos = '<div class="cfg-bloco">' + AUTOMACOES_INFO.map(function(a){ return chk('data-cfgauto="'+a[0]+'"', d.automacoes[a[0]], a[1], a[2]); }).join('') + '</div>' +
+      '<p class="hint" style="margin:0">Sempre automáticos, em qualquer campanha: Usos, Escassez e Espaço pelas características, Cabo de Guerra, Saúde, custos e requisitos de Experiência, trava de Instintos e a perda da ficha por Pressão (só as Inoportunas, somadas às do Teste de Assimilação).</p>';
+    // Locais
+    var locs = '<div class="cfg-bloco">';
+    if(!(d.locais||[]).length) locs += '<p class="hint" style="margin:0 0 8px">Nenhum local ainda. Locais organizam documentos e itens achados e definem como a Qualidade do item é sorteada.</p>';
+    (d.locais||[]).forEach(function(l, i){
+      locs += '<div class="cfg-linha cfg-local">' +
+        '<div class="field"><label>Local</label><input type="text" data-cfgloc="'+i+'" value="'+esc(l.nome||"")+'"></div>' +
+        '<div class="field"><label>Qualidade dos itens achados aqui</label><select data-cfgloctend="'+i+'">'+TENDENCIAS_LOCAL.map(function(t){ return '<option value="'+t[0]+'"'+(l.tendencia===t[0]?' selected':'')+'>'+t[1]+'</option>'; }).join('')+'</select></div>' +
+        '<div class="cfg-acoes"><button type="button" class="btn secondary doc-btn" data-cfglocmover="'+i+'" data-dir="-1"'+(i===0?' disabled':'')+' title="Subir">↑</button><button type="button" class="btn secondary doc-btn" data-cfglocmover="'+i+'" data-dir="1"'+(i===d.locais.length-1?' disabled':'')+' title="Descer">↓</button><button type="button" class="btn secondary doc-btn" data-cfglocdel="'+i+'">Remover</button></div>' +
+      '</div>';
+    });
+    locs += '<button type="button" class="btn secondary doc-btn" data-cfglocadd="1">+ Local</button>' +
+      '<p class="hint" style="margin:6px 0 0">A ordem aqui é a ordem das listas. Mudar o nome de um local não muda os documentos e itens que já usam o nome antigo.'+(d.automacoes.qualidadePorLocal?'':' O sorteio da Qualidade está desligado nas Automações: os itens saem em Padrão (3).')+'</p></div>';
+    var body = '<div id="gm-config">' +
+      '<p class="hint" style="margin-top:0">Vale só para <b>'+esc(campanhaAtual.nome||"esta campanha")+'</b>. As mudanças só valem depois de <b>Salvar configuração</b>.</p>' +
+      det("criacao", "Criação de personagem", criacao) + det("autos", "Automações", autos) + det("locais", "Locais e Qualidade por local", locs) +
+      '<div class="row" style="gap:8px;margin-top:12px;flex-wrap:wrap"><button type="button" class="btn accent" data-cfgsalvar="1"'+(state.cfgSujo?'':' disabled')+'>Salvar configuração</button>' +
+        '<button type="button" class="btn secondary" data-cfgdescartar="1"'+(state.cfgSujo?'':' disabled')+'>Descartar mudanças</button>' +
+        '<span class="hint" id="cfg-status" style="margin:0;align-self:center">'+(state.cfgSujo?'Há mudanças não salvas.':'')+'</span></div>' +
+    '</div>';
+    return sectionCard("gmconfig", "Configuração da campanha", body);
+  }
+  function bindGmConfig(rerender){
+    var raiz = app.querySelector("#gm-config"); if(!raiz) return;
+    var d = cfgDraftAtual(), cr = d.criacao;
+    function on(sel, ev, fn){ raiz.querySelectorAll(sel).forEach(function(el){ el.addEventListener(ev, function(e){ fn(el, e); }); }); }
+    function sujo(re){
+      state.cfgSujo = true;
+      if(re){ rerender(); return; }
+      var st = raiz.querySelector("#cfg-status"); if(st) st.textContent = "Há mudanças não salvas.";
+      raiz.querySelectorAll("[data-cfgsalvar],[data-cfgdescartar]").forEach(function(b){ b.disabled = false; });
+    }
+    function idx(el, a){ return parseInt(el.getAttribute(a),10); }
+    function mover(lista, i, dir){ var j = i+dir; if(j<0 || j>=lista.length) return; var t = lista[i]; lista[i] = lista[j]; lista[j] = t; }
+    on("[data-cfgdet]", "toggle", function(el){ state.cfgAbertos[el.getAttribute("data-cfgdet")] = el.open; });
+    on("[data-cfggrupo]", "change", function(el){
+      cr.acampamento = el.checked;
+      if(el.checked && !(cr.grupo.opcoes||[]).length && campanhaAtual.id === CAMPANHA_PADRAO) cr.grupo = clonar(CONFIG_PANGEA.criacao.grupo);
+      sujo(true);
+    });
+    on("[data-cfggruporot]", "input", function(el){ cr.grupo.rotulo = el.value; sujo(); });
+    on("[data-cfgop]", "input", function(el){ var o = cr.grupo.opcoes[idx(el,"data-cfgop")]; if(o){ o[el.getAttribute("data-k")] = el.value; sujo(); } });
+    on("[data-cfgopcor]", "input", function(el){
+      var i = idx(el,"data-cfgopcor"), o = cr.grupo.opcoes[i]; if(!o) return;
+      o.cor = el.value; var t = raiz.querySelector('[data-cfgop="'+i+'"][data-k="cor"]'); if(t) t.value = el.value; sujo();
+    });
+    on("[data-cfgopadd]", "click", function(){ cr.grupo.opcoes.push({ id:"g_"+codigoAleatorio(6), nome:"", cor:"#8a7a5c", img:"", frase:"", desc:"" }); sujo(true); });
+    on("[data-cfgopdel]", "click", function(el){ cr.grupo.opcoes.splice(idx(el,"data-cfgopdel"),1); sujo(true); });
+    on("[data-cfgopmover]", "click", function(el){ mover(cr.grupo.opcoes, idx(el,"data-cfgopmover"), idx(el,"data-dir")); sujo(true); });
+    on("[data-cfgsel]", "change", function(el){ cr[el.getAttribute("data-cfgsel")] = el.value; sujo(); });
+    on("[data-cfgchk]", "change", function(el){ cr[el.getAttribute("data-cfgchk")] = el.checked; sujo(); });
+    on("[data-cfgval]", "input", function(el){
+      var n = parseInt(el.value,10), mn = parseInt(el.min,10), mx = parseInt(el.max,10);
+      if(isNaN(n)) return;
+      cr.valores[el.getAttribute("data-cfgval")] = clamp(n, mn, mx); sujo();
+    });
+    on("[data-cfgex]", "input", function(el){ var f = cr.camposExtras[idx(el,"data-cfgex")]; if(f){ f[el.getAttribute("data-k")] = el.value; sujo(); } });
+    on("[data-cfgextipo]", "change", function(el){ var f = cr.camposExtras[idx(el,"data-cfgextipo")]; if(f){ f.tipo = el.value; if(!f.opcoes) f.opcoes = []; sujo(true); } });
+    on("[data-cfgexops]", "input", function(el){ var f = cr.camposExtras[idx(el,"data-cfgexops")]; if(f){ f.opcoes = el.value.split(",").map(function(x){ return x.trim(); }).filter(Boolean); sujo(); } });
+    on("[data-cfgexobr]", "change", function(el){ var f = cr.camposExtras[idx(el,"data-cfgexobr")]; if(f){ f.obrigatorio = el.checked; sujo(); } });
+    on("[data-cfgexadd]", "click", function(){ cr.camposExtras.push({ id:"x_"+codigoAleatorio(6), rotulo:"", tipo:"texto", opcoes:[], ajuda:"", obrigatorio:false }); sujo(true); });
+    on("[data-cfgexdel]", "click", function(el){ cr.camposExtras.splice(idx(el,"data-cfgexdel"),1); sujo(true); });
+    on("[data-cfgauto]", "change", function(el){ d.automacoes[el.getAttribute("data-cfgauto")] = el.checked; sujo(true); });
+    on("[data-cfgloc]", "input", function(el){ var l = d.locais[idx(el,"data-cfgloc")]; if(l){ l.nome = el.value; sujo(); } });
+    on("[data-cfgloctend]", "change", function(el){ var l = d.locais[idx(el,"data-cfgloctend")]; if(l){ l.tendencia = el.value; sujo(); } });
+    on("[data-cfglocadd]", "click", function(){ d.locais.push({ nome:"", tendencia:"geral" }); sujo(true); });
+    on("[data-cfglocdel]", "click", function(el){ d.locais.splice(idx(el,"data-cfglocdel"),1); sujo(true); });
+    on("[data-cfglocmover]", "click", function(el){ mover(d.locais, idx(el,"data-cfglocmover"), idx(el,"data-dir")); sujo(true); });
+    on("[data-cfgdescartar]", "click", function(){ state.cfgDraft = null; state.cfgSujo = false; rerender(); });
+    on("[data-cfgsalvar]", "click", function(el){
+      var limpo = limparConfig(d);
+      if(limpo.erro){ alert(limpo.erro); return; }
+      el.disabled = true;
+      var cid = campanhaAtual.id;
+      FB.escrever([{ tipo:"update", col:"/campanhas", id:cid, data:{ config: limpo.cfg, configAtualizadaEm: agoraIso() } }]).then(function(){
+        if(campanhaAtual && campanhaAtual.id === cid){ campanhaAtual.config = limpo.cfg; }
+        state.cfgDraft = null; state.cfgSujo = false; rerender();
+      }).catch(function(err){
+        console.error("[Pangea] config", err);
+        alert("Não deu pra salvar a configuração: " + (err && (err.code || err.message) || "erro desconhecido"));
+        el.disabled = false;
+      });
+    });
+  }
+  // Confere e arruma o rascunho antes de gravar.
+  function limparConfig(d){
+    var cfg = clonar(d), cr = cfg.criacao;
+    cr.grupo.rotulo = String(cr.grupo.rotulo||"").trim() || "Grupo";
+    cr.grupo.opcoes = (cr.grupo.opcoes||[]).map(function(o){ o.nome = String(o.nome||"").trim(); o.cor = String(o.cor||"").trim(); o.img = String(o.img||"").trim(); return o; });
+    if(cr.acampamento && cr.grupo.opcoes.some(function(o){ return !o.nome; })) return { erro:"Dê um nome a todas as opções do campo \""+cr.grupo.rotulo+"\" (ou remova as vazias)." };
+    if(cr.acampamento && !cr.grupo.opcoes.length) return { erro:"O campo \""+cr.grupo.rotulo+"\" está ligado mas não tem nenhuma opção. Adicione opções ou desligue o campo." };
+    var corOk = /^(#[0-9a-f]{3,8}|var\(--[a-z0-9-]+\)|[a-z]+)$/i;
+    var corRuim = cr.grupo.opcoes.filter(function(o){ return o.cor && !corOk.test(o.cor); })[0];
+    if(corRuim) return { erro:"A cor de \""+corRuim.nome+"\" não é válida. Use o seletor de cor." };
+    var imgRuim = cr.grupo.opcoes.filter(function(o){ return o.img && /^\s*javascript:/i.test(o.img); })[0];
+    if(imgRuim) return { erro:"O endereço da imagem de \""+imgRuim.nome+"\" não é válido." };
+    cr.camposExtras = (cr.camposExtras||[]).map(function(f){ f.rotulo = String(f.rotulo||"").trim(); return f; });
+    if(cr.camposExtras.some(function(f){ return !f.rotulo; })) return { erro:"Dê um nome a todos os campos extras (ou remova os vazios)." };
+    var semOps = cr.camposExtras.filter(function(f){ return f.tipo === "escolha" && !(f.opcoes||[]).length; })[0];
+    if(semOps) return { erro:"O campo \""+semOps.rotulo+"\" é de escolha mas não tem opções." };
+    cfg.locais = (cfg.locais||[]).map(function(l){ return { nome:String(l.nome||"").trim(), tendencia:l.tendencia||"geral" }; });
+    if(cfg.locais.some(function(l){ return !l.nome; })) return { erro:"Dê um nome a todos os locais (ou remova os vazios)." };
+    var vistos = {}, dup = cfg.locais.filter(function(l){ var k = l.nome.toLowerCase(); if(vistos[k]) return true; vistos[k] = 1; return false; })[0];
+    if(dup) return { erro:"O local \""+dup.nome+"\" aparece duas vezes." };
+    return { cfg: cfg };
+  }
+
   function gmJogadoresHtml(){
     var cmp = campanhaAtual; if(!cmp) return "";
     var pedidos = (shared.pedidos||[]).filter(function(p){ return p.status === "pendente"; });
@@ -3809,7 +4106,9 @@
       FB.escrever([{ tipo:"set", col:"convites", id:cod, data:{
         codigo: cod, campanhaId: campanhaAtual.id, campanhaNome: campanhaAtual.nome || "",
         mestreNome: usuario.displayName || usuario.email || "", criadoEm: agoraIso(), ativo: true,
-        pedeAcampamento: !!(cfg.criacao && cfg.criacao.acampamento)
+        pedeAcampamento: grupoLigado() && grupoOpcoes().length > 0,
+        grupoRotulo: grupoRotulo(),
+        grupoOpcoes: grupoOpcoes().map(function(o){ return { id:o.id, nome:o.nome||o.id }; })
       } }]).catch(falhou("gerar o link"));
     });
     raiz.querySelectorAll("[data-gmcopiarconv]").forEach(function(b){
@@ -3967,7 +4266,7 @@
       sistema:"oficial", precisaRefazer:false,
       nomeJogador:"", nomePersonagem:"", acampamento:null,
       origem:{ geracao:"", evento:"", ocupacao:"" },
-      propIndividuais:["",""], propRelacionais:["",""],
+      propIndividuais:["",""], propRelacionais:["",""], extras:{},
       // Livro pág. 80: todo Instinto começa em 1, e há mais 3 pontos livres (máx. 3 por Instinto).
       instintos:{ reacao:1,percepcao:1,sagacidade:1,potencia:1,influencia:1,resolucao:1 },
       // Bônus de Assimilação: Instintos/Conhecimentos/Práticas que uma Assimilação aumenta
@@ -4100,6 +4399,7 @@
     return Math.max(1, n);
   }
   function investirPressaoItem(item, delta){
+    if(!autoLigada("qualidadeCaiComPressao")) return;
     if(item.qualidade==null) item.qualidade = 3;
     if(!item.pressao) item.pressao = 0;
     if(item.qualidade <= 0 && delta > 0) return;
@@ -4121,7 +4421,7 @@
       '<button type="button" class="btn secondary" data-'+attrPrefix+'q="menos"'+dataIdx+' style="padding:1px 7px;font-size:11px" '+(q<=0?"disabled":"")+'>&minus;</button>' +
       '<b style="min-width:120px;text-align:center">'+q+' · '+QUALIDADES[q]+'</b>' +
       '<button type="button" class="btn secondary" data-'+attrPrefix+'q="mais"'+dataIdx+' style="padding:1px 7px;font-size:11px" '+(q>=6?"disabled":"")+'>+</button>' +
-      (q>0 ? '<span class="hint" style="margin:0">'+icoPressaoTxt(item)+'</span>' +
+      (q>0 && autoLigada("qualidadeCaiComPressao") ? '<span class="hint" style="margin:0">'+icoPressaoTxt(item)+'</span>' +
         '<button type="button" class="btn secondary" data-'+attrPrefix+'p="mais"'+dataIdx+' style="padding:1px 7px;font-size:11px" title="O Assimilador investiu uma Pressão neste item">+1 '+dadoHtml("p")+'</button>' : '') +
     '</div>' + (QUALIDADE_BONUS[q] ? '<p class="hint" style="margin:2px 0 0">'+QUALIDADE_BONUS[q]+'</p>' : '');
   }
@@ -4189,7 +4489,7 @@
     var x = c.xp || {};
     return { recebida: x.recebida||0, historico: x.historico||[], liberarInstinto: !!x.liberarInstinto };
   }
-  function xpTotal(c){ return XP_INICIAL + xpDados(c).recebida; }
+  function xpTotal(c){ return xpInicialDe(c) + xpDados(c).recebida; }
   // Instintos: o TRIPLO do nível que vai atingir, por degrau (2->3 custa 9).
   function custoAumentoInstinto(atual, final){
     var t = 0;
@@ -4610,13 +4910,22 @@
   // ---------- ORIGEM EM TÓPICOS ----------
   function origemTopicos(c){
     var o = c.origem || {}, pi = c.propIndividuais || [], pr = c.propRelacionais || [];
-    return [
+    var cr = cfgCriacao(), ex = c.extras || {};
+    var lista = [];
+    (cr.camposExtras||[]).forEach(function(f){ lista.push({ k:"x_"+f.id, titulo:f.rotulo||"Campo", itens:[ex[f.id]] }); });
+    lista.push(
       { k:"geracao", titulo:"Geração", itens:[o.geracao] },
       { k:"evento", titulo:"Evento Marcante", itens:[o.evento] },
-      { k:"ocupacao", titulo:"Ocupação", itens:[o.ocupacao] },
-      { k:"propositos", titulo:"Propósitos individuais", itens:[pi[0], pi[1]], lista:true },
-      { k:"conexoes", titulo:"Conexões", itens:[pr[0], pr[1]], lista:true }
-    ];
+      { k:"ocupacao", titulo:"Ocupação", itens:[o.ocupacao] }
+    );
+    if(cr.propositos === "livro"){
+      lista.push({ k:"propositos", titulo:"Propósitos pessoais", itens:[pi[0], pi[1]], lista:true });
+      lista.push({ k:"conexoes", titulo:"Propósito coletivo", itens:[pr[0]].concat(pr[1] ? [pr[1]] : []), lista:true });
+    } else if(cr.propositos === "conexoes" || pi[0] || pr[0]){
+      lista.push({ k:"propositos", titulo:"Propósitos individuais", itens:[pi[0], pi[1]], lista:true });
+      lista.push({ k:"conexoes", titulo:"Conexões", itens:[pr[0], pr[1]], lista:true });
+    }
+    return lista;
   }
   function fichaAtual(){ return state.view === "sheet" && state.charId ? getChar(state.charId) : null; }
   CAIXAS.orig = function(k){
@@ -5081,6 +5390,7 @@
   tentar("Aparência", function(){ aplicarAparencia(); montarAparencia(); });
 
   function render(){
+    tentar("Configuração", aplicarConfigCampanha);
     tentar("tela", function(){
       if(state.view === "roster") renderRoster();
       else if(state.view === "wizard") renderWizard();
@@ -5303,9 +5613,9 @@
         var maxNivelRoster = saudePontosMax(c);
         var pontosRoster = c.saudePontosAtuais!=null ? c.saudePontosAtuais : maxNivelRoster;
         html += '<div class="char-card" style="--camp-color:'+(camp?camp.cor:'var(--accent)')+'" data-open="'+c.id+'">' +
-          (camp ? '<img class="badge" src="'+camp.img+'" alt="">' : '') +
+          (camp && camp.img ? '<img class="badge" src="'+esc(camp.img)+'" alt="">' : '') +
           '<h3>'+esc(c.nomePersonagem||"Sem nome")+npcBadgeHtml(c)+'</h3>' +
-          '<div class="camp-tag">'+(camp?camp.nome:"acampamento não definido")+(c.nomeJogador?" · "+esc(c.nomeJogador):"")+'</div>' +
+          '<div class="camp-tag">'+(camp?esc(camp.nome):(grupoLigado()?esc(grupoRotulo().toLowerCase())+" não definido":"&nbsp;"))+(c.nomeJogador?" · "+esc(c.nomeJogador):"")+'</div>' +
           '<div class="stat-row" style="align-items:flex-end;flex-wrap:wrap">' + tugMiniBarHtml(c) + '<span>Saúde nível '+c.saudeNivel+'/6 · '+pontosRoster+'/'+maxNivelRoster+' pts</span></div>' +
         '</div>';
       });
@@ -5389,12 +5699,30 @@
   }
 
   // ----- WIZARD -----
+  // Etapa C: os passos e os nomes dependem da configuração da campanha. Os índices
+  // (0 a 6) continuam fixos, porque a edição da ficha reaproveita cada passo.
+  function wizRotulo(step){
+    var cr = cfgCriacao();
+    if(step === 0) return grupoLigado() ? grupoRotulo() : "Nome";
+    if(step === 2) return cr.propositos === "livro" ? "Propósitos" : "Propósitos e Conexões";
+    if(step === 6) return cr.artefato && cr.kitInicial ? "Artefato e Equipamentos" : (cr.artefato ? "Artefato inicial" : "Equipamentos iniciais");
+    return WIZ_STEPS[step];
+  }
+  function wizEtapas(){
+    var cr = cfgCriacao();
+    return [0,1,2,3,4,5,6].filter(function(st){
+      if(st === 2) return cr.propositos !== "desligado";
+      if(st === 6) return !!(cr.artefato || cr.kitInicial);
+      return true;
+    });
+  }
   function stepsBar(current){
     // A cor de todas as bolinhas vem do --camp-color herdado do wrapper (ver renderWizard); sem precisar de lógica extra aqui.
     var s = '<div class="steps">';
-    WIZ_STEPS.forEach(function(label,i){
-      var cls = i < current ? "done" : (i === current ? "current" : "");
-      s += '<span class="'+cls+'" title="'+esc(label)+'">'+(i+1)+'</span>';
+    var etapas = wizEtapas(), pos = etapas.indexOf(current);
+    etapas.forEach(function(st, i){
+      var cls = i < pos ? "done" : (i === pos ? "current" : "");
+      s += '<span class="'+cls+'" data-wizir="'+st+'" title="'+esc(wizRotulo(st))+'">'+(i+1)+'</span>';
     });
     s += '</div>';
     return s;
@@ -5402,41 +5730,47 @@
 
   function renderWizard(){
     var c = state.draft;
-    var step = state.wizStep;
-    var campColor = c.acampamento ? CAMPS[c.acampamento].cor : null;
+    var etapas = wizEtapas();
+    if(etapas.indexOf(state.wizStep) < 0) state.wizStep = etapas.filter(function(st){ return st > state.wizStep; })[0] || etapas[etapas.length-1];
+    var step = state.wizStep, pos = etapas.indexOf(step);
+    var campColor = c.acampamento && CAMPS[c.acampamento] ? CAMPS[c.acampamento].cor : null;
     var html = topbar("wizard");
     html += '<div'+(campColor?' style="--camp-color:'+campColor+'"':'')+'>';
-    html += '<div class="card">' + stepsBar(step) + '<h2'+(campColor?' style="color:'+campColor+'"':'')+'>Passo '+(step+1)+': '+WIZ_STEPS[step]+'</h2>';
+    html += '<div class="card">' + stepsBar(step) + '<h2'+(campColor?' style="color:'+campColor+'"':'')+'>Passo '+(pos+1)+': '+esc(wizRotulo(step))+'</h2>';
     html += wizardStepBody(c, step);
     html += '</div>';
     html += '<div class="btn-row">';
-    html += step>0 ? '<button class="btn secondary" data-wiz="back">Voltar</button>' : '<button class="btn secondary" data-wiz="cancel">Cancelar</button>';
-    html += step < WIZ_STEPS.length-1 ? '<button class="btn accent" data-wiz="next">Avançar</button>' : '<button class="btn accent" data-wiz="finish">Concluir Ficha</button>';
+    html += pos>0 ? '<button class="btn secondary" data-wiz="back">Voltar</button>' : '<button class="btn secondary" data-wiz="cancel">Cancelar</button>';
+    html += pos < etapas.length-1 ? '<button class="btn accent" data-wiz="next">Avançar</button>' : '<button class="btn accent" data-wiz="finish">Concluir Ficha</button>';
     html += '</div>';
     html += '</div>';
     app.innerHTML = html + caixaHtml();
     bindGlobal();
     bindWizardStep(c, step);
 
-    app.querySelectorAll(".steps span").forEach(function(el, i){
-      el.addEventListener("click", function(){ state.wizStep = i; render(); });
+    app.querySelectorAll(".steps span[data-wizir]").forEach(function(el){
+      el.addEventListener("click", function(){ state.wizStep = parseInt(el.getAttribute("data-wizir"),10); render(); });
     });
 
     app.querySelectorAll("[data-wiz]").forEach(function(el){
       el.addEventListener("click", function(){
         var action = el.getAttribute("data-wiz");
         if(action === "cancel"){ goto("roster"); return; }
-        if(action === "back"){ state.wizStep = Math.max(0, step-1); render(); return; }
+        if(action === "back"){ state.wizStep = etapas[Math.max(0, pos-1)]; render(); return; }
         if(action === "next"){
           var v = validateStep(c, step);
           if(!v.ok){ alert(v.msg); return; }
-          state.wizStep = Math.min(WIZ_STEPS.length-1, step+1);
+          state.wizStep = etapas[Math.min(etapas.length-1, pos+1)];
           render();
           return;
         }
         if(action === "finish"){
-          var vf = validateStep(c, step);
-          if(!vf.ok){ alert(vf.msg); return; }
+          // Confere todos os passos da campanha (pode ter pulado algum pelas bolinhas).
+          for(var ie=0; ie<etapas.length; ie++){
+            var vf = validateStep(c, etapas[ie]);
+            if(!vf.ok){ state.wizStep = etapas[ie]; render(); alert(vf.msg); return; }
+          }
+          if(c.xpInicial == null) c.xpInicial = cfgValores().xpInicial;
           if(!podeEditar()) return;
           c.atualizadoEm = new Date().toISOString();
           // NPC é ficha da mesa: fica sem conta vinculada e só o mestre vê.
@@ -5453,9 +5787,12 @@
   }
 
   function validateStep(c, step){
+    var cr = cfgCriacao(), vals = cr.valores;
     if(step === 0){
       if(!c.nomePersonagem || !c.nomePersonagem.trim()) return {ok:false, msg:"Dê um nome ao personagem pra continuar."};
-      if(!c.acampamento) return {ok:false, msg:"Escolha um acampamento pra continuar."};
+      if(grupoLigado() && grupoOpcoes().length && !c.acampamento) return {ok:false, msg:"Escolha um(a) "+grupoRotulo().toLowerCase()+" pra continuar."};
+      var faltaExtra = (cr.camposExtras||[]).filter(function(f){ return f.obrigatorio && !String(((c.extras||{})[f.id])||"").trim(); })[0];
+      if(faltaExtra) return {ok:false, msg:'Preencha "'+faltaExtra.rotulo+'".'};
       return {ok:true};
     }
     if(step === 1){
@@ -5463,23 +5800,28 @@
       return {ok:true};
     }
     if(step === 2){
-      if(!c.propIndividuais[0] || !c.propIndividuais[1]) return {ok:false, msg:"Preencha os 2 Propósitos Individuais."};
-      if(!c.propRelacionais[0] || !c.propRelacionais[1]) return {ok:false, msg:"Preencha as 2 Conexões (os NPCs ligados ao seu personagem ou ao seu acampamento)."};
+      if(cr.propositos === "desligado") return {ok:true};
+      var nomeInd = cr.propositos === "livro" ? "Pessoais" : "Individuais";
+      if(!c.propIndividuais[0] || !c.propIndividuais[1]) return {ok:false, msg:"Preencha os 2 Propósitos "+nomeInd+"."};
+      if(cr.propositos === "livro"){
+        if(!c.propRelacionais[0]) return {ok:false, msg:"Preencha o Propósito Coletivo (a proposta que você leva ao grupo)."};
+      } else if(!c.propRelacionais[0] || !c.propRelacionais[1]) return {ok:false, msg:"Preencha as 2 Conexões (os NPCs ligados ao seu personagem ou ao seu acampamento)."};
       return {ok:true};
     }
     if(step === 3){
+      var alvoInst = INSTINTOS.length + vals.instintoLivres;
       var totalInst = sum(INSTINTOS.map(function(i){ return c.instintos[i[0]]||0; }));
-      var badInst = INSTINTOS.filter(function(i){ var v = c.instintos[i[0]]||0; return v<1 || v>3; });
-      if(badInst.length) return {ok:false, msg:"Cada Instinto começa em 1 e pode ir até 3."};
-      if(totalInst !== 9) return {ok:false, msg:"Os Instintos somam 9 (1 em cada + 3 pontos livres). Agora estão em "+totalInst+"."};
+      var badInst = INSTINTOS.filter(function(i){ var v = c.instintos[i[0]]||0; return v<1 || v>vals.instintoMax; });
+      if(badInst.length) return {ok:false, msg:"Cada Instinto começa em 1 e pode ir até "+vals.instintoMax+"."};
+      if(totalInst !== alvoInst) return {ok:false, msg:"Os Instintos somam "+alvoInst+" (1 em cada + "+vals.instintoLivres+" pontos livres). Agora estão em "+totalInst+"."};
       return {ok:true};
     }
     if(step === 4){
-      var total = conhPratPontosGastos(c);
-      if(total > 7) return {ok:false, msg:"Você gastou "+total+" de 7 pontos. Reduza algum valor."};
-      if(total < 7) return {ok:false, msg:"Ainda faltam "+(7-total)+" dos 7 pontos de Conhecimentos e Práticas."};
-      var over = CONH_PRAT.filter(function(p){ return c.conhPrat[p[0]] > 2; });
-      if(over.length) return {ok:false, msg:"Nessa etapa, o máximo por Conhecimento/Prática é 2."};
+      var total = conhPratPontosGastos(c), cpP = vals.cpPontos;
+      if(total > cpP) return {ok:false, msg:"Você gastou "+total+" de "+cpP+" pontos. Reduza algum valor."};
+      if(total < cpP) return {ok:false, msg:"Ainda faltam "+(cpP-total)+" dos "+cpP+" pontos de Conhecimentos e Práticas."};
+      var over = CONH_PRAT.filter(function(p){ return c.conhPrat[p[0]] > vals.cpMax; });
+      if(over.length) return {ok:false, msg:"Nessa etapa, o máximo por Conhecimento/Prática é "+vals.cpMax+"."};
       return {ok:true};
     }
     if(step === 5){
@@ -5496,8 +5838,9 @@
     }
     if(step === 6){
       var ec = equipCusto(c);
+      if(!cr.artefato && !c.equip.nome) return {ok:true};
       if(c.equip.traits.length && !c.equip.nome) return {ok:false, msg:"Você escolheu características pro Artefato: dê um nome a ele (ou remova as características se não quiser Artefato)."};
-      if(ec > ESCASSEZ_TETO_INICIAL && !temCarac(c,"reliquia")) return {ok:false, msg:"O Artefato inicial pode ter no máximo Escassez "+ESCASSEZ_TETO_INICIAL+" (agora está em "+ec+")."};
+      if(ec > escassezTetoInicial() && !temCarac(c,"reliquia")) return {ok:false, msg:"O Artefato inicial pode ter no máximo Escassez "+escassezTetoInicial()+" (agora está em "+ec+")."};
       return {ok:true};
     }
     return {ok:true};
@@ -5596,33 +5939,92 @@
     });
   }
 
+  // Campos extras da campanha (etapa C): texto livre ou escolha entre opções.
+  // Ficam em c.extras[id] e aparecem na Origem da ficha.
+  function camposExtrasFormHtml(c){
+    var lista = cfgCriacao().camposExtras || [];
+    if(!lista.length) return '';
+    var ex = c.extras || {};
+    return '<div class="grid cols-2" style="margin-top:10px">' + lista.map(function(f){
+      var v = ex[f.id] || "";
+      var rot = esc(f.rotulo||"Campo")+(f.obrigatorio?'':' <span class="hint" style="text-transform:none">(opcional)</span>');
+      if(f.tipo === "escolha"){
+        var ops = (f.opcoes||[]).filter(function(o){ return String(o).trim(); });
+        return '<div class="field"><label>'+rot+'</label><select data-extra="'+esc(f.id)+'"><option value="">escolha…</option>' +
+          ops.map(function(o){ return '<option value="'+esc(o)+'"'+(v===o?' selected':'')+'>'+esc(o)+'</option>'; }).join('') +
+          (v && ops.indexOf(v)<0 ? '<option value="'+esc(v)+'" selected>'+esc(v)+'</option>' : '') + '</select>' +
+          (f.ajuda ? '<p class="hint" style="margin:4px 0 0">'+esc(f.ajuda)+'</p>' : '') + '</div>';
+      }
+      return '<div class="field"><label>'+rot+'</label><input type="text" data-extra="'+esc(f.id)+'" value="'+esc(v)+'"'+(f.ajuda?' placeholder="'+esc(f.ajuda)+'"':'')+'></div>';
+    }).join('') + '</div>';
+  }
+  function bindCamposExtras(c){
+    app.querySelectorAll("[data-extra]").forEach(function(el){
+      el.addEventListener(el.tagName === "SELECT" ? "change" : "input", function(){
+        if(!c.extras) c.extras = {};
+        c.extras[el.getAttribute("data-extra")] = el.value;
+      });
+    });
+  }
+
   function wizardStepBody(c, step){
+    if(step === 0 && state.view === "sheet" && !temAcessoTotal()){
+      return camposExtrasFormHtml(c) || '<p class="hint">Nada para editar aqui.</p>';
+    }
     if(step === 0){
       var html = '<div class="grid cols-2">' +
         '<div class="field"><label>Nome do personagem</label><input type="text" data-basicinfo="nomePersonagem" value="'+esc(c.nomePersonagem)+'" placeholder="obrigatório"></div>' +
         '<div class="field"><label>Nome do jogador(a)</label><input type="text" data-basicinfo="nomeJogador" value="'+esc(c.nomeJogador)+'" placeholder="opcional, dá pra preencher depois"></div>' +
       '</div>' + npcCheckboxHtml(c, 'data-wiznpc');
-      html += '<p>Escolha a qual dos quatro acampamentos de Pangea seu personagem pertence.</p><div class="camp-pick">';
-      Object.keys(CAMPS).forEach(function(key){
-        var camp = CAMPS[key];
-        html += '<button type="button" class="camp-opt'+(c.acampamento===key?' selected':'')+'" style="--camp-color:'+camp.cor+'" data-camp="'+key+'">' +
-          '<img src="'+camp.img+'" alt="">' +
-          '<div><h3>'+camp.nome+'</h3>' +
-          '<p class="hint" style="margin-bottom:6px;font-style:italic">'+camp.pron+'</p>' +
-          '<p style="font-weight:600;color:var(--ink)">'+camp.frase+'</p>' +
-          '<p>'+camp.desc+'</p></div>' +
-        '</button>';
-      });
-      html += '</div>';
+      html += camposExtrasFormHtml(c);
+      var opsGrupo = grupoOpcoes();
+      if(opsGrupo.length){
+        var ehPangea = campanhaAtual ? campanhaAtual.id === CAMPANHA_PADRAO : true;
+        html += '<p>'+(ehPangea && grupoRotulo() === "Acampamento" ? 'Escolha a qual dos quatro acampamentos de Pangea seu personagem pertence.' : 'Escolha o(a) '+esc(grupoRotulo().toLowerCase())+' do seu personagem.')+'</p><div class="camp-pick">';
+        opsGrupo.forEach(function(o){
+          var camp = CAMPS[o.id] || o, key = o.id;
+          html += '<button type="button" class="camp-opt'+(c.acampamento===key?' selected':'')+'" style="--camp-color:'+esc(camp.cor||"var(--accent)")+'" data-camp="'+esc(key)+'">' +
+            (camp.img ? '<img src="'+esc(camp.img)+'" alt="">' : '<span class="camp-sem-img" style="background:'+esc(camp.cor||"var(--accent)")+'"></span>') +
+            '<div><h3>'+esc(camp.nome)+'</h3>' +
+            (camp.pron ? '<p class="hint" style="margin-bottom:6px;font-style:italic">'+esc(camp.pron)+'</p>' : '') +
+            (camp.frase ? '<p style="font-weight:600;color:var(--ink)">'+esc(camp.frase)+'</p>' : '') +
+            (camp.desc ? '<p>'+esc(camp.desc)+'</p>' : '') + '</div>' +
+          '</button>';
+        });
+        html += '</div>';
+      }
       return html;
     }
     if(step === 1){
-      return '<p>Todos os Sobreviventes de Pangea nasceram no Pós-Colapso: esse é o único mundo que você já conheceu. Complete a Origem do personagem em três frases curtas.</p>' +
-        '<div class="field"><label>Geração: como foi crescer conhecendo só esse mundo?</label><textarea data-origem="geracao">'+esc(c.origem.geracao)+'</textarea></div>' +
+      var geracaoHtml;
+      if(cfgCriacao().geracao === "livro"){
+        geracaoHtml = '<div class="field"><label>Geração: em que época seu personagem nasceu, em relação ao Colapso</label><div class="trait-list">' +
+          GERACOES_LIVRO.map(function(g){
+            var marc = c.origem.geracao === g[0];
+            return '<label class="trait'+(marc?" checked":"")+'"><input type="radio" name="wiz-geracao" data-geracaoopt="'+esc(g[0])+'"'+(marc?" checked":"")+'><span class="txt"><b>'+esc(g[0])+'</b><span>'+esc(g[1])+'</span></span></label>';
+          }).join('') +
+          ((c.origem.geracao && !GERACOES_LIVRO.some(function(g){ return g[0]===c.origem.geracao; })) ? '<p class="hint">Hoje na ficha: '+esc(c.origem.geracao)+'</p>' : '') +
+          '</div></div>';
+      } else {
+        geracaoHtml = '<div class="field"><label>Geração: como foi crescer conhecendo só esse mundo?</label><textarea data-origem="geracao">'+esc(c.origem.geracao)+'</textarea></div>';
+      }
+      var introOrigem = (campanhaAtual && campanhaAtual.id !== CAMPANHA_PADRAO)
+        ? '<p>Complete a Origem do personagem: a Geração, um Evento Marcante (passado) e a Ocupação (atual).</p>'
+        : '<p>Todos os Sobreviventes de Pangea nasceram no Pós-Colapso: esse é o único mundo que você já conheceu. Complete a Origem do personagem em três frases curtas.</p>';
+      return introOrigem + geracaoHtml +
         '<div class="field"><label>Evento Marcante: algo que moldou como ele vê o mundo hoje</label><textarea data-origem="evento">'+esc(c.origem.evento)+'</textarea></div>' +
-        '<div class="field"><label>Ocupação: função atual dentro do acampamento</label><textarea data-origem="ocupacao">'+esc(c.origem.ocupacao)+'</textarea></div>';
+        '<div class="field"><label>'+((campanhaAtual && campanhaAtual.id !== CAMPANHA_PADRAO) ? 'Ocupação: o que ele faz hoje e pelo que é conhecido' : 'Ocupação: função atual dentro do acampamento')+'</label><textarea data-origem="ocupacao">'+esc(c.origem.ocupacao)+'</textarea></div>';
     }
     if(step === 2){
+      if(cfgCriacao().propositos === "livro"){
+        return '<p><b>2 Propósitos Pessoais:</b> os anseios íntimos do personagem. Só o Assimilador precisa saber.</p>' +
+          '<div class="grid cols-2">' +
+            '<div class="field"><label>Propósito Pessoal 1</label><input type="text" data-prop="ind0" value="'+esc(c.propIndividuais[0])+'"></div>' +
+            '<div class="field"><label>Propósito Pessoal 2</label><input type="text" data-prop="ind1" value="'+esc(c.propIndividuais[1])+'"></div>' +
+          '</div>' +
+          '<p style="margin-top:14px"><b>Propósito Coletivo:</b> a sua proposta para o grupo. Ele só vale se pelo menos mais um jogador aderir (senão fica Inerte).</p>' +
+          '<div class="field"><label>Propósito Coletivo</label><input type="text" data-prop="rel0" value="'+esc(c.propRelacionais[0])+'"></div>';
+      }
       return '<p><b>2 Propósitos Individuais:</b> o que move seu personagem, o que ele lutaria até a morte pra proteger.</p>' +
         '<div class="grid cols-2">' +
           '<div class="field"><label>Propósito Individual 1</label><input type="text" data-prop="ind0" value="'+esc(c.propIndividuais[0])+'"></div>' +
@@ -5635,36 +6037,38 @@
         '</div>';
     }
     if(step === 3){
+      var vI = cfgValores();
       var got = INSTINTOS.map(function(i){ return c.instintos[i[0]]||0; });
       var totalInst = sum(got);
-      var livres = totalInst - 6;
-      var badRange = INSTINTOS.some(function(i){ var v = c.instintos[i[0]]||0; return v<1 || v>3; });
-      var valid = totalInst===9 && !badRange;
-      var html = '<p>Todo Instinto começa em 1. Distribua mais 3 pontos livres entre eles (máximo 3 em cada).</p>';
+      var livres = totalInst - INSTINTOS.length, nLiv = vI.instintoLivres;
+      var badRange = INSTINTOS.some(function(i){ var v = c.instintos[i[0]]||0; return v<1 || v>vI.instintoMax; });
+      var valid = livres===nLiv && !badRange;
+      var html = '<p>Todo Instinto começa em 1. Distribua mais '+nLiv+' pontos livres entre eles (máximo '+vI.instintoMax+' em cada).</p>';
       html += '<div class="budget '+(valid?"ok":"bad")+'">' +
-        '<span>Pontos livres de Instinto</span><span class="num">'+livres+' / 3'+(livres<3?' · faltam '+(3-livres):(livres>3?' · '+(livres-3)+' acima do limite':' · completo ✓'))+'</span></div>';
+        '<span>Pontos livres de Instinto</span><span class="num">'+livres+' / '+nLiv+(livres<nLiv?' · faltam '+(nLiv-livres):(livres>nLiv?' · '+(livres-nLiv)+' acima do limite':' · completo ✓'))+'</span></div>';
       var vidaPorNivel = saudePontosMax(c);
       html += '<div class="budget ok"><span>Saúde: 1 + Potência + Resolução</span>' +
         '<span class="num">'+vidaPorNivel+' pontos por Nível · 6 Níveis</span></div>';
       html += '<div class="grid cols-3" style="margin-top:14px">';
       INSTINTOS.forEach(function(i){
-        html += stepperField("instinto", i[1], i[2], i[0], c.instintos[i[0]]||1, 1, tetoEdicao(3), false);
+        html += stepperField("instinto", i[1], i[2], i[0], c.instintos[i[0]]||1, 1, tetoEdicao(vI.instintoMax), false);
       });
       html += '</div>';
       return html;
     }
     if(step === 4){
+      var vC = cfgValores();
       var total = conhPratPontosGastos(c);
-      var faltamCp = 7 - total;
-      var html = '<p>Você tem 7 pontos pra distribuir entre os 6 Conhecimentos e as 6 Práticas. Podem ficar em 0, e o máximo é 2 em cada nessa etapa (dá pra subir mais com Experiência no próximo passo).</p>';
-      html += '<div class="budget '+(total>7?"bad":"ok")+'"><span>Pontos usados</span><span class="num">'+total+' / 7'+(faltamCp>0?' · faltam '+faltamCp:(faltamCp<0?' · '+(-faltamCp)+' acima do limite':' · completo ✓'))+'</span></div>';
+      var faltamCp = vC.cpPontos - total;
+      var html = '<p>Você tem '+vC.cpPontos+' pontos pra distribuir entre os 6 Conhecimentos e as 6 Práticas. Podem ficar em 0, e o máximo é '+vC.cpMax+' em cada nessa etapa (dá pra subir mais com Experiência no próximo passo).</p>';
+      html += '<div class="budget '+(total>vC.cpPontos?"bad":"ok")+'"><span>Pontos usados</span><span class="num">'+total+' / '+vC.cpPontos+(faltamCp>0?' · faltam '+faltamCp:(faltamCp<0?' · '+(-faltamCp)+' acima do limite':' · completo ✓'))+'</span></div>';
       html += '<h3 style="margin-bottom:8px">Conhecimentos</h3><div class="grid cols-3">';
       CONHECIMENTOS.forEach(function(p){
-        html += stepperField("cp", p[1], p[2], p[0], c.conhPrat[p[0]]||0, 0, tetoEdicao(2), false);
+        html += stepperField("cp", p[1], p[2], p[0], c.conhPrat[p[0]]||0, 0, tetoEdicao(vC.cpMax), false);
       });
       html += '</div><h3 style="margin:14px 0 8px">Práticas</h3><div class="grid cols-3">';
       PRATICAS.forEach(function(p){
-        html += stepperField("cp", p[1], p[2], p[0], c.conhPrat[p[0]]||0, 0, tetoEdicao(2), false);
+        html += stepperField("cp", p[1], p[2], p[0], c.conhPrat[p[0]]||0, 0, tetoEdicao(vC.cpMax), false);
       });
       html += '</div>';
       return html;
@@ -5675,8 +6079,8 @@
       var faltamCarac = xpCarTot - tot;
       var criando = state.view === "wizard" || edicaoLivre();
       var livreCarac = edicaoLivre();
-      var html = '<p>Você tem <b>'+XP_INICIAL+' Pontos de Experiência</b> pra comprar Características (se cumprir o requisito) e/ou subir Conhecimentos e Práticas. Subir custa o dobro do nível desejado a cada degrau: de 1 pra 2 custa 4, de 2 pra 3 custa 6.</p>';
-      if(xpCarTot !== XP_INICIAL) html += '<p class="hint">Total de Experiência deste personagem: '+XP_INICIAL+' da criação + '+xpDados(c).recebida+' recebidos'+(instintosEvolGasto(c)?' − '+instintosEvolGasto(c)+' já usados em Instintos':'')+'.</p>';
+      var html = '<p>Você tem <b>'+xpInicialDe(c)+' Pontos de Experiência</b> pra comprar Características (se cumprir o requisito) e/ou subir Conhecimentos e Práticas. Subir custa o dobro do nível desejado a cada degrau: de 1 pra 2 custa 4, de 2 pra 3 custa 6.</p>';
+      if(xpCarTot !== xpInicialDe(c)) html += '<p class="hint">Total de Experiência deste personagem: '+xpInicialDe(c)+' da criação + '+xpDados(c).recebida+' recebidos'+(instintosEvolGasto(c)?' − '+instintosEvolGasto(c)+' já usados em Instintos':'')+'.</p>';
       html += '<div class="budget '+(tot>xpCarTot?"bad":"ok")+'"><span>Experiência usada</span><span class="num">'+tot+' / '+xpCarTot+(faltamCarac>0?' · sobram '+faltamCarac:(faltamCarac<0?' · '+(-faltamCarac)+' acima do limite':' · completo ✓'))+'</span></div>';
       html += '<h3 style="margin-bottom:8px">Subir Conhecimento ou Prática (até 3)</h3><div class="grid cols-3">';
       CONH_PRAT.forEach(function(p){
@@ -5718,8 +6122,11 @@
     if(step === 6){
       var ec = equipCusto(c);
       var bloqueado = artefatoBloqueado(c);
-      var teto = temCarac(c,"reliquia") ? null : ESCASSEZ_TETO_INICIAL;
-      var html = '<p>O <b>Artefato inicial</b> é opcional: um item com características especiais. A Escassez dele é a soma das categorias das características escolhidas, e o teto na criação é <b>'+ESCASSEZ_TETO_INICIAL+' ('+ESCASSEZ_NOMES[ESCASSEZ_TETO_INICIAL]+')</b>'+(teto===null?' — mas com Relíquia não há teto':'')+'. Se não quiser um, deixe o nome em branco e avance.</p>';
+      var teto = temCarac(c,"reliquia") ? null : escassezTetoInicial();
+      var cr6 = cfgCriacao(), mostraArt = cr6.artefato || !!(c.equip && c.equip.nome), mostraKit = cr6.kitInicial;
+      var html = '';
+      if(mostraArt){
+      html += '<p>O <b>Artefato inicial</b> é opcional: um item com características especiais. A Escassez dele é a soma das categorias das características escolhidas, e o teto na criação é <b>'+escassezTetoInicial()+' ('+ESCASSEZ_NOMES[escassezTetoInicial()]+')</b>'+(teto===null?' — mas com Relíquia não há teto':'')+'. Se não quiser um, deixe o nome em branco e avance.</p>';
       if(bloqueado) html += '<div class="card tight" style="border-color:var(--accent)"><p class="hint" style="margin:0">As características de um Artefato só podem ser mudadas por quem tem a Característica <b>Gambiarra</b> (ou pelo Assimilador).</p></div>';
       html += '<div class="field"><label>Nome do Artefato</label><input type="text" data-equip="nome" value="'+esc(c.equip.nome)+'"></div>';
       html += '<div class="field"><label>Descrição / história curta</label><textarea data-equip="desc">'+esc(c.equip.desc)+'</textarea></div>';
@@ -5728,8 +6135,9 @@
       var espacosoWiz = espacosoBonus(c.equip.traits);
       var usosW = equipUsosMax(c);
       html += '<p class="hint" style="margin-top:10px">Qualidade inicial: <b>Padrão (3)</b> · Espaço que ocupa: <b>'+equipEspaco(c)+'</b>'+(usosW?' · <b>'+usosW+'</b> uso'+(usosW>1?'s':''):'')+(espacosoWiz>0?' · <b>+'+espacosoWiz+'</b> no teto de inventário (Espaçoso)':'')+'</p>';
-
-      html += '<h3 style="margin:20px 0 8px">Pacote inicial (opcional)</h3>';
+      }
+      if(!mostraKit) return html;
+      html += '<h3 style="margin:'+(mostraArt?'20px':'0')+' 0 8px">Pacote inicial (opcional)</h3>';
       html += '<p class="hint">Escolha um pacote de equipamentos (pág. 90 do livro) pra começar o inventário. Dá pra trocar à vontade, e ajustar ou remover cada item depois, na ficha.</p>';
       html += '<div class="kit-pick">';
       html += '<button type="button" class="kit-opt'+(!c.kitInicial?' selected':'')+'" data-kit="">' +
@@ -5758,9 +6166,13 @@
       var npcWiz = app.querySelector('[data-wiznpc]');
       if(npcWiz) npcWiz.addEventListener("change", function(){ c.ehNpc = npcWiz.checked; });
     }
+    if(step === 0) bindCamposExtras(c, rerender);
     if(step === 1){
       app.querySelectorAll("[data-origem]").forEach(function(el){
         el.addEventListener("input", function(){ c.origem[el.getAttribute("data-origem")] = el.value; });
+      });
+      app.querySelectorAll("[data-geracaoopt]").forEach(function(el){
+        el.addEventListener("change", function(){ if(el.checked){ c.origem.geracao = el.getAttribute("data-geracaoopt"); rerender(); } });
       });
     }
     if(step === 2){
@@ -5777,20 +6189,20 @@
     if(step === 3){
       app.querySelectorAll("[data-instinto]").forEach(function(el){
         el.addEventListener("input", function(){
-          c.instintos[el.getAttribute("data-instinto")] = clamp(parseInt(el.value,10),1,tetoEdicao(3));
+          c.instintos[el.getAttribute("data-instinto")] = clamp(parseInt(el.value,10),1,tetoEdicao(cfgValores().instintoMax));
           rerender();
         });
       });
-      bindStepper("instinto", function(id){ return c.instintos[id]; }, function(id,v){ c.instintos[id] = v; }, 1, tetoEdicao(3), rerender);
+      bindStepper("instinto", function(id){ return c.instintos[id]; }, function(id,v){ c.instintos[id] = v; }, 1, tetoEdicao(cfgValores().instintoMax), rerender);
     }
     if(step === 4){
       app.querySelectorAll("[data-cp]").forEach(function(el){
         el.addEventListener("input", function(){
-          c.conhPrat[el.getAttribute("data-cp")] = clamp(parseInt(el.value,10),0,tetoEdicao(2));
+          c.conhPrat[el.getAttribute("data-cp")] = clamp(parseInt(el.value,10),0,tetoEdicao(cfgValores().cpMax));
           rerender();
         });
       });
-      bindStepper("cp", function(id){ return c.conhPrat[id]; }, function(id,v){ c.conhPrat[id] = v; }, 0, tetoEdicao(2), rerender);
+      bindStepper("cp", function(id){ return c.conhPrat[id]; }, function(id,v){ c.conhPrat[id] = v; }, 0, tetoEdicao(cfgValores().cpMax), rerender);
     }
     if(step === 5){
       app.querySelectorAll("[data-aumento]").forEach(function(el){
@@ -5952,16 +6364,16 @@
 
     html += '<div class="card" style="border-left:6px solid '+(camp?camp.cor:'var(--accent)')+'">';
     html += '<div class="row" style="justify-content:space-between">';
-    html += '<div><h2 style="margin-bottom:2px">'+esc(c.nomePersonagem||"Sem nome")+npcBadgeHtml(c)+'</h2><span class="camp-tag">'+(camp?camp.nome:"")+' · jogador(a): <input type="text" data-jogador value="'+esc(c.nomeJogador)+'" placeholder="seu nome" style="width:140px;display:inline-block"></span>' +
+    html += '<div><h2 style="margin-bottom:2px">'+esc(c.nomePersonagem||"Sem nome")+npcBadgeHtml(c)+'</h2><span class="camp-tag">'+(camp?esc(camp.nome)+' · ':'')+'jogador(a): <input type="text" data-jogador value="'+esc(c.nomeJogador)+'" placeholder="seu nome" style="width:140px;display:inline-block"></span>' +
       (caps.mode === "mesa" && ehMestre() && c.donoEmail ? ' <span class="hint">· vinculada a '+esc(c.donoEmail)+'</span>' : '') +
       '</div>';
-    if(camp) html += '<img src="'+camp.img+'" alt="" style="width:88px;height:88px">';
+    if(camp && camp.img) html += '<img src="'+esc(camp.img)+'" alt="" style="width:88px;height:88px">';
     html += '</div></div>';
 
     if(c.precisaRefazer){
       html += '<div class="card" style="border:2px solid var(--accent)">' +
         '<h2 style="margin-bottom:6px">Atualize a ficha pro sistema oficial</h2>' +
-        '<p class="hint" style="margin-top:0">A ficha agora segue o livro de regras definitivo. A história, os Instintos, as mutações e o Cabo de Guerra foram mantidos, mas é preciso refazer: <b>Conhecimentos e Práticas</b> (7 pontos), <b>Características</b> (7 Pontos de Experiência, com requisitos) e o <b>Artefato inicial</b> (Escassez até '+ESCASSEZ_TETO_INICIAL+').</p>' +
+        '<p class="hint" style="margin-top:0">A ficha agora segue o livro de regras definitivo. A história, os Instintos, as mutações e o Cabo de Guerra foram mantidos, mas é preciso refazer: <b>Conhecimentos e Práticas</b> (7 pontos), <b>Características</b> (7 Pontos de Experiência, com requisitos) e o <b>Artefato inicial</b> (Escassez até '+escassezTetoInicial()+').</p>' +
         ((c.caracAntigas&&c.caracAntigas.length)||(c.equipAntigo&&c.equipAntigo.nome) ? '<p class="hint">Antes: '+
           ((c.caracAntigas||[]).length ? 'Características '+esc(c.caracAntigas.join(", ").replace(/_/g," "))+'. ' : '') +
           (c.equipAntigo&&c.equipAntigo.nome ? 'Equipamento "'+esc(c.equipAntigo.nome)+'"'+(c.equipAntigo.traits.length?' ('+esc(c.equipAntigo.traits.join(", "))+')':'')+'.' : '') + '</p>' : '') +
@@ -5976,7 +6388,7 @@
     // Origem / Propositos
     // Cada tópico é só uma linha (título + começo do texto); o texto inteiro abre
     // numa caixa ao lado (ver abrirOrigemPop), pra o cartão não crescer.
-    html += sectionCard("origem", "Origem, Propósitos &amp; Conexões",
+    html += sectionCard("origem", cfgCriacao().propositos === "livro" ? "Origem &amp; Propósitos" : (cfgCriacao().propositos === "desligado" ? "Origem" : "Origem, Propósitos &amp; Conexões"),
       '<div class="lx-lista">' + origemTopicos(c).map(function(t){
         var prev = t.itens.filter(Boolean).join(" · ");
         return caixaLinha("orig", t.k, esc(t.titulo), prev ? esc(prev) : '<i>em branco</i>');
@@ -6134,7 +6546,7 @@
         '<button class="btn secondary" data-invq="menos" data-idx="'+idx+'" '+(q<=0?"disabled":"")+'>&minus;</button>' +
         '<span title="'+esc(QUALIDADE_BONUS[q]||"")+'"><b>'+q+'</b> · '+QUALIDADES[q]+'</span>' +
         '<button class="btn secondary" data-invq="mais" data-idx="'+idx+'" '+(q>=6?"disabled":"")+'>+</button>' +
-        (q>0?'<button class="btn secondary" data-invp="mais" data-idx="'+idx+'" title="Pressão investida: '+(it.pressao||0)+' de '+qualidadeLimiar(it)+' pra cair um nível">+1 '+dadoHtml("p")+' ('+(it.pressao||0)+'/'+qualidadeLimiar(it)+')</button>':'') +
+        (q>0 && autoLigada("qualidadeCaiComPressao")?'<button class="btn secondary" data-invp="mais" data-idx="'+idx+'" title="Pressão investida: '+(it.pressao||0)+' de '+qualidadeLimiar(it)+' pra cair um nível">+1 '+dadoHtml("p")+' ('+(it.pressao||0)+'/'+qualidadeLimiar(it)+')</button>':'') +
       '</span>' +
       (it.usosMax ? '<span class="grupo"><span class="rot">Usos</span>' +
         '<button class="btn secondary" data-invuso="menos" data-idx="'+idx+'" '+((it.usosAtual||0)<=0?"disabled":"")+'>&minus;</button>' +
@@ -6472,22 +6884,45 @@
   }
 
   // ----- ASSIMILAÇÃO: TESTE, CARTAS DE MUTAÇÃO E PRESSÃO (livro definitivo, Cap. 4) -----
-  // Pressão acumulada de verdade: soma os C do custo de TODAS as mutações já adquiridas
-  // (Evolutivas, Adaptativas, Inoportunas e Singulares - decisão do Marco, 04/10/2026:
-  // Pressão investida em carta que não é Inoportuna também conta pro limite), menos os
-  // já neutralizados por Clareza de Propósito. Atingir 10 é perda de controle definitiva (pág. 124).
-  function pressaoTotal(c){
+  // Regra das Pressões (livro págs. 62, 124 e 144; corrigida na etapa C, 08/10/2026,
+  // revertendo a decisão de 04/10): para a perda da ficha contam só as Pressões das
+  // Assimilações INOPORTUNAS (espadas, cat. H) já adquiridas, menos as anuladas por
+  // Clareza de Propósito, SOMADAS às Pressões tiradas no Teste de Assimilação daquele
+  // momento (o teste mantém todos os dados). Atingir 10 é a perda definitiva.
+  // Pressão em Adaptativas/Singulares não conta mais.
+  function pressaoInoportunas(c){
     var t = 0;
     (c.mutAdquiridas||[]).forEach(function(m){
+      if(m.cat !== "H") return;
       var simb = custoSimbolos(m.custo);
       t += Math.max(0, simb.p - (m.neutralizadas||0));
     });
     return t;
   }
+  function pressaoTotal(c){ return pressaoInoportunas(c); }
+  function marcarPerdido(c, motivo){
+    c.assimPerdido = true;
+    c.assimPerdidoMotivo = motivo;
+  }
   function perdidoParaAssimilacao(c){
     if(c.assimPerdido) return true;
-    if(pressaoTotal(c) >= 10){ c.assimPerdido = true; return true; }
+    var acum = pressaoInoportunas(c);
+    if(acum >= 10){ marcarPerdido(c, { tipo:"acumulada", acumulada:acum, em:new Date().toISOString() }); return true; }
     return false;
+  }
+  function perdaMotivoTexto(c){
+    var m = c.assimPerdidoMotivo || {};
+    if(m.tipo === "teste") return 'No Teste de Assimilação, as '+(m.noTeste||0)+' Pressões tiradas somadas às '+(m.acumulada||0)+' das Assimilações Inoportunas chegaram a 10.';
+    return 'As Pressões das Assimilações Inoportunas chegaram a 10.';
+  }
+  // Fichas marcadas como perdidas pela conta antiga (somava todas as cartas) e sem o
+  // motivo novo: refaz a conta. A conta antiga nunca olhava o teste, então se as
+  // Inoportunas sozinhas não chegam a 10, a perda não valia pela regra do livro.
+  function recalcularPerdaAntiga(c){
+    if(!c || !c.assimPerdido || c.assimPerdidoMotivo) return;
+    var acum = pressaoInoportunas(c);
+    if(acum >= 10) c.assimPerdidoMotivo = { tipo:"acumulada", acumulada:acum, recalculadaEm:new Date().toISOString() };
+    else { c.assimPerdido = false; c.assimPerdidaRevertida = new Date().toISOString(); }
   }
   // Sorteia n cartas distintas (índices 0-12) de uma categoria - simula puxar do baralho
   // físico daquele naipe sem repetir na mesma rolagem (repete só entre rolagens diferentes,
@@ -6517,7 +6952,12 @@
     var cartas = { F: sortearCartas("F", totS), G: sortearCartas("G", totA), H: sortearCartas("H", totP) };
     c.assimTesteAtual = { e:e, dados:dados, sPool:totS, aPool:totA, pPool:totP, cartas:cartas, ts:new Date().toISOString() };
     c.testesAssimPendentes = Math.max(0, (c.testesAssimPendentes||0) - 1);
-    perdidoParaAssimilacao(c); // já soma qualquer P vindo de Inoportunas anteriores; a rolagem em si só conta pra perda quando os pontos forem GASTOS numa mutação Inoportuna (pág. 124 conta C "mantidas no resultado", ou seja, efetivamente adquiridas)
+    // Pág. 124: Inoportunas anteriores + Pressões mantidas nesta rolagem (todas) >= 10 = perda.
+    var acum = pressaoInoportunas(c);
+    c.assimTesteAtual.pressaoAntes = acum;
+    if(!c.assimPerdido && acum + totP >= 10){
+      marcarPerdido(c, { tipo:"teste", acumulada:acum, noTeste:totP, em:c.assimTesteAtual.ts });
+    } else perdidoParaAssimilacao(c);
   }
   // ---------- TESTE DE ASSIMILAÇÃO: ANIMAÇÃO E HISTÓRICO ----------
   // Pedido do Marco (01/10/2026): o Teste de Assimilação entra no Histórico de
@@ -6648,7 +7088,7 @@
   // Clareza de Propósito (pág. 62 do livro definitivo): ao concluir um arco satisfatoriamente,
   // cumprir um Propósito ou algo maravilhoso/inesperado acontecer, o(a) Infectado(a) escolhe
   // entre subir 1 Nível de Determinação (voltando 1 Nível de Assimilação) OU anular 1 C de
-  // qualquer mutação já adquirida (Inoportuna, Adaptativa, Singular...) (uma C por vez; zerar todas as C daquela mutação cessa seus efeitos negativos,
+  // uma Assimilação Inoportuna já adquirida (uma C por vez; zerar todas as C daquela mutação cessa seus efeitos negativos,
   // mesmo que a mutação física em si permaneça).
   function clarezaRecuperarNivel(c){
     var novoCaixa = clamp((c.determinacao.caixaAtual!=null?c.determinacao.caixaAtual:3) + 1, DET_CAIXA_FLOOR, 3);
@@ -6659,7 +7099,7 @@
   }
   function clarezaNeutralizarPressao(c, mutId){
     var m = (c.mutAdquiridas||[]).filter(function(x){return x.id===mutId;})[0];
-    if(!m) return false; // qualquer tipo de carta (decisão do Marco, 04/10/2026)
+    if(!m || m.cat !== "H") return false; // só Inoportunas (pág. 62, item 2)
     var total = custoSimbolos(m.custo).p;
     if((m.neutralizadas||0) >= total) return false;
     m.neutralizadas = (m.neutralizadas||0) + 1;
@@ -6722,13 +7162,13 @@
     if(perdido){
       body += '<div class="card tight" style="border-color:var(--blood);background:rgba(143,29,29,.08)">' +
         '<h2 style="color:var(--blood);margin-bottom:4px">Perdido(a) para a Assimilação</h2>' +
-        '<p class="hint" style="margin:0">A Pressão acumulada nas Assimilações atingiu 10. O(a) jogador(a) perde o controle da personagem pra sempre: ela passa a ser controlada pelo(a) Assimilador(a).</p>' +
+        '<p class="hint" style="margin:0">'+perdaMotivoTexto(c)+' O(a) jogador(a) perde o controle da personagem pra sempre: ela passa a ser controlada pelo(a) Assimilador(a).</p>' +
       '</div>';
     }
 
     var pressaoClass = pressao>=10 ? "warn" : "";
     body += '<div class="row" style="justify-content:space-between;flex-wrap:wrap;gap:10px">' +
-      '<span class="gm-compact-line" style="margin:0">Pressão acumulada (todas as Assimilações): <b'+(pressao>=7?' style="color:var(--danger)"':'')+'>'+pressao+'</b> / 10'+(pressao>=7&&pressao<10?' <span class="badge-pill warn">atenção</span>':'')+'</span>' +
+      '<span class="gm-compact-line" style="margin:0">Pressão acumulada (Assimilações Inoportunas): <b'+(pressao>=7?' style="color:var(--danger)"':'')+'>'+pressao+'</b> / 10'+(pressao>=7&&pressao<10?' <span class="badge-pill warn">atenção</span>':'')+'</span>' +
     '</div>';
 
     if(pendentes>0 && !perdido){
@@ -6745,7 +7185,7 @@
     }
 
     if(clarezaAberta && !perdido){
-      var inoportunasComC = (c.mutAdquiridas||[]).filter(function(m){ return MUT_DECKS[m.cat] && (m.neutralizadas||0) < custoSimbolos(m.custo).p; });
+      var inoportunasComC = (c.mutAdquiridas||[]).filter(function(m){ return m.cat === "H" && MUT_DECKS[m.cat] && (m.neutralizadas||0) < custoSimbolos(m.custo).p; });
       var caixaClareza = c.determinacao && c.determinacao.caixaAtual!=null ? c.determinacao.caixaAtual : 3;
       body += '<div class="card tight" style="margin-top:10px;background:var(--surface-2)">' +
         '<p class="hint" style="margin-top:0">Ao concluir um arco satisfatoriamente, cumprir um Propósito ou algo maravilhoso/inesperado acontecer: escolha uma das opções abaixo.</p>' +
@@ -6753,7 +7193,7 @@
           '<button type="button" class="btn secondary" data-action="assim-clareza-nivel"'+(caixaClareza>=3?' disabled title="Nenhum Nível de Assimilação pra voltar"':'')+'>Subir 1 Nível de Determinação (volta 1 Nível de Assimilação)</button>' +
         '</div>';
       if(inoportunasComC.length){
-        body += '<p class="hint" style="margin:10px 0 6px">Ou retire 1 Pressão ('+dadoHtml("p")+') acumulada de qualquer mutação já adquirida:</p><div class="row" style="gap:8px;flex-wrap:wrap">';
+        body += '<p class="hint" style="margin:10px 0 6px">Ou retire 1 Pressão ('+dadoHtml("p")+') de uma Assimilação Inoportuna já adquirida:</p><div class="row" style="gap:8px;flex-wrap:wrap">';
         inoportunasComC.forEach(function(m){
           var card = MUT_DECKS[m.cat][m.cardIdx]; var tier = card[2][m.tierIdx];
           var total = custoSimbolos(m.custo).p;
@@ -6761,7 +7201,7 @@
         });
         body += '</div>';
       } else {
-        body += '<p class="hint" style="margin:10px 0 0">Nenhuma mutação com Pressão pra retirar no momento.</p>';
+        body += '<p class="hint" style="margin:10px 0 0">Nenhuma Assimilação Inoportuna com Pressão pra retirar no momento.</p>';
       }
       body += '</div>';
     }
@@ -6770,6 +7210,7 @@
       body += '<div class="card tight" style="margin-top:10px;border-color:var(--assim)">' +
         '<h3 style="margin-bottom:8px">Teste de Assimilação em andamento</h3>' +
         '<p class="hint">Dados rolados: '+pool.dados.map(function(d){ return 'd'+d.sides+':'+d.face; }).join(', ')+'</p>' +
+        (pool.pressaoAntes!=null ? '<p class="hint">Pressões para a perda: '+pool.pressaoAntes+' das Inoportunas + '+(pool.dados||[]).reduce(function(t,d){ return t+(d.p||0); },0)+' deste teste = <b>'+(pool.pressaoAntes+(pool.dados||[]).reduce(function(t,d){ return t+(d.p||0); },0))+'</b> / 10</p>' : '') +
         '<div class="budget ok"><span>Pool ainda disponível</span><span class="num">'+custoChipHtml("A".repeat(pool.sPool)+"B".repeat(pool.aPool)+"C".repeat(pool.pPool))+'</span></div>';
       MUT_CATS.filter(function(cat){ return cat!=="I"; }).forEach(function(cat){
         var idxs = pool.cartas[cat] || [];
@@ -6810,7 +7251,7 @@
         lista.forEach(function(m){
           var card = MUT_DECKS[cat][m.cardIdx], tier = card[2][m.tierIdx];
           var totalP = custoSimbolos(m.custo).p, neutP = m.neutralizadas||0;
-          var extra = custoChipHtml(m.custo) + (totalP && neutP>0 ? '<span class="lx-sel">'+(totalP-neutP)+'/'+totalP+' '+dadoHtml("p")+'</span>' : '');
+          var extra = custoChipHtml(m.custo) + (totalP && neutP>0 && m.cat==="H" ? '<span class="lx-sel">'+(totalP-neutP)+'/'+totalP+' '+dadoHtml("p")+'</span>' : '');
           body += caixaLinha("mut", m.id, esc(card[0]+" — "+tier[1]), formatEfeito(tier[2], false), extra);
         });
         body += '</div>';
@@ -6826,7 +7267,8 @@
     var totalP = custoSimbolos(m.custo).p, neutP = m.neutralizadas||0;
     var corpo = '<p class="hint" style="margin:0 0 6px">'+esc(MUT_SUITS[m.cat])+' ('+MUT_SIGLA[m.cat]+') · custo '+custoChipHtml(m.custo)+'</p>' +
       '<p>'+formatEfeito(tier[2], true)+'</p>' +
-      (totalP ? '<p class="hint">'+(totalP-neutP)+' de '+totalP+' '+dadoHtml("p")+' ainda contam'+(m.cat==="H" && neutP>=totalP?' · efeito cessado':'')+'. A Clareza de Propósito retira Pressão.</p>' : '') +
+      (totalP && m.cat==="H" ? '<p class="hint">'+(totalP-neutP)+' de '+totalP+' '+dadoHtml("p")+' ainda contam para a perda'+(neutP>=totalP?' · efeito cessado':'')+'. A Clareza de Propósito retira Pressão.</p>' : '') +
+      (totalP && m.cat!=="H" ? '<p class="hint">Pressão de carta que não é Inoportuna não conta para a perda da ficha (livro, pág. 124).</p>' : '') +
       '<div class="cx-acoes"><button type="button" class="btn secondary" data-action="assim-remover" data-mutid="'+m.id+'">Remover mutação</button></div>';
     return { titulo:esc(card[0]+" — "+tier[1]), corpo:corpo, lado:"direita", largura:420 };
   };
@@ -6948,7 +7390,7 @@
   function evoluirHtml(c){
     var x = xpDados(c), saldo = xpSaldo(c), gm = temAcessoTotal();
     var html = '<div class="budget '+(saldo<0?"bad":"ok")+'"><span>Experiência disponível</span><span class="num">'+saldo+'</span></div>';
-    html += '<p class="hint">'+XP_INICIAL+' da criação + <b>'+x.recebida+'</b> recebidos do Assimilador − '+xpGasto(c)+' gastos. Só o Assimilador dá Experiência (no fim da sessão, pelo Painel).</p>';
+    html += '<p class="hint">'+xpInicialDe(c)+' da criação + <b>'+x.recebida+'</b> recebidos do Assimilador − '+xpGasto(c)+' gastos. Só o Assimilador dá Experiência (no fim da sessão, pelo Painel).</p>';
     if(gm){
       html += '<div class="row" style="gap:6px;flex-wrap:wrap;align-items:center;margin:4px 0 8px"><span class="hint" style="margin:0">Ajustar:</span>' +
         '<input type="number" min="1" max="50" value="1" data-evolxpqtd style="width:70px">' +
@@ -7423,7 +7865,9 @@
       var totP = sum(kept.map(function(d){return d.p;}));
       var keepN = t.keepN || (t.agir?2:1);
       body += '<div style="margin-top:14px">' +
-        '<p class="hint">Mantém por padrão '+keepN+' dado'+(keepN===1?"":"s")+' (conforme declarado antes da rolagem)'+(t.registered?'':'; clique num dado pra manter ou soltar outro (ex.: tensionando uma Origem), depois confirme pra registrar no histórico')+'.</p>' +
+        (autoLigada("dadosMantidosAuto") || t.registered
+          ? '<p class="hint">Mantém por padrão '+keepN+' dado'+(keepN===1?"":"s")+' (conforme declarado antes da rolagem)'+(t.registered?'':'; clique num dado pra manter ou soltar outro (ex.: tensionando uma Origem), depois confirme pra registrar no histórico')+'.</p>'
+          : '<p class="hint">Escolha '+keepN+' dado'+(keepN===1?"":"s")+' pra manter (conforme declarado antes da rolagem; uma Origem tensionada mantém mais um): clique nos dados e depois confirme. <b>Mantidos agora: '+kept.length+'</b>.</p>') +
         '<div class="row" style="flex-wrap:wrap;gap:8px">';
       t.results.forEach(function(d, idx){
         body += '<button type="button" class="btn secondary" data-testtoggle="'+idx+'" '+(t.registered?'disabled':'')+' style="font-family:\'IBM Plex Mono\',monospace'+(d.kept?'':';opacity:.4;text-decoration:line-through')+(t.registered?';cursor:default':'')+'">d'+d.sides+':'+d.face+' ('+diceResultHtml(d)+')</button>';
@@ -7433,7 +7877,7 @@
       if(t.registered){
         body += '<p class="hint" style="margin-top:8px">✓ Este resultado já foi registrado no Histórico de Testes.</p>';
       } else {
-        body += '<div class="row" style="margin-top:10px"><button class="btn accent" data-testaction="confirm">Confirmar escolha e registrar no histórico</button></div>';
+        body += '<div class="row" style="margin-top:10px"><button class="btn accent" data-testaction="confirm"'+(kept.length?'':' disabled title="Marque pelo menos um dado"')+'>Confirmar escolha e registrar no histórico</button></div>';
       }
       body += '</div>';
     }
@@ -7445,7 +7889,7 @@
     var corpo = '<p>Escolha o <b>Instinto</b> e a <b>Prática ou Conhecimento</b> do teste: a pilha de dados é montada sozinha com os valores da ficha (1d6 por ponto de Instinto, 1d10 por ponto de Prática/Conhecimento).</p>' +
       '<p><b>Agir por Instinto (Rolagem Assimilada):</b> escolha dois Instintos no lugar de Instinto + Prática/Conhecimento (pode repetir o mesmo nos dois). Os dados desses Instintos viram d12 e você mantém 1 dado a mais. Gasta 1 ponto de Assimilação, ou 2 de Determinação se não houver Assimilação disponível.</p>' +
       '<p><b>Empenho (dado extra):</b> pra manter um dado a mais nessa rolagem, declare antes de rolar. Gasta 1 ponto de Determinação.</p>' +
-      '<p>Depois que os dados caírem, clique num dado pra manter ou soltar outro (ex.: tensionando uma Origem) e confirme pra registrar no histórico.</p>' +
+      '<p>'+(autoLigada("dadosMantidosAuto") ? 'Depois que os dados caírem, os melhores já vêm marcados; clique num dado pra manter ou soltar outro (ex.: tensionando uma Origem) e confirme pra registrar no histórico.' : 'Depois que os dados caírem, clique nos dados que quer manter (quantos foram declarados antes de rolar) e confirme pra registrar no histórico.')+'</p>' +
       '<p class="hint">Os pontos de Agir por Instinto e do dado extra são gastos assim que a caixa é marcada (só voltam se for desmarcada antes de rolar), por isso uma opção pode ficar bloqueada se não sobrar recurso pra ela. Esse gasto só vai pra mesa quando o teste é confirmado no botão "Confirmar escolha e registrar no histórico".</p>';
     return { titulo:"Testar: como funciona", corpo:corpo, lado:"direita", largura:440 };
   };
@@ -7564,7 +8008,8 @@
         for(i=0;i<dInst;i++) results.push(rollDie(instintoDado));
         for(i=0;i<d10;i++) results.push(rollDie(10));
         results.forEach(function(d){ d.kept = false; });
-        pickBestIndices(results, Math.min(keepN, results.length)).forEach(function(idx){ results[idx].kept = true; });
+        // Automação da campanha: marca sozinho os melhores dados; desligada, o jogador escolhe.
+        if(autoLigada("dadosMantidosAuto")) pickBestIndices(results, Math.min(keepN, results.length)).forEach(function(idx){ results[idx].kept = true; });
         t.results = results;
         t.rolling = false;
         renderSheet();
@@ -7595,6 +8040,7 @@
     var confirmBtn = app.querySelector('[data-testaction="confirm"]');
     if(confirmBtn) confirmBtn.addEventListener("click", function(){
       var keptNow = t.results.filter(function(d){return d.kept;});
+      if(!keptNow.length){ alert("Marque pelo menos um dado pra manter."); return; }
       var totS = sum(keptNow.map(function(d){return d.s;}));
       var totA = sum(keptNow.map(function(d){return d.a;}));
       var totP = sum(keptNow.map(function(d){return d.p;}));
@@ -7631,11 +8077,16 @@
   }
   // Na edição comum (fora do "Refazer"), só o Assimilador mexe no passo de Experiência.
   function editPassos(c){
-    if(temAcessoTotal()) return [0,1,2,3,4,5,6];
+    var vis = wizEtapas();
+    // Passo 6 continua aparecendo pra quem já tem Artefato, mesmo com a etapa desligada.
+    if(vis.indexOf(6) < 0 && c && c.equip && c.equip.nome) vis.push(6);
+    var temExtras = (cfgCriacao().camposExtras||[]).length > 0;
+    if(temAcessoTotal()) return vis;
     // Textos da ficha (Origem, Propósitos e Conexões) sempre editáveis pelo jogador.
     // Características também editáveis pelo jogador (pedido do Marco, 30/09/2026);
     // o limite de Experiência e os requisitos continuam valendo ao salvar.
-    return [1,2,3,4,5,6];
+    // Etapa C: os campos extras da campanha (passo 0) também.
+    return vis.filter(function(st){ return st !== 0 || temExtras; });
   }
   // ----- SHEET EDIT MODE (reaproveita a UI do assistente pra Instintos/Conh.Prat/Caracteristicas/Equipamento) -----
   function renderSheetEdit(){
@@ -7654,9 +8105,9 @@
     '</div>';
 
     passosEdit.forEach(function(step){
-      html += '<div class="card"><h2>'+WIZ_STEPS[step]+'</h2>' + wizardStepBody(draft, step) + '</div>';
+      html += '<div class="card"><h2>'+esc(step === 0 && !livre ? "Campos da campanha" : wizRotulo(step))+'</h2>' + wizardStepBody(draft, step) + '</div>';
     });
-    if(passosEdit.indexOf(5) === -1) html += '<div class="card"><h2>'+WIZ_STEPS[5]+'</h2><p class="hint" style="margin:0">Depois da criação, a Experiência é gasta na seção <b>Evoluir</b> da ficha: Conhecimentos e Práticas direto, Características com autorização do Assimilador.</p></div>';
+    if(passosEdit.indexOf(5) === -1) html += '<div class="card"><h2>'+esc(wizRotulo(5))+'</h2><p class="hint" style="margin:0">Depois da criação, a Experiência é gasta na seção <b>Evoluir</b> da ficha: Conhecimentos e Práticas direto, Características com autorização do Assimilador.</p></div>';
 
     html += '<div class="btn-row"><button class="btn secondary" data-editaction="cancel">Cancelar edição</button><button class="btn accent" data-editaction="save">Salvar alterações</button></div>';
     html += '</div>';
@@ -7753,9 +8204,9 @@
     var cardStyle = (camp?'--camp-color:'+camp.cor+';':'')+'border-left:6px solid '+(camp?camp.cor:'var(--accent)')+';cursor:'+(soLeitura?'default':'pointer');
     var maxNivel = c.saudeMax != null ? c.saudeMax : (c.instintos ? saudePontosMax(c) : 1);
     return '<div class="char-card" style="'+cardStyle+'"'+(soLeitura?'':' data-mesaopen="'+c.id+'"')+'>' +
-      (camp ? '<img class="badge" src="'+camp.img+'" alt="">' : '') +
+      (camp && camp.img ? '<img class="badge" src="'+esc(camp.img)+'" alt="">' : '') +
       '<h3>'+esc(c.nomePersonagem||"Sem nome")+npcBadgeHtml(c)+'</h3>' +
-      '<div class="camp-tag">'+(camp?camp.nome:"acampamento não definido")+(c.nomeJogador?" · "+esc(c.nomeJogador):"")+'</div>' +
+      '<div class="camp-tag">'+(camp?esc(camp.nome):(grupoLigado()?esc(grupoRotulo().toLowerCase())+" não definido":"&nbsp;"))+(c.nomeJogador?" · "+esc(c.nomeJogador):"")+'</div>' +
       '<div class="row" style="margin-top:10px;gap:16px;flex-wrap:wrap">' +
         '<div><span class="hint" style="display:block;margin-bottom:3px">Saúde (nível '+(c.saudeNivel!=null?c.saudeNivel:"?")+'/6)</span>'+diamondsMini(c.saudePontosAtuais||0, maxNivel, "c-saude")+'</div>' +
         tugMiniBarHtml(c) +
@@ -7777,15 +8228,15 @@
     var extras = '<span class="lx-sel'+(nS<=2?' alerta':'')+'" title="Saúde: nível e pontos">♥ '+nS+'/6 · '+(c.saudePontosAtuais||0)+'/'+maxNivel+'</span>' +
       '<span class="lx-sel" title="Nível de Determinação">Det. '+nivelDet+'/10</span>';
     return '<div class="mesa-lx" style="'+(camp?'--camp-color:'+camp.cor:'')+'">' +
-      caixaLinha("mesa", c.id, (camp ? '<img class="mesa-lx-img" src="'+camp.img+'" alt="">' : '')+esc(c.nomePersonagem||"Sem nome")+npcBadgeHtml(c),
-        esc((camp?camp.nome:"acampamento não definido")+(c.nomeJogador?" · "+c.nomeJogador:"")), extras) + '</div>';
+      caixaLinha("mesa", c.id, (camp && camp.img ? '<img class="mesa-lx-img" src="'+esc(camp.img)+'" alt="">' : '')+esc(c.nomePersonagem||"Sem nome")+npcBadgeHtml(c),
+        esc((camp?camp.nome:(grupoLigado()?grupoRotulo().toLowerCase()+" não definido":""))+(c.nomeJogador?(camp||grupoLigado()?" · ":"")+c.nomeJogador:"")), extras) + '</div>';
   }
   CAIXAS.mesa = function(id){
     if(state.view !== "mesa") return null;
     var d = mesaFichaDados(id); if(!d) return null;
     var c = d.c, camp = c.acampamento ? CAMPS[c.acampamento] : null;
     var maxNivel = c.saudeMax != null ? c.saudeMax : (c.instintos ? saudePontosMax(c) : 1);
-    var corpo = '<p class="hint" style="margin:0 0 8px">'+(camp?camp.nome:"acampamento não definido")+(c.nomeJogador?" · jogador(a): "+esc(c.nomeJogador):"")+'</p>' +
+    var corpo = '<p class="hint" style="margin:0 0 8px">'+(camp?esc(camp.nome):(grupoLigado()?esc(grupoRotulo().toLowerCase())+" não definido":""))+(c.nomeJogador?(camp||grupoLigado()?" · ":"")+"jogador(a): "+esc(c.nomeJogador):"")+'</p>' +
       '<div style="margin-bottom:10px"><span class="hint" style="display:block;margin-bottom:3px">Saúde (nível '+(c.saudeNivel!=null?c.saudeNivel:"?")+'/6'+(c.saudeNivel!=null&&NIVEIS_SAUDE[c.saudeNivel]?' · '+NIVEIS_SAUDE[c.saudeNivel]:'')+')</span>'+diamondsMini(c.saudePontosAtuais||0, maxNivel, "c-saude")+'</div>' +
       tugMiniBarHtml(c) +
       (d.soLeitura ? '<p class="hint" style="margin:10px 0 0">Ficha de outro jogador: só o resumo.</p>'
@@ -8339,7 +8790,7 @@
             '<button type="button" class="best-mini" data-bdesrepresar="'+enc.id+'" data-bg="'+gi+'" data-ba="'+ai+'" title="Devolver os pontos represados">↩</button></span>';
         }
         html += '<div class="best-ativ best-ativ-'+tipo+'"><div class="best-ativ-cab"><b>'+esc(a.n)+'</b>'+bestCustoHtml(c, a.x) + repTxt +
-          (enc && temCusto ? '<span class="best-ativ-acoes">' +
+          (enc && temCusto && autoLigada("bestiarioDesgasteAuto") ? '<span class="best-ativ-acoes">' +
             (podeRepresar ? '<button type="button" class="btn secondary doc-btn" data-brepresar="'+enc.id+'" data-bg="'+gi+'" data-ba="'+ai+'" title="Investe o que der agora; o resto fica pra próxima rodada">Represar</button>' : '') +
             '<button type="button" class="btn '+(pode?'accent':'secondary')+' doc-btn best-pagar" data-bpagar="'+enc.id+'" data-bg="'+gi+'" data-ba="'+ai+'"'+(pode?'':' disabled')+' title="Desconta o custo (usa primeiro o que já está represado)">Pagar</button></span>' : '') +
           '</div><p>'+bestTextoHtml(a.t, chave+"-"+gi+"-"+ai)+'</p></div>';
@@ -8363,7 +8814,7 @@
       html += '<div class="row" style="gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:6px"><span>Sucessos rolados pela criatura: <b>'+atual+'</b></span>' +
         '<button type="button" class="best-mini" data-bdesg="'+enc.id+'" data-bv="-1"'+(atual<=0?' disabled':'')+'>−</button>' +
         '<button type="button" class="best-mini" data-bdesg="'+enc.id+'" data-bv="1">+</button>' +
-        '<span class="hint" style="margin:0">(soma sozinho a cada Rolar Ativação)</span></div>';
+        '<span class="hint" style="margin:0">'+(autoLigada("bestiarioDesgasteAuto")?'(soma sozinho a cada Rolar Ativação)':'(só à mão nesta campanha)')+'</span></div>';
     }
     lista.forEach(function(d, i){
       var feito = enc && atual >= d.m;
@@ -8418,7 +8869,9 @@
       }).join('') +
       '<button type="button" class="btn accent doc-btn" data-brolar="'+enc.id+'">🎲 Rolar Ativação</button>' +
       '<button type="button" class="btn secondary doc-btn" data-bzerar="'+enc.id+'"'+((p.s||p.a||p.p)?'':' disabled')+' title="Pontos livres que não pagaram nem foram represados em nenhuma Ativação se perdem">Fim da rodada: descartar sobras</button></div>';
-    html += '<p class="hint" style="margin:4px 0 0">A rolagem mantém todos os dados e soma aos pontos (Sucesso, Adaptação e Pressão). Todo ponto deve ser investido na rodada: <b>Pagar</b> uma Ativação ou <b>Represar</b> numa incompleta (fica guardado nela pra próxima rodada). O que não pagar nada se perde no fim da rodada.</p>';
+    html += autoLigada("bestiarioDesgasteAuto")
+      ? '<p class="hint" style="margin:4px 0 0">A rolagem mantém todos os dados e soma aos pontos (Sucesso, Adaptação e Pressão). Todo ponto deve ser investido na rodada: <b>Pagar</b> uma Ativação ou <b>Represar</b> numa incompleta (fica guardado nela pra próxima rodada). O que não pagar nada se perde no fim da rodada.</p>'
+      : '<p class="hint" style="margin:4px 0 0">A rolagem mantém todos os dados e soma aos pontos (Sucesso, Adaptação e Pressão). Nesta campanha você desconta à mão (− / +) o que a criatura investir em cada Ativação. O que não pagar nada se perde no fim da rodada.</p>';
     html += bestRolagemHtml(enc.rolagem, 'data-bmostrar="'+enc.id+'"', 'data-bfecharrol="'+enc.id+'"');
     if((cri.cond||[]).length) html += '<div class="lx-lista" style="margin:8px 0">'+caixaLinha("bcond", enc.id, "Condicionantes", esc(cri.cond.map(function(x){ return x.n; }).join(" · ")), '<span class="lx-sel">'+cri.cond.length+'</span>')+'</div>';
     html += '<div class="best-ativs">'+bestAtivacoesHtml(cri, "e"+enc.id, enc)+'</div>';
@@ -8591,7 +9044,7 @@
       var dados = bestRolarPilha(cri.pilha), t = bestTotais(dados);
       enc.pontos = enc.pontos || {s:0,a:0,p:0};
       enc.pontos.s = (enc.pontos.s||0)+t.s; enc.pontos.a = (enc.pontos.a||0)+t.a; enc.pontos.p = (enc.pontos.p||0)+t.p;
-      if((cri.desgaste||[]).length) enc.desgaste = (enc.desgaste||0) + t.s; // todo Sucesso rolado marca a trilha de Desgaste
+      if((cri.desgaste||[]).length && autoLigada("bestiarioDesgasteAuto")) enc.desgaste = (enc.desgaste||0) + t.s; // todo Sucesso rolado marca a trilha de Desgaste
       enc.rolagem = { dados:dados.map(function(d){ return {sides:d.sides, face:d.face, s:d.s, a:d.a, p:d.p}; }), mostrado:false, ts:new Date().toISOString() };
       gravarEncontro(enc); rerender();
     }); });
@@ -8852,18 +9305,21 @@
     acampamento:[[2,10],[3,65],[4,20],[5,5]],
     geral:      [[1,10],[2,35],[3,45],[4,10]]
   };
+  // Etapa C: a tendência de cada local vem da configuração da campanha (Painel →
+  // Configuração da campanha → Locais). Local fora da lista: tendência geral.
   function itemQualTendencia(local){
-    if(/Rêverie|Traúm|Yūgen|Mriya|Centro/i.test(local||"")) return "acampamento";
-    if(/Ruínas|shopping|Caverna|Território|Estradas/i.test(local||"")) return "abandonado";
-    return "geral";
+    var l = locaisConfig().filter(function(x){ return x.nome === local; })[0];
+    return l && ITEM_QUAL_LOCAL[l.tendencia] ? l.tendencia : "geral";
   }
   function itemQualSortear(local){
+    if(!autoLigada("qualidadePorLocal")) return 3;
     var tab = ITEM_QUAL_LOCAL[itemQualTendencia(local)], r = Math.random()*100, acc = 0;
     for(var i=0;i<tab.length;i++){ acc += tab[i][1]; if(r < acc) return tab[i][0]; }
     return 3;
   }
   function itemQualTexto(it){
     if(it.qualidade!=null) return it.qualidade+' · '+QUALIDADES[it.qualidade];
+    if(!autoLigada("qualidadePorLocal")) return '3 · '+QUALIDADES[3]+' (sem sorteio nesta campanha)';
     var t = itemQualTendencia(it.local);
     return 'sorteada ('+(t==="acampamento"?"acampamento: em geral Padrão ou melhor":t==="abandonado"?"abandonado: em geral gasto":"em geral Comprometido ou Padrão")+')';
   }
@@ -8887,14 +9343,14 @@
       var escAuto = clamp(itemCusto(ed.traits||[]),0,6);
       html += '<div class="grid cols-2"><div class="field"><label>Nome</label><input type="text" data-ipf="nome" value="'+esc(ed.nome)+'"></div>' +
         '<div class="field"><label>Local (onde pode ser achado)</label><input type="text" list="item-locais" data-ipf="local" value="'+esc(ed.local||"")+'" placeholder="ex.: Traúm">' +
-        '<datalist id="item-locais">'+DOC_LOCAIS_ORDEM.filter(function(l){ return l.indexOf("Já lidos")!==0; }).map(function(l){ return '<option value="'+esc(l)+'">'; }).join('')+'</datalist></div></div>' +
+        '<datalist id="item-locais">'+locaisOrdem().filter(function(l){ return l.indexOf("Já lidos")!==0; }).map(function(l){ return '<option value="'+esc(l)+'">'; }).join('')+'</datalist></div></div>' +
         '<div class="field"><label>Descrição (o jogador lê no inventário)</label><textarea data-ipf="desc" style="min-height:60px">'+esc(ed.desc)+'</textarea></div>' +
         '<div class="field"><label>Efeito em jogo (o jogador lê no inventário)</label><textarea data-ipf="efeito" style="min-height:50px" placeholder="ex.: 6 usos; cada uso cura 2 Pontos de Saúde">'+esc(ed.efeito||"")+'</textarea></div>' +
         '<div class="field"><label>Nota do Assimilador (só você vê)</label><textarea data-ipf="nota" style="min-height:50px">'+esc(ed.nota)+'</textarea></div>' +
         '<div class="grid cols-2"><div class="field"><label>Escassez</label><select data-ipf="escassez"><option value=""'+((ed.escassez===null||ed.escassez===undefined||ed.escassez==="")?' selected':'')+'>Automática pelas características ('+escAuto+' · '+ESCASSEZ_NOMES[escAuto]+')</option>' +
           [0,1,2,3,4,5,6].map(function(n){ return '<option value="'+n+'"'+(String(ed.escassez)===String(n)?' selected':'')+'>'+n+' · '+ESCASSEZ_NOMES[n]+'</option>'; }).join('')+'</select></div>' +
         '<div class="field"><label>Quantidade</label><input type="number" min="1" max="99" data-ipf="qtd" value="'+esc(String(ed.qtd||1))+'"></div></div>' +
-        '<div class="field"><label>Qualidade em que é achado</label><select data-ipf="qualidade"><option value=""'+((ed.qualidade===null||ed.qualidade===undefined||ed.qualidade==="")?' selected':'')+'>Sortear pelo local na hora da entrega</option>' +
+        '<div class="field"><label>Qualidade em que é achado</label><select data-ipf="qualidade"><option value=""'+((ed.qualidade===null||ed.qualidade===undefined||ed.qualidade==="")?' selected':'')+'>'+(autoLigada("qualidadePorLocal")?'Sortear pelo local na hora da entrega':'Padrão (3), sem sorteio nesta campanha')+'</option>' +
           [0,1,2,3,4,5,6].map(function(n){ return '<option value="'+n+'"'+(String(ed.qualidade)===String(n)?' selected':'')+'>'+n+' · '+QUALIDADES[n]+'</option>'; }).join('')+'</select></div>' +
         '<p class="hint" style="margin:6px 0">Características (deixe sem nenhuma para um equipamento comum):</p>' +
         '<div class="trait-list">'+renderTraitList(ed.traits, "pitem", false)+'</div>' +
@@ -8965,9 +9421,9 @@
     if(state.itemEntregar === it.id && (sorteado || state.itemSorteado !== it.id)){
       html += '<div class="doc-entrega"><p class="hint" style="margin:0 0 6px">Quem fica com o item?</p><div class="row" style="gap:6px 14px;flex-wrap:wrap">' +
         loadChars().map(function(ch, i){ return '<label style="display:flex;align-items:center;gap:5px;text-transform:none;margin:0"><input type="radio" name="ippara" style="width:auto" data-ippara="'+ch.id+'"'+(i===0?' checked':'')+'>'+esc(ch.nomePersonagem||"Sem nome")+(ch.ehNpc?' <span class="hint">(NPC)</span>':'')+'</label>'; }).join('') +
-        '</div><div class="row" style="gap:8px;margin-top:8px;align-items:center;flex-wrap:wrap"><span class="hint" style="margin:0">Estado em que foi achado'+(it.qualidade==null?' (sorteado, pode trocar)':'')+':</span>' +
+        '</div><div class="row" style="gap:8px;margin-top:8px;align-items:center;flex-wrap:wrap"><span class="hint" style="margin:0">Estado em que foi achado'+(it.qualidade==null && autoLigada("qualidadePorLocal")?' (sorteado, pode trocar)':'')+':</span>' +
           '<select data-ipqual style="max-width:220px">'+[0,1,2,3,4,5,6].map(function(n){ return '<option value="'+n+'"'+(n===state.itemEntregarQual?' selected':'')+'>'+n+' · '+QUALIDADES[n]+'</option>'; }).join('')+'</select>' +
-          (it.qualidade==null?'<button type="button" class="btn secondary doc-btn" data-ipacao="ressortear">🎲 Sortear de novo</button>':'')+'</div>' +
+          (it.qualidade==null && autoLigada("qualidadePorLocal")?'<button type="button" class="btn secondary doc-btn" data-ipacao="ressortear">🎲 Sortear de novo</button>':'')+'</div>' +
         '<div class="btn-row" style="justify-content:flex-start;gap:8px;margin-top:8px"><button type="button" class="btn accent doc-btn" data-ipacao="entregar-ok">Colocar no inventário</button><button type="button" class="btn secondary doc-btn" data-ipacao="entregar-cancelar">Cancelar</button></div></div>';
     }
     return html + '</div>';
@@ -9162,7 +9618,7 @@
         html += '<div class="card" style="'+cardStyle+'">';
         html += '<div class="row" style="justify-content:space-between;align-items:flex-start">' +
           '<div><h3 style="color:'+(camp?camp.cor:'var(--ink)')+';font-size:17px;margin-bottom:2px">'+esc(c.nomePersonagem||"Sem nome")+npcBadgeHtml(c)+'</h3>' +
-          '<span class="camp-tag">jogador(a): '+esc(c.nomeJogador||"não informado")+' · '+(camp?camp.nome:"acampamento não definido")+'</span></div>' +
+          '<span class="camp-tag">jogador(a): '+esc(c.nomeJogador||"não informado")+(camp?' · '+esc(camp.nome):(grupoLigado()?' · '+esc(grupoRotulo().toLowerCase())+' não definido':''))+'</span></div>' +
           '<button class="btn secondary" data-gmdel="'+idx+'" style="padding:4px 10px;font-size:11px">remover</button>' +
         '</div>';
         html += gmCharCardBody(c);
@@ -9203,6 +9659,7 @@
     var roster = loadChars();
     var html = topbar("gm");
     html += tentarHtml("Jogadores e convites", gmJogadoresHtml);
+    html += tentarHtml("Configuração da campanha", gmConfigHtml);
     html += renderGmDryRoll();
     html += tentarHtml("Bestiário", gmBestiarioHtml);
     html += renderGmConflitos();
@@ -9220,7 +9677,7 @@
         html += '<div class="card" style="'+cardStyle+'" data-gmopen="'+c.id+'">';
         html += '<div class="row" style="justify-content:space-between;align-items:flex-start">' +
           '<div><h3 style="color:'+(camp?camp.cor:'var(--ink)')+';font-size:17px;margin-bottom:2px">'+esc(c.nomePersonagem||"Sem nome")+npcBadgeHtml(c)+'</h3>' +
-          '<span class="camp-tag">jogador(a): '+esc(c.nomeJogador||"não informado")+' · '+(camp?camp.nome:"acampamento não definido")+'</span>' +
+          '<span class="camp-tag">jogador(a): '+esc(c.nomeJogador||"não informado")+(camp?' · '+esc(camp.nome):(grupoLigado()?' · '+esc(grupoRotulo().toLowerCase())+' não definido':''))+'</span>' +
           '<div class="hint" style="margin-top:2px">'+(c.donoEmail ? 'Conta vinculada: '+esc(c.donoEmail) : (c.ehNpc ? 'NPC (só o Assimilador)' : 'Ainda sem conta vinculada'))+'</div></div>' +
           '<div class="row" style="gap:6px;flex:none;align-items:center">' +
             '<label class="gm-npc" style="display:flex;align-items:center;gap:5px;text-transform:none;margin:0;font-size:12px"><input type="checkbox" style="width:auto" data-gmnpc="'+c.id+'"'+(c.ehNpc?' checked':'')+'> NPC</label>' +
@@ -9238,6 +9695,7 @@
     app.innerHTML = html + caixaHtml();
     bindGlobal();
     tentar("Jogadores e convites", function(){ bindGmJogadores(renderGmMesa); });
+    tentar("Configuração da campanha", function(){ bindGmConfig(renderGmMesa); });
     bindGmDryRoll();
     tentar("Bestiário", function(){ bindGmBestiario(renderGmMesa); });
     bindGmConflitos();
