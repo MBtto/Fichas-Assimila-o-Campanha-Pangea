@@ -291,6 +291,7 @@
   .cfg-linha .cfg-cor input[type=color]{ width:42px; min-width:42px; height:36px; padding:2px; flex:none; }
   .cfg-linha .cfg-chk{ flex:0 0 auto; margin:0 0 14px; }
   .cfg-acoes{ display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px; }
+  .ficha-pendente{ border-style:dashed; }
   .cfg-texto-jogador{ margin:0 0 10px; line-height:1.5; }
   .camp-sem-img{ width:46px; height:46px; flex:none; border-radius:50%; display:inline-block; opacity:.85; }
   .camp-opt.selected{ border-color:var(--camp-color); background:var(--surface-2); }
@@ -3611,7 +3612,7 @@
     });
     html += '</div>';
     if(pedeAcamp){
-      html += '<div class="field" style="margin-top:10px"><label>'+esc(rotConv)+' (esta campanha pede, e a ficha ainda não tem um que valha aqui)</label><select data-conv="acampamento"><option value="">escolha…</option>' +
+      html += '<div class="field" style="margin-top:10px"><label>'+esc(rotConv)+' (a ficha ainda não tem um que valha nesta campanha; dá pra escolher depois)</label><select data-conv="acampamento"><option value="">escolha…</option>' +
         opsConv.map(function(o){ return '<option value="'+esc(o.id)+'"'+(f.acampamento===o.id?' selected':'')+'>'+esc(o.nome||o.id)+'</option>'; }).join("") +
         '</select></div>';
     }
@@ -3766,7 +3767,6 @@
     var env = app.querySelector('[data-conv="enviar"]');
     if(env) env.addEventListener("click", function(){
       var st = app.querySelector("#conv-status");
-      if(lobby.formPedeAcamp && !lobby.form.acampamento){ st.textContent = "Escolha o acampamento."; return; }
       lobby.ocupado = true; env.disabled = true; st.textContent = "Enviando…";
       enviarPedido().then(function(){
         lobby.ocupado = false;
@@ -3915,7 +3915,7 @@
     function chk(attr, lig, txt, ajuda){ return '<label class="cfg-chk"><input type="checkbox" '+attr+(lig?' checked':'')+'><span><b>'+txt+'</b>'+(ajuda?'<span class="hint">'+ajuda+'</span>':'')+'</span></label>'; }
     function num(k, txt, min, max){ return '<div class="field cfg-num"><label>'+txt+'</label><input type="number" min="'+min+'" max="'+max+'" data-cfgval="'+k+'" value="'+v[k]+'"></div>'; }
     // Criação
-    var grupo = '<div class="cfg-bloco">' + chk('data-cfggrupo', cr.acampamento, 'Pedir um grupo na criação', 'O jogador escolhe uma opção, e a cor e a imagem dela vão para a ficha.');
+    var grupo = '<div class="cfg-bloco">' + chk('data-cfggrupo', cr.acampamento, 'Pedir um grupo na criação');
     if(cr.acampamento){
       grupo += '<div class="field" style="max-width:320px"><label>Nome do campo</label><input type="text" data-cfggruporot value="'+esc(cr.grupo.rotulo||"")+'" placeholder="ex.: Acampamento, Facção, Clã"></div>' +
         '<div class="field"><label>Texto para o jogador (texto livre)</label><textarea data-cfgtxt="grupo.instrucao" rows="2" placeholder="opcional: aparece acima das opções">'+esc(cr.grupo.instrucao||"")+'</textarea></div>';
@@ -3970,7 +3970,6 @@
         '<div class="field"><label>Tipo</label><select data-cfgextipo="'+i+'"><option value="texto"'+(f.tipo!=="escolha"?' selected':'')+'>Texto livre</option><option value="escolha"'+(f.tipo==="escolha"?' selected':'')+'>Escolha entre opções</option></select></div>' +
         (f.tipo === "escolha" ? '<div class="field cfg-larga"><label>Opções (separe com vírgula)</label><input type="text" data-cfgexops="'+i+'" value="'+esc((f.opcoes||[]).join(", "))+'"></div>' : '') +
         '<div class="field cfg-larga"><label>Explicação para o jogador</label><input type="text" data-cfgex="'+i+'" data-k="ajuda" value="'+esc(f.ajuda||"")+'" placeholder="opcional"></div>' +
-        '<label class="cfg-chk"><input type="checkbox" data-cfgexobr="'+i+'"'+(f.obrigatorio?' checked':'')+'><span>Obrigatório</span></label>' +
         '<div class="cfg-acoes"><button type="button" class="btn secondary doc-btn" data-cfgexdel="'+i+'">Remover</button></div>' +
       '</div>';
     });
@@ -4047,8 +4046,7 @@
     on("[data-cfgex]", "input", function(el){ var f = cr.camposExtras[idx(el,"data-cfgex")]; if(f){ f[el.getAttribute("data-k")] = el.value; sujo(); } });
     on("[data-cfgextipo]", "change", function(el){ var f = cr.camposExtras[idx(el,"data-cfgextipo")]; if(f){ f.tipo = el.value; if(!f.opcoes) f.opcoes = []; sujo(true); } });
     on("[data-cfgexops]", "input", function(el){ var f = cr.camposExtras[idx(el,"data-cfgexops")]; if(f){ f.opcoes = el.value.split(",").map(function(x){ return x.trim(); }).filter(Boolean); sujo(); } });
-    on("[data-cfgexobr]", "change", function(el){ var f = cr.camposExtras[idx(el,"data-cfgexobr")]; if(f){ f.obrigatorio = el.checked; sujo(); } });
-    on("[data-cfgexadd]", "click", function(){ cr.camposExtras.push({ id:"x_"+codigoAleatorio(6), rotulo:"", tipo:"texto", opcoes:[], ajuda:"", obrigatorio:false }); sujo(true); });
+    on("[data-cfgexadd]", "click", function(){ cr.camposExtras.push({ id:"x_"+codigoAleatorio(6), rotulo:"", tipo:"texto", opcoes:[], ajuda:"" }); sujo(true); });
     on("[data-cfgexdel]", "click", function(el){ cr.camposExtras.splice(idx(el,"data-cfgexdel"),1); sujo(true); });
     on("[data-cfgauto]", "change", function(el){ d.automacoes[el.getAttribute("data-cfgauto")] = el.checked; sujo(true); });
     on("[data-cfgloc]", "input", function(el){ var l = d.locais[idx(el,"data-cfgloc")]; if(l){ l.nome = el.value; sujo(); } });
@@ -5826,6 +5824,13 @@
             var vf = validateStep(c, etapas[ie]);
             if(!vf.ok){ state.wizStep = etapas[ie]; render(); alert(vf.msg); return; }
           }
+          var pend = fichaPendencias(c);
+          if(pend.length && !c.__pendOk){
+            askConfirm("Ainda ficou em branco: "+pend.join(", ")+". Dá pra completar depois em Editar Ficha. Concluir assim mesmo?", function(){ c.__pendOk = true; el.click(); });
+            return;
+          }
+          delete c.__pendOk;
+          if(!String(c.nomePersonagem||"").trim()) c.nomePersonagem = "";
           if(c.xpInicial == null) c.xpInicial = cfgValores().xpInicial;
           if(!podeEditar()) return;
           c.atualizadoEm = new Date().toISOString();
@@ -5842,42 +5847,22 @@
     });
   }
 
+  // Etapa C (pedido do Marco): nada na criação é obrigatório. A ficha pode ser
+  // completada em várias etapas ou depois de pronta. validateStep só barra o que
+  // passa dos limites das regras; o que ficou em branco vira pendência (fichaPendencias).
   function validateStep(c, step){
     var cr = cfgCriacao(), vals = cr.valores;
-    if(step === 0){
-      if(!c.nomePersonagem || !c.nomePersonagem.trim()) return {ok:false, msg:"Dê um nome ao personagem pra continuar."};
-      if(grupoLigado() && grupoOpcoes().length && !c.acampamento) return {ok:false, msg:"Escolha um(a) "+grupoRotulo().toLowerCase()+" pra continuar."};
-      var faltaExtra = (cr.camposExtras||[]).filter(function(f){ return f.obrigatorio && !String(((c.extras||{})[f.id])||"").trim(); })[0];
-      if(faltaExtra) return {ok:false, msg:'Preencha "'+faltaExtra.rotulo+'".'};
-      return {ok:true};
-    }
-    if(step === 1){
-      if(!c.origem.geracao || !c.origem.evento || !c.origem.ocupacao) return {ok:false, msg:"Preencha Geração, Evento Marcante e Ocupação."};
-      return {ok:true};
-    }
-    if(step === 2){
-      if(cr.propositos === "livro"){
-        if(!c.propIndividuais[0] || !c.propIndividuais[1]) return {ok:false, msg:"Preencha os 2 Propósitos Pessoais."};
-        if(!c.propRelacionais[0]) return {ok:false, msg:"Preencha o Propósito Coletivo (a proposta que você leva ao grupo)."};
-        return {ok:true};
-      }
-      var pp = cr.propPers, k;
-      for(k=0;k<pp.qtd1;k++) if(!String((c.propIndividuais||[])[k]||"").trim()) return {ok:false, msg:"Preencha "+pp.item1+" "+(k+1)+"."};
-      for(k=0;k<pp.qtd2;k++) if(!String((c.propRelacionais||[])[k]||"").trim()) return {ok:false, msg:"Preencha "+pp.item2+" "+(k+1)+"."};
-      return {ok:true};
-    }
     if(step === 3){
       var alvoInst = INSTINTOS.length + vals.instintoLivres;
       var totalInst = sum(INSTINTOS.map(function(i){ return c.instintos[i[0]]||0; }));
       var badInst = INSTINTOS.filter(function(i){ var v = c.instintos[i[0]]||0; return v<1 || v>vals.instintoMax; });
       if(badInst.length) return {ok:false, msg:"Cada Instinto começa em 1 e pode ir até "+vals.instintoMax+"."};
-      if(totalInst !== alvoInst) return {ok:false, msg:"Os Instintos somam "+alvoInst+" (1 em cada + "+vals.instintoLivres+" pontos livres). Agora estão em "+totalInst+"."};
+      if(totalInst > alvoInst) return {ok:false, msg:"Os Instintos somam no máximo "+alvoInst+" (1 em cada + "+vals.instintoLivres+" pontos livres). Agora estão em "+totalInst+"."};
       return {ok:true};
     }
     if(step === 4){
       var total = conhPratPontosGastos(c), cpP = vals.cpPontos;
       if(total > cpP) return {ok:false, msg:"Você gastou "+total+" de "+cpP+" pontos. Reduza algum valor."};
-      if(total < cpP) return {ok:false, msg:"Ainda faltam "+(cpP-total)+" dos "+cpP+" pontos de Conhecimentos e Práticas."};
       var over = CONH_PRAT.filter(function(p){ return c.conhPrat[p[0]] > vals.cpMax; });
       if(over.length) return {ok:false, msg:"Nessa etapa, o máximo por Conhecimento/Prática é "+vals.cpMax+"."};
       return {ok:true};
@@ -5889,19 +5874,47 @@
       var semReq = (c.caracComp||[]).map(function(id){ return CARACTERISTICAS.filter(function(x){return x.id===id;})[0]; })
         .filter(function(d){ return d && !reqAtendido(c, d); });
       if(semReq.length) return {ok:false, msg:'"'+semReq[0].nome+'" pede '+reqTexto(semReq[0]).replace("Requisito: ","")+'. Desmarque ou ajuste os valores.'};
-      var semEscolha = (c.caracComp||[]).map(function(id){ return CARACTERISTICAS.filter(function(x){return x.id===id;})[0]; })
-        .filter(function(d){ return d && d.escolha && !((c.caracEscolhas||{})[d.id]); });
-      if(semEscolha.length) return {ok:false, msg:'Escolha o sentido de "'+semEscolha[0].nome+'".'};
       return {ok:true};
     }
     if(step === 6){
       var ec = equipCusto(c);
-      if(!cr.artefato && !c.equip.nome) return {ok:true};
-      if(c.equip.traits.length && !c.equip.nome) return {ok:false, msg:"Você escolheu características pro Artefato: dê um nome a ele (ou remova as características se não quiser Artefato)."};
       if(ec > escassezTetoInicial() && !temCarac(c,"reliquia")) return {ok:false, msg:"O Artefato inicial pode ter no máximo Escassez "+escassezTetoInicial()+" (agora está em "+ec+")."};
       return {ok:true};
     }
     return {ok:true};
+  }
+  // O que ficou em branco na ficha (não impede salvar; aparece como lembrete).
+  function fichaPendencias(c){
+    var cr = cfgCriacao(), vals = cr.valores, out = [], etapas = wizEtapas();
+    var vazio = function(x){ return !String(x||"").trim(); };
+    if(vazio(c.nomePersonagem)) out.push("nome do personagem");
+    if(grupoLigado() && grupoOpcoes().length && !c.acampamento) out.push(grupoRotulo().toLowerCase());
+    (cr.camposExtras||[]).forEach(function(f){ if(vazio((c.extras||{})[f.id])) out.push(f.rotulo); });
+    var o = c.origem || {};
+    if(vazio(o.geracao)) out.push("Geração"); if(vazio(o.evento)) out.push("Evento Marcante"); if(vazio(o.ocupacao)) out.push("Ocupação");
+    if(etapas.indexOf(2) > -1){
+      var pi = c.propIndividuais||[], pr = c.propRelacionais||[], k, n = 0;
+      if(cr.propositos === "livro"){
+        for(k=0;k<2;k++) if(vazio(pi[k])) n++;
+        if(n) out.push(n+" Propósito"+(n>1?"s":"")+" Pessoa"+(n>1?"is":"l"));
+        // Propósito Coletivo pode vir depois, com o grupo: não entra como pendência.
+      } else {
+        var pp = cr.propPers, n1 = 0, n2 = 0;
+        for(k=0;k<pp.qtd1;k++) if(vazio(pi[k])) n1++;
+        for(k=0;k<pp.qtd2;k++) if(vazio(pr[k])) n2++;
+        if(n1) out.push(n1+" "+(n1>1?pp.nome1:pp.item1));
+        if(n2) out.push(n2+" "+(n2>1?pp.nome2:pp.item2));
+      }
+    }
+    var livresInst = sum(INSTINTOS.map(function(i){ return c.instintos[i[0]]||0; })) - INSTINTOS.length;
+    if(livresInst < vals.instintoLivres) out.push((vals.instintoLivres-livresInst)+" ponto(s) de Instinto");
+    var cpG = conhPratPontosGastos(c);
+    if(cpG < vals.cpPontos) out.push((vals.cpPontos-cpG)+" ponto(s) de Conhecimentos e Práticas");
+    var semEscolha = (c.caracComp||[]).map(function(id){ return CARACTERISTICAS.filter(function(x){return x.id===id;})[0]; })
+      .filter(function(d){ return d && d.escolha && !((c.caracEscolhas||{})[d.id]); });
+    semEscolha.forEach(function(d){ out.push('sentido de "'+d.nome+'"'); });
+    if(c.equip && (c.equip.traits||[]).length && vazio(c.equip.nome)) out.push("nome do Artefato");
+    return out;
   }
 
   // O Assimilador pode mudar tudo na edição de uma ficha: os tetos da criação
@@ -6005,7 +6018,7 @@
     var ex = c.extras || {};
     return '<div class="grid cols-2" style="margin-top:10px">' + lista.map(function(f){
       var v = ex[f.id] || "";
-      var rot = esc(f.rotulo||"Campo")+(f.obrigatorio?'':' <span class="hint" style="text-transform:none">(opcional)</span>');
+      var rot = esc(f.rotulo||"Campo");
       if(f.tipo === "escolha"){
         var ops = (f.opcoes||[]).filter(function(o){ return String(o).trim(); });
         return '<div class="field"><label>'+rot+'</label><select data-extra="'+esc(f.id)+'"><option value="">escolha…</option>' +
@@ -6027,7 +6040,17 @@
 
   function wizardStepBody(c, step){
     if(step === 0 && state.view === "sheet" && !temAcessoTotal()){
-      return camposExtrasFormHtml(c) || '<p class="hint">Nada para editar aqui.</p>';
+      var hj = camposExtrasFormHtml(c);
+      var origJ = getChar(c.id);
+      if((!origJ || !origJ.acampamento) && grupoOpcoes().length){
+        hj += '<p>Escolha o(a) '+esc(grupoRotulo().toLowerCase())+' do seu personagem.</p><div class="camp-pick">' + grupoOpcoes().map(function(o){
+          var camp = CAMPS[o.id] || o;
+          return '<button type="button" class="camp-opt'+(c.acampamento===o.id?' selected':'')+'" style="--camp-color:'+esc(camp.cor||"var(--accent)")+'" data-camp="'+esc(o.id)+'">' +
+            (camp.img ? '<img src="'+esc(camp.img)+'" alt="">' : '<span class="camp-sem-img" style="background:'+esc(camp.cor||"var(--accent)")+'"></span>') +
+            '<div><h3>'+esc(camp.nome)+'</h3>'+(camp.frase ? '<p style="font-weight:600;color:var(--ink)">'+esc(camp.frase)+'</p>' : '')+'</div></button>';
+        }).join('') + '</div>';
+      }
+      return hj || '<p class="hint">Nada para editar aqui.</p>';
     }
     if(step === 0){
       var html = '<div class="grid cols-2">' +
@@ -6079,7 +6102,7 @@
             '<div class="field"><label>Propósito Pessoal 1</label><input type="text" data-prop="ind0" value="'+esc(c.propIndividuais[0])+'"></div>' +
             '<div class="field"><label>Propósito Pessoal 2</label><input type="text" data-prop="ind1" value="'+esc(c.propIndividuais[1])+'"></div>' +
           '</div>' +
-          '<p style="margin-top:14px"><b>Propósito Coletivo:</b> a sua proposta para o grupo. Ele só vale se pelo menos mais um jogador aderir (senão fica Inerte).</p>' +
+          '<p style="margin-top:14px"><b>Propósito Coletivo:</b> objetivos/sonhos que representem a vontade do grupo, pode ser preenchido durante a campanha após decisão dos jogadores.</p>' +
           '<div class="field"><label>Propósito Coletivo</label><input type="text" data-prop="rel0" value="'+esc(c.propRelacionais[0])+'"></div>';
       }
       var pp = cfgCriacao().propPers, h = '';
@@ -6425,6 +6448,10 @@
     if(camp && camp.img) html += '<img src="'+esc(camp.img)+'" alt="" style="width:88px;height:88px">';
     html += '</div></div>';
 
+    var pendFicha = (!c.precisaRefazer && !c.ehNpc && (temAcessoTotal() || (usuario && c.donoUid === usuario.uid))) ? fichaPendencias(c) : [];
+    if(pendFicha.length){
+      html += '<div class="card tight ficha-pendente"><p class="hint" style="margin:0"><b>Ficha em construção.</b> Ainda em branco: '+esc(pendFicha.join(", "))+'. Dá pra completar quando quiser em <b>Editar Ficha</b>.</p></div>';
+    }
     if(c.precisaRefazer){
       html += '<div class="card" style="border:2px solid var(--accent)">' +
         '<h2 style="margin-bottom:6px">Atualize a ficha pro sistema oficial</h2>' +
@@ -8135,7 +8162,7 @@
     var vis = wizEtapas();
     // Passo 6 continua aparecendo pra quem já tem Artefato, mesmo com a etapa desligada.
     if(vis.indexOf(6) < 0 && c && c.equip && c.equip.nome) vis.push(6);
-    var temExtras = (cfgCriacao().camposExtras||[]).length > 0;
+    var temExtras = (cfgCriacao().camposExtras||[]).length > 0 || (c && !c.acampamento && grupoOpcoes().length > 0);
     if(temAcessoTotal()) return vis;
     // Textos da ficha (Origem, Propósitos e Conexões) sempre editáveis pelo jogador.
     // Características também editáveis pelo jogador (pedido do Marco, 30/09/2026);
