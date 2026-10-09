@@ -287,6 +287,8 @@
   .cfg-linha{ display:flex; flex-wrap:wrap; gap:0 10px; align-items:flex-end; border-top:1px dashed var(--border); padding:8px 0 2px; }
   .cfg-linha .field{ flex:1 1 180px; min-width:0; margin-bottom:8px; }
   .cfg-linha .cfg-larga{ flex:2 1 260px; }
+  .cfg-linha .field.cfg-num{ flex:1 1 72px; }
+  .cfg-linha .field.cfg-num input{ max-width:none; }
   .cfg-linha .cfg-cor{ flex:0 1 200px; }
   .cfg-linha .cfg-cor input[type=color]{ width:42px; min-width:42px; height:36px; padding:2px; flex:none; }
   .cfg-linha .cfg-chk{ flex:0 0 auto; margin:0 0 14px; }
@@ -635,6 +637,9 @@
   .best-pagar{ margin-left:auto; padding:2px 10px !important; }
   .best-dano{ font:inherit; font-family:"IBM Plex Mono",monospace; font-size:12px; padding:0 6px; border:1px dashed var(--border-strong); background:transparent; color:var(--ink); border-radius:6px; cursor:pointer; }
   .best-dano b{ color:var(--danger); }
+  .best-editor{ border:1px solid var(--border-strong); border-radius:10px; padding:12px; background:var(--surface); }
+  .best-ed-grupo{ margin:8px 0; padding:4px 0 8px 10px; border-bottom:1px dashed var(--border); }
+  .best-ed-item{ padding-left:4px; }
   .best-ficha{ margin-top:8px; padding-top:8px; border-top:1px dashed var(--border); }
   .best-mesa{ margin-top:12px; padding:8px 10px; border:1px solid var(--border); border-radius:8px; }
   .best-mesa-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(240px, 1fr)); gap:10px; }
@@ -3383,7 +3388,7 @@
     lobbyOuvintes = [];
   }
   function limparMesaLocal(){
-    shared = { characters:[], testLog:[], resumos:[], documentos:[], documentosNotas:[], encontros:[], encontrosMesa:[], pedidos:[], convites:[] };
+    shared = { characters:[], testLog:[], resumos:[], documentos:[], documentosNotas:[], encontros:[], encontrosMesa:[], pedidos:[], convites:[], criaturas:[] };
     bestRevPronto = false; bestRevVistos = {};
     rolagensComuns = []; rolagensNpc = [];
     dirtyCharIds = {}; dirtyDeletedCharIds = {}; dirtyTestLogEntries = [];
@@ -8685,38 +8690,28 @@
   // quem interpreta e ativa é o Assimilador. Custos: s = Sucesso, a = Adaptação,
   // p = Pressão (no livro: A, B e C). "desc" é o que os jogadores leem quando a
   // criatura é revelada (dá pra editar antes de revelar).
-  var BEST_CATS = [
-    ["burros", "Burros e hordas"],
-    ["pequenas", "Ameaças pequenas"],
-    ["grandes", "Ameaças médias e grandes"],
-    ["humanos", "Grupos humanos"],
-    ["chefes", "Chefes finais"]
-  ];
-  var BESTIARIO = [
-    {"id":"burro","cat":"burros","nome":"Burro","sub":"Assimilado comum","perfil":"assimilado comum, base pra hordas","desc":"Um assimilado “cru”: mordido, tomado pela infecção e reduzido ao instinto. Devagar, previsível, sem noção de dor.","pilha":{"d6":1},"suc":3,"grupos":[{"itens":[{"n":"Mordida Descoordenada","c":{"p":1},"t":"Avança e morde sem técnica: 1d6/2 de dano. O alvo perde 1 Ponto de Determinação a cada mordida bem-sucedida, sem chance de resistência (é o próprio toque da assimilação)."}]},{"tipo":"adapt","itens":[{"n":"Cambalear","c":{"a":1},"t":"Muda de alvo para outro Infectado próximo."}]},{"tipo":"abert","itens":[{"n":"Tropeço","c":{"s":1},"t":"Cai sobre os próprios pés: o próximo teste contra ele ganha +1 dado."}]}],"nota":"Sozinho, raramente justifica um Conflito: pode ser resolvido com um único Teste do Infectado. Horda: a cada ~5 Burros, +1 dado na pilha (d6 → d10 → d12) e +2 Sucessos para Neutralizar; a perda de Determinação da mordida se mantém em toda a progressão."},
-    {"id":"horda-pequena","cat":"burros","nome":"Horda Pequena de Burros","sub":"~5 a 8 Burros agrupados","perfil":"horda pequena","desc":"Um amontoado de assimilados se arrastando juntos, atraídos pelo barulho. Nenhum deles pensa; juntos, eles cercam.","pilha":{"d6":2,"d10":1},"suc":8,"grupos":[{"itens":[{"n":"Mordidas Descoordenadas","c":{"p":2},"t":"1d6/2 de dano a até 2 Infectados próximos. Cada alvo mordido perde 1 Ponto de Determinação, sem chance de resistência."},{"n":"Avanço em Massa","c":{"p":3},"t":"Vários Burros cercam um Infectado, derrubando-o (1 Sucesso ou Adaptação pra se soltar) e causando 1d6 de dano."}]},{"tipo":"adapt","itens":[{"n":"Espalhar-se","c":{"a":1},"t":"A horda se abre para cercar: até o fim da rodada, quem tentar sair do conflito precisa gastar 1 Sucesso ou Adaptação."}]},{"tipo":"abert","itens":[{"n":"Atropelo Interno","c":{"s":1},"t":"Os Burros tropeçam uns nos outros: um Infectado Derrubado ou Agarrado se solta de graça. Se ninguém estiver preso, o próximo teste contra a horda ganha +1 dado."}]}]},
-    {"id":"horda-media","cat":"burros","nome":"Horda Média de Burros","sub":"~10 a 20 Burros agrupados","perfil":"horda média","desc":"Uma massa de assimilados que enche a rua de ponta a ponta. O perigo não é técnica: é o peso dos corpos.","pilha":{"d6":3,"d10":2},"suc":15,"grupos":[{"itens":[{"n":"Mordidas Descoordenadas","c":{"p":2},"t":"1d6/2 de dano a até 3 Infectados próximos. Cada alvo mordido perde 1 Ponto de Determinação, sem chance de resistência."},{"n":"Cerco","c":{"p":4},"t":"Agarra até 2 Infectados ao mesmo tempo; cada um precisa de 1 Sucesso ou Adaptação pra se soltar."},{"n":"Avalanche de Corpos","c":{"p":6},"t":"O peso da massa esmaga todos os Infectados envolvidos no conflito: 1d6 de dano a cada um. Cada um perde 2 Pontos de Determinação, sem chance de resistência."}]},{"tipo":"adapt","itens":[{"n":"Fechar o Círculo","c":{"a":2},"t":"Até o fim da próxima rodada, sair do conflito custa 2 Sucessos ou Adaptações."}]},{"tipo":"abert","itens":[{"n":"Atropelo Interno","c":{"s":1},"t":"Os Burros tropeçam uns nos outros: um Infectado Derrubado ou Agarrado se solta de graça. Se ninguém estiver preso, o próximo teste contra a horda ganha +1 dado."}]}],"desgaste":[{"m":3,"n":"Massa Dispersa","t":"A horda perde coesão: Avalanche de Corpos deixa de estar disponível."},{"m":5,"n":"Retardatários","t":"Mordidas Descoordenadas passam a atingir no máximo 2 alvos."}],"nota":"Horda Grande (~25+): use a Horda de Burros do Fastplay (3d6 + 3d10, 20 Sucessos)."},
-    {"id":"burro-emparedado","cat":"burros","nome":"Burro Emparedado","sub":"Burro preso em entulho urbano","perfil":"controle de área via escombros","desc":"Um assimilado encravado no entulho, entre parede caída e ferragem retorcida. Não consegue se soltar, e o metal preso ao corpo virou arma.","pilha":{"d6":2,"d10":1},"suc":8,"cond":[{"n":"Preso nos Escombros","t":"Imobilizado no local; não pode ser flanqueado (só atacado pela frente ou pelos lados acessíveis)."}],"grupos":[{"itens":[{"n":"Golpe de Ferragem","c":{"p":2},"t":"Golpeia com um pedaço de metal retorcido preso ao braço: 1d6 de dano."},{"n":"Alcance Retorcido","c":{"p":3},"t":"Usa cacos de metal entrelaçados nos braços pra alcançar mais longe que o esperado: 1d6/2 de dano e o alvo fica Agarrado."},{"n":"Colapso ao Redor","c":{"p":3},"t":"Puxa a própria estrutura e derruba escombros que bloqueiam uma rota de fuga ou passagem por 1 rodada. Sem dano: controle de campo puro."}]},{"tipo":"adapt","itens":[{"n":"Afundar no Entulho","c":{"a":1},"t":"Se cobre de escombros: o próximo teste à distância contra ele rola −1 dado."}]},{"tipo":"abert","itens":[{"n":"Estrutura Cedendo","c":{"s":1},"t":"Um bloco de concreto cai sobre ele: o próximo teste contra ele ganha +1 dado, e quem estiver Agarrado por ele se solta."}]}]},
-    {"id":"burro-suspenso","cat":"burros","nome":"Burro Suspenso","sub":"Burro pendurado em cabos, andaimes ou vãos","perfil":"imprevisibilidade posicional","desc":"Um assimilado pendurado no alto, preso em cabos e andaimes tortos. Nunca vem do mesmo lugar duas vezes.","pilha":{"d6":2,"d10":1},"suc":8,"cond":[{"n":"Posição Imprevisível","t":"Antes de cada Ativação, o Assimilador escolhe de qual ponto vertical ele ataca (andar de cima, vão lateral, buraco no teto); os Infectados só descobrem no momento do ataque."}],"grupos":[{"itens":[{"n":"Investida Pendular","c":{"p":2},"t":"Balança pelos cabos e ataca um Infectado desprevenido: 1d6 de dano."},{"n":"Queda Controlada","c":{"p":3},"t":"Solta-se de propósito sobre um Infectado, derrubando-o (1 Sucesso ou Adaptação pra se soltar), sem dano: o impacto desorienta mais do que fere."},{"n":"Reposicionamento","c":{},"x":"sem custo, entre rodadas","t":"Muda livremente de ponto vertical na cena. É movimento, não ataque, e mantém a imprevisibilidade."}]},{"tipo":"adapt","itens":[{"n":"Balanço Preparado","c":{"a":1},"t":"A próxima Investida Pendular causa +1 de dano."}]},{"tipo":"abert","itens":[{"n":"Cabo Rompido","c":{"s":1},"t":"Um cabo arrebenta e ele fica preso num ponto fixo: o Assimilador revela a posição e Posição Imprevisível não vale nesta rodada."}]}]},
-    {"id":"burro-alagado","cat":"burros","nome":"Burro Alagado","sub":"Burro submerso em porões e garagens alagadas","perfil":"emboscada aquática furtiva","desc":"Algo se mexe debaixo da água turva. Um assimilado que vive submerso nos porões e garagens alagadas, invisível até o bote.","pilha":{"d6":2,"d10":1},"suc":8,"cond":[{"n":"Submerso","t":"Fica escondido debaixo d'água; só é percebido com um teste específico de “algo se mexendo na água” ou quando ataca."}],"grupos":[{"itens":[{"n":"Emergir Mordendo","c":{"p":2},"t":"Sai da água de repente e morde: 1d6 de dano."},{"n":"Puxão Aquático","c":{"p":3},"t":"Agarra a perna de um Infectado perto da água e puxa pra baixo: 1d6/2 de dano e o alvo fica Agarrado (precisa de uma ação extra só pra sair da água antes de fazer qualquer outra coisa)."},{"n":"Arrastar pro Fundo","c":{"p":3},"x":"só contra alvo já Agarrado","t":"Tenta afogá-lo: ele perde a próxima ação lutando pra respirar, a menos que gaste 1 Sucesso ou Adaptação."}]},{"tipo":"adapt","itens":[{"n":"Mergulhar","c":{"a":1},"t":"Volta a ficar Submerso e precisa ser percebido de novo."}]},{"tipo":"abert","itens":[{"n":"Bolhas na Superfície","c":{"s":1},"t":"A posição dele fica visível: perde Submerso até o fim da próxima rodada."}]}]},
-    {"id":"burro-sinalizador","cat":"burros","nome":"Burro Sinalizador","sub":"Burro preso perto de algo que amplifica som","perfil":"atrai reforços","desc":"Um assimilado preso junto a um sino, um cano longo ou uma câmara vazia. Qualquer guincho dele ecoa longe demais.","pilha":{"d6":2,"d10":1},"suc":8,"cond":[{"n":"Eco de Socorro","t":"Ao sofrer o primeiro dano do conflito (ou ao usar Guincho Ensurdecedor), solta um guincho amplificado que pode atrair uma Horda Pequena de Burros ou outra Ameaça próxima, a critério do Assimilador."}],"grupos":[{"itens":[{"n":"Mordida Descoordenada","c":{"p":1},"t":"1d6/2 de dano e o alvo perde 1 Ponto de Determinação, igual ao Burro base."},{"n":"Guincho Ensurdecedor","c":{"p":2},"t":"−1 dado na próxima rolagem de Percepção de até 2 Infectados; pode atrair reforços mesmo sem ter sofrido dano ainda."}]},{"tipo":"adapt","itens":[{"n":"Arrastar-se ao Amplificador","c":{"a":1},"t":"Se tiver sido afastado do objeto que amplifica o som, volta para perto dele."}]},{"tipo":"abert","itens":[{"n":"Voz Falha","c":{"s":1},"t":"A garganta falha: o Eco de Socorro não pode ser ativado nesta rodada."}]}]},
-    {"id":"corvogarida","cat":"pequenas","nome":"Corvogarida","sub":"corvo + mutação floral de margarida","perfil":"complicação aérea","desc":"Um corvo de penas manchadas de branco, com um brilho amarelado no pescoço que lembra o miolo de uma flor. Deixa no ar um cheiro doce de margarida.","pilha":{"d6":1,"d10":1},"suc":5,"grupos":[{"itens":[{"n":"Bicada e Furto","c":{"p":2},"t":"Ataca com o bico: 1d6/2 de dano. Se acertar um Infectado carregando algo pequeno e visível (não guardado ou preso), pode roubar o item e alçar voo com ele."},{"n":"Aroma de Margarida","c":{"p":2},"t":"Solta a nuvem floral ao sobrevoar até 2 Infectados próximos: cada um sofre −1 dado na próxima rolagem de Reação ou Percepção."}]},{"tipo":"adapt","itens":[{"n":"Revoada","c":{"a":1},"t":"Sai do alcance corpo a corpo: até a próxima rodada, só ataques à distância ou testes de alcançá-la contam contra ela."}]},{"tipo":"abert","itens":[{"n":"Asa Pesada","c":{"s":1},"t":"O item roubado pesa demais e ela o deixa cair na cena; se não roubou nada, o próximo teste contra ela ganha +1 dado."}]}],"nota":"Mais fraca que a Cachorrinha: funciona mais como complicação aérea do que como ameaça direta."},
-    {"id":"araboleta","cat":"pequenas","nome":"Araboleta","sub":"arara + borboleta","perfil":"complicação aérea com carga de pólen","desc":"O colorido vivo de uma arara misturado a escamas iridescentes de asa de borboleta. Cada batida de asa solta um pó fino e brilhante.","pilha":{"d6":1,"d10":1},"suc":5,"grupos":[{"itens":[{"n":"Bicada Simples","c":{"p":1},"t":"Bicada direta, sem veneno: 1d6/2 de dano."},{"n":"Nuvem de Pó de Asas","c":{"p":2},"t":"Bate as asas sobre até 2 Infectados próximos: cada um sofre −1 dado na próxima rolagem de Percepção ou de ataque à distância."},{"n":"Bicada Carregada de Pólen","c":{"p":3},"t":"Descarrega o pólen acumulado: 1d6 de dano e o alvo fica Tonto (perde a próxima ação). Ele também perde 2 Pontos de Determinação, a menos que gaste 1 Sucesso ou Adaptação pra limpar os sentidos a tempo."}]},{"tipo":"adapt","itens":[{"n":"Pairar","c":{"a":1},"t":"Acumula pólen: a próxima Bicada Carregada custa 1 Pressão a menos."}]},{"tipo":"abert","itens":[{"n":"Pólen Disperso","c":{"s":1},"t":"Uma corrente de ar leva o pó: os efeitos ativos da Nuvem de Pó de Asas acabam na hora."}]}],"nota":"Com 5 Infectados ela costuma cair em cerca de 1 rodada: funciona melhor como complicação no meio de outro conflito, o que dá tempo pra Bicada Carregada sair."},
-    {"id":"gambalato","cat":"pequenas","nome":"Gambalato","sub":"gambá + lagarto","perfil":"chata e resistente, baixo dano","desc":"Um bicho de pele escamosa e pelo ralo, de cauda comprida e preênsil. Parece frágil, mas é difícil de derrubar de vez.","pilha":{"d6":2,"d10":1},"suc":7,"cond":[{"n":"Tanatose","t":"Na primeira vez que o total para Neutralizar for atingido, finge de morto e volta com 2 Sucessos faltando; no round seguinte, ninguém pode declarar Cumprir Objetivo contra ele."},{"n":"Regeneração de Lagarto","t":"Em cada rodada em que nenhum Sucesso for marcado contra ele, recupera 2 Sucessos do total necessário (não passa do total original)."}],"grupos":[{"itens":[{"n":"Mordida Fraca","c":{"p":1},"t":"Mordida simples: 1d6/2 de dano."},{"n":"Arranhão e Fuga Rápida","c":{"p":2},"t":"Arranha o alvo: 1d6/2 de dano. A pele grossa e o reflexo de fuga previnem 1 Sucesso do próximo teste de neutralização contra ele."},{"n":"Rabada Prendedora","c":{"p":3},"t":"A cauda prênsil derruba o alvo (1 Sucesso ou Adaptação pra se livrar): 1d6 de dano."}]},{"tipo":"adapt","itens":[{"n":"Rastejar pra Toca","c":{"a":1},"t":"Até a próxima rodada, só testes que alcancem o esconderijo contam contra ele."}]},{"tipo":"abert","itens":[{"n":"Fingimento Mal Feito","c":{"s":1},"t":"A Regeneração de Lagarto não acontece nesta rodada; se a mesma rolagem tiver 2 Sucessos ou mais, ele também perde a Tanatose de vez."}]}],"nota":"O perigo não é o dano, e sim o quanto ele estica o conflito com Tanatose e Regeneração."},
-    {"id":"cachorrinha","cat":"pequenas","nome":"Cachorrinha","sub":"cachorro-do-mato + galinha","perfil":"pequena, territorialista","desc":"Pequena, de pelo ralo e penas misturadas, com um bico duro onde deveria haver focinho. Entra sem pensar duas vezes quando alguém invade o espaço dela.","pilha":{"d6":2,"d10":1},"suc":8,"cond":[{"n":"Território","t":"Bote Territorial e Investida Cega só estão disponíveis enquanto pelo menos um Infectado estiver avançando em direção ao território dela. Se todos recuarem ou saírem da área por 2 rodadas seguidas, ela deixa de usar essas duas (resta Bicada em Sequência, mais uma vez) e o Conflito se encerra com ela desistindo da perseguição."}],"grupos":[{"itens":[{"n":"Bote Territorial","c":{"p":2},"t":"Mordida certeira em um Infectado dentro do território: 1d6 de dano."},{"n":"Bicada em Sequência","c":{"p":3},"t":"Bicadas rápidas atingem até 2 Infectados dentro do território (à escolha do Assimilador): 1d6/2 de dano a cada um."},{"n":"Investida Cega","c":{"p":3},"t":"Avança sem cautela e derruba um Infectado que esteja indo em direção ao território. Ele precisa usar 1 Sucesso ou Adaptação no próprio turno pra se livrar; enquanto estiver derrubado, sofre +1 de dano fixo em qualquer Ativação dela."}]},{"tipo":"adapt","itens":[{"n":"Cacarejo de Alerta","c":{"a":1},"t":"Amplia o território: um Infectado que estava fora conta como dentro até o fim da rodada."}]},{"tipo":"abert","itens":[{"n":"Ninho Exposto","c":{"s":1},"t":"Um Infectado Derrubado pela Investida Cega se levanta de graça."},{"n":"Distraída pelo Ninho","c":{"s":2},"t":"Ela se vira para proteger os ovos: Bote Territorial e Investida Cega ficam indisponíveis até o fim da rodada."}]}]},
-    {"id":"camaleobra","cat":"pequenas","nome":"Camaleobra","sub":"cobra + camaleão","perfil":"emboscada e constrição","desc":"Escamas que mudam de tom conforme o ambiente. Enrolada no chão, parece só uma pilha de folhas.","pilha":{"d6":2,"d10":1},"suc":8,"cond":[{"n":"Camuflagem","t":"Se os Infectados não a perceberem antes do conflito (falharem um teste de Percepção), a primeira Ativação é automática e gratuita: Bote Camuflado e Enroscada sem pagar o custo."}],"grupos":[{"itens":[{"n":"Mordida Simples","c":{"p":1},"t":"Mordida rápida, sem veneno: 1d6/2 de dano. Não depende de Agarrado nem de camuflagem."},{"n":"Bote Camuflado e Enroscada","c":{"p":3},"t":"Estava enrolada no chão; quando alguém pisa no meio dela, sobe pela perna apertando: 1d6 de dano e o alvo fica Agarrado (1 Sucesso ou Adaptação no próprio turno pra se soltar)."},{"n":"Apertar o Abraço","c":{"p":3},"x":"só contra alvo já Agarrado","t":"Aumenta a constrição: 1d6 de dano. Pode ser repetida enquanto o alvo continuar Agarrado."},{"n":"Sufocar o Ar","c":{"p":2},"x":"só contra alvo já Agarrado","t":"O aperto sobe até o peito: o alvo perde 2 Pontos de Determinação. Pode gastar 1 Sucesso ou Adaptação no próprio turno pra evitar a perda, mas ainda perde a ação recuperando o fôlego."}]},{"tipo":"adapt","itens":[{"n":"Recamuflar","c":{"a":2},"t":"Volta a ficar camuflada: se ninguém a perceber no início da próxima rodada, o próximo Bote Camuflado sai de graça."}]},{"tipo":"abert","itens":[{"n":"Afrouxar","c":{"s":1},"t":"Um alvo Agarrado por ela se solta de graça."},{"n":"Cor Errada","c":{"s":2},"t":"A camuflagem falha: ela não pode Recamuflar até o fim do conflito."}]}],"nota":"Sem veneno de propósito: a ameaça dela é toda em cima de camuflagem e constrição."},
-    {"id":"mico-musgo","cat":"pequenas","nome":"Mico-Musgo","sub":"mico comum + mutação por exposição urbana","perfil":"furto e provocação em bando","desc":"Um bando de micos de pelo emaranhado de musgo e brotos, saltando entre fiações, marquises e postes tomados pelo verde. Quase nunca descem ao chão.","pilha":{"d6":2,"d10":1},"suc":8,"cond":[{"n":"Bando Ágil","t":"O bando só pode ser alvo de Cumprir Objetivo quando pelo menos um Infectado estiver em posição de alcançá-los (subindo, com arma à distância etc.); do contrário, ficam fora de alcance, provocando e roubando de longe."}],"grupos":[{"itens":[{"n":"Furto Relâmpago","c":{"p":2},"t":"Um mico desce rápido e rouba um item pequeno e visível. Causa 1d6 de dano só se o Infectado resistir e lutar pelo item."},{"n":"Chuva de Detritos","c":{"p":3},"t":"Entulho, telhas e lixo endurecido de cima, em até 2 Infectados: 1d6/2 de dano a cada um."},{"n":"Algazarra Ensurdecedora","c":{"p":3},"t":"Gritos e pancadas em metal: −1 dado na próxima rolagem de Percepção de até 2 Infectados; pode atrair outras Ameaças (inclusive Burros), a critério do Assimilador."}]},{"tipo":"adapt","itens":[{"n":"Dispersar pelos Telhados","c":{"a":1},"t":"O bando muda de posição: quem estava conseguindo alcançá-lo precisa alcançar de novo."}]},{"tipo":"abert","itens":[{"n":"Briga Interna","c":{"s":1},"t":"Dois micos brigam pelo item roubado e o deixam cair na cena; sem item roubado, o bando desce e qualquer Infectado pode alcançá-lo nesta rodada."}]}]},
-    {"id":"barata-colossal","cat":"grandes","nome":"Barata Colossal","sub":"barata + mutação por exposição prolongada","perfil":"média, resistente e evasiva","desc":"Uma barata do tamanho de um cachorro, de carapaça grossa e brilhante. Atravessa entulho, cano e duto sem esforço.","pilha":{"d6":2,"d10":2},"suc":10,"cond":[{"n":"Casco Reforçado","t":"Testes com arma branca ou desarmado contra ela contam 1 Sucesso a menos (mínimo 1). Não afeta fogo, esmagamento com peso (carros, escombros) ou veneno."}],"grupos":[{"itens":[{"n":"Mordida Roedora","c":{"p":1},"t":"Mordida rápida que perfura qualquer coisa orgânica: 1d6 de dano."},{"n":"Spray de Bile Nauseante","c":{"p":3},"t":"Cospe líquido fétido e ácido em até 2 Infectados próximos: −1 dado na próxima ação física de cada um."},{"n":"Fenda e Fuga","c":{"a":2},"t":"Se enfia numa fresta, duto ou bueiro e reaparece em outro ponto da cena na rodada seguinte. Reposicionamento puro, sem dano nem benefício pros Infectados."}]},{"tipo":"adapt","itens":[{"n":"Eriçar Antenas","c":{"a":1},"t":"Pressente o golpe: o próximo teste contra ela rola −1 dado."}]},{"tipo":"abert","itens":[{"n":"De Barriga pra Cima","c":{"s":1},"t":"Tropeça e vira: Casco Reforçado não vale nesta rodada."}]}],"desgaste":[{"m":3,"n":"Casco Rachado","t":"Casco Reforçado deixa de valer até o fim do conflito."}]},
-    {"id":"tigrosa","cat":"grandes","nome":"Tigrosa","sub":"tigre + rosa vermelha","perfil":"predador emboscador grande","desc":"Pelagem listrada que se mistura com pétalas vermelho-sangue ao longo do dorso e da cauda. As garras dianteiras são espinhos endurecidos.","pilha":{"d6":3,"d10":2},"suc":15,"cond":[{"n":"Emboscada","t":"Se os Infectados não a perceberem antes do conflito (falharem um teste de Percepção), a primeira Ativação é automática e gratuita: Salto Predador sem pagar o custo."},{"n":"Espinhos Retaliatórios","t":"Sempre que um Infectado tiver sucesso atacando desarmado ou com arma branca a curta distância, sofre 1 ponto de dano dos espinhos, antes do próprio ataque ser resolvido."}],"grupos":[{"itens":[{"n":"Golpe de Espinhos","c":{"p":3},"t":"1d6 de dano e um corte que sangra: o alvo perde mais 1 Ponto de Saúde na próxima rodada, a menos que gaste 1 Sucesso ou Adaptação pra estancar."},{"n":"Salto Predador","c":{"p":4},"t":"Salta sobre um Infectado, derrubando-o (1 Sucesso ou Adaptação pra se soltar): 1d10 de dano."},{"n":"Fúria Territorial","c":{"p":6},"t":"Ataca dois Infectados próximos ao mesmo tempo: 1d10 de dano a cada um."}]},{"tipo":"adapt","itens":[{"n":"Preparar o Bote","c":{"a":1},"t":"O próximo Salto Predador causa +2 de dano fixo."},{"n":"Recuar pro Mato","c":{"a":2},"t":"Some de vista: se não for percebida no início da próxima rodada, recupera a Emboscada."}]},{"tipo":"abert","itens":[{"n":"Pétalas Murchas","c":{"s":2},"t":"Espinhos Retaliatórios não funcionam nesta rodada."}]}],"desgaste":[{"m":3,"n":"Espinhos Caídos","t":"Espinhos Retaliatórios deixa de existir."},{"m":5,"n":"Ferida Aberta","t":"Golpe de Espinhos deixa de causar sangramento."}]},
-    {"id":"preguicarvore","cat":"grandes","nome":"Preguiçárvore","sub":"bicho-preguiça + árvore","perfil":"predador grande de dois modos","desc":"Um corpo coberto de musgo e casca, quase impossível de distinguir do tronco onde vive fundido. Lenta, mas com uma força e um peso surpreendentes.","pilha":{"d6":3,"d10":2},"suc":15,"cond":[{"n":"Enraizada / Solta","t":"Começa enraizada ou solta, à escolha do Assimilador. Enraizada: imóvel, usa o Kit Enraizado. Solta: se move, usa o Kit Solto. Retorno à Copa a faz voltar a ficar Enraizada. Se a árvore cair (trilha própria de 8 Sucessos, que não contam pra Neutralizar), fica presa no Kit Solto."}],"grupos":[{"titulo":"Kit Solto (enquanto Solta)","itens":[{"n":"Garra Preguiçosa","c":{"p":2},"t":"Golpe lento mas pesado: 1d6 de dano."},{"n":"Investida Vagarosa","c":{"p":4},"t":"Avança com todo o peso, derrubando o alvo (1 Sucesso ou Adaptação pra se soltar): 1d6 de dano."},{"n":"Retorno à Copa","c":{"a":2},"x":"só com a árvore de pé","t":"Se desengaja e sobe de volta à árvore; fica Enraizada a partir da próxima Ativação."}]},{"titulo":"Kit Enraizado (enquanto Enraizada)","itens":[{"n":"Chicote de Cipós","c":{"p":3},"t":"Um cipó alcança um Infectado próximo à árvore: 1d6 de dano e o alvo fica Agarrado."},{"n":"Abraço Sufocante","c":{"p":4},"x":"só contra alvo já Agarrado","t":"Aperto lento e letal: 1d10 de dano e o alvo perde 1 Ponto de Determinação. Repetível enquanto o alvo continuar Agarrado."},{"n":"Queda de Galhos","c":{"p":6},"t":"Sacode a copa sobre até 2 Infectados próximos à árvore: 1d10 de dano a cada um."}]},{"tipo":"adapt","itens":[{"n":"Folhagem Densa","c":{"a":1},"x":"só Enraizada","t":"Até a próxima rodada, testes à distância contra ela rolam −1 dado."}]},{"tipo":"abert","itens":[{"n":"Raiz Exposta","c":{"s":1},"t":"O próximo teste contra a árvore ganha +1 Sucesso na trilha da árvore (não no total da criatura)."}]}],"desgaste":[{"m":3,"n":"Seiva Escorrendo","t":"Chicote de Cipós deixa de agarrar (só causa o dano)."},{"m":5,"n":"Tronco Oco","t":"A árvore passa a cair com 5 Sucessos, em vez de 8."}],"trilhas":[{"nome":"Derrubar a árvore-hospedeira","alvo":8}]},
-    {"id":"aranha-sombras","cat":"grandes","nome":"Aranha-das-Sombras","sub":"aranha + mutação por exposição a subsolos escuros","perfil":"controle de área com teias","desc":"Enorme e pálida, crescida nos subsolos e estacionamentos que nunca mais viram sol. Pilares, vãos e corredores estreitos estão cobertos de teia grudenta.","pilha":{"d6":3,"d10":2},"suc":15,"cond":[{"n":"Domínio da Teia","t":"Sempre que um Infectado se mover rápido pelas áreas com teia (correr, investir, flanquear, fugir), precisa gastar 1 Sucesso ou Adaptação pra não ficar Enredado. Vale o conflito inteiro."}],"grupos":[{"itens":[{"n":"Enredar em Teia","c":{"p":2},"t":"Fio grudento à distância: o alvo fica Agarrado (1 Sucesso ou Adaptação pra se soltar), sem dano."},{"n":"Picada Paralisante","c":{"p":3},"t":"Veneno neurotóxico: 1d6 de dano e −1 dado em testes físicos na rodada seguinte."},{"n":"Fúria das Sombras","c":{"p":5},"t":"Avança sobre até 2 Infectados Enredados ou envenenados: 1d10 de dano a cada um."}]},{"tipo":"adapt","itens":[{"n":"Tecer","c":{"a":1},"t":"Estende a teia para uma área nova da cena."},{"n":"Recolher-se ao Teto","c":{"a":2},"t":"Até a próxima rodada, só testes à distância ou de alcançá-la contam contra ela."}]},{"tipo":"abert","itens":[{"n":"Fio Rompido","c":{"s":1},"t":"Um Infectado Enredado se solta de graça."}]}],"desgaste":[{"m":3,"n":"Teias Rasgadas","t":"Os Infectados escolhem uma área que deixa de ter teia."},{"m":5,"n":"Glândula Seca","t":"Enredar em Teia deixa de estar disponível."}]},
-    {"id":"patrulha-dlem","cat":"humanos","nome":"Patrulha do D'lém","sub":"grupo humano de batedores","perfil":"prioriza diplomacia à força","desc":"Um pequeno grupo armado de batedores do D'lém. Galhos brotando do ombro, manchas de líquen na pele, olhos levemente alterados, e nenhuma vergonha disso.","pilha":{"d6":2,"d10":2},"suc":15,"cond":[{"n":"Diplomacia Antes da Força","t":"Só usa Ativações de combate se os Infectados atacarem primeiro, tentarem impedir a fuga deles à força, ou a negociação falhar. Antes disso, os Infectados podem convencer, negociar ou trocar recursos (trilha separada de 5 a 8 Sucessos com Práticas sociais; ajuste o total conforme a cena). Se der certo, o conflito acaba sem violência."}],"grupos":[{"titulo":"Só se o conflito virar violento","itens":[{"n":"Aviso a Bala","c":{"p":2},"t":"Disparo de aviso ou golpe de coronha: 1d6/2 de dano."},{"n":"Cerco Coordenado","c":{"p":3},"t":"Ataca dois Infectados ao mesmo tempo: 1d6 de dano a cada um."},{"n":"Retirada Tática","c":{"a":2},"t":"O grupo recua em formação levando feridos, dificultando qualquer perseguição."},{"n":"Investida Armada","c":{"p":5},"t":"Ataque coordenado contra um único Infectado: 1d10 de dano."}]},{"tipo":"adapt","itens":[{"n":"Cobertura","c":{"a":1},"t":"Um batedor se protege: o próximo ataque à distância contra a patrulha rola −1 dado."}]},{"tipo":"abert","itens":[{"n":"Hesitação","c":{"s":1},"trilha":0,"ganho":1,"t":"Um batedor abaixa a arma por um instante: a trilha de negociação ganha +1 Sucesso."}]}],"desgaste":[{"m":3,"n":"Moral Abalada","t":"Investida Armada deixa de estar disponível."},{"m":5,"n":"Rendição","t":"A patrulha propõe trégua: se os Infectados aceitarem, a trilha de negociação conta como completa e o conflito acaba."}],"trilhas":[{"nome":"Caminho pacífico (negociar)","alvo":6}]},
-    {"id":"conselheiro","cat":"humanos","nome":"Conselheiro","sub":"humano, escolta do Líder do Conselho","perfil":"autoridade e alarme (Enganado ou Cúmplice)","desc":"Um membro do Conselho, de roupa limpa demais pra quem vive em Pangea. Não luta: dá ordens, chama a guarda e repete que está tudo sob controle.","pilha":{"d6":2,"d10":1},"suc":8,"cond":[{"n":"Enganado ou Cúmplice","t":"O Assimilador define em segredo antes do conflito. O Enganado pode ser convencido com a trilha de 4 Sucessos sociais e abandona o conflito. O Cúmplice não pode ser convencido, mas pode ser desmascarado com a mesma trilha; desmascarado, os Soldados presentes deixam de obedecer às ordens dele."},{"n":"Prova na Mesa","t":"Apresentar um documento da campanha que contradiga o Líder conta 2 Sucessos na trilha (cada documento, uma vez por conflito)."},{"n":"Testemunha","t":"Um Conselheiro Enganado convencido pode acompanhar os Infectados; se acompanhar, o primeiro teste de exposição da Fase 1 do Líder ganha +1 dado."}],"grupos":[{"itens":[{"n":"Empurrão Desesperado","c":{"p":1},"t":"1d6/2 de dano."},{"n":"Ordem à Guarda","c":{"p":3},"x":"só com Soldados presentes","t":"Um Soldado faz um Disparo de Contenção extra, sem pagar o custo."},{"n":"Dar o Alarme","c":{"p":3},"x":"uma vez por conflito","t":"Uma Esquadra de Soldados entra na cena na rodada seguinte."}]},{"tipo":"adapt","itens":[{"n":"Atrás da Guarda","c":{"a":1},"t":"Enquanto houver Soldados em cena, o próximo ataque contra o Conselheiro rola −1 dado."}]},{"tipo":"abert","itens":[{"n":"Voz Vacilante","c":{"s":1},"trilha":0,"ganho":1,"t":"Ele gagueja diante das acusações: a trilha de convencimento ou desmascaramento ganha +1 Sucesso."}]}],"trilhas":[{"nome":"Convencer / Desmascarar","alvo":4}]},
-    {"id":"esquadra-leal","cat":"humanos","nome":"Esquadra de Soldados/Exploradores Leais","sub":"2 a 4 combatentes, escolta do Líder do Conselho","perfil":"contenção disciplinada","desc":"Soldados e exploradores de uniforme gasto, em formação. Querem deter vocês, não matar, e obedecem a quem está no comando.","pilha":{"d6":2,"d10":2},"suc":10,"cond":[{"n":"Dever Acima de Tudo","t":"Enquanto o Conselheiro que os comanda estiver em cena e não tiver sido desmascarado, não aceitam negociação. Depois disso, abre-se a trilha de 5 Sucessos sociais; completada, eles baixam as armas."},{"n":"Prova na Mesa","t":"Igual à do Conselheiro (2 Sucessos por documento). A lista de exploradores perdidos é especialmente forte contra eles: conta 3 Sucessos."}],"grupos":[{"itens":[{"n":"Disparo de Contenção","c":{"p":2},"t":"1d6 de dano."},{"n":"Imobilizar","c":{"p":3},"t":"1d6/2 de dano e o alvo fica Agarrado (1 Sucesso ou Adaptação pra se soltar)."},{"n":"Fogo Coordenado","c":{"p":5},"t":"1d10 de dano em um alvo."}]},{"tipo":"adapt","itens":[{"n":"Escudo Humano","c":{"a":1},"t":"O próximo ataque contra um Conselheiro presente acerta um Soldado e conta contra a Esquadra."},{"n":"Bloquear o Acesso","c":{"a":2},"t":"Até o fim da próxima rodada, nenhum Infectado consegue avançar em direção ao gabinete do Líder."}]},{"tipo":"abert","itens":[{"n":"Olhar Hesitante","c":{"s":1},"t":"Se a trilha de rendição já estiver aberta, ela ganha +1 Sucesso; se ainda não estiver, o próximo teste de Influência contra eles ganha +1 dado."}]}],"desgaste":[{"m":3,"n":"Dúvida nas Fileiras","t":"Fogo Coordenado deixa de estar disponível."}],"trilhas":[{"nome":"Rendição (baixar as armas)","alvo":5}],"nota":"Lidar com a escolta antes do Líder é uma escolha: gasta tempo e recursos, mas tira dele a Ordem Direta e pode render uma Testemunha para a Fase 1."},
-    {"id":"mariah","cat":"chefes","nome":"Mariah, a Cirurgiã da Ley Line","sub":"líder do D'lém, médica, assimilada completa","perfil":"chefe final (ramo D'lém)","desc":"Médica, líder do D'lém, e completamente assimilada. Não tem pressa: ela observa como quem examina um paciente.","pilha":{"d6":3,"d10":4,"d12":2},"suc":28,"cond":[{"n":"Resolução Pragmática","t":"A qualquer momento, os Infectados podem tentar convencê-la a recuar: trilha paralela de 10 Sucessos sociais. Alcançada, o conflito termina sem neutralizá-la; ela se retira viva e o D'lém continua existindo."},{"n":"Precisão Cirúrgica","t":"Todas as Ativações dela ignoram redução de dano por resistência física (Casco Reforçado, blindagem de itens etc.): ela sempre sabe onde cortar."}],"grupos":[{"itens":[{"n":"Diagnóstico Implacável","c":{"p":3},"x":"uma vez por alvo","t":"Expõe um ponto fraco: o alvo sofre −1 dado em todos os testes de Reação pelo resto do conflito."},{"n":"Incisão Direcionada","c":{"p":5},"t":"Ataque cirúrgico preciso: 1d10 de dano, ignorando qualquer resistência do alvo."},{"n":"Anestesia de Campo","c":{"p":4},"t":"Sedativo à distância em até 2 Infectados próximos: −1 dado na próxima ação física de cada um."},{"n":"Transfusão Forçada","c":{"p":10},"x":"uma vez por conflito","t":"Desloca 1 Nível do Cabo de Guerra de um Infectado (Determinação → Assimilação, disparando o Teste de Assimilação) e ela recupera 5 Sucessos do total necessário pra neutralizá-la."}]},{"tipo":"adapt","itens":[{"n":"Instrumento Certo","c":{"a":1},"t":"A próxima Incisão Direcionada causa +2 de dano fixo."},{"n":"Campo Estéril","c":{"a":2},"t":"Isola um Infectado: até o fim da próxima rodada, ele não pode ajudar outros Infectados nem receber ajuda."},{"n":"Assistentes do D'lém","c":{"a":3},"t":"Auxiliares se posicionam ao redor dela: o primeiro teste contra ela na próxima rodada rola −1 dado."}]},{"tipo":"abert","itens":[{"n":"Anestesia Vencida","c":{"s":2},"t":"Os efeitos da Anestesia de Campo acabam em um Infectado."},{"n":"Mão Trêmula","c":{"s":3},"t":"A próxima Ativação de ataque dela perde a Precisão Cirúrgica (a resistência do alvo volta a valer)."},{"n":"Dúvida Ética","c":{"s":3},"trilha":0,"ganho":2,"t":"Ela hesita: a trilha de trégua ganha +2 Sucessos."}]}],"desgaste":[{"m":8,"n":"Diagnóstico Errado","t":"Diagnóstico Implacável deixa de estar disponível (efeitos já aplicados continuam)."},{"m":14,"n":"Cansaço Cirúrgico","t":"Precisão Cirúrgica deixa de valer até o fim do conflito."},{"m":20,"n":"O Juramento Pesa","t":"A trilha de trégua passa a precisar de 5 Sucessos, em vez de 10; se já tiver 5 ou mais, ela aceita a trégua na hora."}],"trilhas":[{"nome":"Trégua (convencê-la a recuar)","alvo":10}]},
-    {"id":"lider-conselho","cat":"chefes","nome":"Líder do Conselho","sub":"assimilado completo, sem deformações visíveis","perfil":"chefe final (ramo Conselho)","desc":"Impecável, calmo, com a voz de quem está acostumado a ser ouvido.","pilha":{"d6":3,"d10":4,"d12":2},"suc":30,"cond":[{"n":"Regra de fase","t":"A trilha de Desgaste zera quando ele muda de fase, e cada fase tem um marco único em 5. Os pontos que sobram (livres e represados) também se perdem na troca de fase."},{"n":"Recusa Categórica (Fase 1)","t":"Sucessos de ataque físico não contam pro total dele. Só contam Sucessos de exposição/investigação (achar provas, confrontá-lo com fatos, expor contradições)."},{"n":"Rachaduras (Fase 2)","t":"A fachada cede: veias esverdeadas, cheiro de seiva, olhos mudando de cor. A partir daqui, ataques físicos contam."},{"n":"Coração Exposto (Fase 3)","t":"Quando ele começa a represar Pressões na Corrupção Absoluta, anuncie: o peito se abre e o núcleo pulsa com a luz da Ley Line. Os Infectados podem direcionar testes pra Cortar a Ligação (trilha de 5 Sucessos que não conta pros 30). Completada antes de a Corrupção sair, ela fica indisponível e as Pressões represadas nela se perdem."},{"n":"Escolta","t":"Antes dele vêm Conselheiros (Enganados ou Cúmplices) e uma Esquadra de Soldados/Exploradores Leais (fichas próprias no catálogo, categoria Humanos)."}],"grupos":[{"titulo":"Fase 1 — Fachada Impecável (0 a 10)","fase":1,"itens":[{"n":"Ordem Direta","c":{"p":4},"x":"só com Conselheiros ou Soldados em cena","t":"Guardas/Conselheiros presentes atacam em conjunto um Infectado: 1d6 de dano."},{"n":"Emboscada Silenciosa","c":{"p":5},"t":"Gás escondido, arma disfarçada de instrumento médico: atinge um Infectado que se aproximou demais, 1d10 de dano."},{"n":"Desviar as Atenções","c":{"p":3},"t":"Argumentos manipuladores: −1 dado na próxima ação de um Infectado."}]},{"titulo":"Fase 1 · Ativações de Adaptação","fase":1,"tipo":"adapt","itens":[{"n":"Discurso Calmante","c":{"a":2},"t":"A sala se acalma: o próximo teste de exposição rola −1 dado."},{"n":"Ocultar Provas","c":{"a":3},"t":"O próximo teste de exposição conta 1 Sucesso a menos (mínimo 0)."}]},{"titulo":"Fase 1 · Aberturas (Sucesso)","fase":1,"tipo":"abert","itens":[{"n":"Guarda Desconfiado","c":{"s":2},"t":"Um soldado leal hesita: Ordem Direta fica indisponível nesta rodada."},{"n":"Ato Falho","c":{"s":3},"t":"Ele deixa escapar uma contradição: o próximo teste de exposição ganha +1 dado."}]},{"titulo":"Fase 2 — Rachaduras na Máscara (11 a 20)","fase":2,"itens":[{"n":"Sussurro da Seiva","c":{"p":4},"x":"uma vez por rodada","t":"Drena energia da Grande Árvore e recupera 3 Sucessos do próprio total (nunca abaixo de 11)."},{"n":"Esporos de Controle","c":{"p":5},"t":"Esporos desorientam até 2 Infectados: −1 dado em todos os testes na próxima rodada."}]},{"titulo":"Fase 2 · Ativações de Adaptação","fase":2,"tipo":"adapt","itens":[{"n":"Recolher-se às Raízes","c":{"a":2},"t":"Até a próxima rodada, ataques à distância contra ele rolam −1 dado."},{"n":"Chamar a Escolta","c":{"a":3},"t":"Um Conselheiro entra na cena."}]},{"titulo":"Fase 2 · Aberturas (Sucesso)","fase":2,"tipo":"abert","itens":[{"n":"Esporos Falhos","c":{"s":2},"t":"Os efeitos de Esporos de Controle acabam em um Infectado."},{"n":"Seiva Contaminada","c":{"s":3},"t":"O próximo Sussurro da Seiva recupera só 1 Sucesso, em vez de 3."}]},{"titulo":"Fase 3 — Forma Verdadeira (21 a 30)","fase":3,"itens":[{"n":"Amplificação da Ley Line","c":{"p":7},"t":"Canaliza a força da Árvore: 1d10 de dano a todos os Infectados na cena."},{"n":"Raízes do Colapso","c":{"p":5},"t":"Raízes sob o chão prendem até 2 Infectados (Agarrados)."},{"n":"Corrupção Absoluta","c":{"p":8},"x":"uma vez por conflito","t":"Desloca 1 Nível do Cabo de Guerra de um Infectado (Determinação → Assimilação, disparando o Teste de Assimilação). Ao começar a represar nela, anuncie o Coração Exposto."}]},{"titulo":"Fase 3 · Ativações de Adaptação","fase":3,"tipo":"adapt","itens":[{"n":"Casca Endurecida","c":{"a":2},"t":"O próximo teste contra ele rola −1 dado."},{"n":"Pulso da Árvore","c":{"a":3},"t":"Cada Infectado Agarrado pelas Raízes do Colapso perde 1 Ponto de Determinação."}]},{"titulo":"Fase 3 · Aberturas (Sucesso)","fase":3,"tipo":"abert","itens":[{"n":"Raízes Partidas","c":{"s":2},"t":"Um Infectado Agarrado se solta."},{"n":"Ley Line Instável","c":{"s":3},"t":"A próxima Amplificação da Ley Line causa 1d6, em vez de 1d10."}]}],"desgaste":[{"fase":1,"m":5,"n":"Rachadura na Fachada","t":"Testes de exposição ganham +1 dado até o fim da fase."},{"fase":2,"m":5,"n":"Raiz Cortada","t":"Sussurro da Seiva deixa de estar disponível."},{"fase":3,"m":5,"n":"Raízes Ressecadas","t":"Raízes do Colapso passa a agarrar só 1 Infectado."}],"trilhas":[{"nome":"Cortar a Ligação (Coração Exposto, Fase 3)","alvo":5}],"fases":[{"ate":10,"nome":"Fase 1 — Fachada Impecável"},{"ate":20,"nome":"Fase 2 — Rachaduras na Máscara"},{"ate":30,"nome":"Fase 3 — Forma Verdadeira"}]}
-  ];
-  function bestCriatura(id){ return BESTIARIO.filter(function(b){ return b.id===id; })[0] || null; }
+  // Etapa D (08/10/2026): o catálogo saiu do código. Cada campanha tem as suas
+  // criaturas em campanhas/{cid}/criaturas (só o mestre lê e grava), criadas no
+  // formulário do Painel ou importadas de um arquivo (Importar catálogo).
+  // Formato de uma criatura: id, nome, categoria, ordem, sub, perfil, desc (o que os
+  // jogadores leem ao revelar), nota, pilha{d6,d10,d12}, suc, cond[{n,t}],
+  // trilhas[{nome,alvo}], fases[{ate,nome}], grupos[{titulo?,tipo:ameaca|adapt|abert,
+  // fase?, itens[{n, c{s,a,p}, x?, t, trilha?, ganho?}]}], desgaste[{m,n,t,fase?}].
+  function criaturasLista(){
+    return (shared.criaturas||[]).slice().sort(function(a,b){
+      var oa = a.ordem!=null ? a.ordem : 9999, ob = b.ordem!=null ? b.ordem : 9999;
+      return oa !== ob ? oa - ob : String(a.nome||"").localeCompare(String(b.nome||""), "pt");
+    });
+  }
+  function bestCriatura(id){ return (shared.criaturas||[]).filter(function(b){ return b.id===id; })[0] || null; }
+  // Criatura de um encontro: a cópia guardada quando entrou em cena (editar ou apagar
+  // a criatura do catálogo não bagunça quem já está em cena); encontros antigos usam o catálogo.
+  function encCri(enc){ return (enc && enc.criatura) || (enc && bestCriatura(enc.criaturaId)) || null; }
+  function bestCategorias(){
+    var vistas = [];
+    criaturasLista().forEach(function(c){ var k = String(c.categoria||"").trim() || "Sem categoria"; if(vistas.indexOf(k) < 0) vistas.push(k); });
+    return vistas;
+  }
   function bestPilhaTexto(p){
     return [6,10,12].filter(function(n){ return (p||{})["d"+n]; }).map(function(n){ return p["d"+n]+"d"+n; }).join(" + ") || "—";
   }
@@ -8814,25 +8809,27 @@
   // Descrição personalizada de uma criatura (o que os jogadores leem ao revelar):
   // fica guardada em "documentosNotas" com o id "bestdesc_<criatura>", coleção que
   // só o Assimilador lê. Vale como padrão pra toda vez que ela entrar em cena.
-  function bestDescCustom(criId){
-    var n = (shared.documentosNotas||[]).filter(function(x){ return x.id === "bestdesc_"+criId; })[0];
-    return n && typeof n.descMesa === "string" ? n : null;
+  function bestDescMesa(cri){ return cri.desc || ""; }
+  // Grava a criatura no catálogo da campanha.
+  function gravarCriatura(cri, apagar){
+    var lista = (shared.criaturas||[]).filter(function(x){ return x.id !== cri.id; });
+    if(!apagar){ cri.atualizadoEm = new Date().toISOString(); lista.push(cri); }
+    shared.criaturas = lista;
+    if(!FB) return Promise.resolve();
+    return FB.escrever([ apagar ? { tipo:"del", col:"criaturas", id:cri.id } : { tipo:"set", col:"criaturas", id:cri.id, data:JSON.parse(JSON.stringify(cri)) } ])
+      .catch(function(e){ console.error("[Pangea] criaturas", e); alert("Não consegui salvar a criatura. Confira a conexão e se as regras do Firestore têm o bloco criaturas."); });
   }
-  function bestDescMesa(cri){ var n = bestDescCustom(cri.id); return n ? n.descMesa : (cri.desc||""); }
   function gravarBestDesc(criId, texto){
-    var id = "bestdesc_"+criId;
-    var lista = (shared.documentosNotas||[]).filter(function(x){ return x.id !== id; });
-    if(texto !== null) lista.push({ id:id, descMesa:texto });
-    shared.documentosNotas = lista;
-    if(!FB) return;
-    FB.escrever([ texto === null ? { tipo:"del", col:"documentosNotas", id:id } : { tipo:"set", col:"documentosNotas", id:id, data:{ id:id, descMesa:texto, atualizadoEm:new Date().toISOString() } } ])
-      .catch(function(e){ console.error("[Pangea] bestiário", e); alert("Não consegui salvar a descrição."); });
+    var cri = bestCriatura(criId); if(!cri) return;
+    cri = JSON.parse(JSON.stringify(cri)); cri.desc = texto || "";
+    gravarCriatura(cri);
   }
   function encontroNovo(cri){
     var mesmos = (shared.encontros||[]).filter(function(e){ return e.criaturaId===cri.id; }).length;
     return { id:uid(), criaturaId:cri.id, nome:cri.nome+(mesmos?" "+(mesmos+1):""), suc:0, alvo:cri.suc,
       trilhas:(cri.trilhas||[]).map(function(t){ return { nome:t.nome, alvo:t.alvo, atual:0, mostrar:false }; }),
       pontos:{s:0,a:0,p:0}, revelada:false, progresso:false, descMesa:bestDescMesa(cri), rolagem:null,
+      criatura:JSON.parse(JSON.stringify(cri)),
       criadoEm:new Date().toISOString() };
   }
 
@@ -8927,7 +8924,7 @@
       '</div></div>';
   }
   function bestEncontroHtml(enc){
-    var cri = bestCriatura(enc.criaturaId);
+    var cri = encCri(enc);
     if(!cri) return '<div class="item-card"><p class="hint">Criatura desconhecida ('+esc(enc.criaturaId)+').</p><button type="button" class="btn secondary doc-btn" data-bencerrar="'+enc.id+'">Tirar de cena</button></div>';
     var fase = bestFaseAtual(cri, enc.suc||0);
     var p = enc.pontos || {s:0,a:0,p:0};
@@ -8977,18 +8974,20 @@
     var rolCat = state.bestRolCat || (state.bestRolCat = {});
     var abertos = state.bestCatAbertos || (state.bestCatAbertos = {});
     var fichas = state.bestFichaAberta || (state.bestFichaAberta = {});
-    BEST_CATS.forEach(function(cat){
-      var lista = BESTIARIO.filter(function(b){ return b.cat===cat[0]; });
-      html += '<details class="doc-grupo" data-bcat="'+cat[0]+'"'+(abertos[cat[0]]?' open':'')+'><summary><b>'+esc(cat[1])+'</b> <span class="hint">· '+lista.length+'</span></summary>';
+    if(!criaturasLista().length) html += '<p class="hint">Nenhuma criatura no catálogo desta campanha. Crie uma em <b>+ Nova criatura</b> ou traga um catálogo em <b>Importar catálogo</b>.</p>';
+    bestCategorias().forEach(function(catNome){
+      var lista = criaturasLista().filter(function(b){ return (String(b.categoria||"").trim() || "Sem categoria") === catNome; });
+      html += '<details class="doc-grupo" data-bcat="'+esc(catNome)+'"'+(abertos[catNome]?' open':'')+'><summary><b>'+esc(catNome)+'</b> <span class="hint">· '+lista.length+'</span></summary>';
       lista.forEach(function(cri){
-        html += '<div class="item-card best-cri" data-bbusca="'+esc((cri.nome+" "+cri.sub+" "+cri.perfil).toLowerCase())+'">' +
+        html += '<div class="item-card best-cri" data-bbusca="'+esc(((cri.nome||"")+" "+(cri.sub||"")+" "+(cri.perfil||"")+" "+(cri.categoria||"")).toLowerCase())+'">' +
           '<div class="best-enc-cab"><span class="best-enc-nome">'+esc(cri.nome)+'</span><span class="item-chips">' +
             '<span class="item-chip">'+bestPilhaTexto(cri.pilha)+'</span><span class="item-chip esc">'+cri.suc+' Sucessos</span></span></div>' +
-          '<p class="item-nota" style="margin-top:2px">'+esc(cri.sub)+' · '+esc(cri.perfil)+'</p>' +
+          ((cri.sub||cri.perfil) ? '<p class="item-nota" style="margin-top:2px">'+esc([cri.sub, cri.perfil].filter(Boolean).join(" · "))+'</p>' : '') +
           '<div class="row" style="gap:6px;flex-wrap:wrap;margin-top:8px">' +
             '<button type="button" class="btn accent doc-btn" data-bcena="'+cri.id+'">⚔ Colocar em cena</button>' +
             '<button type="button" class="btn secondary doc-btn" '+caixaAttr("bficha", cri.id)+' aria-haspopup="dialog">Ver ficha ›</button>' +
-            '<button type="button" class="btn secondary doc-btn" data-brolcat="'+cri.id+'">🎲 Rolar Ativação</button></div>' +
+            '<button type="button" class="btn secondary doc-btn" data-brolcat="'+cri.id+'">🎲 Rolar Ativação</button>' +
+            '<button type="button" class="btn secondary doc-btn" data-beditar="'+cri.id+'">✏️ Editar</button></div>' +
           bestRolagemHtml(rolCat[cri.id], 'data-bmostrarcat="'+cri.id+'"', 'data-bfecharrolcat="'+cri.id+'"');
         html += '</div>';
       });
@@ -8998,14 +8997,14 @@
   }
   // Ficha completa da criatura do catálogo, na caixa ao lado (antes abria dentro do cartão).
   function bestFichaCaixaHtml(cri){
-          var editCat = (state.bestEditCat||{})[cri.id], custom = bestDescCustom(cri.id);
+          var editCat = (state.bestEditCat||{})[cri.id], custom = false;
           var html = '<div class="best-ficha">' + (editCat
             ? '<div class="field" style="margin:0"><label>Descrição para os jogadores (padrão desta criatura)</label><textarea data-bdesccat="'+cri.id+'" style="min-height:90px">'+esc(bestDescMesa(cri))+'</textarea></div>' +
               '<div class="row" style="gap:6px;margin:6px 0 8px;flex-wrap:wrap"><button type="button" class="btn accent doc-btn" data-bsalvacat="'+cri.id+'">Salvar</button><button type="button" class="btn secondary doc-btn" data-bcancelcat="'+cri.id+'">Cancelar</button>' +
-              (custom ? '<button type="button" class="btn secondary doc-btn" data-brestauracat="'+cri.id+'">Voltar ao texto original</button>' : '') + '</div>'
+              '</div>'
             : '<p class="item-nota" style="margin-top:0"><b>Descrição (jogadores'+(custom?', editada':'')+'):</b> '+esc(bestDescMesa(cri))+'</p>' +
               '<button type="button" class="btn secondary doc-btn" data-beditcat="'+cri.id+'" style="margin-bottom:6px">✏️ Editar descrição</button>') +
-            (cri.trilhas ? '<p class="item-nota">'+cri.trilhas.map(function(t){ return '<b>'+esc(t.nome)+':</b> '+t.alvo+' Sucessos'; }).join(' · ')+'</p>' : '') +
+            ((cri.trilhas||[]).length ? '<p class="item-nota">'+cri.trilhas.map(function(t){ return '<b>'+esc(t.nome)+':</b> '+t.alvo+' Sucessos'; }).join(' · ')+'</p>' : '') +
             bestCondHtml(cri, "c"+cri.id) + bestAtivacoesHtml(cri, "c"+cri.id, null) + bestDesgasteHtml(cri, null, "c"+cri.id) +
             (cri.nota ? '<p class="item-nota">'+bestTextoHtml(cri.nota, "c"+cri.id+"-nota")+'</p>' : '') + '</div>';
             return html;
@@ -9016,18 +9015,267 @@
   };
   CAIXAS.bcond = function(encId){
     var enc = encontroGet(encId); if(!enc || state.view !== "gm") return null;
-    var cri = bestCriatura(enc.criaturaId); if(!cri || !(cri.cond||[]).length) return null;
+    var cri = encCri(enc); if(!cri || !(cri.cond||[]).length) return null;
     return { titulo:"Condicionantes · "+esc(enc.nome), tituloTexto:"Condicionantes", corpo:bestCondHtml(cri, "e"+enc.id), lado:"direita", largura:440, ref:".best-enc" };
   };
+  // ----- Formulário de criatura (etapa D) -----
+  // Rascunho em state.bestEdit = { cri, nova }. Os campos usam data-bep="caminho"
+  // (ex.: "grupos.0.itens.1.c.s"); listas crescem com data-beadd e encolhem com data-bedel.
+  var BEST_MODELOS = {
+    cond: function(){ return { n:"", t:"" }; },
+    trilhas: function(){ return { nome:"", alvo:5 }; },
+    fases: function(){ return { ate:10, nome:"" }; },
+    grupos: function(){ return { titulo:"", tipo:"ameaca", itens:[{ n:"", c:{}, t:"" }] }; },
+    itens: function(){ return { n:"", c:{}, t:"" }; },
+    desgaste: function(){ return { m:5, n:"", t:"" }; }
+  };
+  function bePegar(obj, cam){ var ps = String(cam).split("."); for(var i=0;i<ps.length;i++){ if(obj == null) return undefined; obj = obj[ps[i]]; } return obj; }
+  function bePor(obj, cam, val){
+    var ps = String(cam).split(".");
+    for(var i=0;i<ps.length-1;i++){ if(obj[ps[i]] == null || typeof obj[ps[i]] !== "object") obj[ps[i]] = /^\d+$/.test(ps[i+1]) ? [] : {}; obj = obj[ps[i]]; }
+    obj[ps[ps.length-1]] = val;
+  }
+  function criaturaNova(){
+    return { id:"", nome:"", categoria:"", sub:"", perfil:"", desc:"", nota:"", pilha:{ d6:1, d10:0, d12:0 }, suc:3,
+      cond:[], trilhas:[], fases:[], grupos:[ BEST_MODELOS.grupos() ], desgaste:[] };
+  }
+  function bestEditorHtml(){
+    var ed = state.bestEdit, c = ed.cri;
+    function campo(cam, rot, opt){
+      opt = opt || {};
+      var v = bePegar(c, cam); if(v == null) v = "";
+      var inp = opt.area
+        ? '<textarea data-bep="'+cam+'" rows="'+(opt.rows||2)+'"'+(opt.ph?' placeholder="'+esc(opt.ph)+'"':'')+'>'+esc(v)+'</textarea>'
+        : '<input type="'+(opt.num?'number':'text')+'" data-bep="'+cam+'"'+(opt.num?' data-benum="1" min="'+(opt.min!=null?opt.min:0)+'" max="'+(opt.max||99)+'"':'')+(opt.list?' list="'+opt.list+'"':'')+' value="'+esc(v)+'"'+(opt.ph?' placeholder="'+esc(opt.ph)+'"':'')+'>';
+      return '<div class="field'+(opt.cls?' '+opt.cls:'')+'"><label>'+rot+'</label>'+inp+'</div>';
+    }
+    function acoes(cam, i, n){
+      return '<div class="cfg-acoes"><button type="button" class="btn secondary doc-btn" data-bemover="'+cam+'" data-i="'+i+'" data-dir="-1"'+(i===0?' disabled':'')+' title="Subir">↑</button>' +
+        '<button type="button" class="btn secondary doc-btn" data-bemover="'+cam+'" data-i="'+i+'" data-dir="1"'+(i===n-1?' disabled':'')+' title="Descer">↓</button>' +
+        '<button type="button" class="btn secondary doc-btn" data-bedel="'+cam+'" data-i="'+i+'">Remover</button></div>';
+    }
+    function faseSel(cam){
+      if(!(c.fases||[]).length) return '';
+      var v = bePegar(c, cam) || "";
+      return '<div class="field cfg-num"><label>Fase</label><select data-bep="'+cam+'" data-benum="1"><option value="">todas</option>' +
+        c.fases.map(function(f, i){ return '<option value="'+(i+1)+'"'+(String(v)===String(i+1)?' selected':'')+'>'+(i+1)+(f.nome?' · '+esc(f.nome):'')+'</option>'; }).join('') + '</select></div>';
+    }
+    var h = '<div id="best-editor" class="best-editor">';
+    h += '<h3 style="margin:0 0 8px">'+(ed.nova ? 'Nova criatura' : 'Editando: '+esc(c.nome||"criatura"))+'</h3>';
+    h += '<datalist id="best-cats">'+bestCategorias().filter(function(x){ return x !== "Sem categoria"; }).map(function(x){ return '<option value="'+esc(x)+'">'; }).join('')+'</datalist>';
+    h += '<div class="cfg-linha" style="border-top:0;padding-top:0">' + campo("nome", "Nome") + campo("categoria", "Categoria", {list:"best-cats", ph:"ex.: Burros e hordas"}) + '</div>';
+    h += '<div class="cfg-linha" style="border-top:0;padding-top:0">' + campo("sub", "Subtítulo", {ph:"ex.: Assimilado comum"}) + campo("perfil", "Perfil", {ph:"ex.: horda pequena"}) + '</div>';
+    h += campo("desc", "Descrição para os jogadores (aparece ao revelar)", {area:true, rows:3});
+    h += campo("nota", "Nota do mestre (só você vê)", {area:true, rows:2});
+    h += '<h4 class="best-grupo-tit">Pilha de dados e Sucessos</h4><div class="cfg-linha" style="border-top:0;padding-top:0">' +
+      campo("pilha.d6", "d6", {num:true, cls:"cfg-num", max:20}) + campo("pilha.d10", "d10", {num:true, cls:"cfg-num", max:20}) + campo("pilha.d12", "d12", {num:true, cls:"cfg-num", max:20}) +
+      campo("suc", "Sucessos para Neutralizar", {num:true, cls:"cfg-num", min:1, max:99}) + '</div>';
+    // Fases
+    h += '<h4 class="best-grupo-tit">Fases <span class="hint" style="text-transform:none;letter-spacing:0">(opcional: muda o que aparece em cena conforme os Sucessos)</span></h4>';
+    (c.fases||[]).forEach(function(f, i){
+      h += '<div class="cfg-linha">' + campo("fases."+i+".ate", "Até quantos Sucessos", {num:true, cls:"cfg-num", max:99}) + campo("fases."+i+".nome", "Nome da fase "+(i+1), {cls:"cfg-larga"}) + acoes("fases", i, c.fases.length) + '</div>';
+    });
+    h += '<button type="button" class="btn secondary doc-btn" data-beadd="fases">+ Fase</button>';
+    // Trilhas
+    h += '<h4 class="best-grupo-tit">Trilhas extras <span class="hint" style="text-transform:none;letter-spacing:0">(negociação, trégua…)</span></h4>';
+    (c.trilhas||[]).forEach(function(t, i){
+      h += '<div class="cfg-linha">' + campo("trilhas."+i+".nome", "Nome da trilha", {cls:"cfg-larga"}) + campo("trilhas."+i+".alvo", "Sucessos", {num:true, cls:"cfg-num", min:1, max:99}) + acoes("trilhas", i, c.trilhas.length) + '</div>';
+    });
+    h += '<button type="button" class="btn secondary doc-btn" data-beadd="trilhas">+ Trilha</button>';
+    // Condicionantes
+    h += '<h4 class="best-grupo-tit">Condicionantes</h4>';
+    (c.cond||[]).forEach(function(x, i){
+      h += '<div class="cfg-linha">' + campo("cond."+i+".n", "Nome") + campo("cond."+i+".t", "Texto", {area:true, cls:"cfg-larga"}) + acoes("cond", i, c.cond.length) + '</div>';
+    });
+    h += '<button type="button" class="btn secondary doc-btn" data-beadd="cond">+ Condicionante</button>';
+    // Grupos de ativação
+    h += '<h4 class="best-grupo-tit">Ativações</h4>';
+    (c.grupos||[]).forEach(function(g, gi){
+      var tipo = g.tipo || "ameaca";
+      h += '<div class="best-ed-grupo best-ativ-'+tipo+'">' +
+        '<div class="cfg-linha" style="border-top:0;padding-top:0">' +
+          '<div class="field"><label>Tipo</label><select data-bep="grupos.'+gi+'.tipo"><option value="ameaca"'+(tipo==="ameaca"?' selected':'')+'>Ativações de Ameaça</option><option value="adapt"'+(tipo==="adapt"?' selected':'')+'>Ativações de Adaptação</option><option value="abert"'+(tipo==="abert"?' selected':'')+'>Aberturas (Sucesso)</option></select></div>' +
+          campo("grupos."+gi+".titulo", "Título (opcional)", {ph:"usa o nome do tipo"}) + faseSel("grupos."+gi+".fase") + acoes("grupos", gi, c.grupos.length) +
+        '</div>';
+      (g.itens||[]).forEach(function(a, ai){
+        var base = "grupos."+gi+".itens."+ai;
+        h += '<div class="cfg-linha best-ed-item">' + campo(base+".n", "Nome") +
+          campo(base+".c.s", "Sucesso "+dadoHtml("s"), {num:true, cls:"cfg-num", max:30}) + campo(base+".c.a", "Adaptação "+dadoHtml("a"), {num:true, cls:"cfg-num", max:30}) + campo(base+".c.p", "Pressão "+dadoHtml("p"), {num:true, cls:"cfg-num", max:30}) +
+          campo(base+".x", "Restrição", {ph:"ex.: uma vez por conflito"}) +
+          campo(base+".t", "Efeito (1d6, 1d10… viram botão de dano)", {area:true, cls:"cfg-larga"}) +
+          (tipo === "abert" && (c.trilhas||[]).length ? '<div class="field"><label>Soma na trilha</label><select data-bep="'+base+'.trilha" data-benum="1"><option value="">nenhuma</option>' +
+              c.trilhas.map(function(t, ti){ return '<option value="'+ti+'"'+(a.trilha!=null && String(a.trilha)===String(ti)?' selected':'')+'>'+esc(t.nome||("Trilha "+(ti+1)))+'</option>'; }).join('') + '</select></div>' +
+            campo(base+".ganho", "Quanto soma", {num:true, cls:"cfg-num", max:20}) : '') +
+          acoes("grupos."+gi+".itens", ai, g.itens.length) + '</div>';
+      });
+      h += '<button type="button" class="btn secondary doc-btn" data-beadd="grupos.'+gi+'.itens">+ Ativação neste grupo</button></div>';
+    });
+    h += '<button type="button" class="btn secondary doc-btn" data-beadd="grupos">+ Grupo de ativações</button>';
+    // Desgaste
+    h += '<h4 class="best-grupo-tit">Desgaste <span class="hint" style="text-transform:none;letter-spacing:0">(marcos pelos Sucessos rolados pela criatura)</span></h4>';
+    (c.desgaste||[]).forEach(function(d, i){
+      h += '<div class="cfg-linha">' + campo("desgaste."+i+".m", "Marco", {num:true, cls:"cfg-num", min:1, max:99}) + campo("desgaste."+i+".n", "Nome") + faseSel("desgaste."+i+".fase") +
+        campo("desgaste."+i+".t", "Efeito", {area:true, cls:"cfg-larga"}) + acoes("desgaste", i, c.desgaste.length) + '</div>';
+    });
+    h += '<button type="button" class="btn secondary doc-btn" data-beadd="desgaste">+ Marco de Desgaste</button>';
+    h += '<div class="row" style="gap:8px;margin-top:14px;flex-wrap:wrap">' +
+      '<button type="button" class="btn accent" data-besalvar="1">Salvar criatura</button>' +
+      '<button type="button" class="btn secondary" data-becancelar="1">Cancelar</button>' +
+      (ed.nova ? '' : '<button type="button" class="btn secondary" data-beduplicar="1">Duplicar</button><button type="button" class="btn secondary" data-beexcluir="1">Excluir do catálogo</button>') +
+    '</div><p class="hint" style="margin:6px 0 0">Criaturas que já estão em cena guardam a versão de quando entraram; a mudança vale nas próximas vezes.</p></div>';
+    return h;
+  }
+  // Limpa o rascunho antes de gravar: números, custos vazios, listas vazias.
+  function criaturaLimpa(c){
+    c = JSON.parse(JSON.stringify(c));
+    var n = function(v, mn){ v = parseInt(v,10); return isNaN(v) ? null : Math.max(mn||0, v); };
+    c.nome = String(c.nome||"").trim(); c.categoria = String(c.categoria||"").trim();
+    ["sub","perfil","desc","nota"].forEach(function(k){ c[k] = String(c[k]||"").trim(); if(!c[k]) delete c[k]; });
+    c.pilha = { d6:n(c.pilha&&c.pilha.d6)||0, d10:n(c.pilha&&c.pilha.d10)||0, d12:n(c.pilha&&c.pilha.d12)||0 };
+    ["d6","d10","d12"].forEach(function(k){ if(!c.pilha[k]) delete c.pilha[k]; });
+    c.suc = n(c.suc, 1) || 1;
+    c.fases = (c.fases||[]).map(function(f){ return { ate:n(f.ate,1)||1, nome:String(f.nome||"").trim() }; }).sort(function(a,b){ return a.ate-b.ate; });
+    c.trilhas = (c.trilhas||[]).map(function(t){ return { nome:String(t.nome||"").trim(), alvo:n(t.alvo,1)||1 }; }).filter(function(t){ return t.nome; });
+    c.cond = (c.cond||[]).map(function(x){ return { n:String(x.n||"").trim(), t:String(x.t||"").trim() }; }).filter(function(x){ return x.n || x.t; });
+    var nf = c.fases.length;
+    c.grupos = (c.grupos||[]).map(function(g){
+      var o = { tipo:g.tipo||"ameaca", itens:(g.itens||[]).map(function(a){
+        var r = { n:String(a.n||"").trim(), c:{}, t:String(a.t||"").trim() };
+        ["s","a","p"].forEach(function(k){ var v = n(a.c && a.c[k]); if(v) r.c[k] = v; });
+        if(String(a.x||"").trim()) r.x = String(a.x).trim();
+        var tr = n(a.trilha); if(g.tipo === "abert" && tr != null && tr < c.trilhas.length){ r.trilha = tr; r.ganho = n(a.ganho,1) || 1; }
+        return r;
+      }).filter(function(a){ return a.n || a.t; }) };
+      if(String(g.titulo||"").trim()) o.titulo = String(g.titulo).trim();
+      var fs = n(g.fase); if(fs && fs <= nf) o.fase = fs;
+      return o;
+    }).filter(function(g){ return g.itens.length; });
+    c.desgaste = (c.desgaste||[]).map(function(d){
+      var o = { m:n(d.m,1)||1, n:String(d.n||"").trim(), t:String(d.t||"").trim() };
+      var fs = n(d.fase); if(fs && fs <= nf) o.fase = fs;
+      return o;
+    }).filter(function(d){ return d.n || d.t; });
+    ["fases","trilhas","cond","desgaste"].forEach(function(k){ if(!c[k].length) delete c[k]; });
+    delete c.atualizadoEm;
+    return c;
+  }
+  function slugCriatura(nome){
+    var b = String(nome||"criatura").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"").slice(0,40) || "criatura";
+    var id = b, k = 2; while(bestCriatura(id)) id = b+"-"+(k++);
+    return id;
+  }
+  function bindBestEditor(raiz, rerender){
+    var ed = state.bestEdit; if(!ed) return;
+    var c = ed.cri;
+    function on(sel, ev, fn){ raiz.querySelectorAll(sel).forEach(function(el){ el.addEventListener(ev, function(e){ fn(el, e); }); }); }
+    on("input[data-bep], textarea[data-bep]", "input", function(el){
+      var v = el.value;
+      if(el.hasAttribute("data-benum")) v = v === "" ? "" : parseInt(v,10);
+      bePor(c, el.getAttribute("data-bep"), v);
+    });
+    on("select[data-bep]", "change", function(el){
+      var v = el.value; if(el.hasAttribute("data-benum")) v = v === "" ? "" : parseInt(v,10);
+      bePor(c, el.getAttribute("data-bep"), v); rerender();
+    });
+    on("[data-beadd]", "click", function(el){
+      var cam = el.getAttribute("data-beadd"), lista = bePegar(c, cam);
+      if(!Array.isArray(lista)){ lista = []; bePor(c, cam, lista); }
+      var nome = cam.split(".").pop();
+      lista.push(BEST_MODELOS[nome] ? BEST_MODELOS[nome]() : {});
+      rerender();
+    });
+    on("[data-bedel]", "click", function(el){ var l = bePegar(c, el.getAttribute("data-bedel")); if(l) l.splice(parseInt(el.getAttribute("data-i"),10), 1); rerender(); });
+    on("[data-bemover]", "click", function(el){
+      var l = bePegar(c, el.getAttribute("data-bemover")), i = parseInt(el.getAttribute("data-i"),10), j = i + parseInt(el.getAttribute("data-dir"),10);
+      if(!l || j < 0 || j >= l.length) return; var t = l[i]; l[i] = l[j]; l[j] = t; rerender();
+    });
+    on("[data-becancelar]", "click", function(){ state.bestEdit = null; rerender(); });
+    on("[data-besalvar]", "click", function(){
+      var limpa = criaturaLimpa(c);
+      if(!limpa.nome){ alert("Dê um nome à criatura."); return; }
+      if(ed.nova){
+        limpa.id = slugCriatura(limpa.nome);
+        limpa.ordem = criaturasLista().reduce(function(m, x){ return Math.max(m, x.ordem||0); }, 0) + 1;
+        limpa.criadaEm = new Date().toISOString();
+      }
+      state.bestEdit = null;
+      if(limpa.categoria) (state.bestCatAbertos = state.bestCatAbertos || {})[limpa.categoria] = true;
+      gravarCriatura(limpa); rerender();
+    });
+    on("[data-beduplicar]", "click", function(){
+      var copia = criaturaLimpa(c); copia.nome = copia.nome + " (cópia)";
+      state.bestEdit = { cri:copia, nova:true }; rerender();
+    });
+    on("[data-beexcluir]", "click", function(){
+      askConfirm('Excluir "'+(c.nome||"esta criatura")+'" do catálogo desta campanha? Quem já está em cena continua.', function(){
+        var x = bestCriatura(c.id); state.bestEdit = null;
+        if(x) gravarCriatura(x, true);
+        rerender();
+      });
+    });
+  }
+
+  // ----- Importar / Exportar catálogo (arquivo .json) -----
+  function exportarCatalogo(){
+    var dados = { tipo:"catalogo-criaturas-assimilacao", versao:1, origem:(campanhaAtual && campanhaAtual.nome) || "", exportadoEm:new Date().toISOString(),
+      criaturas:criaturasLista().map(function(c){ var x = JSON.parse(JSON.stringify(c)); delete x.atualizadoEm; return x; }) };
+    var blob = new Blob([JSON.stringify(dados, null, 1)], { type:"application/json" });
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "criaturas_"+String((campanhaAtual && campanhaAtual.nome) || "campanha").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^a-z0-9]+/g,"_")+".json";
+    document.body.appendChild(a); a.click();
+    setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+  }
+  // Lê o arquivo e grava as criaturas na campanha aberta. Mesmo id = substitui.
+  // Descrições já editadas nesta campanha pelo jeito antigo (documentosNotas
+  // "bestdesc_<id>") passam para a criatura importada.
+  function importarCatalogo(texto, rerender){
+    var dados;
+    try{ dados = JSON.parse(texto); }catch(e){ alert("Esse arquivo não é um catálogo de criaturas (.json) válido."); return; }
+    var lista = Array.isArray(dados) ? dados : (dados && dados.criaturas);
+    if(!Array.isArray(lista) || !lista.length){ alert("Não achei criaturas nesse arquivo."); return; }
+    var validas = lista.filter(function(c){ return c && typeof c === "object" && String(c.nome||"").trim(); });
+    if(!validas.length){ alert("Não achei criaturas com nome nesse arquivo."); return; }
+    var existentes = validas.filter(function(c){ return c.id && bestCriatura(c.id); }).length;
+    askConfirm("Importar "+validas.length+" criatura"+(validas.length>1?"s":"")+" para "+((campanhaAtual && campanhaAtual.nome) || "esta campanha")+"?"+(existentes?" "+existentes+" já existe"+(existentes>1?"m":"")+" com o mesmo nome interno e ser"+(existentes>1?"ão":"á")+" substituída"+(existentes>1?"s":"")+".":""), function(){
+      var base = criaturasLista().reduce(function(m, x){ return Math.max(m, x.ordem||0); }, 0);
+      var ops = [], novas = [];
+      validas.forEach(function(orig, k){
+        var c = criaturaLimpa(Object.assign(criaturaNova(), orig, { grupos:orig.grupos||[], cond:orig.cond||[], trilhas:orig.trilhas||[], fases:orig.fases||[], desgaste:orig.desgaste||[] }));
+        if(!c.categoria && orig.cat) c.categoria = orig.cat;
+        c.id = (orig.id && /^[a-z0-9_-]{1,60}$/i.test(orig.id)) ? orig.id : slugCriatura(c.nome);
+        var antiga = (shared.documentosNotas||[]).filter(function(x){ return x.id === "bestdesc_"+c.id; })[0];
+        if(antiga && typeof antiga.descMesa === "string") c.desc = antiga.descMesa;
+        c.ordem = orig.ordem != null ? orig.ordem : base + k + 1;
+        c.importadaEm = new Date().toISOString();
+        novas.push(c);
+        ops.push({ tipo:"set", col:"criaturas", id:c.id, data:c });
+      });
+      var ids = novas.map(function(c){ return c.id; });
+      shared.criaturas = (shared.criaturas||[]).filter(function(x){ return ids.indexOf(x.id) < 0; }).concat(novas);
+      rerender();
+      if(FB) FB.escrever(ops).then(function(){ alert(novas.length+" criatura"+(novas.length>1?"s importadas":" importada")+"."); })
+        .catch(function(e){ console.error("[Pangea] importar criaturas", e); alert("Não deu pra importar: " + (e && (e.code || e.message) || "erro desconhecido") + ". Confira se as regras do Firestore têm o bloco criaturas."); });
+    });
+  }
+
   function gmBestiarioHtml(){
     var encs = encontrosLista();
     var body = '<div id="gm-bestiario">';
     body += '<p class="best-grupo-tit" style="margin-top:0">Em cena'+(encs.length?' ('+encs.length+')':'')+'</p>';
     if(!encs.length) body += '<p class="hint">Nenhuma criatura em cena. Escolha uma no catálogo e clique em “Colocar em cena”. Os jogadores só veem o que você revelar.</p>';
     encs.forEach(function(enc){ body += bestEncontroHtml(enc); });
-    body += '<p class="best-grupo-tit">Catálogo</p>' +
-      '<div class="field" style="max-width:320px;margin:0 0 6px"><input type="search" id="best-busca" placeholder="Buscar criatura…" value="'+esc(state.bestBusca||"")+'"></div>';
-    body += bestCatalogoHtml();
+    body += '<p class="best-grupo-tit">Catálogo</p>';
+    if(state.bestEdit){ body += bestEditorHtml(); }
+    else {
+      body += '<div class="row" style="gap:6px;flex-wrap:wrap;margin:0 0 8px">' +
+          '<button type="button" class="btn accent doc-btn" data-bnova="1">+ Nova criatura</button>' +
+          '<button type="button" class="btn secondary doc-btn" data-bimportar="1">Importar catálogo</button>' +
+          '<button type="button" class="btn secondary doc-btn" data-bexportar="1"'+(criaturasLista().length?'':' disabled')+'>Exportar catálogo</button>' +
+          '<input type="file" accept=".json,application/json" data-bimpfile style="display:none"></div>' +
+        '<div class="field" style="max-width:320px;margin:0 0 6px"><input type="search" id="best-busca" placeholder="Buscar criatura…" value="'+esc(state.bestBusca||"")+'"></div>';
+      body += bestCatalogoHtml();
+    }
     body += '<p class="hint" style="margin-top:10px">Os gimmicks não são automáticos: as condicionantes ficam descritas, e você decide quando valem. Os botões 🎲 nos textos rolam só o dano.</p>';
     return sectionCard("gmbestiario", "Bestiário", body + '</div>');
   }
@@ -9043,6 +9291,25 @@
     var raizCard = app.querySelector("#gm-bestiario"); if(!raizCard) return;
     var raiz = comCaixa(raizCard); // também liga os botões da ficha/condicionantes abertas na caixa
     function on(sel, ev, fn){ raiz.querySelectorAll(sel).forEach(function(el){ el.addEventListener(ev, function(e){ fn(el, e); }); }); }
+    if(state.bestEdit){ bindBestEditor(raizCard, rerender); }
+    on("[data-bnova]", "click", function(){ state.bestEdit = { cri:criaturaNova(), nova:true }; rerender(); });
+    on("[data-beditar]", "click", function(el){
+      var cri = bestCriatura(el.getAttribute("data-beditar")); if(!cri) return;
+      var d = JSON.parse(JSON.stringify(cri));
+      ["cond","trilhas","fases","grupos","desgaste"].forEach(function(k){ if(!Array.isArray(d[k])) d[k] = []; });
+      d.pilha = d.pilha || {};
+      state.bestEdit = { cri:d, nova:false }; rerender();
+      setTimeout(function(){ var e = app.querySelector("#best-editor"); if(e && e.scrollIntoView) e.scrollIntoView({block:"start"}); }, 0);
+    });
+    on("[data-bexportar]", "click", function(){ exportarCatalogo(); });
+    var arq = raiz.querySelector("[data-bimpfile]");
+    on("[data-bimportar]", "click", function(){ if(arq) arq.click(); });
+    if(arq) arq.addEventListener("change", function(){
+      var f = arq.files && arq.files[0]; if(!f) return;
+      var leitor = new FileReader();
+      leitor.onload = function(){ importarCatalogo(String(leitor.result||""), rerender); };
+      leitor.readAsText(f);
+    });
     var busca = raiz.querySelector("#best-busca");
     if(busca){
       busca.addEventListener("input", function(){ state.bestBusca = busca.value; bestAplicarBusca(raiz); });
@@ -9079,7 +9346,7 @@
     function trilhaDe(enc, el){ var ti = parseInt(el.getAttribute("data-btrilha"),10); return ti < 0 ? null : enc.trilhas[ti]; }
     on("[data-bdelta]", "click", function(el){ comEnc(el, "data-bcont", function(enc){
       var d = parseInt(el.getAttribute("data-bdelta"),10), t = trilhaDe(enc, el);
-      var cri = bestCriatura(enc.criaturaId), faseAntes = bestFaseNum(cri, enc.suc||0);
+      var cri = encCri(enc), faseAntes = bestFaseNum(cri, enc.suc||0);
       if(t) t.atual = clamp((t.atual||0)+d, 0, t.alvo); else enc.suc = clamp((enc.suc||0)+d, 0, enc.alvo);
       // Troca de fase (Líder do Conselho): Desgaste zera e os pontos que sobraram se perdem.
       if(!t && faseAntes && bestFaseNum(cri, enc.suc||0) !== faseAntes){
@@ -9107,7 +9374,7 @@
     }); });
     function ativDe(cri, el){ return cri.grupos[parseInt(el.getAttribute("data-bg"),10)].itens[parseInt(el.getAttribute("data-ba"),10)]; }
     on("[data-brepresar]", "click", function(el){ comEnc(el, "data-brepresar", function(enc){
-      var cri = bestCriatura(enc.criaturaId); if(!cri) return;
+      var cri = encCri(enc); if(!cri) return;
       var gi = el.getAttribute("data-bg"), ai = el.getAttribute("data-ba"), c = ativDe(cri, el).c||{};
       var falta = bestFalta(enc, gi, ai, c);
       enc.represado = enc.represado || {}; var r = enc.represado[gi+"-"+ai] = enc.represado[gi+"-"+ai] || {s:0,a:0,p:0};
@@ -9120,7 +9387,7 @@
       delete enc.represado[k]; gravarEncontro(enc); rerender();
     }); });
     on("[data-brolar]", "click", function(el){ comEnc(el, "data-brolar", function(enc){
-      var cri = bestCriatura(enc.criaturaId); if(!cri) return;
+      var cri = encCri(enc); if(!cri) return;
       var dados = bestRolarPilha(cri.pilha), t = bestTotais(dados);
       enc.pontos = enc.pontos || {s:0,a:0,p:0};
       enc.pontos.s = (enc.pontos.s||0)+t.s; enc.pontos.a = (enc.pontos.a||0)+t.a; enc.pontos.p = (enc.pontos.p||0)+t.p;
@@ -9129,13 +9396,13 @@
       gravarEncontro(enc); rerender();
     }); });
     on("[data-bmostrar]", "click", function(el){ comEnc(el, "data-bmostrar", function(enc){
-      var cri = bestCriatura(enc.criaturaId); if(!cri || !enc.rolagem || enc.rolagem.mostrado) return;
+      var cri = encCri(enc); if(!cri || !enc.rolagem || enc.rolagem.mostrado) return;
       el.disabled = true;
       enc.rolagem.mostrado = true; gravarEncontro(enc);
       bestMostrarRolagem(enc.revelada ? enc.nome : "Ameaça", bestPilhaTexto(cri.pilha), enc.rolagem.dados, rerender);
     }); });
     on("[data-bpagar]", "click", function(el){ comEnc(el, "data-bpagar", function(enc){
-      var cri = bestCriatura(enc.criaturaId); if(!cri) return;
+      var cri = encCri(enc); if(!cri) return;
       var gi = el.getAttribute("data-bg"), ai = el.getAttribute("data-ba"), a = ativDe(cri, el), c = a.c||{};
       var falta = bestFalta(enc, gi, ai, c);
       if(!["s","a","p"].every(function(k){ return (enc.pontos[k]||0) >= falta[k]; })) return;
@@ -9957,6 +10224,9 @@
       ouvintes.push(fb.ouvir("encontros", function(lista){
         shared.encontros = lista; agendarRender();
       }, function(e){ console.warn("[Pangea] bestiário", e); }));
+      ouvintes.push(fb.ouvir("criaturas", function(lista){
+        shared.criaturas = lista; agendarRender();
+      }, function(e){ console.warn("[Pangea] criaturas", e); }));
       ouvintes.push(fb.ouvir("itensPool", function(lista){
         shared.itensPool = lista; agendarRender();
       }, function(e){ console.warn("[Pangea] itens achados", e); }));
@@ -10072,7 +10342,7 @@ try {
   // as coleções antigas da raiz, lidas só na migração).
   const DA_CAMPANHA = { personagens: "fichas", resumos: "resumos", rolagens: "rolagens", rolagensNpc: "rolagensNpc",
     documentos: "documentos", documentosNotas: "documentosNotas", encontros: "encontros", encontrosMesa: "encontrosMesa",
-    itensPool: "itensPool", meta: "meta", notas: "notas", locais: "locais", convites: "convites", pedidos: "pedidos" };
+    itensPool: "itensPool", meta: "meta", notas: "notas", locais: "locais", convites: "convites", pedidos: "pedidos", criaturas: "criaturas" };
   let campanhaId = null;
   const caminho = (col) => {
     if (col.charAt(0) === "/") return col.slice(1);

@@ -130,6 +130,8 @@ service cloud.firestore {
       match /itensPool/{id}       { allow read, write: if mestreDe(cid); }
       match /notas/{id}           { allow read, write: if mestreDe(cid); }
       match /locais/{id}          { allow read, write: if mestreDe(cid); }
+      // Etapa D: catálogo de criaturas da campanha (só o mestre).
+      match /criaturas/{id}       { allow read, write: if mestreDe(cid); }
 
       // Convites (etapa B): quem tem o link (o código) consegue ler aquele convite;
       // só o mestre lista, cria e apaga (apagar = desativar o link).
