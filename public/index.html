@@ -318,6 +318,20 @@
     padding:10px 12px; background:var(--bg);
   }
   .trait.checked{ border-color:var(--accent); background:var(--surface-2); }
+  /* Linha de um tier de mutação (Teste de Assimilação e cartas): custo | texto | Adquirir.
+     O custo nunca encolhe por baixo do texto; em tela estreita o custo e o botão ficam
+     na primeira linha e o texto ocupa a largura toda embaixo. */
+  .trait.mut-tier{ display:grid; grid-template-columns:auto minmax(0,1fr) auto; align-items:center; cursor:default; }
+  .mut-custo{ min-width:74px; display:flex; }
+  .mut-custo .result-badges{ display:inline-flex; flex-wrap:wrap; gap:3px; }
+  .mut-tier .txt{ min-width:0; overflow-wrap:anywhere; }
+  .mut-acao{ flex:none; justify-self:end; }
+  @media (max-width:560px){
+    .trait.mut-tier{ display:flex; flex-wrap:wrap; align-items:center; gap:6px 10px; }
+    .mut-tier .mut-custo{ order:1; min-width:0; }
+    .mut-tier .mut-acao{ order:2; margin-left:auto; }
+    .mut-tier .txt{ order:3; flex:1 1 100%; }
+  }
   .trait input{ margin-top:3px; width:auto; }
   .trait .cost{ font-family:"Oswald",sans-serif; font-weight:700; color:var(--accent); min-width:34px; text-align:center; }
   .trait .txt b{ display:block; }
@@ -590,6 +604,11 @@
     letter-spacing:.04em; font-size:12.5px;
   }
   .rollfeed.collapsed{ max-height:none; }
+  /* Celular: o painel começa à direita do botão "Aa" (Aparência, fixo no canto
+     esquerdo), aberto ou fechado, pra um nunca ficar por cima do outro. */
+  @media (max-width:600px){
+    .rollfeed{ left:66px; right:14px; width:auto; max-width:none; }
+  }
   .rollfeed.collapsed .rollfeed-list{ display:none; }
   .rollfeed-list{ overflow-y:auto; padding:8px 12px; flex:1 1 auto; min-height:0; }
   .rollfeed-entry{ padding:7px 0; border-bottom:1px solid var(--border); }
@@ -7556,11 +7575,11 @@
       card[2].forEach(function(tier, tierIdx){
         var owned = tierJaAdquirido(c, cat, cardIdx, tierIdx);
         var pode = opts.comPool ? podeAdquirirTier(c, cat, cardIdx, tierIdx) : false;
-        html += '<div class="trait'+(owned?" checked":"")+'" style="cursor:default;align-items:center">' +
-          '<span style="min-width:74px">'+custoChipHtml(tier[0])+'</span>' +
+        html += '<div class="trait mut-tier'+(owned?" checked":"")+'">' +
+          '<span class="mut-custo">'+custoChipHtml(tier[0])+'</span>' +
           '<span class="txt"><b>'+esc(tier[1])+(tier[3]?' <span class="hint">(E'+tier[3]+'+)</span>':'')+'</b><span>'+formatEfeito(tier[2], true)+'</span></span>' +
-          (owned ? '<span class="badge-pill good" style="flex:none">adquirida</span>' :
-            (opts.comPool ? '<button type="button" class="btn secondary" style="flex:none" data-mutbuy="'+cat+'|'+cardIdx+'|'+tierIdx+'" '+(pode?'':'disabled')+'>Adquirir</button>' : '')) +
+          (owned ? '<span class="badge-pill good mut-acao">adquirida</span>' :
+            (opts.comPool ? '<button type="button" class="btn secondary mut-acao" data-mutbuy="'+cat+'|'+cardIdx+'|'+tierIdx+'" '+(pode?'':'disabled')+'>Adquirir</button>' : '')) +
         '</div>';
       });
       html += '</div>';
