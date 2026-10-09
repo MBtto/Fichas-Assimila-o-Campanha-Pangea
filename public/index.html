@@ -291,6 +291,7 @@
   .cfg-linha .cfg-cor input[type=color]{ width:42px; min-width:42px; height:36px; padding:2px; flex:none; }
   .cfg-linha .cfg-chk{ flex:0 0 auto; margin:0 0 14px; }
   .cfg-acoes{ display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px; }
+  .cfg-texto-jogador{ margin:0 0 10px; line-height:1.5; }
   .camp-sem-img{ width:46px; height:46px; flex:none; border-radius:50%; display:inline-block; opacity:.85; }
   .camp-opt.selected{ border-color:var(--camp-color); background:var(--surface-2); }
   .camp-opt h3{ color:var(--camp-color); font-size:16px; margin-bottom:4px; }
@@ -3119,14 +3120,17 @@
   var CONFIG_PANGEA = {
     criacao: {
       acampamento: true,
-      grupo: { rotulo: "Acampamento", opcoes: ["reverie","traum","mriya","yugen"].map(function(k){
+      grupo: { rotulo: "Acampamento", instrucao: "Escolha a qual dos quatro acampamentos de Pangea seu personagem pertence.", opcoes: ["reverie","traum","mriya","yugen"].map(function(k){
         var x = CAMPS[k]; return { id:k, nome:x.nome, pron:x.pron, cor:x.cor, img:x.img, frase:x.frase, desc:x.desc };
       }) },
-      geracao: "texto", propositos: "conexoes", artefato: true, kitInicial: true,
+      geracao: "texto", geracaoTexto: "Todos os Sobreviventes de Pangea nasceram no Pós-Colapso: esse é o único mundo que você já conheceu. Como foi crescer conhecendo só esse mundo?",
+      propositos: "personalizado",
+      propPers: { texto: "Propósitos Individuais: o que move seu personagem, o que ele lutaria até a morte pra proteger.\n\nConexões: NPCs ligados a você ou ao seu acampamento, como uma relação pessoal, uma dívida, uma promessa, ou até alguém que representa uma filosofia do acampamento que você quer manter viva.", nome1: "Propósitos Individuais", item1: "Propósito Individual", qtd1: 2, nome2: "Conexões", item2: "Conexão", qtd2: 2 },
+      artefato: true, kitInicial: true,
       camposExtras: [],
       valores: { instintoLivres:3, instintoMax:3, cpPontos:7, cpMax:2, xpInicial:7, escassezArtefato:3 }
     },
-    automacoes: { qualidadeCaiComPressao: true, dadosMantidosAuto: true, bestiarioDesgasteAuto: true, qualidadePorLocal: true },
+    automacoes: { qualidadeCaiComPressao: true, dadosMantidosAuto: true, qualidadePorLocal: true },
     locais: [
       {nome:"Já lidos (sessão 1)", tendencia:"geral"},
       {nome:"Cidade abandonada (shopping)", tendencia:"abandonado"},
@@ -3275,12 +3279,15 @@
   // ler isto para ligar/desligar cada coisa; até lá a criação segue a da Pangea.
   var CONFIG_PADRAO = {
     criacao: {
-      acampamento: false, grupo: { rotulo: "Grupo", opcoes: [] },
-      geracao: "livro", propositos: "livro", artefato: true, kitInicial: true,
+      acampamento: false, grupo: { rotulo: "Grupo", instrucao: "", opcoes: [] },
+      geracao: "livro", geracaoTexto: "Como foi crescer nesse mundo?",
+      propositos: "livro",
+      propPers: { texto: "", nome1: "Propósitos", item1: "Propósito", qtd1: 2, nome2: "", item2: "", qtd2: 0 },
+      artefato: true, kitInicial: true,
       camposExtras: [],
       valores: { instintoLivres:3, instintoMax:3, cpPontos:7, cpMax:2, xpInicial:7, escassezArtefato:3 }
     },
-    automacoes: { qualidadeCaiComPressao: false, dadosMantidosAuto: false, bestiarioDesgasteAuto: false, qualidadePorLocal: false },
+    automacoes: { qualidadeCaiComPressao: false, dadosMantidosAuto: false, qualidadePorLocal: false },
     locais: []
   };
   // ---------- CONFIGURAÇÃO DA CAMPANHA (etapa C) ----------
@@ -3295,7 +3302,6 @@
   var AUTOMACOES_INFO = [
     ["qualidadeCaiComPressao", "A Qualidade do item cai com a Pressão acumulada", "Botão +1 Pressão no item; Frágil e Durável mudam quantas Pressões derrubam um nível. Desligado: a Qualidade só muda à mão (− / +)."],
     ["dadosMantidosAuto", "Os dados mantidos são escolhidos sozinhos no teste", "O site já deixa marcados os melhores dados. Desligado: o jogador marca quais dados mantém."],
-    ["bestiarioDesgasteAuto", "O Bestiário soma o Desgaste e o Pagar desconta os pontos", "Rolar Ativação soma os Sucessos no Desgaste; Pagar e Represar descontam os pontos da criatura. Desligado: Desgaste e pontos só à mão."],
     ["qualidadePorLocal", "A Qualidade do item achado é sorteada pelo local", "Item sem Qualidade fixa sai sorteado pela tendência do local. Desligado: sai em Padrão (3)."]
   ];
   var TENDENCIAS_LOCAL = [["acampamento","Acampamento (em geral Padrão ou melhor)"],["abandonado","Abandonado (em geral gasto)"],["geral","Geral (Comprometido ou Padrão)"]];
@@ -3309,7 +3315,16 @@
     Object.keys(bc.valores).forEach(function(k){ var v = parseInt(cr.valores[k],10); cr.valores[k] = isNaN(v) ? bc.valores[k] : v; });
     if(!cr.grupo || !Array.isArray(cr.grupo.opcoes)) cr.grupo = bc.grupo;
     if(!cr.grupo.rotulo) cr.grupo.rotulo = bc.grupo.rotulo || "Grupo";
+    if(cr.grupo.instrucao == null) cr.grupo.instrucao = bc.grupo.instrucao || "";
     if(!Array.isArray(cr.camposExtras)) cr.camposExtras = [];
+    // Propósitos: só "livro" (padrão) ou "personalizado". Valores antigos viram personalizado.
+    if(cr.propositos === "conexoes") cr.propositos = "personalizado";
+    if(cr.propositos === "desligado"){ cr.propositos = "personalizado"; cr.propPers = { texto:"", nome1:"Propósitos", item1:"Propósito", qtd1:0, nome2:"", item2:"", qtd2:0 }; }
+    if(cr.propositos !== "personalizado") cr.propositos = "livro";
+    var pp = cr.propPers = cr.propPers || {}, bp = bc.propPers;
+    Object.keys(bp).forEach(function(k){ if(pp[k] === undefined || pp[k] === null) pp[k] = bp[k]; });
+    pp.qtd1 = clamp(parseInt(pp.qtd1,10)||0, 0, 3); pp.qtd2 = clamp(parseInt(pp.qtd2,10)||0, 0, 3);
+    if(cr.geracao !== "texto") cr.geracao = "livro";
     cfg.criacao = cr;
     var au = cfg.automacoes || {};
     Object.keys(base.automacoes).forEach(function(k){ if(typeof au[k] !== "boolean") au[k] = base.automacoes[k]; });
@@ -3900,9 +3915,10 @@
     function chk(attr, lig, txt, ajuda){ return '<label class="cfg-chk"><input type="checkbox" '+attr+(lig?' checked':'')+'><span><b>'+txt+'</b>'+(ajuda?'<span class="hint">'+ajuda+'</span>':'')+'</span></label>'; }
     function num(k, txt, min, max){ return '<div class="field cfg-num"><label>'+txt+'</label><input type="number" min="'+min+'" max="'+max+'" data-cfgval="'+k+'" value="'+v[k]+'"></div>'; }
     // Criação
-    var grupo = '<div class="cfg-bloco">' + chk('data-cfggrupo', cr.acampamento, 'Pedir um grupo na criação', 'Como o Acampamento da Pangea: o jogador escolhe uma opção, e a cor e a imagem dela vão para a ficha.');
+    var grupo = '<div class="cfg-bloco">' + chk('data-cfggrupo', cr.acampamento, 'Pedir um grupo na criação', 'O jogador escolhe uma opção, e a cor e a imagem dela vão para a ficha.');
     if(cr.acampamento){
-      grupo += '<div class="field" style="max-width:320px"><label>Nome do campo</label><input type="text" data-cfggruporot value="'+esc(cr.grupo.rotulo||"")+'" placeholder="ex.: Acampamento, Facção, Clã"></div>';
+      grupo += '<div class="field" style="max-width:320px"><label>Nome do campo</label><input type="text" data-cfggruporot value="'+esc(cr.grupo.rotulo||"")+'" placeholder="ex.: Acampamento, Facção, Clã"></div>' +
+        '<div class="field"><label>Texto para o jogador (texto livre)</label><textarea data-cfgtxt="grupo.instrucao" rows="2" placeholder="opcional: aparece acima das opções">'+esc(cr.grupo.instrucao||"")+'</textarea></div>';
       (cr.grupo.opcoes||[]).forEach(function(o, i){
         grupo += '<div class="cfg-linha cfg-opcao">' +
           '<div class="field"><label>Nome</label><input type="text" data-cfgop="'+i+'" data-k="nome" value="'+esc(o.nome||"")+'"></div>' +
@@ -3917,14 +3933,26 @@
       grupo += '<p class="hint" style="margin:6px 0 0">Tirar uma opção não muda as fichas que já a escolheram.</p>';
     }
     grupo += '</div>';
-    var formatos = '<div class="cfg-bloco cfg-grade">' +
-      '<div class="field"><label>Geração</label><select data-cfgsel="geracao">' +
-        '<option value="texto"'+(cr.geracao==="texto"?' selected':'')+'>Texto livre (como na Pangea)</option>' +
-        '<option value="livro"'+(cr.geracao==="livro"?' selected':'')+'>Escolha entre as 3 gerações do livro</option></select></div>' +
-      '<div class="field"><label>Propósitos</label><select data-cfgsel="propositos">' +
-        '<option value="livro"'+(cr.propositos==="livro"?' selected':'')+'>Livro: 2 Pessoais + 1 Coletivo</option>' +
-        '<option value="conexoes"'+(cr.propositos==="conexoes"?' selected':'')+'>Pangea: 2 Individuais + 2 Conexões</option>' +
-        '<option value="desligado"'+(cr.propositos==="desligado"?' selected':'')+'>Sem esta etapa</option></select></div>' +
+    var pp = cr.propPers || {};
+    var formatos = '<div class="cfg-bloco">' +
+      '<div class="field" style="max-width:420px"><label>Geração</label><select data-cfgsel="geracao">' +
+        '<option value="livro"'+(cr.geracao!=="texto"?' selected':'')+'>Padrão (as 3 gerações do livro)</option>' +
+        '<option value="texto"'+(cr.geracao==="texto"?' selected':'')+'>Texto livre</option></select></div>' +
+      (cr.geracao === "texto" ? '<div class="field"><label>Pergunta ou explicação para o jogador (texto livre)</label><textarea data-cfgtxt="geracaoTexto" rows="2">'+esc(cr.geracaoTexto||"")+'</textarea></div>' : '') +
+      '<div class="field" style="max-width:420px"><label>Propósitos</label><select data-cfgsel="propositos">' +
+        '<option value="livro"'+(cr.propositos!=="personalizado"?' selected':'')+'>Padrão (livro: 2 Pessoais + 1 Coletivo)</option>' +
+        '<option value="personalizado"'+(cr.propositos==="personalizado"?' selected':'')+'>Personalizado</option></select></div>' +
+      (cr.propositos === "personalizado" ?
+        '<div class="field"><label>Explicação para o jogador (texto livre)</label><textarea data-cfgtxt="propPers.texto" rows="4" placeholder="o que o jogador deve escrever em cada parte">'+esc(pp.texto||"")+'</textarea></div>' +
+        '<div class="cfg-linha">' +
+          '<div class="field"><label>1ª parte: nome</label><input type="text" data-cfgtxt="propPers.nome1" value="'+esc(pp.nome1||"")+'" placeholder="ex.: Propósitos Individuais"></div>' +
+          '<div class="field"><label>Nome de cada item</label><input type="text" data-cfgtxt="propPers.item1" value="'+esc(pp.item1||"")+'" placeholder="ex.: Propósito Individual"></div>' +
+          '<div class="field cfg-num"><label>Quantos</label><input type="number" min="0" max="3" data-cfgppqtd="qtd1" value="'+(pp.qtd1||0)+'"></div>' +
+        '</div><div class="cfg-linha">' +
+          '<div class="field"><label>2ª parte: nome</label><input type="text" data-cfgtxt="propPers.nome2" value="'+esc(pp.nome2||"")+'" placeholder="ex.: Conexões (ou deixe 0)"></div>' +
+          '<div class="field"><label>Nome de cada item</label><input type="text" data-cfgtxt="propPers.item2" value="'+esc(pp.item2||"")+'" placeholder="ex.: Conexão"></div>' +
+          '<div class="field cfg-num"><label>Quantos</label><input type="number" min="0" max="3" data-cfgppqtd="qtd2" value="'+(pp.qtd2||0)+'"></div>' +
+        '</div><p class="hint" style="margin:0 0 8px">Com 0 nas duas partes, o passo de Propósitos some da criação.</p>' : '') +
       '</div><div class="cfg-bloco">' +
       chk('data-cfgchk="artefato"', cr.artefato, 'Etapa do Artefato inicial') +
       chk('data-cfgchk="kitInicial"', cr.kitInicial, 'Etapa do Pacote inicial (kit de equipamentos)') +
@@ -4000,7 +4028,16 @@
     on("[data-cfgopadd]", "click", function(){ cr.grupo.opcoes.push({ id:"g_"+codigoAleatorio(6), nome:"", cor:"#8a7a5c", img:"", frase:"", desc:"" }); sujo(true); });
     on("[data-cfgopdel]", "click", function(el){ cr.grupo.opcoes.splice(idx(el,"data-cfgopdel"),1); sujo(true); });
     on("[data-cfgopmover]", "click", function(el){ mover(cr.grupo.opcoes, idx(el,"data-cfgopmover"), idx(el,"data-dir")); sujo(true); });
-    on("[data-cfgsel]", "change", function(el){ cr[el.getAttribute("data-cfgsel")] = el.value; sujo(); });
+    on("[data-cfgsel]", "change", function(el){ cr[el.getAttribute("data-cfgsel")] = el.value; sujo(true); });
+    on("[data-cfgtxt]", "input", function(el){
+      var ps = el.getAttribute("data-cfgtxt").split("."), o = cr;
+      for(var k=0;k<ps.length-1;k++){ o = o[ps[k]] = o[ps[k]] || {}; }
+      o[ps[ps.length-1]] = el.value; sujo();
+    });
+    on("[data-cfgppqtd]", "input", function(el){
+      var n = parseInt(el.value,10); if(isNaN(n)) return;
+      cr.propPers = cr.propPers || {}; cr.propPers[el.getAttribute("data-cfgppqtd")] = clamp(n, 0, 3); sujo();
+    });
     on("[data-cfgchk]", "change", function(el){ cr[el.getAttribute("data-cfgchk")] = el.checked; sujo(); });
     on("[data-cfgval]", "input", function(el){
       var n = parseInt(el.value,10), mn = parseInt(el.min,10), mx = parseInt(el.max,10);
@@ -4047,6 +4084,12 @@
     if(corRuim) return { erro:"A cor de \""+corRuim.nome+"\" não é válida. Use o seletor de cor." };
     var imgRuim = cr.grupo.opcoes.filter(function(o){ return o.img && /^\s*javascript:/i.test(o.img); })[0];
     if(imgRuim) return { erro:"O endereço da imagem de \""+imgRuim.nome+"\" não é válido." };
+    if(cr.propositos === "personalizado"){
+      var pp = cr.propPers || {};
+      ["1","2"].forEach(function(n){ pp["nome"+n] = String(pp["nome"+n]||"").trim(); pp["item"+n] = String(pp["item"+n]||"").trim(); });
+      if(pp.qtd1 > 0 && (!pp.nome1 || !pp.item1)) return { erro:"Dê o nome da 1ª parte dos Propósitos e de cada item dela." };
+      if(pp.qtd2 > 0 && (!pp.nome2 || !pp.item2)) return { erro:"Dê o nome da 2ª parte dos Propósitos e de cada item dela (ou deixe 0)." };
+    }
     cr.camposExtras = (cr.camposExtras||[]).map(function(f){ f.rotulo = String(f.rotulo||"").trim(); return f; });
     if(cr.camposExtras.some(function(f){ return !f.rotulo; })) return { erro:"Dê um nome a todos os campos extras (ou remova os vazios)." };
     var semOps = cr.camposExtras.filter(function(f){ return f.tipo === "escolha" && !(f.opcoes||[]).length; })[0];
@@ -4921,11 +4964,21 @@
     if(cr.propositos === "livro"){
       lista.push({ k:"propositos", titulo:"Propósitos pessoais", itens:[pi[0], pi[1]], lista:true });
       lista.push({ k:"conexoes", titulo:"Propósito coletivo", itens:[pr[0]].concat(pr[1] ? [pr[1]] : []), lista:true });
-    } else if(cr.propositos === "conexoes" || pi[0] || pr[0]){
-      lista.push({ k:"propositos", titulo:"Propósitos individuais", itens:[pi[0], pi[1]], lista:true });
-      lista.push({ k:"conexoes", titulo:"Conexões", itens:[pr[0], pr[1]], lista:true });
+    } else {
+      var pp = cr.propPers;
+      if(pp.qtd1 || pi.some(Boolean)) lista.push({ k:"propositos", titulo:pp.nome1 || "Propósitos", itens:pi.slice(0, Math.max(pp.qtd1, pi.filter(Boolean).length)), lista:true });
+      if(pp.qtd2 || pr.some(Boolean)) lista.push({ k:"conexoes", titulo:pp.nome2 || "Outros", itens:pr.slice(0, Math.max(pp.qtd2, pr.filter(Boolean).length)), lista:true });
     }
     return lista;
+  }
+  function origemTitulo(){
+    var cr = cfgCriacao();
+    if(cr.propositos === "livro") return "Origem &amp; Propósitos";
+    var pp = cr.propPers, partes = [];
+    if(pp.qtd1 && pp.nome1) partes.push(esc(pp.nome1));
+    if(pp.qtd2 && pp.nome2) partes.push(esc(pp.nome2));
+    if(!partes.length) return "Origem";
+    return "Origem, " + partes.join(" &amp; ");
   }
   function fichaAtual(){ return state.view === "sheet" && state.charId ? getChar(state.charId) : null; }
   CAIXAS.orig = function(k){
@@ -5704,14 +5757,17 @@
   function wizRotulo(step){
     var cr = cfgCriacao();
     if(step === 0) return grupoLigado() ? grupoRotulo() : "Nome";
-    if(step === 2) return cr.propositos === "livro" ? "Propósitos" : "Propósitos e Conexões";
+    if(step === 2){
+      if(cr.propositos === "livro") return "Propósitos";
+      var pp = cr.propPers; return pp.qtd1 && pp.qtd2 ? pp.nome1+" e "+pp.nome2 : (pp.qtd1 ? pp.nome1 : pp.nome2) || "Propósitos";
+    }
     if(step === 6) return cr.artefato && cr.kitInicial ? "Artefato e Equipamentos" : (cr.artefato ? "Artefato inicial" : "Equipamentos iniciais");
     return WIZ_STEPS[step];
   }
   function wizEtapas(){
     var cr = cfgCriacao();
     return [0,1,2,3,4,5,6].filter(function(st){
-      if(st === 2) return cr.propositos !== "desligado";
+      if(st === 2) return cr.propositos === "livro" || (cr.propPers.qtd1 + cr.propPers.qtd2) > 0;
       if(st === 6) return !!(cr.artefato || cr.kitInicial);
       return true;
     });
@@ -5800,12 +5856,14 @@
       return {ok:true};
     }
     if(step === 2){
-      if(cr.propositos === "desligado") return {ok:true};
-      var nomeInd = cr.propositos === "livro" ? "Pessoais" : "Individuais";
-      if(!c.propIndividuais[0] || !c.propIndividuais[1]) return {ok:false, msg:"Preencha os 2 Propósitos "+nomeInd+"."};
       if(cr.propositos === "livro"){
+        if(!c.propIndividuais[0] || !c.propIndividuais[1]) return {ok:false, msg:"Preencha os 2 Propósitos Pessoais."};
         if(!c.propRelacionais[0]) return {ok:false, msg:"Preencha o Propósito Coletivo (a proposta que você leva ao grupo)."};
-      } else if(!c.propRelacionais[0] || !c.propRelacionais[1]) return {ok:false, msg:"Preencha as 2 Conexões (os NPCs ligados ao seu personagem ou ao seu acampamento)."};
+        return {ok:true};
+      }
+      var pp = cr.propPers, k;
+      for(k=0;k<pp.qtd1;k++) if(!String((c.propIndividuais||[])[k]||"").trim()) return {ok:false, msg:"Preencha "+pp.item1+" "+(k+1)+"."};
+      for(k=0;k<pp.qtd2;k++) if(!String((c.propRelacionais||[])[k]||"").trim()) return {ok:false, msg:"Preencha "+pp.item2+" "+(k+1)+"."};
       return {ok:true};
     }
     if(step === 3){
@@ -5979,8 +6037,8 @@
       html += camposExtrasFormHtml(c);
       var opsGrupo = grupoOpcoes();
       if(opsGrupo.length){
-        var ehPangea = campanhaAtual ? campanhaAtual.id === CAMPANHA_PADRAO : true;
-        html += '<p>'+(ehPangea && grupoRotulo() === "Acampamento" ? 'Escolha a qual dos quatro acampamentos de Pangea seu personagem pertence.' : 'Escolha o(a) '+esc(grupoRotulo().toLowerCase())+' do seu personagem.')+'</p><div class="camp-pick">';
+        var instr = String(cfgCriacao().grupo.instrucao||"").trim();
+        html += '<p>'+(instr ? esc(instr) : 'Escolha o(a) '+esc(grupoRotulo().toLowerCase())+' do seu personagem.')+'</p><div class="camp-pick">';
         opsGrupo.forEach(function(o){
           var camp = CAMPS[o.id] || o, key = o.id;
           html += '<button type="button" class="camp-opt'+(c.acampamento===key?' selected':'')+'" style="--camp-color:'+esc(camp.cor||"var(--accent)")+'" data-camp="'+esc(key)+'">' +
@@ -6006,14 +6064,13 @@
           ((c.origem.geracao && !GERACOES_LIVRO.some(function(g){ return g[0]===c.origem.geracao; })) ? '<p class="hint">Hoje na ficha: '+esc(c.origem.geracao)+'</p>' : '') +
           '</div></div>';
       } else {
-        geracaoHtml = '<div class="field"><label>Geração: como foi crescer conhecendo só esse mundo?</label><textarea data-origem="geracao">'+esc(c.origem.geracao)+'</textarea></div>';
+        var gTxt = String(cfgCriacao().geracaoTexto||"").trim();
+        geracaoHtml = '<div class="field"><label>Geração</label>'+(gTxt ? '<p class="hint" style="margin:0 0 6px">'+esc(gTxt)+'</p>' : '')+'<textarea data-origem="geracao">'+esc(c.origem.geracao)+'</textarea></div>';
       }
-      var introOrigem = (campanhaAtual && campanhaAtual.id !== CAMPANHA_PADRAO)
-        ? '<p>Complete a Origem do personagem: a Geração, um Evento Marcante (passado) e a Ocupação (atual).</p>'
-        : '<p>Todos os Sobreviventes de Pangea nasceram no Pós-Colapso: esse é o único mundo que você já conheceu. Complete a Origem do personagem em três frases curtas.</p>';
+      var introOrigem = '<p>Complete a Origem do personagem: a Geração, um Evento Marcante (passado) e a Ocupação (atual).</p>';
       return introOrigem + geracaoHtml +
         '<div class="field"><label>Evento Marcante: algo que moldou como ele vê o mundo hoje</label><textarea data-origem="evento">'+esc(c.origem.evento)+'</textarea></div>' +
-        '<div class="field"><label>'+((campanhaAtual && campanhaAtual.id !== CAMPANHA_PADRAO) ? 'Ocupação: o que ele faz hoje e pelo que é conhecido' : 'Ocupação: função atual dentro do acampamento')+'</label><textarea data-origem="ocupacao">'+esc(c.origem.ocupacao)+'</textarea></div>';
+        '<div class="field"><label>Ocupação: o que ele faz hoje e pelo que é conhecido</label><textarea data-origem="ocupacao">'+esc(c.origem.ocupacao)+'</textarea></div>';
     }
     if(step === 2){
       if(cfgCriacao().propositos === "livro"){
@@ -6025,16 +6082,15 @@
           '<p style="margin-top:14px"><b>Propósito Coletivo:</b> a sua proposta para o grupo. Ele só vale se pelo menos mais um jogador aderir (senão fica Inerte).</p>' +
           '<div class="field"><label>Propósito Coletivo</label><input type="text" data-prop="rel0" value="'+esc(c.propRelacionais[0])+'"></div>';
       }
-      return '<p><b>2 Propósitos Individuais:</b> o que move seu personagem, o que ele lutaria até a morte pra proteger.</p>' +
-        '<div class="grid cols-2">' +
-          '<div class="field"><label>Propósito Individual 1</label><input type="text" data-prop="ind0" value="'+esc(c.propIndividuais[0])+'"></div>' +
-          '<div class="field"><label>Propósito Individual 2</label><input type="text" data-prop="ind1" value="'+esc(c.propIndividuais[1])+'"></div>' +
-        '</div>' +
-        '<p style="margin-top:14px"><b>2 Conexões:</b> NPCs ligados a você ou ao seu acampamento, como uma relação pessoal, uma dívida, uma promessa, ou até alguém que representa uma filosofia do acampamento que você quer manter viva.</p>' +
-        '<div class="grid cols-2">' +
-          '<div class="field"><label>Conexão 1</label><input type="text" data-prop="rel0" placeholder="nome do NPC e o que ele significa pra você" value="'+esc(c.propRelacionais[0])+'"></div>' +
-          '<div class="field"><label>Conexão 2</label><input type="text" data-prop="rel1" placeholder="nome do NPC e o que ele significa pra você" value="'+esc(c.propRelacionais[1])+'"></div>' +
-        '</div>';
+      var pp = cfgCriacao().propPers, h = '';
+      if(String(pp.texto||"").trim()) h += '<div class="cfg-texto-jogador">'+esc(pp.texto).replace(/\n/g,'<br>')+'</div>';
+      function parte(nome, item, qtd, chave, arr){
+        if(!qtd) return '';
+        var out = '<h3 style="margin:14px 0 8px">'+esc(nome)+'</h3><div class="grid cols-2">';
+        for(var k=0;k<qtd;k++) out += '<div class="field"><label>'+esc(item)+' '+(k+1)+'</label><input type="text" data-prop="'+chave+k+'" value="'+esc((arr||[])[k]||"")+'"></div>';
+        return out + '</div>';
+      }
+      return h + parte(pp.nome1, pp.item1, pp.qtd1, "ind", c.propIndividuais) + parte(pp.nome2, pp.item2, pp.qtd2, "rel", c.propRelacionais);
     }
     if(step === 3){
       var vI = cfgValores();
@@ -6178,11 +6234,10 @@
     if(step === 2){
       app.querySelectorAll("[data-prop]").forEach(function(el){
         el.addEventListener("input", function(){
-          var k = el.getAttribute("data-prop");
-          if(k==="ind0") c.propIndividuais[0]=el.value;
-          if(k==="ind1") c.propIndividuais[1]=el.value;
-          if(k==="rel0") c.propRelacionais[0]=el.value;
-          if(k==="rel1") c.propRelacionais[1]=el.value;
+          var k = el.getAttribute("data-prop"), n = parseInt(k.slice(3),10);
+          var arr = k.indexOf("ind")===0 ? (c.propIndividuais = c.propIndividuais || []) : (c.propRelacionais = c.propRelacionais || []);
+          while(arr.length <= n) arr.push("");
+          arr[n] = el.value;
         });
       });
     }
@@ -6388,7 +6443,7 @@
     // Origem / Propositos
     // Cada tópico é só uma linha (título + começo do texto); o texto inteiro abre
     // numa caixa ao lado (ver abrirOrigemPop), pra o cartão não crescer.
-    html += sectionCard("origem", cfgCriacao().propositos === "livro" ? "Origem &amp; Propósitos" : (cfgCriacao().propositos === "desligado" ? "Origem" : "Origem, Propósitos &amp; Conexões"),
+    html += sectionCard("origem", origemTitulo(),
       '<div class="lx-lista">' + origemTopicos(c).map(function(t){
         var prev = t.itens.filter(Boolean).join(" · ");
         return caixaLinha("orig", t.k, esc(t.titulo), prev ? esc(prev) : '<i>em branco</i>');
@@ -8790,7 +8845,7 @@
             '<button type="button" class="best-mini" data-bdesrepresar="'+enc.id+'" data-bg="'+gi+'" data-ba="'+ai+'" title="Devolver os pontos represados">↩</button></span>';
         }
         html += '<div class="best-ativ best-ativ-'+tipo+'"><div class="best-ativ-cab"><b>'+esc(a.n)+'</b>'+bestCustoHtml(c, a.x) + repTxt +
-          (enc && temCusto && autoLigada("bestiarioDesgasteAuto") ? '<span class="best-ativ-acoes">' +
+          (enc && temCusto ? '<span class="best-ativ-acoes">' +
             (podeRepresar ? '<button type="button" class="btn secondary doc-btn" data-brepresar="'+enc.id+'" data-bg="'+gi+'" data-ba="'+ai+'" title="Investe o que der agora; o resto fica pra próxima rodada">Represar</button>' : '') +
             '<button type="button" class="btn '+(pode?'accent':'secondary')+' doc-btn best-pagar" data-bpagar="'+enc.id+'" data-bg="'+gi+'" data-ba="'+ai+'"'+(pode?'':' disabled')+' title="Desconta o custo (usa primeiro o que já está represado)">Pagar</button></span>' : '') +
           '</div><p>'+bestTextoHtml(a.t, chave+"-"+gi+"-"+ai)+'</p></div>';
@@ -8814,7 +8869,7 @@
       html += '<div class="row" style="gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:6px"><span>Sucessos rolados pela criatura: <b>'+atual+'</b></span>' +
         '<button type="button" class="best-mini" data-bdesg="'+enc.id+'" data-bv="-1"'+(atual<=0?' disabled':'')+'>−</button>' +
         '<button type="button" class="best-mini" data-bdesg="'+enc.id+'" data-bv="1">+</button>' +
-        '<span class="hint" style="margin:0">'+(autoLigada("bestiarioDesgasteAuto")?'(soma sozinho a cada Rolar Ativação)':'(só à mão nesta campanha)')+'</span></div>';
+        '<span class="hint" style="margin:0">(soma sozinho a cada Rolar Ativação)</span></div>';
     }
     lista.forEach(function(d, i){
       var feito = enc && atual >= d.m;
@@ -8869,9 +8924,7 @@
       }).join('') +
       '<button type="button" class="btn accent doc-btn" data-brolar="'+enc.id+'">🎲 Rolar Ativação</button>' +
       '<button type="button" class="btn secondary doc-btn" data-bzerar="'+enc.id+'"'+((p.s||p.a||p.p)?'':' disabled')+' title="Pontos livres que não pagaram nem foram represados em nenhuma Ativação se perdem">Fim da rodada: descartar sobras</button></div>';
-    html += autoLigada("bestiarioDesgasteAuto")
-      ? '<p class="hint" style="margin:4px 0 0">A rolagem mantém todos os dados e soma aos pontos (Sucesso, Adaptação e Pressão). Todo ponto deve ser investido na rodada: <b>Pagar</b> uma Ativação ou <b>Represar</b> numa incompleta (fica guardado nela pra próxima rodada). O que não pagar nada se perde no fim da rodada.</p>'
-      : '<p class="hint" style="margin:4px 0 0">A rolagem mantém todos os dados e soma aos pontos (Sucesso, Adaptação e Pressão). Nesta campanha você desconta à mão (− / +) o que a criatura investir em cada Ativação. O que não pagar nada se perde no fim da rodada.</p>';
+    html += '<p class="hint" style="margin:4px 0 0">A rolagem mantém todos os dados e soma aos pontos (Sucesso, Adaptação e Pressão). Todo ponto deve ser investido na rodada: <b>Pagar</b> uma Ativação ou <b>Represar</b> numa incompleta (fica guardado nela pra próxima rodada). O que não pagar nada se perde no fim da rodada.</p>';
     html += bestRolagemHtml(enc.rolagem, 'data-bmostrar="'+enc.id+'"', 'data-bfecharrol="'+enc.id+'"');
     if((cri.cond||[]).length) html += '<div class="lx-lista" style="margin:8px 0">'+caixaLinha("bcond", enc.id, "Condicionantes", esc(cri.cond.map(function(x){ return x.n; }).join(" · ")), '<span class="lx-sel">'+cri.cond.length+'</span>')+'</div>';
     html += '<div class="best-ativs">'+bestAtivacoesHtml(cri, "e"+enc.id, enc)+'</div>';
@@ -9044,7 +9097,7 @@
       var dados = bestRolarPilha(cri.pilha), t = bestTotais(dados);
       enc.pontos = enc.pontos || {s:0,a:0,p:0};
       enc.pontos.s = (enc.pontos.s||0)+t.s; enc.pontos.a = (enc.pontos.a||0)+t.a; enc.pontos.p = (enc.pontos.p||0)+t.p;
-      if((cri.desgaste||[]).length && autoLigada("bestiarioDesgasteAuto")) enc.desgaste = (enc.desgaste||0) + t.s; // todo Sucesso rolado marca a trilha de Desgaste
+      if((cri.desgaste||[]).length) enc.desgaste = (enc.desgaste||0) + t.s; // todo Sucesso rolado marca a trilha de Desgaste
       enc.rolagem = { dados:dados.map(function(d){ return {sides:d.sides, face:d.face, s:d.s, a:d.a, p:d.p}; }), mostrado:false, ts:new Date().toISOString() };
       gravarEncontro(enc); rerender();
     }); });
