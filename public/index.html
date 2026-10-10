@@ -506,6 +506,9 @@
     .lx{ grid-template-columns:minmax(0,1fr) auto auto; }
     .lx-prev{ grid-column:1 / -1; grid-row:2; white-space:normal; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; }
   }
+  .carac-prev{ margin-top:10px; padding:10px 12px; border:1px solid var(--border); border-left:3px solid var(--camp-color, var(--accent)); border-radius:8px; background:var(--surface-2); overflow-wrap:anywhere; }
+  .carac-prev p{ margin:4px 0 0; }
+  .carac-prev-tit{ display:flex; flex-wrap:wrap; align-items:center; gap:6px; }
   .lx-sub{ margin:12px 0 6px; font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-muted); }
   .lx-sub:first-child{ margin-top:0; }
   .caixa{ position:absolute; z-index:55; display:flex; flex-direction:column; box-sizing:border-box;
@@ -1392,59 +1395,59 @@
   // alternativas [atributo, mínimo] (basta uma). "assimilacao" = Nível de Assimilação.
   var CARACTERISTICAS = [
     // 1 ponto
-    {id:"agricultor", nome:"Agricultor", custo:1, req:[[["geografia",1]]], txt:"Em jogadas sobre vida vegetal cultivada (grãos, frutos, vegetais, mudas, pragas agrícolas), ganha um Sucesso adicional."},
-    {id:"cavaleiro", nome:"Cavaleiro", custo:1, req:[], txt:"Testes para conduzir animais de montaria podem transformar uma Adaptação em Sucesso."},
-    {id:"estagio_avancado", nome:"Estágio Avançado", custo:1, req:[], soCriacao:true, txt:"Só na criação e com aprovação do Assimilador: +1 Nível de Assimilação inicial (e -1 Nível de Determinação), com rolagem de Assimilações adicionais."},
-    {id:"investigador_assimilacao", nome:"Investigador da Assimilação", custo:1, req:[[["biologia",1]]], txt:"Em testes sobre o funcionamento da Assimilação, pode transformar uma Adaptação em Sucesso."},
-    {id:"pegada_forte", nome:"Pegada Forte", custo:1, req:[[["potencia",2]]], txt:"Testes de firmeza pra se segurar ou não deixar algo/alguém escapar das mãos podem transformar uma Adaptação em Sucesso."},
-    {id:"piloto", nome:"Piloto", custo:1, req:[], txt:"Testes para conduzir veículos podem transformar uma Adaptação em Sucesso."},
-    {id:"punhos_ferro", nome:"Punhos de Ferro", custo:1, req:[[["potencia",2]],[["resolucao",2]]], txt:"Ao usar um Ponto de Determinação pra manter um dado adicional em combate desarmado, também pode transformar uma Adaptação em Sucesso."},
-    {id:"saque_rapido", nome:"Saque Rápido", custo:1, req:[[["reacao",2]]], txt:"Não gasta Adaptação pra sacar ou guardar um Equipamento, mesmo em Conflito."},
-    {id:"sono_leve", nome:"Sono Leve", custo:1, req:[], txt:"Pode fazer um teste de Percepção pra não ser surpreendido enquanto dorme."},
-    {id:"trato_animais", nome:"Trato com Animais", custo:1, req:[[["influencia",2]]], txt:"Jogadas pra influenciar amistosamente o comportamento de animais podem transformar uma Adaptação em Sucesso."},
-    {id:"viajado", nome:"Viajado", custo:1, req:[], txt:"Jogadas envolvendo contato com outras culturas e povos permitem anular uma Pressão no resultado."},
+    {id:"agricultor", nome:"Agricultor", custo:1, req:[[["geografia",1]]], resumo:"+1 Sucesso com plantas cultivadas", txt:"Em jogadas sobre vida vegetal cultivada (grãos, frutos, vegetais, mudas, pragas agrícolas), ganha um Sucesso adicional."},
+    {id:"cavaleiro", nome:"Cavaleiro", custo:1, req:[], resumo:"Adaptação vira Sucesso ao conduzir montarias", txt:"Testes para conduzir animais de montaria podem transformar uma Adaptação em Sucesso."},
+    {id:"estagio_avancado", nome:"Estágio Avançado", custo:1, req:[], soCriacao:true, resumo:"Só na criação: +1 Assimilação, −1 Determinação", txt:"Só na criação e com aprovação do Assimilador: +1 Nível de Assimilação inicial (e -1 Nível de Determinação), com rolagem de Assimilações adicionais."},
+    {id:"investigador_assimilacao", nome:"Investigador da Assimilação", custo:1, req:[[["biologia",1]]], resumo:"Adaptação vira Sucesso ao estudar a Assimilação", txt:"Em testes sobre o funcionamento da Assimilação, pode transformar uma Adaptação em Sucesso."},
+    {id:"pegada_forte", nome:"Pegada Forte", custo:1, req:[[["potencia",2]]], resumo:"Adaptação vira Sucesso pra segurar firme", txt:"Testes de firmeza pra se segurar ou não deixar algo/alguém escapar das mãos podem transformar uma Adaptação em Sucesso."},
+    {id:"piloto", nome:"Piloto", custo:1, req:[], resumo:"Adaptação vira Sucesso ao conduzir veículos", txt:"Testes para conduzir veículos podem transformar uma Adaptação em Sucesso."},
+    {id:"punhos_ferro", nome:"Punhos de Ferro", custo:1, req:[[["potencia",2]],[["resolucao",2]]], resumo:"Desarmado: dado extra com Determinação + Adaptação vira Sucesso", txt:"Ao usar um Ponto de Determinação pra manter um dado adicional em combate desarmado, também pode transformar uma Adaptação em Sucesso."},
+    {id:"saque_rapido", nome:"Saque Rápido", custo:1, req:[[["reacao",2]]], resumo:"Sacar ou guardar Equipamento não gasta Adaptação", txt:"Não gasta Adaptação pra sacar ou guardar um Equipamento, mesmo em Conflito."},
+    {id:"sono_leve", nome:"Sono Leve", custo:1, req:[], resumo:"Teste de Percepção pra não ser surpreendido dormindo", txt:"Pode fazer um teste de Percepção pra não ser surpreendido enquanto dorme."},
+    {id:"trato_animais", nome:"Trato com Animais", custo:1, req:[[["influencia",2]]], resumo:"Adaptação vira Sucesso ao lidar com animais", txt:"Jogadas pra influenciar amistosamente o comportamento de animais podem transformar uma Adaptação em Sucesso."},
+    {id:"viajado", nome:"Viajado", custo:1, req:[], resumo:"Anula 1 Pressão no contato com outras culturas", txt:"Jogadas envolvendo contato com outras culturas e povos permitem anular uma Pressão no resultado."},
     // 2 pontos
-    {id:"antecedente_marcante", nome:"Antecedente Marcante", custo:2, req:[], txt:"Ao ativar o Evento Marcante, adiciona um d10 na rolagem, sem alterar a quantidade de dados mantidos."},
-    {id:"aparencia_inofensiva", nome:"Aparência Inofensiva", custo:2, req:[[["influencia",2]]], txt:"Em Conflito, pode gastar Adaptação ou Sucesso pra encarecer as ativações de Ameaças que o tenham como alvo no próximo turno (cada Adaptação +1 Adaptação; cada Sucesso +1 Pressão no custo)."},
-    {id:"artes_marciais", nome:"Artes Marciais", custo:2, req:[[["atletismo",2]],[["reacao",2]]], txt:"Testes que envolvam diretamente artes marciais (atacando ou defendendo) permitem remover uma Pressão do resultado."},
-    {id:"atencao_redobrada", nome:"Atenção Redobrada", custo:2, req:[[["percepcao",2]]], txt:"Ao reagir a um perigo súbito (queda, armadilha, emboscada), pode transformar em Sucesso um número de Adaptações até o seu valor de Reação."},
-    {id:"atirador_astuto", nome:"Atirador Astuto", custo:2, req:[[["furtividade",2]]], txt:"Em ataques de pontaria protegido por uma cobertura onde consiga se esconder, pode transformar uma Adaptação em Sucesso."},
-    {id:"batedor", nome:"Batedor", custo:2, req:[[["geografia",2]]], txt:"Explora a Região na metade do tempo e encontra um marco geográfico escolhido pelo Assimilador se tiver êxito em Geografia ou Sobrevivência."},
-    {id:"disciplinado", nome:"Disciplinado", custo:2, req:[], txt:"Fora de Conflito e sem ser perturbado, pode ignorar uma Pressão no resultado se fizer a ação com calma, levando o dobro do tempo."},
-    {id:"dissimulado", nome:"Dissimulado", custo:2, req:[[["influencia",2]],[["expressao",1],["furtividade",1]]], txt:"Se passa por residente de outro Refúgio (com acesso ao vestuário local) com êxito em Influência + Expressão ou Furtividade; quanto menor o Refúgio, mais Sucessos exigidos."},
-    {id:"escaldado", nome:"Escaldado", custo:2, req:[[["sagacidade",2]]], txt:"Em testes de Percepção pra perceber segundas intenções (pedidos pelo Assimilador), pode transformar uma Adaptação em Sucesso."},
-    {id:"frugal", nome:"Frugal", custo:2, req:[], txt:"Precisa de menos água e comida: aguenta o dobro do tempo sem elas antes de sofrer penalidade."},
-    {id:"intimidador", nome:"Intimidador", custo:2, req:[], txt:"Ao intimidar, pode gastar um Ponto de Determinação pra trocar a quantidade de dados de Expressão pelo valor de um Instinto aprovado pelo Assimilador (o tipo de dado não muda)."},
-    {id:"maos_leves", nome:"Mãos-Leves", custo:2, req:[[["reacao",2]],[["furtividade",2]]], txt:"Ao roubar ou ocultar objetos à vista das pessoas, adiciona uma Adaptação ao resultado."},
-    {id:"memoria_afiada", nome:"Memória Afiada", custo:2, req:[[["sagacidade",2]]], txt:"Testes ligados a lembrar de alguma informação garantem um Sucesso no resultado."},
-    {id:"presenca_encantadora", nome:"Presença Encantadora", custo:2, req:[[["influencia",3]]], txt:"Pode gastar um Ponto de Determinação antes de rolar pra anular todas as Pressões do resultado em interações sociais."},
-    {id:"reliquia", nome:"Relíquia", custo:2, req:[], txt:"O Artefato inicial é um item valioso sempre consigo: não é limitado pelo teto de Escassez da criação e pode ser consertado mesmo Quebrado; perdê-lo custa um Ponto de Determinação."},
-    {id:"sacrificio_heroico", nome:"Sacrifício Heroico", custo:2, req:[], txt:"Uma vez por sessão, pode sofrer todo o dano no lugar de um aliado próximo."},
-    {id:"sentido_agucado", nome:"[Sentido] Aguçado", custo:2, req:[[["percepcao",2]]], escolha:["visão","audição","tato","paladar","olfato"], txt:"Escolha um sentido: todo teste de Percepção pra identificar algo com ele adiciona um Sucesso ao resultado."},
+    {id:"antecedente_marcante", nome:"Antecedente Marcante", custo:2, req:[], resumo:"Evento Marcante rola +1 d10", txt:"Ao ativar o Evento Marcante, adiciona um d10 na rolagem, sem alterar a quantidade de dados mantidos."},
+    {id:"aparencia_inofensiva", nome:"Aparência Inofensiva", custo:2, req:[[["influencia",2]]], resumo:"Encarece ativações de Ameaças contra você", txt:"Em Conflito, pode gastar Adaptação ou Sucesso pra encarecer as ativações de Ameaças que o tenham como alvo no próximo turno (cada Adaptação +1 Adaptação; cada Sucesso +1 Pressão no custo)."},
+    {id:"artes_marciais", nome:"Artes Marciais", custo:2, req:[[["atletismo",2]],[["reacao",2]]], resumo:"Remove 1 Pressão em testes de artes marciais", txt:"Testes que envolvam diretamente artes marciais (atacando ou defendendo) permitem remover uma Pressão do resultado."},
+    {id:"atencao_redobrada", nome:"Atenção Redobrada", custo:2, req:[[["percepcao",2]]], resumo:"Contra perigo súbito, Adaptações viram Sucessos (até Reação)", txt:"Ao reagir a um perigo súbito (queda, armadilha, emboscada), pode transformar em Sucesso um número de Adaptações até o seu valor de Reação."},
+    {id:"atirador_astuto", nome:"Atirador Astuto", custo:2, req:[[["furtividade",2]]], resumo:"Na cobertura, Adaptação vira Sucesso ao mirar", txt:"Em ataques de pontaria protegido por uma cobertura onde consiga se esconder, pode transformar uma Adaptação em Sucesso."},
+    {id:"batedor", nome:"Batedor", custo:2, req:[[["geografia",2]]], resumo:"Explora a Região na metade do tempo", txt:"Explora a Região na metade do tempo e encontra um marco geográfico escolhido pelo Assimilador se tiver êxito em Geografia ou Sobrevivência."},
+    {id:"disciplinado", nome:"Disciplinado", custo:2, req:[], resumo:"Com calma (dobro do tempo), ignora 1 Pressão", txt:"Fora de Conflito e sem ser perturbado, pode ignorar uma Pressão no resultado se fizer a ação com calma, levando o dobro do tempo."},
+    {id:"dissimulado", nome:"Dissimulado", custo:2, req:[[["influencia",2]],[["expressao",1],["furtividade",1]]], resumo:"Se passa por morador de outro Refúgio", txt:"Se passa por residente de outro Refúgio (com acesso ao vestuário local) com êxito em Influência + Expressão ou Furtividade; quanto menor o Refúgio, mais Sucessos exigidos."},
+    {id:"escaldado", nome:"Escaldado", custo:2, req:[[["sagacidade",2]]], resumo:"Adaptação vira Sucesso pra notar segundas intenções", txt:"Em testes de Percepção pra perceber segundas intenções (pedidos pelo Assimilador), pode transformar uma Adaptação em Sucesso."},
+    {id:"frugal", nome:"Frugal", custo:2, req:[], resumo:"Aguenta o dobro do tempo sem água e comida", txt:"Precisa de menos água e comida: aguenta o dobro do tempo sem elas antes de sofrer penalidade."},
+    {id:"intimidador", nome:"Intimidador", custo:2, req:[], resumo:"Ao intimidar, troca Expressão por um Instinto", txt:"Ao intimidar, pode gastar um Ponto de Determinação pra trocar a quantidade de dados de Expressão pelo valor de um Instinto aprovado pelo Assimilador (o tipo de dado não muda)."},
+    {id:"maos_leves", nome:"Mãos-Leves", custo:2, req:[[["reacao",2]],[["furtividade",2]]], resumo:"+1 Adaptação ao roubar ou esconder à vista", txt:"Ao roubar ou ocultar objetos à vista das pessoas, adiciona uma Adaptação ao resultado."},
+    {id:"memoria_afiada", nome:"Memória Afiada", custo:2, req:[[["sagacidade",2]]], resumo:"+1 Sucesso garantido ao lembrar informações", txt:"Testes ligados a lembrar de alguma informação garantem um Sucesso no resultado."},
+    {id:"presenca_encantadora", nome:"Presença Encantadora", custo:2, req:[[["influencia",3]]], resumo:"1 Determinação anula as Pressões numa interação social", txt:"Pode gastar um Ponto de Determinação antes de rolar pra anular todas as Pressões do resultado em interações sociais."},
+    {id:"reliquia", nome:"Relíquia", custo:2, req:[], resumo:"Artefato inicial especial, sempre consertável", txt:"O Artefato inicial é um item valioso sempre consigo: não é limitado pelo teto de Escassez da criação e pode ser consertado mesmo Quebrado; perdê-lo custa um Ponto de Determinação."},
+    {id:"sacrificio_heroico", nome:"Sacrifício Heroico", custo:2, req:[], resumo:"1×/sessão, toma o dano no lugar de um aliado", txt:"Uma vez por sessão, pode sofrer todo o dano no lugar de um aliado próximo."},
+    {id:"sentido_agucado", nome:"[Sentido] Aguçado", custo:2, req:[[["percepcao",2]]], escolha:["visão","audição","tato","paladar","olfato"], resumo:"+1 Sucesso em Percepção com o sentido escolhido", txt:"Escolha um sentido: todo teste de Percepção pra identificar algo com ele adiciona um Sucesso ao resultado."},
     // 3 pontos
-    {id:"companheiro_animal", nome:"Companheiro Animal", custo:3, req:[[["sobrevivencia",1]]], txt:"Um animal de pequeno ou médio porte o acompanha; quando ajuda numa ação, adiciona uma Adaptação ao resultado."},
-    {id:"construtor", nome:"Construtor", custo:3, req:[[["engenharia",3]]], txt:"Realiza Construções de forma mais eficiente, sem testes semanais de Engenharia pra obter pontos de obra."},
-    {id:"contra_ataque", nome:"Contra-ataque", custo:3, req:[[["reacao",2]]], txt:"Depois de sofrer um ataque em Conflito, o próximo teste pra Neutralizar aquela Ameaça adiciona um Sucesso."},
-    {id:"corpo_grande", nome:"Corpo Grande", custo:3, req:[[["atletismo",2]]], txt:"Testes de Resolução ligados a resistência física podem ser feitos com Potência (não vale pra testes mentais ou emocionais)."},
-    {id:"determinacao_inabalavel", nome:"Determinação Inabalável", custo:3, req:[[["resolucao",3]]], txt:"Testes ligados ao Propósito do Infectado permitem transformar uma Adaptação em Sucesso."},
-    {id:"esquiva_precisa", nome:"Esquiva Precisa", custo:3, req:[[["reacao",2]]], txt:"Pode investir Sucessos do resultado da Ação pra que ataques contra si sofram a mesma quantidade de Penalidade, até ser paga ou o Conflito acabar."},
-    {id:"gambiarra", nome:"Gambiarra", custo:3, req:[[["sagacidade",2]]], txt:"Pode mudar as Características de Artefatos - sem esta Característica, isso não é possível."},
-    {id:"inabalavel", nome:"Inabalável", custo:3, req:[[["resolucao",3]]], txt:"Em testes de resistência mental e emocional, pode transformar Adaptações em Sucessos, até o seu valor de Resolução de vezes por sessão."},
-    {id:"olhar_minucioso", nome:"Olhar Minucioso", custo:3, req:[[["percepcao",2]]], txt:"Jogadas de Percepção ou Sagacidade pra encontrar algo escondido ou oculto podem adicionar um Sucesso ao resultado."},
-    {id:"orientacao", nome:"Orientação", custo:3, req:[[["geografia",2],["sobrevivencia",2]]], txt:"Dificilmente se perde: testes de Geografia ou Sobrevivência pra recuperar um rastro ou saber onde está adicionam uma Adaptação."},
-    {id:"parkour", nome:"Parkour", custo:3, req:[[["reacao",2]]], txt:"Testes de escalada, equilíbrio, saltos, corridas curtas, acrobacias ou passar por lugares apertados adicionam uma Adaptação."},
-    {id:"primeiros_socorros", nome:"Primeiros Socorros", custo:3, req:[[["medicina",2]]], txt:"Jogadas pra cuidar de ferimentos e doenças adicionam um Sucesso ao resultado."},
-    {id:"racional", nome:"Racional", custo:3, req:[[["erudicao",2]]], txt:"Testes de Resolução ligados a resistência mental podem ser feitos com Sagacidade (não vale pra testes físicos)."},
-    {id:"recuperacao_rapida", nome:"Recuperação Rápida", custo:3, req:[[["resolucao",2]]], txt:"Toda vez que ativa a Recuperação, recupera dois Pontos de Saúde adicionais."},
-    {id:"resiliente", nome:"Resiliente", custo:3, req:[[["assimilacao",2]]], txt:"Uma vez por Conflito, ao sofrer dano, pode gastar Pontos de Assimilação pra reduzir o dano na mesma proporção."},
-    {id:"vaso_ruim", nome:"Vaso Ruim", custo:3, req:[[["resolucao",2]]], txt:"Anula a primeira ativação que levaria à sua morte; só volta a valer depois de cumprir uma Clareza de Propósito."},
+    {id:"companheiro_animal", nome:"Companheiro Animal", custo:3, req:[[["sobrevivencia",1]]], resumo:"Animal ajuda nas ações: +1 Adaptação", txt:"Um animal de pequeno ou médio porte o acompanha; quando ajuda numa ação, adiciona uma Adaptação ao resultado."},
+    {id:"construtor", nome:"Construtor", custo:3, req:[[["engenharia",3]]], resumo:"Construções sem testes semanais de Engenharia", txt:"Realiza Construções de forma mais eficiente, sem testes semanais de Engenharia pra obter pontos de obra."},
+    {id:"contra_ataque", nome:"Contra-ataque", custo:3, req:[[["reacao",2]]], resumo:"Após sofrer ataque, +1 Sucesso pra Neutralizar", txt:"Depois de sofrer um ataque em Conflito, o próximo teste pra Neutralizar aquela Ameaça adiciona um Sucesso."},
+    {id:"corpo_grande", nome:"Corpo Grande", custo:3, req:[[["atletismo",2]]], resumo:"Resistência física com Potência no lugar de Resolução", txt:"Testes de Resolução ligados a resistência física podem ser feitos com Potência (não vale pra testes mentais ou emocionais)."},
+    {id:"determinacao_inabalavel", nome:"Determinação Inabalável", custo:3, req:[[["resolucao",3]]], resumo:"Adaptação vira Sucesso em testes do Propósito", txt:"Testes ligados ao Propósito do Infectado permitem transformar uma Adaptação em Sucesso."},
+    {id:"esquiva_precisa", nome:"Esquiva Precisa", custo:3, req:[[["reacao",2]]], resumo:"Sucessos investidos penalizam ataques contra você", txt:"Pode investir Sucessos do resultado da Ação pra que ataques contra si sofram a mesma quantidade de Penalidade, até ser paga ou o Conflito acabar."},
+    {id:"gambiarra", nome:"Gambiarra", custo:3, req:[[["sagacidade",2]]], resumo:"Pode mudar as Características de Artefatos", txt:"Pode mudar as Características de Artefatos - sem esta Característica, isso não é possível."},
+    {id:"inabalavel", nome:"Inabalável", custo:3, req:[[["resolucao",3]]], resumo:"Adaptações viram Sucessos contra abalo mental (Resolução×/sessão)", txt:"Em testes de resistência mental e emocional, pode transformar Adaptações em Sucessos, até o seu valor de Resolução de vezes por sessão."},
+    {id:"olhar_minucioso", nome:"Olhar Minucioso", custo:3, req:[[["percepcao",2]]], resumo:"+1 Sucesso pra achar algo escondido", txt:"Jogadas de Percepção ou Sagacidade pra encontrar algo escondido ou oculto podem adicionar um Sucesso ao resultado."},
+    {id:"orientacao", nome:"Orientação", custo:3, req:[[["geografia",2],["sobrevivencia",2]]], resumo:"+1 Adaptação pra achar rastro ou se localizar", txt:"Dificilmente se perde: testes de Geografia ou Sobrevivência pra recuperar um rastro ou saber onde está adicionam uma Adaptação."},
+    {id:"parkour", nome:"Parkour", custo:3, req:[[["reacao",2]]], resumo:"+1 Adaptação em escalada, saltos e acrobacias", txt:"Testes de escalada, equilíbrio, saltos, corridas curtas, acrobacias ou passar por lugares apertados adicionam uma Adaptação."},
+    {id:"primeiros_socorros", nome:"Primeiros Socorros", custo:3, req:[[["medicina",2]]], resumo:"+1 Sucesso ao tratar ferimentos e doenças", txt:"Jogadas pra cuidar de ferimentos e doenças adicionam um Sucesso ao resultado."},
+    {id:"racional", nome:"Racional", custo:3, req:[[["erudicao",2]]], resumo:"Resistência mental com Sagacidade no lugar de Resolução", txt:"Testes de Resolução ligados a resistência mental podem ser feitos com Sagacidade (não vale pra testes físicos)."},
+    {id:"recuperacao_rapida", nome:"Recuperação Rápida", custo:3, req:[[["resolucao",2]]], resumo:"+2 Pontos de Saúde a cada Recuperação", txt:"Toda vez que ativa a Recuperação, recupera dois Pontos de Saúde adicionais."},
+    {id:"resiliente", nome:"Resiliente", custo:3, req:[[["assimilacao",2]]], resumo:"1×/Conflito, gasta Assimilação pra reduzir dano", txt:"Uma vez por Conflito, ao sofrer dano, pode gastar Pontos de Assimilação pra reduzir o dano na mesma proporção."},
+    {id:"vaso_ruim", nome:"Vaso Ruim", custo:3, req:[[["resolucao",2]]], resumo:"Anula a primeira ativação que levaria à morte", txt:"Anula a primeira ativação que levaria à sua morte; só volta a valer depois de cumprir uma Clareza de Propósito."},
     // 4 pontos
-    {id:"heroi_local", nome:"Herói Local", custo:4, req:[[["influencia",3]]], txt:"Conhecido por um ato heroico: uma vez por arco de história, pode gastar o uso do Evento Marcante pra evitar que o Refúgio perca um nível de Moral."},
-    {id:"macgyver", nome:"MacGyver", custo:4, req:[[["sagacidade",2]],[["manufaturas",2]]], txt:"Uma vez por sessão, monta um Artefato Improvisado com outra característica de categoria 1 à escolha, que dura até o fim da cena."},
-    {id:"suporte", nome:"Suporte", custo:4, req:[[["influencia",2]],[["reacao",2]]], txt:"Ao usar Ajudar Aliado pra transferir Sucessos, adiciona um Sucesso a mais."},
+    {id:"heroi_local", nome:"Herói Local", custo:4, req:[[["influencia",3]]], resumo:"1×/arco, evita que o Refúgio perca Moral", txt:"Conhecido por um ato heroico: uma vez por arco de história, pode gastar o uso do Evento Marcante pra evitar que o Refúgio perca um nível de Moral."},
+    {id:"macgyver", nome:"MacGyver", custo:4, req:[[["sagacidade",2]],[["manufaturas",2]]], resumo:"1×/sessão, monta um Artefato Improvisado", txt:"Uma vez por sessão, monta um Artefato Improvisado com outra característica de categoria 1 à escolha, que dura até o fim da cena."},
+    {id:"suporte", nome:"Suporte", custo:4, req:[[["influencia",2]],[["reacao",2]]], resumo:"Ajudar Aliado transfere +1 Sucesso", txt:"Ao usar Ajudar Aliado pra transferir Sucessos, adiciona um Sucesso a mais."},
     // 5 pontos
-    {id:"mira_fatal", nome:"Mira Fatal", custo:5, req:[[["armas",3]],[["percepcao",3],["reacao",3]]], txt:"Em ataques de pontaria, pode gastar 2 Pontos de Determinação pra dobrar os Sucessos investidos em Neutralização de Ameaça."},
-    {id:"motivar_aliado", nome:"Motivar Aliado", custo:5, req:[[["expressao",3]]], txt:"Ao usar Apoiar Aliado, cada Adaptação anula duas Pressões do aliado alvo; usável um número de vezes por sessão igual à sua Influência."}
+    {id:"mira_fatal", nome:"Mira Fatal", custo:5, req:[[["armas",3]],[["percepcao",3],["reacao",3]]], resumo:"2 Determinação dobram a Neutralização ao mirar", txt:"Em ataques de pontaria, pode gastar 2 Pontos de Determinação pra dobrar os Sucessos investidos em Neutralização de Ameaça."},
+    {id:"motivar_aliado", nome:"Motivar Aliado", custo:5, req:[[["expressao",3]]], resumo:"Apoiar Aliado: cada Adaptação anula 2 Pressões", txt:"Ao usar Apoiar Aliado, cada Adaptação anula duas Pressões do aliado alvo; usável um número de vezes por sessão igual à sua Influência."}
   ];
 
   // Características de Artefatos do livro definitivo (pág. 97-98). custo = categoria
@@ -6872,13 +6875,13 @@
     if(!modoBase) html += tentarHtml("Teste", function(){ return renderSheetTest(c); });
 
     // Caracteristicas
-    // Cada Característica é uma linha (nome, custo e começo do texto); o texto inteiro
-    // abre na caixa ao lado (ver CAIXAS.carac).
+    // Cada Característica é uma linha (nome, custo e o resumo de uma linha); o texto
+    // inteiro abre na caixa ao lado (ver CAIXAS.carac).
     var caracDetalhes = c.caracComp.map(function(id){ return CARACTERISTICAS.filter(function(x){return x.id===id;})[0]; }).filter(Boolean);
     var caracBody;
     if(caracDetalhes.length){
       caracBody = '<div class="lx-lista">' + caracDetalhes.map(function(d){
-        return caixaLinha("carac", d.id, esc(d.nome), esc(d.txt), '<span class="lx-sel forte">'+d.custo+' pt</span>');
+        return caixaLinha("carac", d.id, esc(d.nome), esc(d.resumo||d.txt), '<span class="lx-sel forte">'+d.custo+' pt</span>');
       }).join('') + '</div>';
     } else {
       caracBody = '<p class="hint">Nenhuma característica única comprada.</p>';
@@ -7030,7 +7033,10 @@
   };
   CAIXAS.carac = function(id){
     var d = carDef(id); if(!d) return null;
-    return { titulo:esc(d.nome)+' <span class="hint" style="font-weight:400">· '+d.custo+' pt</span>', tituloTexto:d.nome, corpo:'<p>'+iconizarTexto(esc(d.txt))+'</p>', lado:"direita", largura:400 };
+    var cF = fichaAtual(), escF = cF && cF.caracEscolhas && cF.caracEscolhas[id];
+    return { titulo:esc(d.nome)+' <span class="hint" style="font-weight:400">· '+d.custo+' pt</span>', tituloTexto:d.nome,
+      corpo:'<p>'+iconizarTexto(esc(d.txt))+'</p>' +
+        '<p class="hint" style="margin:6px 0 0">'+esc(reqTexto(d))+(escF?' · Sentido: <b>'+esc(escF)+'</b>':'')+'</p>', lado:"direita", largura:400 };
   };
 
   // ----- Formulário de item genérico do inventário -----
@@ -7901,7 +7907,7 @@
     if(pedidas.length){
       html += pedidas.map(function(id){
         var d = carDef(id); if(!d) return '';
-        return '<div class="evol-item" style="margin-bottom:6px"><span><b>'+esc(d.nome)+'</b> · '+d.custo+' XP · '+(gm?'pedido do jogador':'aguardando o Assimilador')+'</span><span class="row" style="gap:6px;flex:none">' +
+        return '<div class="evol-item" style="margin-bottom:6px"><span><b>'+esc(d.nome)+'</b> · '+d.custo+' XP · '+(gm?'pedido do jogador':'aguardando o Assimilador')+(d.resumo?'<span class="hint" style="display:block">'+esc(d.resumo)+'</span>':'')+'</span><span class="row" style="gap:6px;flex:none">' +
           (gm?'<button type="button" class="btn accent evol-btn" data-evolaprovar="'+id+'"'+(d.custo>saldo?" disabled":"")+'>Aprovar</button>':'') +
           '<button type="button" class="btn secondary evol-btn" data-evolcancelar="'+id+'">'+(gm?'Recusar':'Cancelar pedido')+'</button></span></div>';
       }).join('');
@@ -7917,8 +7923,17 @@
     html += '<p class="hint" style="margin-top:0">O livro pede autorização do Assimilador, que deve fazer sentido na história. Aparecem aqui só as que o personagem já cumpre o requisito.</p>';
     html += '<div class="row" style="gap:8px;flex-wrap:wrap;align-items:center"><select id="evol-carac" style="flex:1 1 240px"><option value="">escolha uma Característica…</option>' +
       elegiveis.map(function(d){ return '<option value="'+d.id+'"'+(d.custo>saldo?" disabled":"")+'>'+esc(d.nome)+' · '+d.custo+' XP'+(d.custo>saldo?' (falta Experiência)':'')+'</option>'; }).join('') +
-      '</select><button type="button" class="btn accent" data-evolpedir>'+(gm?'Conceder':'Pedir ao Assimilador')+'</button></div>';
+      '</select><button type="button" class="btn accent" data-evolpedir>'+(gm?'Conceder':'Pedir ao Assimilador')+'</button></div>' +
+      '<div id="evol-carac-prev" class="carac-prev" aria-live="polite" hidden></div>';
     return html;
+  }
+  // Cartão com o efeito da Característica escolhida no menu do Evoluir (antes de
+  // Conceder/Pedir). Só mostra; não grava nada.
+  function caracPreviaHtml(d){
+    if(!d) return '';
+    return '<div class="carac-prev-tit"><b>'+esc(d.nome)+'</b> <span class="lx-sel forte">'+d.custo+' XP</span></div>' +
+      '<p>'+iconizarTexto(esc(d.txt))+'</p>' +
+      '<p class="hint" style="margin:4px 0 0">'+esc(reqTexto(d))+'</p>';
   }
   CAIXAS.evol = function(k){
     var c = fichaAtual(); if(!c || c.precisaRefazer) return null;
@@ -8001,6 +8016,15 @@
           salvar();
         });
       });
+    });
+    var selCarac = app.querySelector('#evol-carac'), prevCarac = app.querySelector('#evol-carac-prev');
+    if(selCarac && prevCarac) selCarac.addEventListener("change", function(){
+      var d = carDef(selCarac.value);
+      prevCarac.innerHTML = caracPreviaHtml(d);
+      prevCarac.hidden = !d;
+      if(typeof posicionarCaixa === "function") posicionarCaixa();
+      // Em tela pequena o cartão pode ficar abaixo da dobra da caixa: rola só a caixa.
+      if(d && prevCarac.scrollIntoView) prevCarac.scrollIntoView({ block:"nearest" });
     });
     var pedir = app.querySelector('[data-evolpedir]');
     if(pedir) pedir.addEventListener("click", function(){
