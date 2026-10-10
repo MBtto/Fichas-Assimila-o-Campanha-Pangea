@@ -7920,7 +7920,6 @@
       }).join('');
     }
     var elegiveis = CARACTERISTICAS.filter(function(d){ return !d.soCriacao && !temCarac(c,d.id) && pedidas.indexOf(d.id)===-1 && reqAtendido(c,d); });
-    html += '<p class="hint" style="margin-top:0">O livro pede autorização do Assimilador, que deve fazer sentido na história. Aparecem aqui só as que o personagem já cumpre o requisito.</p>';
     html += '<div class="row" style="gap:8px;flex-wrap:wrap;align-items:center"><select id="evol-carac" style="flex:1 1 240px"><option value="">escolha uma Característica…</option>' +
       elegiveis.map(function(d){ return '<option value="'+d.id+'"'+(d.custo>saldo?" disabled":"")+'>'+esc(d.nome)+' · '+d.custo+' XP'+(d.custo>saldo?' (falta Experiência)':'')+'</option>'; }).join('') +
       '</select><button type="button" class="btn accent" data-evolpedir>'+(gm?'Conceder':'Pedir ao Assimilador')+'</button></div>' +
