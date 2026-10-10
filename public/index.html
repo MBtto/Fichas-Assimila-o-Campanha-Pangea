@@ -6209,6 +6209,14 @@
   // Etapa C (pedido do Marco): nada na criação é obrigatório. A ficha pode ser
   // completada em várias etapas ou depois de pronta. validateStep só barra o que
   // passa dos limites das regras; o que ficou em branco vira pendência (fichaPendencias).
+  // Característica marcada sem cumprir o requisito: bloqueia sempre (criação, refazer
+  // e edição livre do Assimilador). Devolve a mensagem ou "" se estiver tudo certo.
+  function caracSemRequisitoMsg(c){
+    var semReq = (c.caracComp||[]).map(function(id){ return CARACTERISTICAS.filter(function(x){return x.id===id;})[0]; })
+      .filter(function(d){ return d && !reqAtendido(c, d); });
+    if(!semReq.length) return "";
+    return '"'+semReq[0].nome+'" pede '+reqFaltando(c, semReq[0])+'. Desmarque ou ajuste os valores.';
+  }
   function validateStep(c, step){
     var cr = cfgCriacao(), vals = cr.valores;
     if(step === 3){
@@ -6230,9 +6238,8 @@
       var tc = caracPontosGastos(c);
       var xpCar = xpParaCaracteristicas(c);
       if(tc > xpCar) return {ok:false, msg:"Você gastou "+tc+" de "+xpCar+" Pontos de Experiência. Ajuste suas escolhas."};
-      var semReq = (c.caracComp||[]).map(function(id){ return CARACTERISTICAS.filter(function(x){return x.id===id;})[0]; })
-        .filter(function(d){ return d && !reqAtendido(c, d); });
-      if(semReq.length) return {ok:false, msg:'"'+semReq[0].nome+'" pede '+reqTexto(semReq[0]).replace("Requisito: ","")+'. Desmarque ou ajuste os valores.'};
+      var msgReq = caracSemRequisitoMsg(c);
+      if(msgReq) return {ok:false, msg:msgReq};
       return {ok:true};
     }
     if(step === 6){
@@ -6541,7 +6548,9 @@
         html += '<h3 style="margin:16px 0 8px">Características de '+custo+' ponto'+(custo>1?'s':'')+'</h3><div class="trait-list">';
         lista.forEach(function(t){
           var checked = c.caracComp.indexOf(t.id) > -1;
-          var ok = reqAtendido(c, t) || livreCarac;
+          // Requisito vale sempre, inclusive na edição livre do Assimilador (pedido do Marco, 10/10/2026):
+          // sem o requisito a caixa fica travada; uma que já estava marcada pode ser desmarcada.
+          var ok = reqAtendido(c, t);
           html += '<label class="trait'+(checked?" checked":"")+'"'+(!ok&&!checked?' style="opacity:.55"':'')+'><input type="checkbox" data-carac="'+t.id+'" '+(checked?"checked":"")+((!ok&&!checked)?" disabled":"")+'>' +
             '<span class="cost">'+t.custo+'</span><span class="txt"><b>'+t.nome+'</b>' +
             '<span class="hint" style="display:block;margin:1px 0 3px;'+(ok?'':'color:var(--danger)')+'">'+reqTexto(t)+(ok?'':' — falta '+reqFaltando(c, t))+'</span>' +
@@ -8566,6 +8575,8 @@
     });
     app.querySelector('[data-editaction="save"]').addEventListener("click", function(){
       if(!draft.nomePersonagem || !draft.nomePersonagem.trim()){ alert("Dê um nome ao personagem."); return; }
+      var semReqMsg = caracSemRequisitoMsg(draft);
+      if(semReqMsg){ alert(semReqMsg); return; }
       var problemas = [];
       for(var s=3;s<=6;s++){
         var v = validateStep(draft, s);
