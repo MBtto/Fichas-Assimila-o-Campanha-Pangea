@@ -181,6 +181,11 @@
   .card.tight{ padding:12px 14px; }
   .card-headrow{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px; }
   .card-headrow h2{ margin-bottom:0; }
+  .card > .card-headrow:last-child{ margin-bottom:0; }
+  .gm-dobrar{ gap:8px; justify-content:flex-end; margin:0 0 10px; }
+  .gm-pc-cab{ position:relative; padding-right:40px; }
+  .gm-pc-cab > .card-toggle{ position:absolute; top:0; right:0; }
+  .gm-dobrar .btn{ padding:4px 12px; font-size:11px; }
   .card-toggle{
     flex:none; width:28px; height:28px; padding:0; display:flex; align-items:center; justify-content:center;
     background:var(--surface-2); border:1px solid var(--border-strong); border-radius:var(--radius);
@@ -5566,6 +5571,21 @@
     }};
   };
 
+  // Painel (11/10/2026): dobra um cartão já montado ('<div class="card…"><h2>Título</h2>…</div>')
+  // com o mesmo ▾/▸ do sectionCard. Fechado, o cartão perde o id (os binds dele não
+  // acham nada e não fazem nada) e mostra só o título.
+  function dobravel(id, html, forcarAberto){
+    if(!html) return html;
+    var fimTag = html.indexOf(">"), iH = html.indexOf("<h2"), fH = html.indexOf("</h2>");
+    var fimCard = html.lastIndexOf("</div>");
+    if(fimTag < 0 || iH < 0 || fH < 0 || fimCard < fH) return html;
+    var abre = html.slice(0, fimTag + 1), h2 = html.slice(iH, fH + 5), corpo = html.slice(fH + 5, fimCard);
+    var fechado = !forcarAberto && !!state.collapsed[id];
+    if(fechado) abre = abre.replace(/\s+id="[^"]*"/, "");
+    return abre + '<div class="card-headrow">' + h2 +
+      '<button type="button" class="card-toggle" data-collapse-toggle="'+id+'" title="'+(fechado?"Expandir":"Minimizar")+'">'+(fechado?"▸":"▾")+'</button></div>' +
+      (fechado ? '' : corpo) + '</div>';
+  }
   function sectionCard(id, title, bodyHtml){
     var collapsed = !!state.collapsed[id];
     return '<div class="card" data-secid="'+id+'">' +
@@ -10729,15 +10749,16 @@
   function renderGmMesa(){
     var roster = loadChars();
     var html = topbar("gm");
-    html += tentarHtml("Jogadores e convites", gmJogadoresHtml);
+    html += '<div class="row gm-dobrar"><button type="button" class="btn secondary" data-gmdobrar="abrir">Abrir tudo</button><button type="button" class="btn secondary" data-gmdobrar="fechar">Fechar tudo</button></div>';
+    html += dobravel("gmjogadores", tentarHtml("Jogadores e convites", gmJogadoresHtml));
     html += tentarHtml("Configuração da campanha", gmConfigHtml);
     html += renderGmDryRoll();
     html += tentarHtml("Bestiário", gmBestiarioHtml);
     html += renderGmConflitos();
-    html += gmXpTodosHtml(roster);
-    html += gmDocsHtml();
-    html += tentarHtml("Itens achados", gmItensHtml);
-    html += backupCardHtml();
+    html += dobravel("gmxp", gmXpTodosHtml(roster));
+    html += dobravel("gmdocs", gmDocsHtml(), !!state.docEdit);
+    html += dobravel("gmitens", tentarHtml("Itens achados", gmItensHtml), !!state.itemPoolEdit);
+    html += dobravel("gmbackup", backupCardHtml());
     html += '<div class="row" style="justify-content:space-between;align-items:center;margin:20px 0 10px;gap:8px;flex-wrap:wrap"><h2 style="margin:0">Personagens da Mesa</h2><button type="button" class="btn secondary" data-nav="wizard-npc">+ Novo NPC</button></div>';
     var semConta = fichasSemConta();
     if(semConta.length){
@@ -10750,8 +10771,9 @@
       roster.forEach(function(c){
         var camp = c.acampamento ? CAMPS[c.acampamento] : null;
         var cardStyle = (camp?'--camp-color:'+camp.cor+';':'')+'border-left:6px solid '+(camp?camp.cor:'var(--accent)')+';margin-bottom:12px;cursor:pointer';
+        var dobraId = "gmc_" + c.id, charFechado = !!state.collapsed[dobraId];
         html += '<div class="card" style="'+cardStyle+'" data-gmopen="'+c.id+'">';
-        html += '<div class="row" style="justify-content:space-between;align-items:flex-start">' +
+        html += '<div class="gm-pc-cab"><div class="row" style="justify-content:space-between;align-items:flex-start">' +
           '<div><h3 style="color:'+(camp?camp.cor:'var(--ink)')+';font-size:17px;margin-bottom:2px">'+esc(c.nomePersonagem||"Sem nome")+npcBadgeHtml(c)+'</h3>' +
           '<span class="camp-tag">jogador(a): '+esc(c.nomeJogador||"não informado")+(camp?' · '+esc(camp.nome):(grupoLigado()?' · '+esc(grupoRotulo().toLowerCase())+' não definido':''))+'</span>' +
           '<div class="hint" style="margin-top:2px">'+(c.donoUid ? 'Conta: '+esc(c.donoEmail||c.donoNome||"vinculada") : (c.ehNpc ? 'NPC (só o Assimilador)' : '<span style="color:var(--danger)">Ficha de jogador sem conta</span>'))+'</div></div>' +
@@ -10760,9 +10782,12 @@
             (!c.donoUid ? passarParaHtml(c) : '') +
             (caps.canEdit ? '<button class="btn secondary" data-gmdelmesa="'+c.id+'" style="padding:4px 10px;font-size:11px">excluir</button>' : '') +
           '</div>' +
+        '</div><button type="button" class="card-toggle" data-collapse-toggle="'+dobraId+'" title="'+(charFechado?"Expandir":"Minimizar")+'">'+(charFechado?"▸":"▾")+'</button>' +
         '</div>';
-        html += gmCharCardBody(c);
-        html += gmXpCardHtml(c);
+        if(!charFechado){
+          html += gmCharCardBody(c);
+          html += gmXpCardHtml(c);
+        }
         html += '</div>';
       });
     }
@@ -10859,10 +10884,21 @@
       goto("roster");
     });
     app.querySelectorAll('[data-collapse-toggle]').forEach(function(btn){
-      btn.addEventListener("click", function(){
+      btn.addEventListener("click", function(e){
+        e.stopPropagation();
         var id = btn.getAttribute("data-collapse-toggle");
         state.collapsed[id] = !state.collapsed[id];
         saveLS("pangea:collapsed", state.collapsed);
+        if(state.view === "gm") fecharCaixa();
+        render();
+      });
+    });
+    app.querySelectorAll('[data-gmdobrar]').forEach(function(btn){
+      btn.addEventListener("click", function(){
+        var fechar = btn.getAttribute("data-gmdobrar") === "fechar";
+        app.querySelectorAll('[data-collapse-toggle]').forEach(function(t){ state.collapsed[t.getAttribute("data-collapse-toggle")] = fechar; });
+        saveLS("pangea:collapsed", state.collapsed);
+        fecharCaixa();
         render();
       });
     });
