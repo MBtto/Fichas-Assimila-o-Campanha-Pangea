@@ -5171,9 +5171,9 @@
       ["instintos", "Instintos", fnavIco("instintos")],
       ["conhprat", "Con/Prá", fnavIco("conhprat")],
       ["testar", "Testes", fnavIco("testes")],
+      ["saude", "Saúde", fnavIco("saude")],
       ["caracteristicas", "Características", fnavIco("caracteristicas")],
       ["evoluir", "Evoluir", fnavIco("evoluir")],
-      ["saude", "Saúde", fnavIco("saude")],
       ["assimilacao", "Assimilações", fnavIco("assimilacoes")],
       ["inventario", "Inventário", fnavIco("inventario")],
       ["documentos", "Documentos", fnavIco("documentos")],
@@ -7068,21 +7068,7 @@
     }
     if(!modoBase) html += tentarHtml("Teste", function(){ return renderSheetTest(c); });
 
-    // Caracteristicas
-    // Cada Característica é uma linha (nome, custo e o resumo de uma linha); o texto
-    // inteiro abre na caixa ao lado (ver CAIXAS.carac).
-    var caracDetalhes = c.caracComp.map(function(id){ return CARACTERISTICAS.filter(function(x){return x.id===id;})[0]; }).filter(Boolean);
-    var caracBody;
-    if(caracDetalhes.length){
-      caracBody = '<div class="lx-lista">' + caracDetalhes.map(function(d){
-        return caixaLinha("carac", d.id, esc(d.nome), esc(d.resumo||d.txt), '<span class="lx-sel forte">'+d.custo+' pt</span>');
-      }).join('') + '</div>';
-    } else {
-      caracBody = '<p class="hint">Nenhuma característica única comprada.</p>';
-    }
-    html += sectionCard("caracteristicas", "Características", caracBody);
-    if(!c.precisaRefazer) html += tentarHtml("Evoluir", function(){ return sectionCard("evoluir", "Evoluir (Experiência)", evoluirHtml(c)); });
-
+    // Saúde e Cabo de Guerra logo abaixo do Teste (pedido do Marco, 11/10/2026).
     // Saude e Determinacao
     var maxNivel = saudePontosMax(c);
     if(c.saudePontosAtuais==null) c.saudePontosAtuais = maxNivel;
@@ -7101,6 +7087,22 @@
     // a única forma de calcular e mostrar isso, sempre visível na ficha.
     html += tentarHtml("Determinação", function(){ return tugDeGuerraCardHtml(c); });
     html += '</div>';
+
+    // Caracteristicas
+    // Cada Característica é uma linha (nome, custo e o resumo de uma linha); o texto
+    // inteiro abre na caixa ao lado (ver CAIXAS.carac).
+    var caracDetalhes = c.caracComp.map(function(id){ return CARACTERISTICAS.filter(function(x){return x.id===id;})[0]; }).filter(Boolean);
+    var caracBody;
+    if(caracDetalhes.length){
+      caracBody = '<div class="lx-lista">' + caracDetalhes.map(function(d){
+        return caixaLinha("carac", d.id, esc(d.nome), esc(d.resumo||d.txt), '<span class="lx-sel forte">'+d.custo+' pt</span>');
+      }).join('') + '</div>';
+    } else {
+      caracBody = '<p class="hint">Nenhuma característica única comprada.</p>';
+    }
+    html += sectionCard("caracteristicas", "Características", caracBody);
+    if(!c.precisaRefazer) html += tentarHtml("Evoluir", function(){ return sectionCard("evoluir", "Evoluir (Experiência)", evoluirHtml(c)); });
+
 
     // Assimilação: Teste de Assimilação, mutações adquiridas e Clareza de Propósito
     // (ver renderMutacoesCard) - livro definitivo, Cap. 4.
