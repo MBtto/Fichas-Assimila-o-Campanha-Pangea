@@ -2013,6 +2013,15 @@
     return parts.join(" ");
   }
 
+  // Mesma leitura, com os ícones dos dados (para HTML fora de <option>).
+  function custoSimbolosHtml(str){
+    var s = custoSimbolos(str), parts = [];
+    if(s.s) parts.push(dadoHtml("s")+s.s);
+    if(s.a) parts.push(dadoHtml("a")+s.a);
+    if(s.p) parts.push(dadoHtml("p")+s.p);
+    return parts.join(" ");
+  }
+
   // ---- Símbolos nos TEXTOS DE EFEITO das cartas de Assimilação (MUT_DECKS) ----
   // custoSimbolos/custoSimbolosTexto (acima) já cuidam da string de CUSTO de cada
   // tier (ex. "BBA"), mas o texto do EFEITO em si (tier[2], livre, ex. "Some B
@@ -2085,14 +2094,15 @@
     function sym(color, ch){ return htmlColor ? '<span style="color:'+color+'">'+ch+'</span>' : ch; }
     // Pontos de Determinação ("d") e de Assimilação ("e"/[E]) viram os ícones
     // oficiais (triângulos) no HTML; no texto puro continuam sendo ♦.
-    function symPts(k){ return htmlColor ? icoHtml(k) : "♦"; }
+    // Texto puro (title): palavras no lugar dos ícones.
+    function symPts(k){ return htmlColor ? icoHtml(k) : (k === "pd" ? " ponto de Determinação" : " ponto de Assimilação"); }
     var out = esc(txt);
     out = out.split("[E]").join(symPts("pa"));
     out = out.replace(RE_EFEITO_ABC, function(run){
       return run.split("").map(function(ch){
-        if(ch==="A") return htmlColor ? dadoHtml("s") : "✓";
-        if(ch==="B") return htmlColor ? dadoHtml("a") : "⟳";
-        return htmlColor ? dadoHtml("p") : "⚠"; // C ou P (Pressão)
+        if(ch==="A") return htmlColor ? dadoHtml("s") : " Sucesso ";
+        if(ch==="B") return htmlColor ? dadoHtml("a") : " Adaptação ";
+        return htmlColor ? dadoHtml("p") : " Pressão "; // C ou P (Pressão)
       }).join("");
     });
     out = out.replace(RE_EFEITO_DIGITO_DE, function(_, n, letra){
@@ -2100,6 +2110,7 @@
     });
     out = out.replace(RE_EFEITO_D_SOLTO, function(){ return symPts("pd"); });
     if(htmlColor) out = iconizarTexto(out);
+    else out = out.replace(/ {2,}/g, " ").replace(/ ([.,;:)])/g, "$1").replace(/(^|\s)([+\-−]) (?=Sucesso|Adaptação|Pressão)/g, "$1$2").trim();
     return out;
   }
 
@@ -8042,7 +8053,7 @@
           var card = MUT_DECKS[cat][m.cardIdx], tier = card[2][m.tierIdx];
           var totalP = custoSimbolos(m.custo).p, neutP = m.neutralizadas||0;
           var extra = custoChipHtml(m.custo) + (totalP && neutP>0 && m.cat==="H" ? '<span class="lx-sel">'+(totalP-neutP)+'/'+totalP+' '+dadoHtml("p")+'</span>' : '');
-          body += caixaLinha("mut", m.id, esc(card[0]+" — "+tier[1]), formatEfeito(tier[2], false), extra);
+          body += caixaLinha("mut", m.id, esc(card[0]+" — "+tier[1]), formatEfeito(tier[2], true), extra);
         });
         body += '</div>';
       });
@@ -10323,7 +10334,7 @@
       html += '<p class="hint" style="margin-top:10px;margin-bottom:2px">Mutações de Assimilação ('+c.mutAdquiridas.length+')</p><div class="gm-carac-list">' +
         c.mutAdquiridas.map(function(m){
           var card = MUT_DECKS[m.cat][m.cardIdx], tier = card[2][m.tierIdx];
-          return '<span class="gm-carac-chip" title="'+formatEfeito(tier[2], false)+'"><b>'+esc(card[0]+" — "+tier[1])+'</b><span class="cost">'+MUT_SIGLA[m.cat]+' '+custoSimbolosTexto(m.custo)+'</span></span>';
+          return '<span class="gm-carac-chip" title="'+formatEfeito(tier[2], false)+'"><b>'+esc(card[0]+" — "+tier[1])+'</b><span class="cost">'+MUT_SIGLA[m.cat]+' '+custoSimbolosHtml(m.custo)+'</span></span>';
         }).join('') +
       '</div>';
     }
