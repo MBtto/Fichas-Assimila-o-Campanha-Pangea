@@ -864,6 +864,79 @@
   .tug-endcap.mini{ width:10px; height:10px; border-width:2px; }
   .tug-lace.mini{ font-size:13px; cursor:default; }
   .tug-lace.mini:hover{ transform:none; }
+  /* Cabo de Guerra, visual novo (11/10/2026, ver tugLacosHtml): argola +
+     10 segmentos "gravata-borboleta" em SVG + argola, rótulos sobre faixas
+     rabiscadas. Cores só por --royal/--assim (temas e daltonismo valem). O
+     .tug-wrap é contêiner de largura: no celular/texto Maior as argolas e o
+     espaço entre segmentos encolhem e os 10 cabem sempre numa linha. */
+  .tg-d{ --tg:var(--royal); }
+  .tg-a{ --tg:var(--assim); }
+  .tug-linha svg .tg-linha, .tug-anel svg .tg-linha{ fill:none; stroke:var(--tg); stroke-linecap:round; stroke-linejoin:round; vector-effect:non-scaling-stroke; }
+  .tug-seg svg .tg-linha{ stroke-width:1.8px; }
+  .tug-seg svg .tg-vazio .tg-linha{ stroke-width:1.4px; opacity:.8; }
+  .tug-seg svg .tg-linha2{ stroke-width:1px; opacity:.55; }
+  .tug-seg svg .tg-fundo{ fill:var(--tg); fill-opacity:.16; stroke:none; }
+  .tug-seg svg .tg-hach{ fill:none; stroke:var(--tg); stroke-width:1.15px; stroke-linecap:round; stroke-linejoin:round; vector-effect:non-scaling-stroke; opacity:.9; }
+  .tug-seg.mini svg .tg-linha{ stroke-width:1.2px; }
+  .tug-seg.mini svg .tg-vazio .tg-linha{ stroke-width:1px; }
+  .tug-seg.mini svg .tg-hach{ stroke-width:.9px; }
+  .tug-wrap{ container-type:inline-size; margin-top:10px; }
+  .tug-linha{ display:flex; align-items:center; gap:6px; min-width:0; }
+  .tug-segs{ flex:1 1 auto; min-width:0; display:flex; align-items:center; justify-content:center; gap:4px; }
+  .tug-seg{ flex:1 1 0; min-width:0; max-width:64px; display:block; line-height:0; }
+  .tug-seg svg{ display:block; width:100%; height:auto; aspect-ratio:3/2; overflow:visible; }
+  .tug-seg[data-tuglvl]{ cursor:pointer; -webkit-tap-highlight-color:transparent; }
+  .tug-seg[data-tuglvl]:hover svg{ transform:scale(1.08); }
+  .tug-seg[data-tuglvl]:hover svg .tg-vazio .tg-linha{ opacity:1; }
+  :root[data-anim="reduzidas"] .tug-seg[data-tuglvl]:hover svg{ transform:none; }
+  .tug-anel{ position:relative; flex:none; width:52px; height:52px; display:inline-flex; align-items:center; justify-content:center; line-height:1; }
+  .tug-anel svg{ position:absolute; inset:0; width:100%; height:100%; overflow:visible; }
+  .tug-anel svg .tg-disco{ fill:var(--surface); stroke:none; }
+  .tug-anel svg .tg-linha{ stroke-width:2.4px; }
+  .tug-anel svg .tg-linha2{ stroke-width:1.2px; opacity:.6; }
+  .tug-anel.det svg{ filter:drop-shadow(0 0 5px color-mix(in srgb, var(--royal) 55%, transparent)); }
+  .tug-anel.assim svg{ filter:drop-shadow(0 0 5px color-mix(in srgb, var(--assim) 55%, transparent)); }
+  .tug-anel b{
+    position:relative; font-family:"Oswald",sans-serif; font-weight:700; font-size:24px; color:var(--ink);
+    font-variant-numeric:tabular-nums;
+  }
+  .tug-anel.det b{ text-shadow:0 0 6px color-mix(in srgb, var(--royal) 70%, transparent), 0 0 14px color-mix(in srgb, var(--royal) 45%, transparent); }
+  .tug-anel.assim b{ text-shadow:0 0 6px color-mix(in srgb, var(--assim) 70%, transparent), 0 0 14px color-mix(in srgb, var(--assim) 45%, transparent); }
+  .tug-rot{ display:flex; align-items:center; gap:6px; }
+  .tug-rot.det{ justify-content:flex-start; margin-bottom:6px; }
+  .tug-rot.assim{ justify-content:flex-end; margin-top:6px; }
+  .tug-rot .ico{ font-size:20px; }
+  .tug-faixa{ position:relative; display:inline-block; padding:3px 12px 3px 10px; line-height:1.2; }
+  .tug-faixa svg{ position:absolute; inset:0; width:100%; height:100%; }
+  .tug-faixa svg path{ fill:var(--tg); fill-opacity:.3; }
+  .tug-faixa > span{
+    position:relative; font-family:"Oswald",sans-serif; font-weight:700; text-transform:uppercase;
+    letter-spacing:.08em; font-size:13px; color:var(--ink); white-space:nowrap;
+  }
+  @container (max-width:420px){
+    .tug-linha:not(.mini){ gap:3px; }
+    .tug-linha:not(.mini) .tug-segs{ gap:2px; }
+    .tug-anel:not(.mini){ width:40px; height:40px; }
+    .tug-anel:not(.mini) b{ font-size:19px; }
+    /* segmento estreito: fica mais alto (alvo de toque maior no celular) */
+    .tug-seg:not(.mini) svg{ aspect-ratio:auto; height:24px; }
+  }
+  @container (max-width:300px){
+    .tug-linha:not(.mini) .tug-segs{ gap:1px; }
+    .tug-anel:not(.mini){ width:34px; height:34px; }
+    .tug-anel:not(.mini) b{ font-size:16px; }
+  }
+  /* Versões mini (tela de Personagens, aba Mesa, Painel): sem clique. */
+  .tug-mini-bloco{ flex:1 1 200px; min-width:0; max-width:340px; }
+  .tug-linha.mini{ gap:3px; max-width:340px; }
+  .tug-linha.mini .tug-segs{ gap:2px; }
+  .tug-seg.mini{ max-width:26px; }
+  .tug-anel.mini{ width:24px; height:24px; }
+  .tug-anel.mini svg .tg-linha{ stroke-width:1.6px; }
+  .tug-anel.mini b{ font-size:12px; }
+  .tug-anel.mini.det svg, .tug-anel.mini.assim svg{ filter:none; }
+  .tug-anel.mini.det b{ text-shadow:0 0 4px color-mix(in srgb, var(--royal) 60%, transparent); }
+  .tug-anel.mini.assim b{ text-shadow:0 0 4px color-mix(in srgb, var(--assim) 60%, transparent); }
   .gm-attr-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(92px,1fr)); gap:6px; margin-top:6px; }
   .gm-attr-cell{ background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius); padding:5px 8px; text-align:center; }
   .gm-attr-cell .lbl{ font-size:10px; text-transform:uppercase; letter-spacing:.04em; color:var(--ink-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
@@ -7091,18 +7164,173 @@
   // menor). Unificado em 27/09/2026 a pedido do Marco, que apontou que essas
   // mini-fichas ainda mostravam o modelo antigo (barra de preenchimento única)
   // mesmo depois do resto da ficha ter migrado pro visual do livro.
-  function tugLacosHtml(nivelDet, clicavel){
-    var lacos = "";
-    for(var li=1; li<=10; li++){
-      lacos += '<span class="tug-lace'+(clicavel?"":" mini")+' '+(li<=nivelDet?"det":"assim")+'"'+
-        (clicavel?' data-tuglvl="'+li+'"':'')+
-        ' title="Nível '+li+' de Determinação / '+(10-li)+' de Assimilação">⋈</span>';
+  // Visual novo (11/10/2026, Parte 1 de claude/CaboDeGuerra_Visual_Plano.md):
+  // cada laço vira um SVG "gravata-borboleta" com dois triângulos que se tocam
+  // pela ponta (esquerda = Determinação, direita = Assimilação). O lado dono do
+  // segmento fica cheio e hachurado; o outro, só em contorno. Traço "rabiscado"
+  // gerado aqui (pontos tremidos com semente fixa por segmento, então o desenho
+  // é igual em toda renderização e em todo aparelho). Cores só por --royal/
+  // --assim (classes tg-d/tg-a), então os temas de acessibilidade continuam
+  // valendo. Nas pontas, argolas rabiscadas com o Nível em número.
+  // Clique (só na ficha): segmento i do lado da Determinação -> Nível de
+  // Determinação = i-1 (ele e os da direita vão para a Assimilação); segmento i
+  // do lado da Assimilação -> Nível de Determinação = i (ele e os da esquerda
+  // vão para a Determinação). O alvo já sai pronto em data-tuglvl, então o
+  // clique em bindSheet continua o mesmo (piso DET_CAIXA_FLOOR incluído).
+  function tugRnd(seed){
+    var a = seed >>> 0;
+    return function(){
+      a = (a + 0x6D2B79F5) >>> 0;
+      var t = a;
+      t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  function tugN(v){ return Math.round(v*10)/10; }
+  // Contorno tremido de um polígono fechado (cada aresta vira uma curva com o
+  // meio levemente deslocado; os cantos tremem um pouco e passam do ponto).
+  function tugRabiscoPoligono(pts, rnd, amp, fixos){
+    var j = pts.map(function(p, i){
+      var a = fixos && fixos[i] ? amp*0.15 : amp*0.6;
+      return [p[0] + (rnd()-0.5)*2*a, p[1] + (rnd()-0.5)*2*a];
+    });
+    var d = "M" + tugN(j[0][0]) + " " + tugN(j[0][1]);
+    for(var i=0;i<j.length;i++){
+      var a = j[i], b = j[(i+1) % j.length];
+      var mx = (a[0]+b[0])/2, my = (a[1]+b[1])/2;
+      var dx = b[0]-a[0], dy = b[1]-a[1], len = Math.sqrt(dx*dx+dy*dy) || 1;
+      var off = (rnd()-0.5)*2*amp;
+      d += "Q" + tugN(mx - dy/len*off) + " " + tugN(my + dx/len*off) + " " + tugN(b[0]) + " " + tugN(b[1]);
     }
-    return '<div class="tug-track'+(clicavel?"":" mini")+'">' +
-      '<span class="tug-endcap'+(clicavel?"":" mini")+'" style="border-color:var(--royal)"></span>' +
-      lacos +
-      '<span class="tug-endcap'+(clicavel?"":" mini")+'" style="border-color:var(--assim)"></span>' +
+    // passa um pouco do ponto inicial, como caneta que não fecha certinho
+    var p0 = j[0], p1 = j[1];
+    d += "L" + tugN(p0[0] + (p1[0]-p0[0])*0.12 + (rnd()-0.5)*amp) + " " + tugN(p0[1] + (p1[1]-p0[1])*0.12 + (rnd()-0.5)*amp);
+    return d;
+  }
+  // Hachura em zigue-zague (um rabisco contínuo) dentro de um polígono convexo.
+  function tugHachura(pts, rnd, passo, ang){
+    var nx = -Math.sin(ang), ny = Math.cos(ang);
+    var ds = pts.map(function(p){ return p[0]*nx + p[1]*ny; });
+    var dmin = Math.min.apply(null, ds), dmax = Math.max.apply(null, ds);
+    var linhas = [];
+    for(var dd = dmin + passo*0.6; dd < dmax - passo*0.3; dd += passo){
+      var cortes = [];
+      for(var i=0;i<pts.length;i++){
+        var a = pts[i], b = pts[(i+1) % pts.length];
+        var fa = a[0]*nx + a[1]*ny - dd, fb = b[0]*nx + b[1]*ny - dd;
+        if((fa < 0 && fb >= 0) || (fa >= 0 && fb < 0)){
+          var t = fa / (fa - fb);
+          cortes.push([a[0] + (b[0]-a[0])*t, a[1] + (b[1]-a[1])*t]);
+        }
+      }
+      if(cortes.length >= 2) linhas.push([cortes[0], cortes[1]]);
+    }
+    if(!linhas.length) return "";
+    var d = "";
+    linhas.forEach(function(l, k){
+      var p = k % 2 ? [l[1], l[0]] : l;
+      // encolhe as pontas pra não vazar do contorno
+      var ex = p[1][0]-p[0][0], ey = p[1][1]-p[0][1], el = Math.sqrt(ex*ex+ey*ey) || 1, enc = Math.min(0.9, el*0.2);
+      var x0 = p[0][0] + ex/el*enc + (rnd()-0.5)*0.6, y0 = p[0][1] + ey/el*enc + (rnd()-0.5)*0.6;
+      var x1 = p[1][0] - ex/el*enc + (rnd()-0.5)*0.6, y1 = p[1][1] - ey/el*enc + (rnd()-0.5)*0.6;
+      d += (k ? "L" : "M") + tugN(x0) + " " + tugN(y0) + "L" + tugN(x1) + " " + tugN(y1);
+    });
+    return d;
+  }
+  var TUG_SEG_CACHE = {};
+  // Um segmento (0..9 = posição na trilha). lado: "det" ou "assim" (dono).
+  function tugSegSvg(idx, lado, mini){
+    var chave = idx + lado + (mini?"m":"");
+    if(TUG_SEG_CACHE[chave]) return TUG_SEG_CACHE[chave];
+    var rnd = tugRnd(9173 + idx*131 + (mini?7:0));
+    var amp = mini ? 1.0 : 1.4;
+    var triE = [[4,5],[4,35],[30,20]], triD = [[56,5],[56,35],[30,20]];
+    var fixo = [false,false,true];
+    function lado1(tri, cls, cheio){
+      var g = '<g class="'+cls+(cheio?' tg-cheio':' tg-vazio')+'">';
+      if(cheio){
+        g += '<path class="tg-fundo" d="M'+tri[0][0]+' '+tri[0][1]+'L'+tri[1][0]+' '+tri[1][1]+'L'+tri[2][0]+' '+tri[2][1]+'Z"/>';
+        g += '<path class="tg-hach" d="'+tugHachura(tri, rnd, mini?5.5:4.4, -1.0 + (rnd()-0.5)*0.25)+'"/>';
+      }
+      g += '<path class="tg-linha" d="'+tugRabiscoPoligono(tri, rnd, amp, fixo)+'"/>';
+      if(cheio && !mini) g += '<path class="tg-linha tg-linha2" d="'+tugRabiscoPoligono(tri, rnd, amp*1.2, fixo)+'"/>';
+      return g + '</g>';
+    }
+    var svg = '<svg viewBox="0 0 60 40" preserveAspectRatio="none" aria-hidden="true" focusable="false">' +
+      lado1(triE, "tg-d", lado === "det") + lado1(triD, "tg-a", lado === "assim") + '</svg>';
+    TUG_SEG_CACHE[chave] = svg;
+    return svg;
+  }
+  var TUG_ANEL_CACHE = {};
+  function tugAnelSvg(lado, mini){
+    var chave = lado + (mini?"m":"");
+    if(TUG_ANEL_CACHE[chave]) return TUG_ANEL_CACHE[chave];
+    var rnd = tugRnd(lado === "det" ? 4421 : 7717);
+    function volta(r, extra){
+      var a0 = rnd()*Math.PI*2, d = "", passos = 30;
+      for(var k=0;k<=passos;k++){
+        var a = a0 + (Math.PI*2 + extra) * k / passos;
+        var rr = r + (rnd()-0.5)*1.6;
+        d += (k ? "L" : "M") + tugN(25 + Math.cos(a)*rr) + " " + tugN(25 + Math.sin(a)*rr);
+      }
+      return d;
+    }
+    var svg = '<svg viewBox="0 0 50 50" aria-hidden="true" focusable="false"><g class="'+(lado==="det"?"tg-d":"tg-a")+'">' +
+      '<circle class="tg-disco" cx="25" cy="25" r="20"/>' +
+      '<path class="tg-linha" d="'+volta(20.5, 0.5)+'"/>' +
+      (mini ? '' : '<path class="tg-linha tg-linha2" d="'+volta(19, 0.3)+'"/>') +
+    '</g></svg>';
+    TUG_ANEL_CACHE[chave] = svg;
+    return svg;
+  }
+  var TUG_FAIXA_CACHE = {};
+  function tugFaixaSvg(lado){
+    if(TUG_FAIXA_CACHE[lado]) return TUG_FAIXA_CACHE[lado];
+    var rnd = tugRnd(lado === "det" ? 311 : 977);
+    var d = "M" + tugN(1 + rnd()*3) + " " + tugN(4 + rnd()*3);
+    var k;
+    for(k=1;k<=10;k++) d += "L" + (k*10 - (k===10?2:0)) + " " + tugN(2 + rnd()*3.5);
+    d += "L" + tugN(97 + rnd()*3) + " " + tugN(8 + rnd()*4);
+    for(k=9;k>=0;k--) d += "L" + (k*10 + (k===0?2:0)) + " " + tugN(15 + rnd()*3.5);
+    d += "L" + tugN(rnd()*3) + " " + tugN(10 + rnd()*3) + "Z";
+    var svg = '<svg viewBox="0 0 100 20" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path class="'+(lado==="det"?"tg-d":"tg-a")+'" d="'+d+'"/></svg>';
+    TUG_FAIXA_CACHE[lado] = svg;
+    return svg;
+  }
+  // Argola de uma ponta com o Nível em número dentro.
+  function tugAnelHtml(lado, nivel, mini){
+    var nome = lado === "det" ? "Nível de Determinação" : "Nível de Assimilação";
+    return '<span class="tug-anel '+lado+(mini?" mini":"")+'" role="img" aria-label="'+nome+' '+nivel+'" title="'+nome+' '+nivel+'">' +
+      tugAnelSvg(lado, mini) + '<b>'+nivel+'</b></span>';
+  }
+  // Trilha completa (argola + 10 segmentos + argola). clicavel=true só na
+  // ficha (tugDeGuerraCardHtml); false = versão mini, só leitura (card da tela
+  // de Personagens, mini-ficha da aba Mesa via tugMiniBarHtml e Painel via
+  // gmCharCardBody).
+  function tugLacosHtml(nivelDet, clicavel){
+    var mini = !clicavel;
+    nivelDet = clamp(nivelDet, 0, 10);
+    var segs = "";
+    for(var li=1; li<=10; li++){
+      var lado = li <= nivelDet ? "det" : "assim";
+      var alvo = lado === "det" ? li - 1 : li;
+      segs += '<span class="tug-seg '+lado+(mini?" mini":"")+'"' +
+        (clicavel ? ' data-tuglvl="'+alvo+'" title="Determinação '+alvo+' / Assimilação '+(10-alvo)+'"'
+                  : '') + '>' + tugSegSvg(li-1, lado, mini) + '</span>';
+    }
+    return '<div class="tug-linha'+(mini?" mini":"")+'"' +
+      (mini ? ' role="img" aria-label="Cabo de Guerra: Determinação '+nivelDet+', Assimilação '+(10-nivelDet)+'"' : '') + '>' +
+      tugAnelHtml("det", nivelDet, mini) +
+      '<span class="tug-segs">' + segs + '</span>' +
+      tugAnelHtml("assim", 10 - nivelDet, mini) +
     '</div>';
+  }
+  // Rótulo DETERMINAÇÃO / ASSIMILAÇÃO sobre uma faixa rabiscada da cor do lado.
+  function tugRotuloHtml(lado){
+    var ico = icoHtml(lado === "det" ? "nd" : "na");
+    var faixa = '<span class="tug-faixa '+lado+'">'+tugFaixaSvg(lado)+'<span>'+(lado === "det" ? "Determinação" : "Assimilação")+'</span></span>';
+    return '<div class="tug-rot '+lado+'">' + (lado === "det" ? ico + faixa : faixa + ico) + '</div>';
   }
 
   // Card de Determinação/Assimilação: única forma de calcular e mostrar isso
@@ -7143,15 +7371,12 @@
       detEffect.stamp +
       '<h2>Determinação / Assimilação</h2>' +
       pendingSectionBannerHtml(c, "cabo") +
-      '<p class="hint" style="margin-top:2px">Determinação e Assimilação têm cada uma um Nível, e os dois sempre somam 10. Clique num laço da trilha pra ajustar o Nível atual.</p>' +
+      '<p class="hint" style="margin-top:2px">Determinação e Assimilação têm cada uma um Nível, e os dois sempre somam 10. Clique num segmento da Determinação pra passar ele e os da direita para a Assimilação, ou num da Assimilação pra passar ele e os da esquerda para a Determinação.</p>' +
       (c.determinacao.suscetivel ? '<p class="hint" style="margin-top:2px;color:var(--suscet)"><b>Estado Suscetível:</b> não pode gastar Pontos de Determinação até completar a Assimilação'+((c.testesAssimPendentes>0||c.assimTesteAtual)?' (faça o Teste de Assimilação)':' ou recuperar Determinação')+'. Qualquer nova perda com os pontos zerados derruba um Nível.</p>' : '') +
       '<div class="tug-wrap">' +
-        '<div class="tug-row">' +
-          '<span class="tug-tag" style="color:var(--royal)">Determinação</span>' +
-          tugLacosHtml(nivelDet, true) +
-          '<span class="tug-tag" style="color:var(--assim)">Assimilação</span>' +
-        '</div>' +
-        '<div class="tug-nums"><span>'+icoHtml("nd")+' Nível '+nivelDet+'</span><span>Nível '+nivelAssim+' '+icoHtml("na")+'</span></div>' +
+        tugRotuloHtml("det") +
+        tugLacosHtml(nivelDet, true) +
+        tugRotuloHtml("assim") +
       '</div>' +
       '<div class="row" style="margin-top:12px;gap:16px;flex-wrap:wrap;align-items:center">' +
         '<div class="row" style="gap:6px;align-items:center;flex-wrap:nowrap">' +
@@ -8661,8 +8886,8 @@
   // forma de calcular Determinação/Assimilação (ver tugLacosHtml).
   function tugMiniBarHtml(c){
     var nivelDet = c.determinacao ? nivelDetAtual(c) : 10;
-    return '<div>' +
-      '<span class="hint" style="display:block;margin-bottom:3px">Determinação/Assimilação (Nível '+nivelDet+'/10)</span>' +
+    return '<div class="tug-mini-bloco">' +
+      '<span class="hint" style="display:block;margin-bottom:3px">Determinação / Assimilação</span>' +
       tugLacosHtml(nivelDet, false) +
     '</div>';
   }
