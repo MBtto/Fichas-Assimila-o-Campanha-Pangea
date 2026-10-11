@@ -223,6 +223,12 @@
   .field{ margin-bottom:12px; }
   .hint{ font-size:12px; color:var(--ink-muted); margin-top:3px; }
   .hint.attr-desc{ min-height:2.6em; line-height:1.3; }
+  /* Textos de ajuda em blocos (11/10/2026): parágrafos curtos e listas. */
+  .ajuda > p{ margin:0 0 6px; }
+  .ajuda > p:last-child, .ajuda > ul:last-child{ margin-bottom:0; }
+  .ajuda > ul{ margin:2px 0 6px; padding-left:18px; max-width:72ch; }
+  .ajuda > ul > li{ margin:2px 0; }
+  p.ajuda, div.ajuda{ text-align:left; }
 
   .btn{
     display:inline-flex; align-items:center; gap:6px; background:var(--ink); color:var(--bg);
@@ -769,7 +775,7 @@
     background:var(--surface); border:2px solid var(--border-strong); border-radius:var(--radius);
     box-shadow:var(--shadow); padding:18px 20px; max-width:420px; width:100%;
   }
-  .confirm-box p{ margin:0 0 16px; }
+  .confirm-box p{ margin:0 0 16px; white-space:pre-line; }
   .confirm-box .btn-row{ margin-top:0; }
 
   /* Cabo de Guerra (ver tugDeGuerraCardHtml): única forma de calcular e
@@ -2755,7 +2761,7 @@
     if(!r.ops.length){ if(!avisoTipoProvavel(lista, "documentos", comoCodigo)) alert("Não achei documentos com título ou texto nesse "+(comoCodigo?"código":"arquivo")+"."); return; }
     var nome = (campanhaAtual && campanhaAtual.nome) || "esta campanha";
     var um = r.n === 1 && lista.length === 1 && (lista[0].rotulo || lista[0].titulo);
-    askConfirm((um ? 'Importar o documento "'+um+'" para '+nome+'?' : "Importar "+r.n+" documento"+(r.n>1?"s":"")+" para "+nome+"?")+(r.existentes?(um ? " Ele já existe e será substituído (quem já recebeu continua recebendo)." : " "+r.existentes+" já existe"+(r.existentes>1?"m":"")+" e ser"+(r.existentes>1?"ão substituídos":"á substituído")+" (quem já recebeu continua recebendo)."):""), function(){
+    askConfirm((um ? 'Importar o documento "'+um+'" para '+nome+'?' : "Importar "+r.n+" documento"+(r.n>1?"s":"")+" para "+nome+"?")+(r.existentes?(um ? "\n\nEle já existe e será substituído (quem já recebeu continua recebendo)." : "\n\n"+r.existentes+" já existe"+(r.existentes>1?"m":"")+" e ser"+(r.existentes>1?"ão substituídos":"á substituído")+" (quem já recebeu continua recebendo)."):""), function(){
       if(aoConfirmar) aoConfirmar();
       gravarDocs(r.ops).then(function(){ if(rerender) rerender(); });
     });
@@ -2771,7 +2777,7 @@
         '<div class="field"><label>Papel</label><select data-docf="papel">'+selectOpts([["liso","Liso"],["caderno","Caderno pautado"]], ed.papel)+'</select></div>' +
         '<div class="field"><label>Condição</label><select data-docf="condicao">'+selectOpts(PDOC_CONDICOES, ed.condicao)+'</select></div></div>' +
         '<div class="field"><label>Texto</label><textarea data-docf="texto" style="min-height:220px">'+esc(ed.texto)+'</textarea>' +
-        '<p class="hint" style="margin:4px 0 0">Linha em branco = novo parágrafo · <b>[ilegível]</b> = borrão · <b>~~texto~~</b> = riscado · <b>{{texto}}</b> = apagado · <b>**texto**</b> = destaque · parágrafo começando com <b>&gt; </b> = anotação à mão de outra pessoa.</p></div>' +
+        '<div class="hint ajuda" style="margin:4px 0 0"><ul><li>Linha em branco = novo parágrafo</li><li><b>[ilegível]</b> = borrão · <b>~~texto~~</b> = riscado · <b>{{texto}}</b> = apagado · <b>**texto**</b> = destaque</li><li>Parágrafo começando com <b>&gt; </b> = anotação à mão de outra pessoa</li></ul></div></div>' +
         '<div class="grid cols-3"><div class="field"><label>Data (opcional)</label><input type="text" data-docf="data" value="'+esc(ed.data)+'"></div>' +
         '<div class="field"><label>Assinatura (opcional)</label><input type="text" data-docf="assinatura" value="'+esc(ed.assinatura)+'"></div>' +
         '<div class="field"><label>Carimbo (opcional)</label><input type="text" data-docf="carimbo" value="'+esc(ed.carimbo)+'"></div></div>' +
@@ -2789,7 +2795,8 @@
         '<div class="btn-row"><button type="button" class="btn secondary" data-docacao="cancelar">Cancelar</button><button type="button" class="btn accent" data-docacao="salvar">Salvar documento</button></div>' +
         '</div><div class="doc-editor-previa"><p class="hint" style="margin:0 0 8px">Prévia (é assim que os jogadores veem):</p><div id="doc-previa">'+renderDocumento(ed)+'</div></div></div>';
     } else {
-      html += '<p class="hint">Crie os papéis que o grupo vai encontrar e entregue na hora certa. O jogador vê o documento na ficha, na seção <b>Documentos</b>; quem não recebeu não consegue ler. <b>Exportar</b> baixa um arquivo .json com todos os documentos e suas notas (sem as entregas), para guardar ou levar para outra campanha. Para levar um só, use <b>Copiar código</b> no documento e <b>Colar código</b> na outra campanha.</p>';
+      html += '<div class="hint ajuda" style="margin-bottom:10px"><p>Crie os papéis que o grupo vai encontrar e entregue na hora certa. O jogador lê na seção <b>Documentos</b> da ficha; quem não recebeu não vê.</p>' +
+        '<ul><li><b>Exportar</b>: baixa todos os documentos e notas em .json (sem as entregas).</li><li>Para levar só um: <b>Copiar código</b> no documento e <b>Colar código</b> na outra campanha.</li></ul></div>';
       html += '<div class="btn-row" style="justify-content:flex-start;gap:8px;flex-wrap:wrap"><button type="button" class="btn accent" data-docacao="novo">+ Novo documento</button><button type="button" class="btn secondary" data-docacao="importar-arq">Importar documentos</button><button type="button" class="btn secondary" data-docacao="exportar"'+(docsLista().length?'':' disabled')+'>Exportar documentos</button><button type="button" class="btn secondary" data-docacao="importar">Colar código</button><input type="file" accept=".json,application/json" data-docimpfile style="display:none"></div>';
       if(state.docImportar){
         html += '<div class="field" style="margin-top:10px"><label>Cole o código (do Copiar código ou de um arquivo exportado)</label><textarea id="doc-import" style="min-height:120px" placeholder="{ &quot;tipo&quot;: &quot;documentos-assimilacao&quot;, ... }"></textarea>' +
@@ -3314,7 +3321,7 @@
     document.getElementById("rollfeed").innerHTML = "";
     app.innerHTML = telaAvisoHtml("Passar a mesa para campanhas",
       '<p>'+(existente ? 'A migração começou e não terminou. Dá pra continuar de onde parou.' : 'Esta é a primeira vez que o site abre no formato de campanhas.')+'</p>' +
-      '<p style="text-align:left">O que acontece:<br>• a mesa atual vira a campanha <b>Pangea</b>, com você como mestre;<br>• fichas, documentos, itens, criaturas e rolagens são copiados para dentro dela;<br>• cada ficha de jogador ganha também uma <b>ficha-base</b> na conta do jogador;<br>• NPCs ficam só na campanha, vistos só por você;<br>• nada é apagado: os dados antigos continuam guardados como estão.</p>' +
+      '<div class="ajuda"><p>O que acontece:</p><ul><li>a mesa atual vira a campanha <b>Pangea</b>, com você como mestre;</li><li>fichas, documentos, itens, criaturas e rolagens são copiados para ela;</li><li>cada ficha de jogador ganha uma <b>ficha-base</b> na conta do jogador;</li><li>NPCs ficam só na campanha, vistos só por você;</li><li>nada é apagado: os dados antigos continuam guardados.</li></ul></div>' +
       '<p>Faça um backup antes, se ainda não fez.</p><p id="mig-status" style="font-weight:600"></p>',
       '<button type="button" class="btn accent" data-action="migrar">'+(existente ? 'Continuar a migração' : 'Migrar agora')+'</button>');
     ligarSairAviso();
@@ -3452,9 +3459,9 @@
     ["Geração pós-Colapso", "Nasceram depois do Colapso ou tinham menos de 5 anos durante o evento."]
   ];
   var AUTOMACOES_INFO = [
-    ["qualidadeCaiComPressao", "A Qualidade do item cai com a Pressão acumulada", "Botão +1 Pressão no item; Frágil e Durável mudam quantas Pressões derrubam um nível. Desligado: a Qualidade só muda à mão (− / +)."],
-    ["dadosMantidosAuto", "Os dados mantidos são escolhidos sozinhos no teste", "O site já deixa marcados os melhores dados. Desligado: o jogador marca quais dados mantém."],
-    ["qualidadePorLocal", "A Qualidade do item achado é sorteada pelo local", "Item sem Qualidade fixa sai sorteado pela tendência do local. Desligado: sai em Padrão (3)."]
+    ["qualidadeCaiComPressao", "A Qualidade do item cai com a Pressão acumulada", "Botão +1 Pressão no item; Frágil e Durável mudam quantas Pressões derrubam um nível.<br>Desligado: a Qualidade só muda à mão (− / +)."],
+    ["dadosMantidosAuto", "Os dados mantidos são escolhidos sozinhos no teste", "O site já deixa marcados os melhores dados.<br>Desligado: o jogador marca quais dados mantém."],
+    ["qualidadePorLocal", "A Qualidade do item achado é sorteada pelo local", "Item sem Qualidade fixa sai sorteado pela tendência do local.<br>Desligado: sai em Padrão (3)."]
   ];
   var TENDENCIAS_LOCAL = [["acampamento","Acampamento (em geral Padrão ou melhor)"],["abandonado","Abandonado (em geral gasto)"],["geral","Geral (Comprometido ou Padrão)"]];
   function configBase(cmp){ return (cmp && cmp.id === CAMPANHA_PADRAO) ? CONFIG_PANGEA : (cmp ? CONFIG_PADRAO : CONFIG_PANGEA); }
@@ -3822,7 +3829,7 @@
     var levaBase = !!(escolhida && escolhida.base && !escolhida.guardada);
     var pedeExtras = (levaBase && extrasConv) ? extrasConv.filter(function(x){ return !String(((escolhida.base.extras)||{})[x.id]||"").trim(); }) : [];
     var html = '<div class="card" style="border-color:var(--accent)"><h2>Convite: '+esc(d.campanhaNome||"campanha")+'</h2>' +
-      '<p class="hint" style="margin:0 0 10px">Mestre: <b>'+esc(d.mestreNome||"")+'</b>. Escolha a ficha que vai levar. A campanha recebe uma cópia própria dela (Saúde, Determinação, inventário, XP e mutações daquela mesa); a sua ficha-base continua na sua conta. Você só entra depois que o mestre aprovar.</p>' +
+      '<div class="hint ajuda" style="margin:0 0 10px"><p>Mestre: <b>'+esc(d.mestreNome||"")+'</b></p><p>Escolha a ficha que vai levar. A campanha recebe uma cópia dela, com Saúde, Determinação, inventário, XP e mutações próprios daquela mesa. A sua ficha-base continua na sua conta.</p><p>Você só entra depois que o mestre aprovar.</p></div>' +
       '<div class="lobby-opcoes">';
     opcoes.forEach(function(o){
       html += '<label class="lobby-opcao'+(o.valor===f.escolha?' sel':'')+'"><input type="radio" name="conv-ficha" value="'+esc(o.valor)+'"'+(o.valor===f.escolha?' checked':'')+'>' +
@@ -3887,7 +3894,7 @@
     var levaBase = !!(esc0.base && !esc0.guardada);
     var pedeGrupo = levaBase && opsGrupo.length > 0 && !opsGrupo.some(function(o){ return o.id === esc0.base.acampamento; });
     var pedeExtras = levaBase ? (cr.camposExtras||[]).filter(function(x){ return x && x.id && !String(((esc0.base.extras)||{})[x.id]||"").trim(); }) : [];
-    html += '<p class="hint" style="margin:0 0 10px">Escolha a ficha. A campanha recebe uma cópia própria dela e a sua ficha-base continua na sua conta. A ficha só entra na mesa depois que o mestre aprovar.</p><div class="lobby-opcoes">';
+    html += '<div class="hint ajuda" style="margin:0 0 10px"><p>Escolha a ficha. A campanha recebe uma cópia dela; a sua ficha-base continua na sua conta.</p><p>A ficha só entra na mesa depois que o mestre aprovar.</p></div><div class="lobby-opcoes">';
     opcoes.forEach(function(o){
       html += '<label class="lobby-opcao'+(o.valor===lv.escolha?' sel':'')+'"><input type="radio" name="lev-ficha" value="'+esc(o.valor)+'"'+(o.valor===lv.escolha?' checked':'')+'>' +
         '<span><b>'+esc(o.titulo)+'</b><br><span class="hint">'+o.detalhe+'</span></span></label>';
@@ -3964,9 +3971,9 @@
   function lobbyFichasHtml(){
     var bases = lobby.bases || [];
     var html = '<div class="row" style="justify-content:space-between;align-items:center;margin:24px 0 6px"><h2 style="margin:0">Minhas fichas</h2></div>' +
-      '<p class="hint" style="margin:0 0 12px">A ficha-base fica na sua conta. Cada campanha recebe uma cópia própria dela. Para levar uma ficha a uma campanha nova, abra o link de convite do mestre; para uma campanha em que você já joga, use <b>Levar uma ficha</b> no cartão dela.</p>';
+      '<div class="hint ajuda" style="margin:0 0 12px"><p>A ficha-base fica na sua conta; cada campanha recebe uma cópia dela.</p><ul><li>Campanha nova: abra o link de convite do mestre.</li><li>Campanha em que você já joga: use <b>Levar uma ficha</b> no cartão dela.</li></ul></div>';
     if(!bases.length){
-      return html + '<div class="card"><p class="hint" style="margin:0">Nenhuma ficha-base ainda. Use <b>+ Criar ficha</b> para criar um personagem fora de campanha, ou crie um personagem dentro de uma campanha (a ficha-base nasce sozinha).</p></div>';
+      return html + '<div class="card"><div class="hint ajuda" style="margin:0"><p>Nenhuma ficha-base ainda.</p><p>Use <b>+ Criar ficha</b> para criar um personagem fora de campanha, ou crie um dentro de uma campanha (a ficha-base nasce sozinha).</p></div></div>';
     }
     html += '<div class="roster-grid">';
     bases.forEach(function(b){
@@ -4010,7 +4017,7 @@
     var jogo = lobby.campanhas.filter(function(c){ return c.donoUid !== usuario.uid; });
     html += '<div class="row" style="justify-content:space-between;align-items:center;margin:20px 0 10px;gap:8px"><h2 style="margin:0">Minhas campanhas</h2>' +
       '<div class="row lobby-criar" style="gap:8px">' +
-        '<button type="button" class="btn secondary" data-lobby="criar-ficha" title="Cria um personagem fora de campanha, com a criação do livro">+ Criar ficha</button>' +
+        '<button type="button" class="btn secondary" data-lobby="criar-ficha" title="Cria um personagem fora de campanha, com a criação padrão">+ Criar ficha</button>' +
         (podeCriarCampanha() && !lobby.criando ? '<button type="button" class="btn secondary" data-lobby="criar">+ Criar campanha</button>' : '') +
       '</div></div>';
     if(lobby.criando){
@@ -4021,7 +4028,7 @@
         '<div class="row" style="gap:8px"><button type="button" class="btn accent" data-lobby="confirmar-criar"'+(lobby.ocupado?' disabled':'')+'>Criar</button><button type="button" class="btn secondary" data-lobby="cancelar-criar">Cancelar</button></div></div>';
     }
     if(!lobby.campanhas.length){
-      html += '<div class="card"><p class="hint" style="margin:0">Você ainda não participa de nenhuma campanha. Para entrar numa mesa, peça ao mestre um link de convite e abra o link aqui.</p></div>';
+      html += '<div class="card"><div class="hint ajuda" style="margin:0"><p>Você ainda não participa de nenhuma campanha.</p><p>Para entrar numa mesa, peça ao mestre um link de convite e abra o link aqui.</p></div></div>';
     }
     if(mestro.length){
       html += '<h3 class="lobby-sub">Como mestre</h3><div class="roster-grid">' + mestro.map(function(c){ return lobbyCardCampanhaHtml(c, true); }).join("") + '</div>';
@@ -4052,7 +4059,7 @@
       el.addEventListener("click", function(e){
         e.stopPropagation();
         var cmp = campanhaDoLobby(el.getAttribute("data-saircmp")); if(!cmp) return;
-        askConfirm('Sair da campanha "'+(cmp.nome||"")+'"? Sua ficha desta mesa fica guardada na sua conta, com tudo (XP, inventário, mutações), e volta assim se você entrar de novo.', function(){
+        askConfirm('Sair da campanha "'+(cmp.nome||"")+'"?\n\nSua ficha desta mesa fica guardada na sua conta, com tudo (XP, inventário, mutações), e volta assim se você entrar de novo.', function(){
           el.disabled = true;
           sairDaCampanha(cmp).then(function(){
             avisoLobby = 'Você saiu de "'+(cmp.nome||"")+'". A ficha ficou guardada na sua conta.';
@@ -4393,11 +4400,11 @@
     var pp = cr.propPers || {};
     var formatos = '<div class="cfg-bloco">' +
       '<div class="field" style="max-width:420px"><label>Geração</label><select data-cfgsel="geracao">' +
-        '<option value="livro"'+(cr.geracao!=="texto"?' selected':'')+'>Padrão (as 3 gerações do livro)</option>' +
+        '<option value="livro"'+(cr.geracao!=="texto"?' selected':'')+'>Padrão (as 3 gerações)</option>' +
         '<option value="texto"'+(cr.geracao==="texto"?' selected':'')+'>Texto livre</option></select></div>' +
       (cr.geracao === "texto" ? '<div class="field"><label>Pergunta ou explicação para o jogador (texto livre)</label><textarea data-cfgtxt="geracaoTexto" rows="2">'+esc(cr.geracaoTexto||"")+'</textarea></div>' : '') +
       '<div class="field" style="max-width:420px"><label>Propósitos</label><select data-cfgsel="propositos">' +
-        '<option value="livro"'+(cr.propositos!=="personalizado"?' selected':'')+'>Padrão (livro: 2 Pessoais + 1 Coletivo)</option>' +
+        '<option value="livro"'+(cr.propositos!=="personalizado"?' selected':'')+'>Padrão (2 Pessoais + 1 Coletivo)</option>' +
         '<option value="personalizado"'+(cr.propositos==="personalizado"?' selected':'')+'>Personalizado</option></select></div>' +
       (cr.propositos === "personalizado" ?
         '<div class="field"><label>Explicação para o jogador (texto livre)</label><textarea data-cfgtxt="propPers.texto" rows="4" placeholder="o que o jogador deve escrever em cada parte">'+esc(pp.texto||"")+'</textarea></div>' +
@@ -4413,17 +4420,17 @@
       '</div><div class="cfg-bloco">' +
       chk('data-cfgchk="artefato"', cr.artefato, 'Etapa do Artefato inicial') +
       chk('data-cfgchk="kitInicial"', cr.kitInicial, 'Etapa do Pacote inicial (kit de equipamentos)') +
-      chk('data-cfgcabo="1"', cr.caboGuerra.ligado, 'Etapa do Cabo de Guerra', 'O jogador escolhe a Determinação inicial na criação. Desligada: começa com Determinação 9 e Assimilação 1, como no livro.') +
+      chk('data-cfgcabo="1"', cr.caboGuerra.ligado, 'Etapa do Cabo de Guerra', 'O jogador escolhe a Determinação inicial.<br>Desligada: a ficha começa com Determinação 9 e Assimilação 1.') +
       (cr.caboGuerra.ligado ? '<div class="cfg-linha cfg-cabo">' +
         '<div class="field cfg-num"><label>Determinação mínima</label><input type="number" min="1" max="10" data-cfgcabonum="detMin" value="'+cr.caboGuerra.detMin+'"></div>' +
         '<div class="field cfg-num"><label>Determinação máxima</label><input type="number" min="1" max="10" data-cfgcabonum="detMax" value="'+cr.caboGuerra.detMax+'"></div>' +
-      '</div><p class="hint" style="margin:0 0 8px">De 1 a 10 (Determinação 10 = Assimilação 0). O 0 fica de fora: a ficha começaria Suscetível. Cada Nível de Assimilação inicial deixa um Teste de Assimilação pendente na ficha. Fichas que já existem (inclusive as levadas para a campanha) não mudam.</p>' : '') +
+      '</div><div class="hint ajuda" style="margin:0 0 8px"><ul><li>Vai de 1 a 10 (Determinação 10 = Assimilação 0). O 0 fica de fora: a ficha começaria Suscetível.</li><li>Cada Nível de Assimilação inicial deixa um Teste de Assimilação pendente.</li><li>Fichas que já existem (inclusive as levadas para a campanha) não mudam.</li></ul></div>' : '') +
       '</div>';
     var valores = '<div class="cfg-bloco cfg-grade">' +
       num("instintoLivres", "Pontos livres de Instinto", 0, 12) + num("instintoMax", "Máximo por Instinto na criação", 1, 6) +
       num("cpPontos", "Pontos de Conhecimentos e Práticas", 0, 30) + num("cpMax", "Máximo por Conhecimento/Prática", 1, 6) +
       num("xpInicial", "Experiência inicial", 0, 50) + num("escassezArtefato", "Escassez máxima do Artefato", 0, 6) +
-      '</div><p class="hint" style="margin:0">Livro: 3, 3, 7, 2, 7 e 3. A Experiência inicial fica gravada em cada ficha nova; mudar aqui não mexe nas fichas que já existem.</p>';
+      '</div><div class="hint ajuda" style="margin:0"><p>Padrão: 3, 3, 7, 2, 7 e 3.</p><p>A Experiência inicial fica gravada em cada ficha nova; mudar aqui não mexe nas fichas que já existem.</p></div>';
     var extras = '<div class="cfg-bloco">';
     if(!(cr.camposExtras||[]).length) extras += '<p class="hint" style="margin:0 0 8px">Nenhum campo extra. Eles aparecem no primeiro passo da criação e na Origem da ficha.</p>';
     (cr.camposExtras||[]).forEach(function(f, i){
@@ -4440,7 +4447,7 @@
       '<h3 class="lobby-sub">Valores das regras</h3>'+valores+'<h3 class="lobby-sub">Campos extras</h3>'+extras;
     // Automações
     var autos = '<div class="cfg-bloco">' + AUTOMACOES_INFO.map(function(a){ return chk('data-cfgauto="'+a[0]+'"', d.automacoes[a[0]], a[1], a[2]); }).join('') + '</div>' +
-      '<p class="hint" style="margin:0">Sempre automáticos, em qualquer campanha: Usos, Escassez e Espaço pelas características, Cabo de Guerra, Saúde, custos e requisitos de Experiência, trava de Instintos e a perda da ficha por Pressão (só as Inoportunas, somadas às do Teste de Assimilação).</p>';
+      '<div class="hint ajuda" style="margin:0"><p>Sempre automáticos, em qualquer campanha:</p><ul><li>Usos, Escassez e Espaço pelas características;</li><li>Cabo de Guerra e Saúde;</li><li>custos e requisitos de Experiência e a trava de Instintos;</li><li>perda da ficha por Pressão (só as Inoportunas, somadas às do Teste de Assimilação).</li></ul></div>';
     // Locais
     var locs = '<div class="cfg-bloco">';
     if(!(d.locais||[]).length) locs += '<p class="hint" style="margin:0 0 8px">Nenhum local ainda. Locais organizam documentos e itens achados e definem como a Qualidade do item é sorteada.</p>';
@@ -4452,7 +4459,7 @@
       '</div>';
     });
     locs += '<button type="button" class="btn secondary doc-btn" data-cfglocadd="1">+ Local</button>' +
-      '<p class="hint" style="margin:6px 0 0">A ordem aqui é a ordem das listas. Mudar o nome de um local não muda os documentos e itens que já usam o nome antigo.'+(d.automacoes.qualidadePorLocal?'':' O sorteio da Qualidade está desligado nas Automações: os itens saem em Padrão (3).')+'</p></div>';
+      '<div class="hint ajuda" style="margin:6px 0 0"><ul><li>A ordem aqui é a ordem das listas.</li><li>Mudar o nome de um local não muda os documentos e itens que já usam o nome antigo.</li>'+(d.automacoes.qualidadePorLocal?'':'<li>O sorteio da Qualidade está desligado nas Automações: os itens saem em Padrão (3).</li>')+'</ul></div></div>';
     var body = '<div id="gm-config">' +
       '<p class="hint" style="margin-top:0">Vale só para <b>'+esc(campanhaAtual.nome||"esta campanha")+'</b>. As mudanças só valem depois de <b>Salvar configuração</b>.</p>' +
       det("criacao", "Criação de personagem", criacao) + det("autos", "Automações", autos) + det("locais", "Locais e Qualidade por local", locs) +
@@ -4599,7 +4606,7 @@
       '</div>';
     });
     html += '<h3 class="lobby-sub">Link de convite</h3>' +
-      '<p class="hint" style="margin:0 0 8px">Quem abrir o link entra com a conta Google, escolhe a ficha e manda um pedido. Só entra na mesa depois que você aprovar. Desative o link quando não precisar mais.</p>';
+      '<div class="hint ajuda" style="margin:0 0 8px"><p>Quem abrir o link entra com a conta Google, escolhe a ficha e manda um pedido. Só entra na mesa depois que você aprovar.</p><p>Desative o link quando não precisar mais.</p></div>';
     (shared.convites||[]).filter(function(c){ return c.ativo; }).forEach(function(c){
       html += '<div class="row" style="gap:8px;margin:6px 0"><input type="text" readonly value="'+esc(linkConvite(cmp.id, c.codigo))+'" data-gmlink="'+esc(c.codigo)+'" style="flex:1 1 220px;min-width:0">' +
         '<button type="button" class="btn secondary" data-gmcopiarconv="'+esc(c.codigo)+'">Copiar</button>' +
@@ -4652,7 +4659,7 @@
     raiz.querySelectorAll("[data-gmrecusar]").forEach(function(b){
       b.addEventListener("click", function(){
         var p = (shared.pedidos||[]).filter(function(x){ return x.uid === b.getAttribute("data-gmrecusar"); })[0]; if(!p) return;
-        askConfirm("Recusar o pedido de "+(p.nome||p.email||"esta conta")+"? "+(p.membro ? "A pessoa continua na mesa com as fichas que já tem e vê que este pedido foi recusado." : "A pessoa vê que foi recusado e pode pedir de novo pelo link, se ele ainda estiver ativo."), function(){
+        askConfirm("Recusar o pedido de "+(p.nome||p.email||"esta conta")+"?\n\n"+(p.membro ? "A pessoa continua na mesa com as fichas que já tem e vê que este pedido foi recusado." : "A pessoa vê que foi recusado e pode pedir de novo pelo link, se ele ainda estiver ativo."), function(){
           FB.escrever([{ tipo:"update", col:"pedidos", id:p.uid, data:{ status:"recusado", respondidoEm: agoraIso() } }]).catch(falhou("recusar o pedido"));
         });
       });
@@ -4660,7 +4667,7 @@
     raiz.querySelectorAll("[data-gmremover]").forEach(function(b){
       b.addEventListener("click", function(){
         var m = b.getAttribute("data-gmremover"), q = nomeDoMembro(m);
-        askConfirm("Remover "+(q.nome||q.email||"este jogador")+" da mesa? As fichas dele saem desta campanha e ficam guardadas na conta dele, com tudo; voltam assim se ele entrar de novo.", function(){
+        askConfirm("Remover "+(q.nome||q.email||"este jogador")+" da mesa?\n\nAs fichas dele saem desta campanha e ficam guardadas na conta dele, com tudo; voltam assim se ele entrar de novo.", function(){
           b.disabled = true;
           removerJogador(m).catch(falhou("remover o jogador"));
         });
@@ -5519,7 +5526,7 @@
         '<button type="button" class="stepper-btn" data-bpk="'+kind+'" data-bpid="'+id+'" data-bpdir="1" aria-label="Mais '+rot+'">+</button>' +
       '</span></div>';
     }
-    var html = '<p class="hint" style="margin:0 0 6px">Quando uma Assimilação aumenta um Instinto, Conhecimento ou Prática além do normal. Soma em cima da base em todo lugar (tabelas, testes, Painel).</p>';
+    var html = '<div class="hint ajuda" style="margin:0 0 6px"><p>Quando uma Assimilação aumenta um Instinto, Conhecimento ou Prática além do normal.</p><p>Soma em cima da base em todo lugar (tabelas, testes, Painel).</p></div>';
     html += '<p class="bonus-sub">Instintos</p><div class="bonus-grade">';
     INSTINTOS.forEach(function(i){ html += linha("inst", i[0], i[1], ib[i[0]]||0); });
     html += '</div><p class="bonus-sub">Conhecimentos &amp; Práticas</p><div class="bonus-grade">';
@@ -6122,7 +6129,8 @@
     notas:"notas do mestre", locais:"locais", rolagens:"rolagens", rolagensNpc:"rolagens de NPC", convites:"convites", pedidos:"pedidos" };
   function backupCardHtml(){
     return '<div class="card tight" id="backup-card"><h2>Backup da campanha</h2>' +
-      '<p class="hint">Baixa um arquivo com tudo desta campanha: fichas (com os NPCs), documentos e notas, itens achados, criaturas, encontros, configuração, notas do mestre, locais e rolagens. Guarde de vez em quando. <b>Restaurar</b> regrava a campanha com o que está no arquivo (antes disso o site baixa um backup de agora, por segurança); o que foi criado depois do backup continua.</p>' +
+      '<div class="hint ajuda" style="margin-bottom:10px"><p><b>Baixar</b>: um arquivo com tudo desta campanha (fichas e NPCs, documentos e notas, itens achados, criaturas, encontros, configuração, notas do mestre, locais e rolagens). Guarde de vez em quando.</p>' +
+        '<p><b>Restaurar</b>: regrava a campanha com o que está no arquivo. Antes, o site baixa um backup de agora, por segurança. O que foi criado depois do backup continua.</p></div>' +
       '<div class="row" style="gap:8px;flex-wrap:wrap;align-items:center">' +
         '<button type="button" class="btn accent" data-backup="baixar">Baixar backup da campanha</button>' +
         '<label class="btn secondary" style="cursor:pointer;margin:0">Restaurar de um arquivo<input type="file" accept=".json,application/json" data-backup="arquivo" style="display:none"></label>' +
@@ -6165,7 +6173,7 @@
     if(!podeEditar()) return;
     if(data && !Array.isArray(data) && Array.isArray(data.personagens)) data = data.personagens;
     if(!data || !Array.isArray(data)){ alert("Esse arquivo não é um backup."); return; }
-    askConfirm("Esse é um backup antigo, só com fichas. Restaurar "+data.length+" ficha(s) em \""+(campanhaAtual.nome||"")+"\"? Fichas com o mesmo código serão substituídas pela versão do arquivo.", function(){
+    askConfirm("Esse é um backup antigo, só com fichas. Restaurar "+data.length+" ficha(s) em \""+(campanhaAtual.nome||"")+"\"?\n\nFichas com o mesmo código serão substituídas pela versão do arquivo.", function(){
       var list = loadChars();
       data.forEach(function(nc){
         var idx = list.findIndex(function(x){return x.id===nc.id;});
@@ -6189,7 +6197,7 @@
     }
     var quando = ""; try{ quando = new Date(b.geradoEm).toLocaleString("pt-BR"); }catch(e){}
     var oque = resumoContagem(b, true) || "nada";
-    askConfirm("Restaurar o backup de "+(quando||"data desconhecida")+" em \""+(cmp.nome||"")+"\"? Vai regravar "+oque+" e a configuração da campanha com a versão do arquivo. O que foi criado depois do backup continua. Antes, o site baixa um backup de agora.", function(){
+    askConfirm("Restaurar o backup de "+(quando||"data desconhecida")+" em \""+(cmp.nome||"")+"\"?\n\nVai regravar "+oque+" e a configuração da campanha com a versão do arquivo. O que foi criado depois do backup continua.\n\nAntes, o site baixa um backup de agora.", function(){
       status("Baixando o backup de agora…");
       flushPendente();
       baixarBackupCampanha("_antes-de-restaurar").then(function(){
@@ -6286,7 +6294,7 @@
     var campColor = c.acampamento && CAMPS[c.acampamento] ? CAMPS[c.acampamento].cor : null;
     var html = topbar("wizard");
     html += '<div'+(campColor?' style="--camp-color:'+campColor+'"':'')+'>';
-    if(modoBase && pos === 0) html += '<div class="card tight"><p class="hint" style="margin:0"><b>Ficha nova, fora de campanha.</b> Ela segue a criação padrão do livro e fica em <b>Minhas fichas</b>. Ao entrar numa campanha pelo link de convite, você escolhe esta ficha e completa só o que a campanha pedir a mais; o mestre aprova e ajusta o resto.</p></div>';
+    if(modoBase && pos === 0) html += '<div class="card tight"><div class="hint ajuda" style="margin:0"><p><b>Ficha nova, fora de campanha.</b> Ela segue a criação padrão e fica em <b>Minhas fichas</b>.</p><p>Ao entrar numa campanha pelo link de convite, você escolhe esta ficha e completa só o que a campanha pedir a mais. O mestre aprova e ajusta o resto.</p></div></div>';
     html += '<div class="card">' + stepsBar(step) + '<h2'+(campColor?' style="color:'+campColor+'"':'')+'>Passo '+(pos+1)+': '+esc(wizRotulo(step))+'</h2>';
     html += wizardStepBody(c, step);
     html += '</div>';
@@ -6648,7 +6656,7 @@
       var vC = cfgValores();
       var total = conhPratPontosGastos(c);
       var faltamCp = vC.cpPontos - total;
-      var html = '<p>Você tem '+vC.cpPontos+' pontos pra distribuir entre os 6 Conhecimentos e as 6 Práticas. Podem ficar em 0, e o máximo é '+vC.cpMax+' em cada nessa etapa (dá pra subir mais com Experiência no próximo passo).</p>';
+      var html = '<div class="ajuda" style="margin-bottom:10px"><p>Você tem <b>'+vC.cpPontos+' pontos</b> para distribuir entre os 6 Conhecimentos e as 6 Práticas.</p><p class="hint">Podem ficar em 0. O máximo nesta etapa é '+vC.cpMax+' em cada; dá para subir mais com Experiência no próximo passo.</p></div>';
       html += '<div class="budget '+(total>vC.cpPontos?"bad":"ok")+'"><span>Pontos usados</span><span class="num">'+total+' / '+vC.cpPontos+(faltamCp>0?' · faltam '+faltamCp:(faltamCp<0?' · '+(-faltamCp)+' acima do limite':' · completo ✓'))+'</span></div>';
       html += '<h3 style="margin-bottom:8px">Conhecimentos</h3><div class="grid cols-3">';
       CONHECIMENTOS.forEach(function(p){
@@ -6667,7 +6675,7 @@
       var faltamCarac = xpCarTot - tot;
       var criando = state.view === "wizard" || edicaoLivre();
       var livreCarac = edicaoLivre();
-      var html = '<p>Você tem <b>'+xpInicialDe(c)+' Pontos de Experiência</b> pra comprar Características (se cumprir o requisito) e/ou subir Conhecimentos e Práticas. Subir custa o dobro do nível desejado a cada degrau: de 1 pra 2 custa 4, de 2 pra 3 custa 6.</p>';
+      var html = '<div class="ajuda" style="margin-bottom:10px"><p>Você tem <b>'+xpInicialDe(c)+' Pontos de Experiência</b> para comprar Características (se cumprir o requisito) e subir Conhecimentos e Práticas.</p><p class="hint">Subir custa o dobro do nível novo: de 1 para 2 custa 4; de 2 para 3, 6.</p></div>';
       if(xpCarTot !== xpInicialDe(c)) html += '<p class="hint">Total de Experiência deste personagem: '+xpInicialDe(c)+' da criação + '+xpDados(c).recebida+' recebidos'+(instintosEvolGasto(c)?' − '+instintosEvolGasto(c)+' já usados em Instintos':'')+'.</p>';
       html += '<div class="budget '+(tot>xpCarTot?"bad":"ok")+'"><span>Experiência usada</span><span class="num">'+tot+' / '+xpCarTot+(faltamCarac>0?' · sobram '+faltamCarac:(faltamCarac<0?' · '+(-faltamCarac)+' acima do limite':' · completo ✓'))+'</span></div>';
       html += '<h3 style="margin-bottom:8px">Subir Conhecimento ou Prática (até 3)</h3><div class="grid cols-3">';
@@ -6716,7 +6724,7 @@
       var cr6 = cfgCriacao(), mostraArt = cr6.artefato || !!(c.equip && c.equip.nome), mostraKit = cr6.kitInicial;
       var html = '';
       if(mostraArt){
-      html += '<p>O <b>Artefato inicial</b> é opcional: um item com características especiais. A Escassez dele é a soma das categorias das características escolhidas, e o teto na criação é <b>'+escassezTetoInicial()+' ('+ESCASSEZ_NOMES[escassezTetoInicial()]+')</b>'+(teto===null?' — mas com Relíquia não há teto':'')+'. Se não quiser um, deixe o nome em branco e avance.</p>';
+      html += '<div class="ajuda" style="margin-bottom:10px"><p>O <b>Artefato inicial</b> é opcional: um item com características especiais.</p><ul class="hint"><li>Escassez = soma das categorias das características escolhidas.</li><li>Teto na criação: <b>'+escassezTetoInicial()+' ('+ESCASSEZ_NOMES[escassezTetoInicial()]+')</b>'+(teto===null?'; com Relíquia não há teto':'')+'.</li><li>Não quer um? Deixe o nome em branco e avance.</li></ul></div>';
       if(bloqueado) html += '<div class="card tight" style="border-color:var(--accent)"><p class="hint" style="margin:0">As características de um Artefato só podem ser mudadas por quem tem a Característica <b>Gambiarra</b> (ou pelo Assimilador).</p></div>';
       html += '<div class="field"><label>Nome do Artefato</label><input type="text" data-equip="nome" value="'+esc(c.equip.nome)+'"></div>';
       html += '<div class="field"><label>Descrição / história curta</label><textarea data-equip="desc">'+esc(c.equip.desc)+'</textarea></div>';
@@ -6728,7 +6736,7 @@
       }
       if(!mostraKit) return html;
       html += '<h3 style="margin:'+(mostraArt?'20px':'0')+' 0 8px">Pacote inicial (opcional)</h3>';
-      html += '<p class="hint">Escolha um pacote de equipamentos (pág. 90 do livro) pra começar o inventário. Dá pra trocar à vontade, e ajustar ou remover cada item depois, na ficha.</p>';
+      html += '<div class="hint ajuda" style="margin-bottom:8px"><p>Escolha um pacote de equipamentos para começar o inventário.</p><p>Dá para trocar à vontade e, depois, ajustar ou remover cada item na ficha.</p></div>';
       html += '<div class="kit-pick">';
       html += '<button type="button" class="kit-opt'+(!c.kitInicial?' selected':'')+'" data-kit="">' +
         '<h4>Nenhum</h4><p>Só o Artefato inicial.</p></button>';
@@ -6945,7 +6953,7 @@
     if(state.deleteConfirm){
       html += '<div class="card" style="border:3px solid var(--danger);background:rgba(162,58,58,.08)">' +
         '<h2 style="color:var(--danger)">Excluir "'+esc(c.nomePersonagem||"este personagem")+'" definitivamente?</h2>' +
-        '<p style="font-weight:700;font-size:15.5px">Essa ação NÃO PODE SER DESFEITA. Todos os dados dessa ficha (Instintos, Conhecimentos, Práticas, Características, Equipamento, Inventário, Notas) serão apagados desta campanha pra sempre.</p>' +
+        '<p style="font-weight:700;font-size:15.5px;margin-bottom:6px">Essa ação NÃO PODE SER DESFEITA.</p><p style="margin-top:0">Todos os dados desta ficha (Instintos, Conhecimentos, Práticas, Características, Equipamento, Inventário, Notas) serão apagados desta campanha para sempre.</p>' +
         '<p class="hint">Só dá pra recuperar por um backup da campanha baixado antes pelo mestre (Painel do Assimilador → Backup da campanha).</p>' +
         '<div class="btn-row"><button class="btn secondary" data-action="cancel-delete">Cancelar</button><button class="btn danger" data-action="confirm-delete">Sim, excluir definitivamente</button></div>' +
       '</div></div>';
@@ -6975,7 +6983,7 @@
     if(c.precisaRefazer){
       html += '<div class="card" style="border:2px solid var(--accent)">' +
         '<h2 style="margin-bottom:6px">Atualize a ficha pro sistema oficial</h2>' +
-        '<p class="hint" style="margin-top:0">A ficha agora segue o livro de regras definitivo. A história, os Instintos, as mutações e o Cabo de Guerra foram mantidos, mas é preciso refazer: <b>Conhecimentos e Práticas</b> (7 pontos), <b>Características</b> (7 Pontos de Experiência, com requisitos) e o <b>Artefato inicial</b> (Escassez até '+escassezTetoInicial()+').</p>' +
+        '<div class="hint ajuda" style="margin:0 0 6px"><p>A ficha mudou para o sistema novo. A história, os Instintos, as mutações e o Cabo de Guerra foram mantidos.</p><p>É preciso refazer:</p><ul><li><b>Conhecimentos e Práticas</b> (7 pontos);</li><li><b>Características</b> (7 Pontos de Experiência, com requisitos);</li><li><b>Artefato inicial</b> (Escassez até '+escassezTetoInicial()+').</li></ul></div>' +
         ((c.caracAntigas&&c.caracAntigas.length)||(c.equipAntigo&&c.equipAntigo.nome) ? '<p class="hint">Antes: '+
           ((c.caracAntigas||[]).length ? 'Características '+esc(c.caracAntigas.join(", ").replace(/_/g," "))+'. ' : '') +
           (c.equipAntigo&&c.equipAntigo.nome ? 'Equipamento "'+esc(c.equipAntigo.nome)+'"'+(c.equipAntigo.traits.length?' ('+esc(c.equipAntigo.traits.join(", "))+')':'')+'.' : '') + '</p>' : '') +
@@ -7104,7 +7112,7 @@
 
     if(modoBase){
       // Etapa H: ficha-base fora de campanha. Sem testes, documentos e exclusão.
-      html += '<div class="card tight"><p class="hint" style="margin:0">Esta é a sua <b>ficha-base</b>, fora de campanha. As mudanças aqui ficam só nela: as cópias que já estão em campanhas não mudam. Para levar a ficha a uma campanha, abra o link de convite do mestre.</p></div>';
+      html += '<div class="card tight"><div class="hint ajuda" style="margin:0"><p>Esta é a sua <b>ficha-base</b>, fora de campanha. As mudanças aqui ficam só nela; as cópias que já estão em campanhas não mudam.</p><p>Para levar a ficha a uma campanha, abra o link de convite do mestre.</p></div></div>';
       html += '<div class="btn-row"><button class="btn secondary" data-action="lobby">Voltar às campanhas</button>' +
         '<div class="row"><button class="btn accent" data-action="edit">Editar Ficha</button></div></div>';
     } else
@@ -7204,7 +7212,7 @@
     var html = '<div class="card" style="margin-top:12px;background:var(--surface-2)"><h3 style="margin-bottom:8px">Novo item</h3>';
     html += '<div class="field"><label>Nome do item</label><input type="text" id="item-nome" value="'+esc(draft.nome)+'"></div>';
     html += '<div class="field"><label>Descrição (opcional)</label><textarea id="item-desc">'+esc(draft.desc)+'</textarea></div>';
-    html += '<p class="hint">Equipamento comum não tem características. Um item com características é um Artefato: a Escassez dele é a soma das categorias, e o Assimilador decide o que dá pra encontrar.</p>';
+    html += '<div class="hint ajuda" style="margin-bottom:8px"><p>Equipamento comum não tem características. Um item com características é um Artefato: a Escassez dele é a soma das categorias.</p><p>O Assimilador decide o que dá para encontrar.</p></div>';
     html += '<div class="budget ok"><span>Escassez</span><span class="num">'+escassez+' · '+(ESCASSEZ_NOMES[clamp(escassez,0,6)]||"")+'</span></div>';
     html += '<div class="trait-list">' + renderTraitList(draft.traits, "item") + '</div>';
     var espacosoItem = espacosoBonus(draft.traits);
@@ -7417,7 +7425,8 @@
   function caboCriacaoHtml(c){
     var cb = caboCriacao(), nd = caboInicialNaFaixa(c), na = 10 - nd;
     if(caboInicialDe(c) !== nd) aplicarCaboInicial(c, nd);
-    return '<p>Escolha onde o seu Cabo de Guerra começa. Determinação e Assimilação somam sempre 10: mais Determinação deixa o personagem mais firme; mais Assimilação dá mais Pontos de Assimilação desde o início, mas cada Nível de Assimilação já começa com um Teste de Assimilação a fazer. O livro sugere Determinação 9 e Assimilação 1.</p>' +
+    return '<div class="ajuda"><p>Escolha onde o seu Cabo de Guerra começa. Determinação e Assimilação somam sempre 10.</p>' +
+      '<ul class="hint"><li><b>Mais Determinação:</b> o personagem começa mais firme.</li><li><b>Mais Assimilação:</b> mais Pontos de Assimilação desde o início, mas cada Nível de Assimilação já começa com um Teste de Assimilação a fazer.</li></ul></div>' +
       '<div class="tug-wrap tug-cria">' + tugRotuloHtml("det") + tugLacosHtml(nd, true, { attr:"data-tugcria", min:cb.detMin, max:cb.detMax }) + tugRotuloHtml("assim") + '</div>' +
       '<p class="tug-cria-resumo"><b style="color:var(--royal)">Determinação '+nd+'</b> · <b style="color:var(--assim)">Assimilação '+na+'</b><span class="hint" style="display:block;margin:2px 0 0;text-align:center">'+
         (na === 0 ? 'Sem Teste de Assimilação para fazer.' : na+' Teste'+(na>1?'s':'')+' de Assimilação para fazer na ficha.')+' Começa com '+nd+' '+(nd===1?'ponto':'pontos')+' de Determinação e '+na+' de Assimilação.</span></p>' +
@@ -7471,8 +7480,8 @@
       detEffect.stamp +
       '<h2>Determinação / Assimilação</h2>' +
       pendingSectionBannerHtml(c, "cabo") +
-      '<p class="hint" style="margin-top:2px">Determinação e Assimilação têm cada uma um Nível, e os dois sempre somam 10. Clique num segmento da Determinação pra passar ele e os da direita para a Assimilação, ou num da Assimilação pra passar ele e os da esquerda para a Determinação.</p>' +
-      (c.determinacao.suscetivel ? '<p class="hint" style="margin-top:2px;color:var(--suscet)"><b>Estado Suscetível:</b> não pode gastar Pontos de Determinação até completar a Assimilação'+((c.testesAssimPendentes>0||c.assimTesteAtual)?' (faça o Teste de Assimilação)':' ou recuperar Determinação')+'. Qualquer nova perda com os pontos zerados derruba um Nível.</p>' : '') +
+      '<div class="hint ajuda" style="margin-top:2px"><p>Os Níveis de Determinação e Assimilação somam sempre 10.</p><p>Clique num segmento para mover o Cabo de Guerra até ele.</p></div>' +
+      (c.determinacao.suscetivel ? '<div class="hint ajuda" style="margin-top:6px;color:var(--suscet)"><p><b>Estado Suscetível:</b> não pode gastar Pontos de Determinação até completar a Assimilação'+((c.testesAssimPendentes>0||c.assimTesteAtual)?' (faça o Teste de Assimilação)':' ou recuperar Determinação')+'.</p><p>Qualquer nova perda com os pontos zerados derruba um Nível.</p></div>' : '') +
       '<div class="tug-wrap">' +
         tugRotuloHtml("det") +
         tugLacosHtml(nivelDet, true) +
@@ -8010,7 +8019,7 @@
     // pra "sortear" a carta certa. Pedido do Marco em 27/09/2026.
     body += '<div class="card tight" style="margin-top:10px">' +
       '<h3 style="margin-bottom:8px">Adicionar mutação manualmente</h3>' +
-      '<p class="hint">Use para registrar uma Assimilação Singular concedida pelo(a) Assimilador(a) (elas nunca são sorteadas pelo Teste) ou para lançar retroativamente uma mutação de qualquer categoria que a personagem já tinha antes desse sistema existir na ficha.</p>' +
+      '<div class="hint ajuda"><p>Use para registrar:</p><ul><li>uma Assimilação Singular dada pelo Assimilador (elas nunca saem no Teste);</li><li>uma mutação que a personagem já tinha antes de a ficha controlar isso.</li></ul></div>' +
       '<div class="row" style="gap:8px;flex-wrap:wrap;align-items:center">' +
         '<select data-mancat style="max-width:220px">' + MUT_CATS.map(function(cat){ return '<option value="'+cat+'"'+(cat==="I"?' selected':'')+'>'+esc(MUT_SUITS[cat])+' ('+MUT_SIGLA[cat]+')</option>'; }).join('') + '</select>' +
         '<select data-mancard style="max-width:220px"></select>' +
@@ -8049,7 +8058,7 @@
     var corpo = '<p class="hint" style="margin:0 0 6px">'+esc(MUT_SUITS[m.cat])+' ('+MUT_SIGLA[m.cat]+') · custo '+custoChipHtml(m.custo)+'</p>' +
       '<p>'+formatEfeito(tier[2], true)+'</p>' +
       (totalP && m.cat==="H" ? '<p class="hint">'+(totalP-neutP)+' de '+totalP+' '+dadoHtml("p")+' ainda contam para a perda'+(neutP>=totalP?' · efeito cessado':'')+'. A Clareza de Propósito retira Pressão.</p>' : '') +
-      (totalP && m.cat!=="H" ? '<p class="hint">Pressão de carta que não é Inoportuna não conta para a perda da ficha (livro, pág. 124).</p>' : '') +
+      (totalP && m.cat!=="H" ? '<p class="hint">Pressão de carta que não é Inoportuna não conta para a perda da ficha.</p>' : '') +
       '<div class="cx-acoes"><button type="button" class="btn secondary" data-action="assim-remover" data-mutid="'+m.id+'">Remover mutação</button></div>';
     return { titulo:esc(card[0]+" — "+tier[1]), corpo:corpo, lado:"direita", largura:420 };
   };
@@ -8165,7 +8174,7 @@
   function evoluirHtml(c){
     var x = xpDados(c), saldo = xpSaldo(c), gm = temAcessoTotal();
     var html = '<div class="budget '+(saldo<0?"bad":"ok")+'"><span>Experiência disponível</span><span class="num">'+saldo+'</span></div>';
-    html += '<p class="hint">'+xpInicialDe(c)+' da criação + <b>'+x.recebida+'</b> recebidos do Assimilador − '+xpGasto(c)+' gastos. Só o Assimilador dá Experiência (no fim da sessão, pelo Painel).</p>';
+    html += '<p class="hint">'+xpInicialDe(c)+' da criação + <b>'+x.recebida+'</b> recebidos do Assimilador − '+xpGasto(c)+' gastos.<br>Só o Assimilador dá Experiência (no fim da sessão, pelo Painel).</p>';
     if(gm){
       html += '<div class="row" style="gap:6px;flex-wrap:wrap;align-items:center;margin:4px 0 8px"><span class="hint" style="margin:0">Ajustar:</span>' +
         '<input type="number" min="1" max="50" value="1" data-evolxpqtd style="width:70px">' +
@@ -8211,7 +8220,7 @@
     var x = xpDados(c), saldo = xpSaldo(c), gm = temAcessoTotal(), html = '';
     // Instintos: triplo, só depois de uma sessão com mutação (o Assimilador libera).
     if(x.liberarInstinto || gm){
-      html += '<p class="hint" style="margin-top:0">Custa o triplo do nível que vai atingir (de 2 pra 3 custa 9).'+(x.liberarInstinto?' <b>Liberado pelo Assimilador.</b>':' Ainda não liberado pro jogador (só você, Assimilador, vê os botões).')+'</p><div class="evol-grid">';
+      html += '<div class="hint ajuda" style="margin-top:0;margin-bottom:8px"><p>Custa o triplo do nível novo (de 2 para 3 custa 9).</p><p>'+(x.liberarInstinto?'<b>Liberado pelo Assimilador.</b>':'Ainda não liberado para o jogador (só você, Assimilador, vê os botões).')+'</p></div><div class="evol-grid">';
       INSTINTOS.forEach(function(i){
         var atual = instintoBase(c, i[0]), custo = 3*(atual+1);
         var podeDesfazerI = gm && (c.instintosEvol||{})[i[0]] > ((c.instintos&&c.instintos[i[0]])||0);
@@ -8660,8 +8669,8 @@
       var keepN = t.keepN || (t.agir?2:1);
       body += '<div style="margin-top:14px">' +
         (autoLigada("dadosMantidosAuto") || t.registered
-          ? '<p class="hint">Mantém por padrão '+keepN+' dado'+(keepN===1?"":"s")+' (conforme declarado antes da rolagem)'+(t.registered?'':'; clique num dado pra manter ou soltar outro (ex.: tensionando uma Origem), depois confirme pra registrar no histórico')+'.</p>'
-          : '<p class="hint">Escolha '+keepN+' dado'+(keepN===1?"":"s")+' pra manter (conforme declarado antes da rolagem; uma Origem tensionada mantém mais um): clique nos dados e depois confirme. <b>Mantidos agora: '+kept.length+'</b>.</p>') +
+          ? '<p class="hint">Mantém por padrão '+keepN+' dado'+(keepN===1?"":"s")+' (o que foi declarado antes de rolar)'+'.'+(t.registered?'':' Clique num dado para manter ou soltar outro (ex.: tensionando uma Origem) e confirme para registrar no histórico.')+'</p>'
+          : '<div class="hint ajuda"><p>Escolha '+keepN+' dado'+(keepN===1?"":"s")+' para manter (o que foi declarado antes de rolar; uma Origem tensionada mantém mais um): clique nos dados e confirme.</p><p><b>Mantidos agora: '+kept.length+'</b></p></div>') +
         '<div class="row" style="flex-wrap:wrap;gap:8px">';
       t.results.forEach(function(d, idx){
         body += '<button type="button" class="btn secondary" data-testtoggle="'+idx+'" '+(t.registered?'disabled':'')+' style="font-family:\'IBM Plex Mono\',monospace'+(d.kept?'':';opacity:.4;text-decoration:line-through')+(t.registered?';cursor:default':'')+'">d'+d.sides+':'+d.face+' ('+diceResultHtml(d)+')</button>';
@@ -8680,11 +8689,11 @@
 
   CAIXAS.testar = function(){
     var c = fichaAtual(); if(!c) return null;
-    var corpo = '<p>Escolha o <b>Instinto</b> e a <b>Prática ou Conhecimento</b> do teste: a pilha de dados é montada sozinha com os valores da ficha (1d6 por ponto de Instinto, 1d10 por ponto de Prática/Conhecimento).</p>' +
-      '<p><b>Agir por Instinto (Rolagem Assimilada):</b> escolha dois Instintos no lugar de Instinto + Prática/Conhecimento (pode repetir o mesmo nos dois). Os dados desses Instintos viram d12 e você mantém 1 dado a mais. Gasta 1 ponto de Assimilação, ou 2 de Determinação se não houver Assimilação disponível.</p>' +
+    var corpo = '<div class="ajuda"><p>Escolha o <b>Instinto</b> e a <b>Prática ou Conhecimento</b> do teste. A pilha de dados sai da ficha: 1d6 por ponto de Instinto e 1d10 por ponto de Prática/Conhecimento.</p>' +
+      '<p><b>Agir por Instinto (Rolagem Assimilada):</b></p><ul><li>escolha dois Instintos no lugar de Instinto + Prática/Conhecimento (pode repetir o mesmo);</li><li>os dados viram d12 e você mantém 1 dado a mais;</li><li>custa 1 ponto de Assimilação, ou 2 de Determinação se não houver Assimilação.</li></ul>' +
       '<p><b>Empenho (dado extra):</b> pra manter um dado a mais nessa rolagem, declare antes de rolar. Gasta 1 ponto de Determinação.</p>' +
-      '<p>'+(autoLigada("dadosMantidosAuto") ? 'Depois que os dados caírem, os melhores já vêm marcados; clique num dado pra manter ou soltar outro (ex.: tensionando uma Origem) e confirme pra registrar no histórico.' : 'Depois que os dados caírem, clique nos dados que quer manter (quantos foram declarados antes de rolar) e confirme pra registrar no histórico.')+'</p>' +
-      '<p class="hint">Os pontos de Agir por Instinto e do dado extra são gastos assim que a caixa é marcada (só voltam se for desmarcada antes de rolar), por isso uma opção pode ficar bloqueada se não sobrar recurso pra ela. Esse gasto só vai pra mesa quando o teste é confirmado no botão "Confirmar escolha e registrar no histórico".</p>';
+      '<p>'+(autoLigada("dadosMantidosAuto") ? 'Depois que os dados caírem, os melhores já vêm marcados. Clique num dado para manter ou soltar outro (ex.: tensionando uma Origem) e confirme para registrar no histórico.' : 'Depois que os dados caírem, clique nos dados que quer manter (quantos foram declarados) e confirme para registrar no histórico.')+'</p>' +
+      '<div class="hint ajuda"><p>Os pontos de Agir por Instinto e do dado extra são gastos ao marcar a caixa (voltam se desmarcar antes de rolar). Por isso uma opção pode ficar bloqueada se faltar recurso.</p><p>O gasto só vai para a mesa quando o teste é confirmado.</p></div></div>';
     return { titulo:"Testar: como funciona", corpo:corpo, lado:"direita", largura:440 };
   };
   function bindSheetTest(c){
@@ -8867,7 +8876,7 @@
   // Caixa "É um NPC": só aparece pro Assimilador (jogador não esconde a própria ficha).
   function npcCheckboxHtml(c, attr){
     if(!temAcessoTotal()) return '';
-    return '<label style="display:flex;align-items:center;gap:8px;text-transform:none;font-size:13px;margin:10px 0 0"><input type="checkbox" style="width:auto" '+attr+(c.ehNpc?" checked":"")+'> É um NPC (personagem controlado pelo Assimilador): a ficha e as rolagens dele ficam escondidas dos jogadores (aba Mesa, Histórico de Rolagens e painel flutuante) — só o Assimilador vê.</label>' +
+    return '<label style="display:flex;align-items:center;gap:8px;text-transform:none;font-size:13px;margin:10px 0 0"><input type="checkbox" style="width:auto" '+attr+(c.ehNpc?" checked":"")+'> <span><b>É um NPC</b> (controlado pelo Assimilador). A ficha e as rolagens dele ficam escondidas dos jogadores.</span></label>' +
       '<p class="hint" style="margin:4px 0 0">Desmarcado, a ficha fica na sua própria conta. Pra dar a ficha a um jogador, deixe como NPC e depois use <b>Passar para um jogador</b> no Painel do Assimilador.</p>';
   }
   // Na edição comum (fora do "Refazer"), só o Assimilador mexe no passo de Experiência.
@@ -8895,7 +8904,7 @@
     var passosEdit = editPassos(draft);
     var livre = temAcessoTotal();
     html += '<div class="card"><h2>'+(draft.precisaRefazer?'Refazendo no sistema oficial: ':'Editando: ')+esc(draft.nomePersonagem||"personagem")+'</h2>' +
-      (livre ? '<p class="hint" style="margin:0">Como Assimilador, você pode mudar qualquer coisa: os limites da criação (Instinto até 3, Conhecimento/Prática até 2, pontos exatos, Escassez do Artefato, requisitos) não travam nada aqui. Se algo sair das regras, o site só avisa antes de salvar.</p>' :
+      (livre ? '<div class="hint ajuda" style="margin:0"><p>Como Assimilador, você pode mudar qualquer coisa: os limites da criação (Instinto até 3, Conhecimento/Prática até 2, pontos exatos, Escassez do Artefato, requisitos) não travam nada aqui.</p><p>Se algo sair das regras, o site só avisa antes de salvar.</p></div>' :
       '<div class="field" style="max-width:320px"><label>Nome do personagem</label><input type="text" data-editnome value="'+esc(draft.nomePersonagem)+'"></div>' +
       npcCheckboxHtml(draft, 'data-editnpc')) +
     '</div>';
@@ -9642,7 +9651,7 @@
       }).join('') +
       '<button type="button" class="btn accent doc-btn" data-brolar="'+enc.id+'">🎲 Rolar Ativação</button>' +
       '<button type="button" class="btn secondary doc-btn" data-bzerar="'+enc.id+'"'+((p.s||p.a||p.p)?'':' disabled')+' title="Pontos livres que não pagaram nem foram represados em nenhuma Ativação se perdem">Fim da rodada: descartar sobras</button></div>';
-    html += '<p class="hint" style="margin:4px 0 0">A rolagem mantém todos os dados e soma aos pontos (Sucesso, Adaptação e Pressão). Todo ponto deve ser investido na rodada: <b>Pagar</b> uma Ativação ou <b>Represar</b> numa incompleta (fica guardado nela pra próxima rodada). O que não pagar nada se perde no fim da rodada.</p>';
+    html += '<div class="hint ajuda" style="margin:4px 0 0"><p>A rolagem mantém todos os dados e soma aos pontos (Sucesso, Adaptação e Pressão). Todo ponto deve ser investido na rodada:</p><ul><li><b>Pagar</b> uma Ativação;</li><li><b>Represar</b> numa incompleta (fica guardado nela para a próxima rodada).</li></ul><p>O que não pagar nada se perde no fim da rodada.</p></div>';
     html += bestRolagemHtml(enc.rolagem, 'data-bmostrar="'+enc.id+'"', 'data-bfecharrol="'+enc.id+'"');
     if((cri.cond||[]).length) html += '<div class="lx-lista" style="margin:8px 0">'+caixaLinha("bcond", enc.id, "Condicionantes", esc(cri.cond.map(function(x){ return x.n; }).join(" · ")), '<span class="lx-sel">'+cri.cond.length+'</span>')+'</div>';
     html += '<div class="best-ativs">'+bestAtivacoesHtml(cri, "e"+enc.id, enc)+'</div>';
@@ -9935,7 +9944,7 @@
     var existentes = validas.filter(function(c){ return c.id && bestCriatura(c.id); }).length;
     var nomeCmp = (campanhaAtual && campanhaAtual.nome) || "esta campanha";
     var uma = validas.length === 1 && validas[0].nome;
-    askConfirm((uma ? 'Importar a criatura "'+uma+'" para '+nomeCmp+'?' : "Importar "+validas.length+" criatura"+(validas.length>1?"s":"")+" para "+nomeCmp+"?")+(existentes?(uma ? " Ela já existe com o mesmo nome interno e será substituída." : " "+existentes+" já existe"+(existentes>1?"m":"")+" com o mesmo nome interno e ser"+(existentes>1?"ão":"á")+" substituída"+(existentes>1?"s":"")+"."):""), function(){
+    askConfirm((uma ? 'Importar a criatura "'+uma+'" para '+nomeCmp+'?' : "Importar "+validas.length+" criatura"+(validas.length>1?"s":"")+" para "+nomeCmp+"?")+(existentes?(uma ? "\n\nEla já existe com o mesmo nome interno e será substituída." : "\n\n"+existentes+" já existe"+(existentes>1?"m":"")+" com o mesmo nome interno e ser"+(existentes>1?"ão":"á")+" substituída"+(existentes>1?"s":"")+"."):""), function(){
       if(aoConfirmar) aoConfirmar();
       var base = criaturasLista().reduce(function(m, x){ return Math.max(m, x.ordem||0); }, 0);
       var ops = [], novas = [];
@@ -9963,7 +9972,7 @@
     var encs = encontrosLista();
     var body = '<div id="gm-bestiario">';
     body += '<p class="best-grupo-tit" style="margin-top:0">Em cena'+(encs.length?' ('+encs.length+')':'')+'</p>';
-    if(!encs.length) body += '<p class="hint">Nenhuma criatura em cena. Escolha uma no catálogo e clique em “Colocar em cena”. Os jogadores só veem o que você revelar.</p>';
+    if(!encs.length) body += '<div class="hint ajuda"><p>Nenhuma criatura em cena. Escolha uma no catálogo e clique em “Colocar em cena”.</p><p>Os jogadores só veem o que você revelar.</p></div>';
     encs.forEach(function(enc){ body += bestEncontroHtml(enc); });
     body += '<p class="best-grupo-tit">Catálogo</p>';
     if(state.bestEdit){ body += bestEditorHtml(); }
@@ -9979,7 +9988,7 @@
         '<div class="field" style="max-width:320px;margin:0 0 6px"><input type="search" id="best-busca" placeholder="Buscar criatura…" value="'+esc(state.bestBusca||"")+'"></div>';
       body += bestCatalogoHtml();
     }
-    body += '<p class="hint" style="margin-top:10px">Os gimmicks não são automáticos: as condicionantes ficam descritas, e você decide quando valem. Os botões 🎲 nos textos rolam só o dano.</p>';
+    body += '<div class="hint ajuda" style="margin-top:10px"><p>Os gimmicks não são automáticos: as condicionantes ficam descritas, e você decide quando valem.</p><p>Os botões 🎲 nos textos rolam só o dano.</p></div>';
     return sectionCard("gmbestiario", "Bestiário", body + '</div>');
   }
   function bestAplicarBusca(raiz){
@@ -10226,7 +10235,7 @@
   // nome opcional, uma meta de Sucessos e uma contagem que sobe/desce.
   function renderGmConflitos(){
     var conflitos = loadLS("pangea:gm:conflitos", []);
-    var body = '<p class="hint">Monte um conflito (perseguição, cerco, negociação prolongada...) indicando quantos Sucessos ele exige pra ser resolvido, e vá somando o placar conforme os testes acontecem na mesa.</p>';
+    var body = '<div class="hint ajuda"><p>Monte um conflito (perseguição, cerco, negociação prolongada…) com quantos Sucessos ele exige para ser resolvido.</p><p>Vá somando o placar conforme os testes acontecem na mesa.</p></div>';
     body += '<div class="row" style="gap:8px;flex-wrap:wrap;align-items:flex-end">' +
       '<div class="field" style="max-width:220px;margin:0"><label>Nome do conflito (opcional)</label><input type="text" id="conflito-nome" placeholder="ex: Fuga do posto avançado"></div>' +
       '<div class="field" style="max-width:150px;margin:0"><label>Sucessos p/ resolver</label><input type="number" id="conflito-alvo" min="1" max="99" value="5"></div>' +
@@ -10415,7 +10424,7 @@
     if(!r.ops.length){ if(!avisoTipoProvavel(lista, "itens", comoCodigo)) alert("Não achei itens com nome nesse "+(comoCodigo?"código":"arquivo")+"."); return; }
     var nome = (campanhaAtual && campanhaAtual.nome) || "esta campanha";
     var um = r.n === 1 && lista.length === 1 && lista[0].nome;
-    askConfirm((um ? 'Importar o item "'+um+'" para '+nome+'?' : "Importar "+r.n+" ite"+(r.n>1?"ns":"m")+" para "+nome+"?")+(r.existentes?(um ? " Ele já existe e será substituído (quem já recebeu continua com o seu)." : " "+r.existentes+" já existe"+(r.existentes>1?"m":"")+" e ser"+(r.existentes>1?"ão substituídos":"á substituído")+" (quem já recebeu continua com o seu)."):""), function(){
+    askConfirm((um ? 'Importar o item "'+um+'" para '+nome+'?' : "Importar "+r.n+" ite"+(r.n>1?"ns":"m")+" para "+nome+"?")+(r.existentes?(um ? "\n\nEle já existe e será substituído (quem já recebeu continua com o seu)." : "\n\n"+r.existentes+" já existe"+(r.existentes>1?"m":"")+" e ser"+(r.existentes>1?"ão substituídos":"á substituído")+" (quem já recebeu continua com o seu)."):""), function(){
       if(aoConfirmar) aoConfirmar();
       var p = gravarItensPool(r.ops);
       if(p && p.then) p.then(function(){ if(rerender) rerender(); });
@@ -10456,7 +10465,8 @@
       html += '</div>';
       return html;
     }
-    html += '<p class="hint">Itens que o grupo pode encontrar. Ao entregar, o item vai direto pro Inventário adicional do personagem. Os jogadores não veem esta lista. <b>Exportar</b> baixa um arquivo .json com todos os itens (sem as entregas), para guardar ou levar para outra campanha. Para levar um só, abra o item, use <b>Copiar código</b> e <b>Colar código</b> na outra campanha.</p>';
+    html += '<div class="hint ajuda" style="margin-bottom:10px"><p>Itens que o grupo pode encontrar. Os jogadores não veem esta lista. Ao entregar, o item vai direto para o Inventário adicional do personagem.</p>' +
+      '<ul><li><b>Exportar</b>: baixa todos os itens em .json (sem as entregas).</li><li>Para levar só um: abra o item, use <b>Copiar código</b> e <b>Colar código</b> na outra campanha.</li></ul></div>';
     html += '<div class="btn-row" style="justify-content:flex-start;gap:8px;flex-wrap:wrap"><button type="button" class="btn accent" data-ipacao="novo">+ Novo item</button><button type="button" class="btn secondary" data-ipacao="importar-arq">Importar itens</button><button type="button" class="btn secondary" data-ipacao="exportar"'+(itensPoolLista().length?'':' disabled')+'>Exportar itens</button><button type="button" class="btn secondary" data-ipacao="importar">Colar código</button><input type="file" accept=".json,application/json" data-ipimpfile style="display:none"></div>';
     if(state.itemImportar){
       html += '<div class="field" style="margin-top:10px"><label>Cole o código (do Copiar código ou de um arquivo exportado)</label><textarea id="item-import" style="min-height:120px" placeholder="{ &quot;tipo&quot;: &quot;itens-assimilacao&quot;, ... }"></textarea>' +
@@ -10568,7 +10578,7 @@
     }); });
     raiz.querySelectorAll("[data-ipexcluir]").forEach(function(b){ b.addEventListener("click", function(){
       var id = b.getAttribute("data-ipexcluir"), it = itensPoolLista().filter(function(x){ return x.id===id; })[0];
-      askConfirm('Excluir "'+((it&&it.nome)||"este item")+'" da pool? (Quem já recebeu continua com ele no inventário.)', function(){ gravarItensPool([{ tipo:"del", col:"itensPool", id:id }]); });
+      askConfirm('Excluir "'+((it&&it.nome)||"este item")+'" da pool?\n\nQuem já recebeu continua com ele no inventário.', function(){ gravarItensPool([{ tipo:"del", col:"itensPool", id:id }]); });
     }); });
     raiz.querySelectorAll("[data-ipacao]").forEach(function(b){
       b.addEventListener("click", function(){
@@ -10625,7 +10635,7 @@
     var jogadores = roster.slice();
     if(!jogadores.length) return '';
     var html = '<div class="card"><h2>Dar Experiência</h2>' +
-      '<p class="hint">No fim da sessão: o livro sugere no mínimo 1 por sessão, e não passar de 3 por sessão em aventuras iniciais. Propósito alcançado 2–4, Conflito 1–6, Avanço no Refúgio 1–2, Conclusão de arco 2–6, Grande descoberta 1–3, Interpretação inspirada 1.</p>' +
+      '<div class="hint ajuda"><p>Valores de referência, no fim da sessão:</p><ul><li>Propósito alcançado 2–4 · Conflito 1–6 · Avanço no Refúgio 1–2</li><li>Conclusão de arco 2–6 · Grande descoberta 1–3 · Interpretação inspirada 1</li></ul></div>' +
       '<div class="gm-xp" style="border-top:0;margin-top:0;padding-top:0"><div class="row" style="margin-bottom:8px">' +
       jogadores.map(function(c){ return '<label style="display:flex;align-items:center;gap:5px;text-transform:none;margin:0 10px 0 0"><input type="checkbox" style="width:auto" data-gmxptodos="'+c.id+'"'+(c.ehNpc?'':' checked')+'>'+esc(c.nomePersonagem||"Sem nome")+(c.ehNpc?' <span class="hint" style="margin:0">(NPC)</span>':'')+'</label>'; }).join('') +
       '</div><div class="row"><select data-gmxpmotivo="todos">'+xpMotivoOptions()+'</select>' +
@@ -10678,7 +10688,7 @@
           : [chave];
         if(!ids.length) return;
         var nomes = ids.map(function(id){ var c = getChar(id); return c ? c.nomePersonagem : ""; }).filter(Boolean);
-        askConfirm((qtd>0?'Dar ':'Retirar ')+Math.abs(qtd)+' de Experiência ('+motivo+')'+(qtd>0?' pra: ':' de: ')+nomes.join(", ")+'?'+(qtd<0?' Se o saldo de alguém ficar negativo, desfaça compras na seção Evoluir da ficha.':''), function(){
+        askConfirm((qtd>0?'Dar ':'Retirar ')+Math.abs(qtd)+' de Experiência ('+motivo+')'+(qtd>0?' pra: ':' de: ')+nomes.join(", ")+'?'+(qtd<0?'\n\nSe o saldo de alguém ficar negativo, desfaça compras na seção Evoluir da ficha.':''), function(){
           ids.forEach(function(id){ var c = getChar(id); if(c){ darExperiencia(c, qtd, motivo); updateChar(c); } });
           if(caps.mode==="mesa"){ clearTimeout(publishTimer); doPublish(); }
           renderGmMesa();
@@ -10793,7 +10803,7 @@
         var c = getChar(sel.getAttribute("data-gmpassar")); if(!c){ sel.value = ""; return; }
         var q = nomeDoMembro(m), quem = q.nome || q.email || "este jogador";
         sel.value = "";
-        askConfirm('Passar "'+(c.nomePersonagem||"esta ficha")+'" para '+quem+'? '+(c.ehNpc ? 'Ela deixa de ser NPC, passa' : 'Ela passa')+' a aparecer na conta de '+quem+' (que pode abrir e mexer nela) e ganha uma ficha-base lá. Você continua vendo e ajustando como mestre.', function(){
+        askConfirm('Passar "'+(c.nomePersonagem||"esta ficha")+'" para '+quem+'?\n\n'+(c.ehNpc ? 'Ela deixa de ser NPC, passa' : 'Ela passa')+' a aparecer na conta de '+quem+' (que pode abrir e mexer nela) e ganha uma ficha-base lá.\n\nVocê continua vendo e ajustando como mestre.', function(){
           passarParaJogador(c.id, m).then(function(){ renderGmMesa(); }).catch(function(err){
             console.error("[Pangea] passar ficha", err);
             alert("Não deu pra passar a ficha: " + (err && (err.code || err.message) || "erro desconhecido"));
