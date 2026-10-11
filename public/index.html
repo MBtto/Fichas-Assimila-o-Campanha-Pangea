@@ -885,10 +885,16 @@
   .tug-segs{ flex:1 1 auto; min-width:0; display:flex; align-items:center; justify-content:center; gap:4px; }
   .tug-seg{ flex:1 1 0; min-width:0; max-width:64px; display:block; line-height:0; }
   .tug-seg svg{ display:block; width:100%; height:auto; aspect-ratio:3/2; overflow:visible; }
-  .tug-seg[data-tuglvl]{ cursor:pointer; -webkit-tap-highlight-color:transparent; }
-  .tug-seg[data-tuglvl]:hover svg{ transform:scale(1.08); }
-  .tug-seg[data-tuglvl]:hover svg .tg-vazio .tg-linha{ opacity:1; }
-  :root[data-anim="reduzidas"] .tug-seg[data-tuglvl]:hover svg{ transform:none; }
+  .tug-seg[data-tuglvl], .tug-seg[data-tugcria]{ cursor:pointer; -webkit-tap-highlight-color:transparent; }
+  .tug-seg[data-tuglvl]:hover svg, .tug-seg[data-tugcria]:hover svg{ transform:scale(1.08); }
+  .tug-seg[data-tuglvl]:hover svg .tg-vazio .tg-linha, .tug-seg[data-tugcria]:hover svg .tg-vazio .tg-linha{ opacity:1; }
+  :root[data-anim="reduzidas"] .tug-seg[data-tuglvl]:hover svg, :root[data-anim="reduzidas"] .tug-seg[data-tugcria]:hover svg{ transform:none; }
+  /* Criação (etapa Cabo de Guerra): segmento fora dos limites da campanha. */
+  .tug-seg.tug-trava{ cursor:not-allowed; opacity:.35; }
+  .tug-cria-resumo{ margin:14px 0 0; text-align:center; }
+  .tug-cria-botoes{ margin-top:10px; gap:8px; justify-content:space-between; flex-wrap:wrap; }
+  .tug-cria-botoes .btn{ display:inline-flex; align-items:center; gap:6px; }
+  .tug-cria-botoes .btn:last-child{ margin-left:auto; }
   .tug-anel{ position:relative; flex:none; width:52px; height:52px; display:inline-flex; align-items:center; justify-content:center; line-height:1; }
   .tug-anel svg{ position:absolute; inset:0; width:100%; height:100%; overflow:visible; }
   .tug-anel svg .tg-disco{ fill:var(--surface); stroke:none; }
@@ -1565,7 +1571,10 @@
   var ESCASSEZ_TETO_INICIAL = 3;
   var XP_INICIAL = 7;
 
-  var WIZ_STEPS = ["Acampamento","Origem","Propósitos e Conexões","Instintos","Conhecimentos e Práticas","Características (Experiência)","Artefato e Equipamentos"];
+  var WIZ_STEPS = ["Acampamento","Origem","Propósitos e Conexões","Instintos","Conhecimentos e Práticas","Características (Experiência)","Artefato e Equipamentos","Cabo de Guerra"];
+  // Ordem dos passos na criação: o Cabo de Guerra (7, só com a etapa ligada) vem
+  // depois dos Propósitos. Os índices continuam fixos (a edição reaproveita cada passo).
+  var WIZ_ORDEM = [0,1,2,7,3,4,5,6];
 
   // Kits de itens iniciais: cada um preenche o Inventário adicional com alguns itens narrativos prontos.
   var KITS_INICIAIS = [
@@ -3266,6 +3275,8 @@
       propositos: "personalizado",
       propPers: { texto: "Propósitos Individuais: o que move seu personagem, o que ele lutaria até a morte pra proteger.\n\nConexões: NPCs ligados a você ou ao seu acampamento, como uma relação pessoal, uma dívida, uma promessa, ou até alguém que representa uma filosofia do acampamento que você quer manter viva.", nome1: "Propósitos Individuais", item1: "Propósito Individual", qtd1: 2, nome2: "Conexões", item2: "Conexão", qtd2: 2 },
       artefato: true, kitInicial: true,
+      // Cabo de Guerra na criação (11/10/2026): desligado = livro (Det 9 / Assim 1 fixo).
+      caboGuerra: { ligado: false, detMin: 5, detMax: 10 },
       camposExtras: [],
       valores: { instintoLivres:3, instintoMax:3, cpPontos:7, cpMax:2, xpInicial:7, escassezArtefato:3 }
     },
@@ -3423,6 +3434,8 @@
       propositos: "livro",
       propPers: { texto: "", nome1: "Propósitos", item1: "Propósito", qtd1: 2, nome2: "", item2: "", qtd2: 0 },
       artefato: true, kitInicial: true,
+      // Cabo de Guerra na criação (11/10/2026): desligado = livro (Det 9 / Assim 1 fixo).
+      caboGuerra: { ligado: false, detMin: 5, detMax: 10 },
       camposExtras: [],
       valores: { instintoLivres:3, instintoMax:3, cpPontos:7, cpMax:2, xpInicial:7, escassezArtefato:3 }
     },
@@ -3464,6 +3477,11 @@
     Object.keys(bp).forEach(function(k){ if(pp[k] === undefined || pp[k] === null) pp[k] = bp[k]; });
     pp.qtd1 = clamp(parseInt(pp.qtd1,10)||0, 0, 3); pp.qtd2 = clamp(parseInt(pp.qtd2,10)||0, 0, 3);
     if(cr.geracao !== "texto") cr.geracao = "livro";
+    var cg = (cr.caboGuerra && typeof cr.caboGuerra === "object") ? cr.caboGuerra : {}, bg = bc.caboGuerra;
+    var cgMin = parseInt(cg.detMin,10), cgMax = parseInt(cg.detMax,10);
+    cgMin = clamp(isNaN(cgMin) ? bg.detMin : cgMin, 1, 10); cgMax = clamp(isNaN(cgMax) ? bg.detMax : cgMax, 1, 10);
+    if(cgMin > cgMax){ var cgT = cgMin; cgMin = cgMax; cgMax = cgT; }
+    cr.caboGuerra = { ligado: cg.ligado === true, detMin: cgMin, detMax: cgMax };
     cfg.criacao = cr;
     var au = cfg.automacoes || {};
     Object.keys(base.automacoes).forEach(function(k){ if(typeof au[k] !== "boolean") au[k] = base.automacoes[k]; });
@@ -3487,6 +3505,32 @@
   }
   function cfgCriacao(){ return cfgCampanha().criacao; }
   function cfgValores(){ return cfgCriacao().valores; }
+  // Etapa "Cabo de Guerra" da criação: o jogador escolhe o Nível de Determinação
+  // inicial (entre detMin e detMax; o 0 nunca, porque começaria Suscetível).
+  // Ficha nova fora de campanha (+ Criar ficha): sempre com a escolha, de 5 a 10.
+  var CABO_CRIACAO_FORA = { ligado: true, detMin: 5, detMax: 10 };
+  function caboCriacao(){
+    if(modoBase && !modoBase.cmp) return CABO_CRIACAO_FORA;
+    return cfgCriacao().caboGuerra || { ligado:false, detMin:5, detMax:10 };
+  }
+  // Grava a escolha nos campos que a ficha já tem (nada novo): caixaAtual = 3 − Nível
+  // de Assimilação, pontos cheios e um Teste de Assimilação pendente por Nível de
+  // Assimilação (o 9/1 do livro grava 2, 9 e 1 teste).
+  function aplicarCaboInicial(c, nivelDet){
+    nivelDet = clamp(parseInt(nivelDet,10), 1, 10);
+    c.determinacao = c.determinacao || {};
+    c.determinacao.caixaAtual = nivelDet - 7;
+    c.determinacao.pontosAtual = nivelDet;
+    c.determinacao.assimPontosAtual = null;
+    c.determinacao.suscetivel = false;
+    c.testesAssimPendentes = 10 - nivelDet;
+  }
+  function caboInicialDe(c){ return (c && c.determinacao && c.determinacao.caixaAtual != null) ? clamp(c.determinacao.caixaAtual + 7, 0, 10) : 9; }
+  function caboInicialNaFaixa(c){
+    var cb = caboCriacao();
+    if(!cb.ligado) return 9;
+    return clamp(caboInicialDe(c), cb.detMin, cb.detMax);
+  }
   function autoLigada(k){ return !!cfgCampanha().automacoes[k]; }
   function grupoLigado(){ return !!cfgCriacao().acampamento; }
   function grupoRotulo(){ return cfgCriacao().grupo.rotulo || "Acampamento"; }
@@ -4369,6 +4413,11 @@
       '</div><div class="cfg-bloco">' +
       chk('data-cfgchk="artefato"', cr.artefato, 'Etapa do Artefato inicial') +
       chk('data-cfgchk="kitInicial"', cr.kitInicial, 'Etapa do Pacote inicial (kit de equipamentos)') +
+      chk('data-cfgcabo="1"', cr.caboGuerra.ligado, 'Etapa do Cabo de Guerra', 'O jogador escolhe a Determinação inicial na criação. Desligada: começa com Determinação 9 e Assimilação 1, como no livro.') +
+      (cr.caboGuerra.ligado ? '<div class="cfg-linha cfg-cabo">' +
+        '<div class="field cfg-num"><label>Determinação mínima</label><input type="number" min="1" max="10" data-cfgcabonum="detMin" value="'+cr.caboGuerra.detMin+'"></div>' +
+        '<div class="field cfg-num"><label>Determinação máxima</label><input type="number" min="1" max="10" data-cfgcabonum="detMax" value="'+cr.caboGuerra.detMax+'"></div>' +
+      '</div><p class="hint" style="margin:0 0 8px">De 1 a 10 (Determinação 10 = Assimilação 0). O 0 fica de fora: a ficha começaria Suscetível. Cada Nível de Assimilação inicial deixa um Teste de Assimilação pendente na ficha. Fichas que já existem (inclusive as levadas para a campanha) não mudam.</p>' : '') +
       '</div>';
     var valores = '<div class="cfg-bloco cfg-grade">' +
       num("instintoLivres", "Pontos livres de Instinto", 0, 12) + num("instintoMax", "Máximo por Instinto na criação", 1, 6) +
@@ -4451,6 +4500,11 @@
       cr.propPers = cr.propPers || {}; cr.propPers[el.getAttribute("data-cfgppqtd")] = clamp(n, 0, 3); sujo();
     });
     on("[data-cfgchk]", "change", function(el){ cr[el.getAttribute("data-cfgchk")] = el.checked; sujo(); });
+    on("[data-cfgcabo]", "change", function(el){ cr.caboGuerra.ligado = el.checked; sujo(true); });
+    on("[data-cfgcabonum]", "input", function(el){
+      var n = parseInt(el.value,10); if(isNaN(n)) return;
+      cr.caboGuerra[el.getAttribute("data-cfgcabonum")] = clamp(n, 1, 10); sujo();
+    });
     on("[data-cfgval]", "input", function(el){
       var n = parseInt(el.value,10), mn = parseInt(el.min,10), mx = parseInt(el.max,10);
       if(isNaN(n)) return;
@@ -4500,6 +4554,11 @@
       ["1","2"].forEach(function(n){ pp["nome"+n] = String(pp["nome"+n]||"").trim(); pp["item"+n] = String(pp["item"+n]||"").trim(); });
       if(pp.qtd1 > 0 && (!pp.nome1 || !pp.item1)) return { erro:"Dê o nome da 1ª parte dos Propósitos e de cada item dela." };
       if(pp.qtd2 > 0 && (!pp.nome2 || !pp.item2)) return { erro:"Dê o nome da 2ª parte dos Propósitos e de cada item dela (ou deixe 0)." };
+    }
+    if(cr.caboGuerra){
+      var cgMn = clamp(parseInt(cr.caboGuerra.detMin,10)||1, 1, 10), cgMx = clamp(parseInt(cr.caboGuerra.detMax,10)||10, 1, 10);
+      if(cgMn > cgMx) return { erro:"No Cabo de Guerra, a Determinação mínima ("+cgMn+") passa da máxima ("+cgMx+")." };
+      cr.caboGuerra = { ligado: cr.caboGuerra.ligado === true, detMin: cgMn, detMax: cgMx };
     }
     cr.camposExtras = (cr.camposExtras||[]).map(function(f){ f.rotulo = String(f.rotulo||"").trim(); return f; });
     if(cr.camposExtras.some(function(f){ return !f.rotulo; })) return { erro:"Dê um nome a todos os campos extras (ou remova os vazios)." };
@@ -6196,8 +6255,9 @@
   }
   function wizEtapas(){
     var cr = cfgCriacao();
-    return [0,1,2,3,4,5,6].filter(function(st){
+    return WIZ_ORDEM.filter(function(st){
       if(st === 2) return cr.propositos === "livro" || (cr.propPers.qtd1 + cr.propPers.qtd2) > 0;
+      if(st === 7) return !!caboCriacao().ligado;
       if(st === 6) return !!(cr.artefato || cr.kitInicial);
       return true;
     });
@@ -6217,7 +6277,11 @@
   function renderWizard(){
     var c = state.draft;
     var etapas = wizEtapas();
-    if(etapas.indexOf(state.wizStep) < 0) state.wizStep = etapas.filter(function(st){ return st > state.wizStep; })[0] || etapas[etapas.length-1];
+    if(etapas.indexOf(state.wizStep) < 0){
+      var ordAtual = WIZ_ORDEM.indexOf(state.wizStep);
+      state.wizStep = etapas.filter(function(st){ return WIZ_ORDEM.indexOf(st) > ordAtual; })[0];
+      if(state.wizStep == null) state.wizStep = etapas[etapas.length-1];
+    }
     var step = state.wizStep, pos = etapas.indexOf(step);
     var campColor = c.acampamento && CAMPS[c.acampamento] ? CAMPS[c.acampamento].cor : null;
     var html = topbar("wizard");
@@ -6265,6 +6329,8 @@
           delete c.__pendOk;
           if(!String(c.nomePersonagem||"").trim()) c.nomePersonagem = "";
           if(c.xpInicial == null) c.xpInicial = cfgValores().xpInicial;
+          // Cabo de Guerra inicial: escolhido na etapa (dentro dos limites) ou o 9/1 do livro.
+          aplicarCaboInicial(c, caboInicialNaFaixa(c));
           if(!podeEditar()) return;
           c.atualizadoEm = new Date().toISOString();
           // NPC é ficha da mesa: fica sem conta vinculada e só o mestre vê.
@@ -6481,6 +6547,7 @@
   }
 
   function wizardStepBody(c, step){
+    if(step === 7) return caboCriacaoHtml(c);
     if(step === 0 && state.view === "sheet" && !temAcessoTotal()){
       var hj = camposExtrasFormHtml(c);
       var origJ = getChar(c.id);
@@ -6679,6 +6746,21 @@
 
   function bindWizardStep(c, step, rerender){
     rerender = rerender || renderWizard;
+    if(step === 7){
+      app.querySelectorAll("[data-tugcria]").forEach(function(el){
+        el.addEventListener("click", function(){
+          var cb = caboCriacao(), n = clamp(parseInt(el.getAttribute("data-tugcria"),10), cb.detMin, cb.detMax);
+          if(n === caboInicialDe(c)) return;
+          aplicarCaboInicial(c, n); rerender();
+        });
+      });
+      app.querySelectorAll("[data-tugcriapasso]").forEach(function(el){
+        el.addEventListener("click", function(){
+          var cb = caboCriacao(), n = clamp(caboInicialNaFaixa(c) + parseInt(el.getAttribute("data-tugcriapasso"),10), cb.detMin, cb.detMax);
+          aplicarCaboInicial(c, n); rerender();
+        });
+      });
+    }
     if(step === 0){
       app.querySelectorAll("[data-camp]").forEach(function(el){
         el.addEventListener("click", function(){ c.acampamento = el.getAttribute("data-camp"); rerender(); });
@@ -7308,16 +7390,21 @@
   // ficha (tugDeGuerraCardHtml); false = versão mini, só leitura (card da tela
   // de Personagens, mini-ficha da aba Mesa via tugMiniBarHtml e Painel via
   // gmCharCardBody).
-  function tugLacosHtml(nivelDet, clicavel){
+  // opts (só na criação, etapa Cabo de Guerra): { attr:"data-tugcria", min, max }.
+  // Os segmentos cujo alvo sai da faixa ficam travados (sem clique).
+  function tugLacosHtml(nivelDet, clicavel, opts){
     var mini = !clicavel;
+    var attr = (opts && opts.attr) || "data-tuglvl";
+    var tMin = opts && opts.min != null ? opts.min : 0, tMax = opts && opts.max != null ? opts.max : 10;
     nivelDet = clamp(nivelDet, 0, 10);
     var segs = "";
     for(var li=1; li<=10; li++){
       var lado = li <= nivelDet ? "det" : "assim";
       var alvo = lado === "det" ? li - 1 : li;
-      segs += '<span class="tug-seg '+lado+(mini?" mini":"")+'"' +
-        (clicavel ? ' data-tuglvl="'+alvo+'" title="Determinação '+alvo+' / Assimilação '+(10-alvo)+'"'
-                  : '') + '>' + tugSegSvg(li-1, lado, mini) + '</span>';
+      var trava = clicavel && (alvo < tMin || alvo > tMax);
+      segs += '<span class="tug-seg '+lado+(mini?" mini":"")+(trava?" tug-trava":"")+'"' +
+        (clicavel && !trava ? ' '+attr+'="'+alvo+'" title="Determinação '+alvo+' / Assimilação '+(10-alvo)+'"'
+                  : (trava ? ' title="Fora do limite da campanha (Determinação de '+tMin+' a '+tMax+')"' : '')) + '>' + tugSegSvg(li-1, lado, mini) + '</span>';
     }
     return '<div class="tug-linha'+(mini?" mini":"")+'"' +
       (mini ? ' role="img" aria-label="Cabo de Guerra: Determinação '+nivelDet+', Assimilação '+(10-nivelDet)+'"' : '') + '>' +
@@ -7325,6 +7412,22 @@
       '<span class="tug-segs">' + segs + '</span>' +
       tugAnelHtml("assim", 10 - nivelDet, mini) +
     '</div>';
+  }
+  // Passo "Cabo de Guerra" da criação (Parte 2 de claude/CaboDeGuerra_Visual_Plano.md).
+  function caboCriacaoHtml(c){
+    var cb = caboCriacao(), nd = caboInicialNaFaixa(c), na = 10 - nd;
+    if(caboInicialDe(c) !== nd) aplicarCaboInicial(c, nd);
+    var faixa = cb.detMin === cb.detMax ? 'Nesta '+(modoBase ? 'criação' : 'campanha')+' a Determinação inicial é '+cb.detMin+'.' :
+      (modoBase && !modoBase.cmp ? 'Fora de campanha' : 'Nesta campanha')+', a Determinação inicial vai de <b>'+cb.detMin+'</b> a <b>'+cb.detMax+'</b>.';
+    return '<p>Escolha onde o seu Cabo de Guerra começa. Determinação e Assimilação somam sempre 10: mais Determinação deixa o personagem mais firme; mais Assimilação dá mais Pontos de Assimilação desde o início, mas cada Nível de Assimilação já começa com um Teste de Assimilação a fazer. O livro sugere Determinação 9 e Assimilação 1.</p>' +
+      '<p class="hint" style="margin-top:0">'+faixa+' Clique num segmento da Determinação para passar ele e os da direita para a Assimilação, ou num da Assimilação para passar ele e os da esquerda para a Determinação.</p>' +
+      '<div class="tug-wrap tug-cria">' + tugRotuloHtml("det") + tugLacosHtml(nd, true, { attr:"data-tugcria", min:cb.detMin, max:cb.detMax }) + tugRotuloHtml("assim") + '</div>' +
+      '<p class="tug-cria-resumo"><b style="color:var(--royal)">Determinação '+nd+'</b> · <b style="color:var(--assim)">Assimilação '+na+'</b><span class="hint" style="display:block;margin:2px 0 0;text-align:center">'+
+        (na === 0 ? 'Sem Teste de Assimilação para fazer.' : na+' Teste'+(na>1?'s':'')+' de Assimilação para fazer na ficha.')+' Começa com '+nd+' '+(nd===1?'ponto':'pontos')+' de Determinação e '+na+' de Assimilação.</span></p>' +
+      '<div class="row tug-cria-botoes">' +
+        '<button type="button" class="btn secondary" data-tugcriapasso="1"'+(nd >= cb.detMax ? ' disabled' : '')+'>'+icoHtml("nd")+' + Determinação</button>' +
+        '<button type="button" class="btn secondary" data-tugcriapasso="-1"'+(nd <= cb.detMin ? ' disabled' : '')+'>+ Assimilação '+icoHtml("na")+'</button>' +
+      '</div>';
   }
   // Rótulo DETERMINAÇÃO / ASSIMILAÇÃO sobre uma faixa rabiscada da cor do lado.
   function tugRotuloHtml(lado){
@@ -8772,7 +8875,8 @@
   }
   // Na edição comum (fora do "Refazer"), só o Assimilador mexe no passo de Experiência.
   function editPassos(c){
-    var vis = wizEtapas();
+    // O Cabo de Guerra é mexido direto na ficha, não na edição.
+    var vis = wizEtapas().filter(function(st){ return st !== 7; });
     // Passo 6 continua aparecendo pra quem já tem Artefato, mesmo com a etapa desligada.
     if(vis.indexOf(6) < 0 && c && c.equip && c.equip.nome) vis.push(6);
     var temExtras = (cfgCriacao().camposExtras||[]).length > 0 || (c && !c.acampamento && grupoOpcoes().length > 0);
