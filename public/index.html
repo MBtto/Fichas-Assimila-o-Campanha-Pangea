@@ -7417,10 +7417,7 @@
   function caboCriacaoHtml(c){
     var cb = caboCriacao(), nd = caboInicialNaFaixa(c), na = 10 - nd;
     if(caboInicialDe(c) !== nd) aplicarCaboInicial(c, nd);
-    var faixa = cb.detMin === cb.detMax ? 'Nesta '+(modoBase ? 'criação' : 'campanha')+' a Determinação inicial é '+cb.detMin+'.' :
-      (modoBase && !modoBase.cmp ? 'Fora de campanha' : 'Nesta campanha')+', a Determinação inicial vai de <b>'+cb.detMin+'</b> a <b>'+cb.detMax+'</b>.';
     return '<p>Escolha onde o seu Cabo de Guerra começa. Determinação e Assimilação somam sempre 10: mais Determinação deixa o personagem mais firme; mais Assimilação dá mais Pontos de Assimilação desde o início, mas cada Nível de Assimilação já começa com um Teste de Assimilação a fazer. O livro sugere Determinação 9 e Assimilação 1.</p>' +
-      '<p class="hint" style="margin-top:0">'+faixa+' Clique num segmento da Determinação para passar ele e os da direita para a Assimilação, ou num da Assimilação para passar ele e os da esquerda para a Determinação.</p>' +
       '<div class="tug-wrap tug-cria">' + tugRotuloHtml("det") + tugLacosHtml(nd, true, { attr:"data-tugcria", min:cb.detMin, max:cb.detMax }) + tugRotuloHtml("assim") + '</div>' +
       '<p class="tug-cria-resumo"><b style="color:var(--royal)">Determinação '+nd+'</b> · <b style="color:var(--assim)">Assimilação '+na+'</b><span class="hint" style="display:block;margin:2px 0 0;text-align:center">'+
         (na === 0 ? 'Sem Teste de Assimilação para fazer.' : na+' Teste'+(na>1?'s':'')+' de Assimilação para fazer na ficha.')+' Começa com '+nd+' '+(nd===1?'ponto':'pontos')+' de Determinação e '+na+' de Assimilação.</span></p>' +
