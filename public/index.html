@@ -1385,6 +1385,19 @@
 .pdoc-overlay{ position:fixed; inset:0; z-index:9999; background:rgba(12,9,6,.82); overflow:auto; padding:40px 16px; display:flex; align-items:flex-start; justify-content:center; }
 .pdoc-overlay .pdoc-wrap{ width:100%; }
 .pdoc-fechar{ position:fixed; top:12px; right:14px; z-index:10000; background:#efe4c8 !important; color:#2a2118 !important; border-color:#efe4c8 !important; }
+/* Documentos com várias páginas (08/11/2026): folhear uma página por vez */
+.pdoc-overlay.pdoc-com-paginas{ padding-bottom:96px; overflow-x:hidden; }
+.pdoc-paginador{ position:fixed; left:50%; bottom:14px; transform:translateX(-50%); z-index:10000; display:flex; align-items:center; gap:8px; padding:6px; border-radius:999px; background:#efe4c8; color:#2a2118; box-shadow:0 4px 18px rgba(0,0,0,.45); max-width:calc(100vw - 24px); }
+.pdoc-paginador .btn{ min-width:44px; min-height:40px; padding:2px 12px !important; font-size:1.35em !important; line-height:1; background:transparent !important; color:#2a2118 !important; border:1px solid rgba(42,33,24,.35) !important; border-radius:999px !important; }
+.pdoc-paginador .btn:disabled{ opacity:.3; cursor:default; }
+.pdoc-paginador span{ font-variant-numeric:tabular-nums; white-space:nowrap; padding:0 4px; }
+.pdoc-folha .pdoc{ min-height:min(72vh, 720px); }
+.pdoc-faltando{ display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; min-height:min(72vh, 720px); border:2px dashed rgba(239,228,200,.45); border-radius:6px; background:rgba(20,15,10,.9); color:#efe4c8; text-align:center; padding:24px; }
+.pdoc-faltando b{ font-size:1.15em; }
+@keyframes pdocViraD{ from{ opacity:0; transform:translateX(26px); } to{ opacity:1; transform:none; } }
+@keyframes pdocViraE{ from{ opacity:0; transform:translateX(-26px); } to{ opacity:1; transform:none; } }
+.pdoc-vira-d{ animation:pdocViraD .22s ease-out; }
+.pdoc-vira-e{ animation:pdocViraE .22s ease-out; }
 
 @media (max-width:560px){
   .escrita-rabisco{ font-size:21px; }
@@ -1408,10 +1421,79 @@
 .doc-linha-topo{ display:flex; justify-content:space-between; gap:10px; align-items:flex-start; flex-wrap:wrap; }
 .doc-btn{ padding:4px 10px !important; font-size:11px !important; }
 .doc-entrega{ margin-top:8px; padding:10px; border-radius:8px; background:rgba(128,128,128,.08); }
+.doc-entrega-tabela{ overflow-x:auto; max-width:100%; }
+.doc-entrega-tabela table{ border-collapse:collapse; }
+.doc-entrega-tabela th, .doc-entrega-tabela td{ padding:4px 8px; text-align:center; white-space:nowrap; border-bottom:1px dashed var(--line, rgba(128,128,128,.35)); }
+.doc-entrega-tabela th{ font-weight:600; font-size:.9em; }
+.doc-entrega-tabela th:first-child, .doc-entrega-tabela td:first-child{ text-align:left; white-space:normal; min-width:110px; }
+.doc-entrega-tabela input{ width:auto; margin:0; }
+@media (max-width:560px){ .doc-entrega-tabela th, .doc-entrega-tabela td{ padding:4px 6px; } .doc-entrega-tabela th:first-child, .doc-entrega-tabela td:first-child{ min-width:0; } .doc-pag-rot{ display:none; } }
+.doc-paginas-ed{ margin-bottom:12px; }
+.doc-paginas-ed .abas{ flex-wrap:wrap; }
 .doc-editor{ display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:20px; align-items:start; }
 .doc-editor-previa{ position:sticky; top:10px; background:#2a241c; border-radius:10px; padding:22px 16px; }
 .doc-editor-previa .hint{ color:#cdbb95; }
 @media (max-width:820px){ .doc-editor{ grid-template-columns:1fr; } .doc-editor-previa{ position:static; } }
+/* ===== Trilhas sonoras (menu lateral) =====
+   Aba fixa na borda esquerda, no meio da tela. O Assimilador escolhe a trilha
+   (vale para a mesa toda); cada um regula só o próprio volume. */
+.trilha-aba{ position:fixed; left:0; top:50%; transform:translateY(-50%); z-index:51;
+  display:flex; flex-direction:column; align-items:center; gap:6px; width:34px; padding:10px 0;
+  background:var(--surface); color:var(--ink); border:2px solid var(--border-strong); border-left:0;
+  border-radius:0 10px 10px 0; box-shadow:var(--shadow); cursor:pointer; font:inherit; }
+.trilha-aba:focus-visible, .trilha-painel button:focus-visible, .trilha-painel input:focus-visible{ outline:3px solid var(--accent); outline-offset:2px; }
+.trilha-aba svg{ width:18px; height:18px; flex:none; }
+.trilha-aba-rot{ writing-mode:vertical-rl; transform:rotate(180deg); font-family:"Oswald",sans-serif; font-weight:600;
+  text-transform:uppercase; letter-spacing:.08em; font-size:11.5px; }
+.trilha-aba.tocando{ border-color:var(--accent); }
+.trilha-aba.tocando svg{ color:var(--accent); }
+.trilha-aba.bloqueado::after{ content:"!"; position:absolute; top:-8px; right:-8px; width:18px; height:18px; border-radius:50%;
+  background:var(--danger); color:#fff; font-size:12px; font-weight:700; line-height:18px; text-align:center; }
+.trilha-ondas{ display:none; gap:2px; align-items:flex-end; height:12px; }
+.trilha-aba.tocando .trilha-ondas{ display:flex; }
+.trilha-ondas i{ width:3px; background:var(--accent); border-radius:1px; animation:trilhaOnda 1s ease-in-out infinite; }
+.trilha-ondas i:nth-child(2){ animation-delay:-.35s; }
+.trilha-ondas i:nth-child(3){ animation-delay:-.7s; }
+@media (max-width:600px){ .trilha-aba{ width:28px; padding:8px 0; } .trilha-aba svg{ width:16px; height:16px; } .trilha-aba-rot{ font-size:10.5px; } }
+@keyframes trilhaOnda{ 0%,100%{ height:3px; } 50%{ height:12px; } }
+.trilha-painel{ position:fixed; left:0; top:0; bottom:0; z-index:52; width:min(320px, calc(100vw - 40px));
+  display:flex; flex-direction:column; background:var(--surface); color:var(--ink);
+  border-right:2px solid var(--border-strong); box-shadow:6px 0 24px rgba(0,0,0,.3);
+  transform:translateX(-105%); transition:transform .22s ease; visibility:hidden; }
+.trilha-painel.aberto{ transform:none; visibility:visible; }
+:root[data-texto="grande"] .trilha-painel{ width:min(320px, calc((100vw - 40px) / 1.15)); }
+:root[data-texto="maior"] .trilha-painel{ width:min(320px, calc((100vw - 40px) / 1.3)); }
+.trilha-topo{ display:flex; align-items:center; justify-content:space-between; gap:8px; flex:none;
+  padding:10px 12px; background:var(--ink); color:var(--bg); }
+.trilha-topo h3{ margin:0; font-size:14px; font-family:"Oswald",sans-serif; text-transform:uppercase; letter-spacing:.05em; color:inherit; }
+.trilha-fechar{ background:transparent; border:0; color:inherit; font-size:22px; line-height:1; cursor:pointer; padding:0 4px; }
+.trilha-corpo{ flex:1 1 auto; min-height:0; overflow-y:auto; padding:12px 12px 72px; } /* 72px: espaço do botão Aa */
+.trilha-sec{ margin-bottom:16px; }
+.trilha-rot{ font-family:"Oswald",sans-serif; text-transform:uppercase; font-size:11.5px; letter-spacing:.05em; color:var(--ink-muted); margin:0 0 6px; }
+.trilha-agora{ padding:10px; border:1px solid var(--border); border-radius:8px; background:var(--surface-2); }
+.trilha-agora b{ display:block; font-size:15px; overflow-wrap:anywhere; }
+.trilha-agora .hint{ margin:4px 0 0; }
+.trilha-agora.tocando{ border:2px solid var(--accent); }
+.trilha-destravar{ margin-top:8px; width:100%; justify-content:center; }
+.trilha-vol{ display:flex; align-items:center; gap:8px; }
+.trilha-vol input[type=range]{ flex:1 1 auto; min-width:0; accent-color:var(--accent); }
+.trilha-vol-num{ flex:none; width:40px; text-align:right; font-variant-numeric:tabular-nums; font-size:13px; }
+.trilha-mudo{ flex:none; width:34px; height:34px; display:inline-flex; align-items:center; justify-content:center; border-radius:6px;
+  border:1px solid var(--border-strong); background:var(--surface-2); color:var(--ink); cursor:pointer; padding:0; }
+.trilha-mudo svg{ width:18px; height:18px; }
+.trilha-mudo[aria-pressed="true"]{ border-color:var(--danger); color:var(--danger); }
+.trilha-vol.desligado{ opacity:.45; }
+.trilha-lista{ display:grid; gap:6px; }
+.trilha-item{ display:flex; align-items:center; gap:10px; width:100%; text-align:left; padding:8px 10px; border-radius:8px;
+  border:1px solid var(--border); background:var(--surface-2); color:var(--ink); cursor:pointer; font:inherit; font-size:14px; }
+.trilha-item:hover{ border-color:var(--accent); }
+.trilha-item[aria-pressed="true"]{ border:2px solid var(--accent); font-weight:600; }
+.trilha-item-ico{ flex:none; width:26px; height:26px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center;
+  background:var(--ink); color:var(--bg); font-size:11px; }
+.trilha-item[aria-pressed="true"] .trilha-item-ico{ background:var(--accent); color:var(--accent-ink); }
+.trilha-item-nome{ flex:1 1 auto; min-width:0; overflow-wrap:anywhere; }
+.trilha-parar{ margin-top:10px; width:100%; justify-content:center; }
+.trilha-erro{ color:var(--danger); font-size:12.5px; margin:8px 0 0; }
 </style>
 <script>
   (function(){ try{
@@ -2523,7 +2605,7 @@
     miolo += '<div class="pdoc-sujeira"'+(sujeira.length?' style="background-image:'+sujeira.join(",")+'"':'')+'></div>';
     miolo += extras;
 
-    var html = '<div class="pdoc-wrap'+(bilhete?' pdoc-bilhete':'')+(cond==="pedacos"?' pdoc-wrap-pedacos':'')+'">';
+    var html = '<div class="pdoc-wrap'+(bilhete?' pdoc-bilhete':'')+(doc.tamanho==="pagina"?' pdoc-folha':'')+(cond==="pedacos"?' pdoc-wrap-pedacos':'')+'">';
     if(cond === "pedacos"){
       // Mesmo papel desenhado duas (ou três) vezes, cada cópia recortada num pedaço,
       // separadas por um rasgo irregular e um pouco afastadas umas das outras.
@@ -2583,8 +2665,47 @@
   // onde/como é achado e a nota do Assimilador (só o Assimilador lê). "entregues" são
   // ids de personagem; "leitores" são as contas Google dos donos desses personagens
   // (recalculado pelo Assimilador sempre que as fichas mudam de dono).
-  function docsLista(){ return (shared.documentos||[]).slice().sort(function(a,b){ return String(a.criadoEm||"").localeCompare(String(b.criadoEm||"")); }); }
-  function docsDoPersonagem(c){ return docsLista().filter(function(d){ return (d.entregues||[]).indexOf(c.id) > -1; }); }
+  // Páginas (08/11/2026): um documento pode ter várias páginas. A página 1 é o próprio
+  // documento, com os campos de sempre. Cada página a mais é outro registro na coleção
+  // "documentos", com paginaDe = id do documento e ordem = número da página (2, 3...).
+  // Cada página tem as próprias entregas e leitores: quem não recebeu uma página não
+  // consegue lê-la. "total" = quantas páginas o documento tem; "herda" = escolhas de
+  // visual que acompanham a página 1 (no editor aparecem como "Igual à página 1").
+  var DOC_VISUAL = ["escrita","papel","condicao"];
+  var DOC_CAMPOS_PAGINA = ["titulo","texto","escrita","papel","condicao","data","assinatura","carimbo"];
+  function docsLista(){ return (shared.documentos||[]).filter(function(d){ return !d.paginaDe; }).sort(function(a,b){ return String(a.criadoEm||"").localeCompare(String(b.criadoEm||"")); }); }
+  function docAcharPorId(id){ return docsLista().filter(function(x){ return x.id===id; })[0]; }
+  function docPaginasExtras(id){ return (shared.documentos||[]).filter(function(d){ return d.paginaDe === id; }).sort(function(a,b){ return (a.ordem||0)-(b.ordem||0); }); }
+  function docTodasPaginas(d){ return [d].concat(docPaginasExtras(d.id)); }
+  // Página pronta para ler: em documento de várias páginas, nenhuma vira "bilhete".
+  function docPaginaParaVer(p, total){
+    if(total < 2 || p.tamanho) return p;
+    var r = {}; Object.keys(p).forEach(function(k){ r[k] = p[k]; }); r.tamanho = "pagina"; return r;
+  }
+  // Documentos que este personagem recebeu, agrupados: { id, total, paginas:[doc ou null] }.
+  // Página que ele não recebeu fica null e aparece como "faltando".
+  function docsDoPersonagem(c){
+    var grupos = {}, lista = [];
+    (shared.documentos||[]).forEach(function(d){
+      if((d.entregues||[]).indexOf(c.id) < 0) return;
+      var raiz = d.paginaDe || d.id, g = grupos[raiz];
+      if(!g){ g = grupos[raiz] = { id:raiz, criadoEm:d.criadoEm||"", total:1, recebidas:{} }; lista.push(g); }
+      var n = d.paginaDe ? (d.ordem||2) : 1;
+      g.recebidas[n] = d;
+      g.total = Math.max(g.total, d.total||1, n);
+      if(!d.paginaDe && d.criadoEm) g.criadoEm = d.criadoEm;
+    });
+    lista.forEach(function(g){ g.paginas = []; for(var i=1;i<=g.total;i++) g.paginas.push(g.recebidas[i] || null); });
+    return lista.sort(function(a,b){ return String(a.criadoEm).localeCompare(String(b.criadoEm)); });
+  }
+  // "1–2, 4"
+  function docFaixas(ns){
+    ns = ns.slice().sort(function(a,b){ return a-b; });
+    var out = [], ini = null, ant = null;
+    ns.forEach(function(n){ if(ini === null){ ini = ant = n; } else if(n === ant+1){ ant = n; } else { out.push(ini===ant ? ""+ini : ini+"–"+ant); ini = ant = n; } });
+    if(ini !== null) out.push(ini===ant ? ""+ini : ini+"–"+ant);
+    return out.join(", ");
+  }
   function docNota(id){ return (shared.documentosNotas||[]).filter(function(n){ return n.id===id; })[0] || {}; }
   function leitoresDe(entregues){
     var uids = [];
@@ -2604,24 +2725,66 @@
     });
     if(ops.length) gravarDocs(ops);
   }
-  function abrirDocumento(d){
+  // Abre em tela cheia. "d" é um documento ou uma lista de páginas (null = página que
+  // o personagem ainda não recebeu). Com várias páginas: setas, teclado e deslizar.
+  function abrirDocumento(d, inicio){
     pdocInstalarFiltros();
+    var pags = Array.isArray(d) ? d : [d], total = pags.length, atual = Math.max(0, Math.min(total-1, inicio||0));
+    if(!pags[atual]) for(var i=0;i<total;i++) if(pags[i]){ atual = i; break; }
     var el = document.getElementById("pdoc-overlay-root");
     if(!el){ el = document.createElement("div"); el.id = "pdoc-overlay-root"; document.body.appendChild(el); }
-    el.innerHTML = '<div class="pdoc-overlay" data-pdocfechar><button type="button" class="btn secondary pdoc-fechar" data-pdocfechar>Fechar ✕</button>' +
-      '<div style="width:100%;max-width:620px" data-pdocpapel>'+renderDocumento(d)+'</div></div>';
+    el.innerHTML = '<div class="pdoc-overlay'+(total>1?' pdoc-com-paginas':'')+'" data-pdocfechar><button type="button" class="btn secondary pdoc-fechar" data-pdocfechar>Fechar ✕</button>' +
+      (total > 1 ? '<div class="pdoc-paginador" data-pdocnav><button type="button" class="btn" data-pdocir="-1" aria-label="Página anterior">‹</button><span data-pdocnum aria-live="polite"></span><button type="button" class="btn" data-pdocir="1" aria-label="Próxima página">›</button></div>' : '') +
+      '<div style="width:100%;max-width:620px" data-pdocpapel></div></div>';
+    var overlay = el.querySelector(".pdoc-overlay"), papel = el.querySelector("[data-pdocpapel]"), num = el.querySelector("[data-pdocnum]");
+    function mostrar(dir){
+      var p = pags[atual];
+      papel.innerHTML = p ? renderDocumento(docPaginaParaVer(p, total)) : '<div class="pdoc-faltando"><b>Página '+(atual+1)+'</b><span>Vocês ainda não encontraram esta página.</span></div>';
+      if(num){
+        num.textContent = "Página "+(atual+1)+" de "+total;
+        el.querySelector('[data-pdocir="-1"]').disabled = atual === 0;
+        el.querySelector('[data-pdocir="1"]').disabled = atual === total-1;
+      }
+      if(dir){ papel.classList.remove("pdoc-vira-e","pdoc-vira-d"); void papel.offsetWidth; papel.classList.add(dir > 0 ? "pdoc-vira-d" : "pdoc-vira-e"); overlay.scrollTop = 0; }
+    }
+    function ir(dir){ var n = atual + dir; if(n < 0 || n >= total) return; atual = n; mostrar(dir); }
+    mostrar(0);
     document.body.style.overflow = "hidden";
     function fechar(){ el.innerHTML = ""; document.body.style.overflow = ""; document.removeEventListener("keydown", esc1); }
-    function esc1(e){ if(e.key === "Escape") fechar(); }
+    function esc1(e){
+      if(e.key === "Escape") fechar();
+      else if(total > 1 && e.key === "ArrowRight"){ e.preventDefault(); ir(1); }
+      else if(total > 1 && e.key === "ArrowLeft"){ e.preventDefault(); ir(-1); }
+    }
     document.addEventListener("keydown", esc1);
+    if(total > 1){
+      var tx = null, ty = 0;
+      overlay.addEventListener("touchstart", function(e){ if(e.touches.length !== 1){ tx = null; return; } tx = e.touches[0].clientX; ty = e.touches[0].clientY; }, { passive:true });
+      overlay.addEventListener("touchend", function(e){
+        if(tx === null) return;
+        var t = e.changedTouches[0], dx = t.clientX - tx, dy = t.clientY - ty; tx = null;
+        if(Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)*1.5) ir(dx < 0 ? 1 : -1);
+      });
+    }
     el.querySelectorAll("[data-pdocfechar]").forEach(function(b){
-      b.addEventListener("click", function(e){ if(e.target.closest("[data-pdocpapel]") && !e.target.closest(".pdoc-fechar")) return; fechar(); });
+      b.addEventListener("click", function(e){
+        var nav = e.target.closest("[data-pdocnav]");
+        if(nav){ var bt = e.target.closest("[data-pdocir]"); if(bt && !bt.disabled) ir(parseInt(bt.getAttribute("data-pdocir"),10)); return; }
+        if(e.target.closest("[data-pdocpapel]") && !e.target.closest(".pdoc-fechar")) return;
+        fechar();
+      });
     });
   }
-  // Nome do documento na lista: o título, ou o começo do texto (sem as marcações).
+  // Nome do documento na lista do Painel: o "Nome na lista" do mestre (só ele vê),
+  // ou o mesmo nome que os jogadores veem.
   function docRotulo(d){
     var n = docNota(d.id);
     if(n.rotulo) return n.rotulo;
+    return docRotuloJogador(d);
+  }
+  // Nome que os jogadores veem (eles não leem as notas do mestre): o título, ou o
+  // começo do texto sem as marcações.
+  function docRotuloJogador(d){
     if(d.titulo) return d.titulo;
     var t = String(d.texto||"").replace(/\[ileg[ií]vel\]/gi,"…").replace(/~~|\{\{|\}\}|\*\*/g,"").replace(/^&gt; |^> /gm,"").replace(/\s+/g," ").trim();
     return t ? (t.length > 42 ? t.slice(0,42).replace(/\s+\S*$/,"")+"…" : t) : "Sem título";
@@ -2659,14 +2822,22 @@
   // Seção da ficha: documentos que este personagem recebeu.
   function docsFichaHtml(c){
     var lista = docsDoPersonagem(c);
+    DOC_GRUPOS_FICHA = {};
     if(!lista.length) return '<p class="hint" style="margin:0">Nenhum documento encontrado ainda. Quando o grupo achar papéis, cartas ou registros, o Assimilador entrega por aqui.</p>';
-    return '<div class="doc-lista">' + lista.map(function(d){
-      return '<button type="button" class="doc-item" data-docabrir="'+d.id+'"><span class="doc-ico">📜</span><span><b>'+esc(docRotulo(d))+'</b><span class="hint" style="display:block;margin:0">'+condicaoNome(d.condicao)+'</span></span></button>';
+    return '<div class="doc-lista">' + lista.map(function(g){
+      DOC_GRUPOS_FICHA[g.id] = g;
+      var d = g.paginas[0] || g.paginas.filter(Boolean)[0], principal = docAcharPorId(g.id);
+      var nomeJog = docRotuloJogador(d), nomePainel = (caps.isOwner && !state.gmPreviewJogador && principal) ? docRotulo(principal) : nomeJog;
+      var info = condicaoNome(d.condicao);
+      if(g.total > 1){ var tem = g.paginas.filter(Boolean).length; info = tem === g.total ? g.total+" páginas" : tem+" de "+g.total+" páginas"; }
+      return '<button type="button" class="doc-item" data-docabrir="'+esc(g.id)+'"><span class="doc-ico">📜</span><span><b>'+esc(nomeJog)+'</b><span class="hint" style="display:block;margin:0">'+info+'</span>' +
+        (nomePainel !== nomeJog ? '<span class="hint" style="display:block;margin:0"><i>No seu Painel:</i> '+esc(nomePainel)+'</span>' : '') + '</span></button>';
     }).join('') + '</div><p class="hint" style="margin:8px 0 0">Papéis não ocupam espaço no inventário.</p>';
   }
+  var DOC_GRUPOS_FICHA = {};
   function bindDocsFicha(){
     app.querySelectorAll("[data-docabrir]").forEach(function(b){
-      b.addEventListener("click", function(){ var d = docsLista().filter(function(x){ return x.id===b.getAttribute("data-docabrir"); })[0]; if(d) abrirDocumento(d); });
+      b.addEventListener("click", function(){ var g = DOC_GRUPOS_FICHA[b.getAttribute("data-docabrir")]; if(g) abrirDocumento(g.paginas); });
     });
   }
 
@@ -2741,9 +2912,16 @@
   // nova ele chega "A entregar"; na mesma campanha, quem já recebeu continua.
   function docExportavel(d){
     var n = docNota(d.id);
-    return { id:d.id, titulo:d.titulo||"", texto:d.texto||"", escrita:d.escrita||"manuscrito", papel:d.papel||"liso", condicao:d.condicao||"gasto",
+    var r = { id:d.id, titulo:d.titulo||"", texto:d.texto||"", escrita:d.escrita||"manuscrito", papel:d.papel||"liso", condicao:d.condicao||"gasto",
       data:d.data||"", assinatura:d.assinatura||"", carimbo:d.carimbo||"", cabecalho:(d.cabecalho||["",""]).slice(0,2),
       autor:n.autor||"", achado:n.achado||"", achadoAlt:n.achadoAlt||"", notaMestre:n.notaMestre||"", local:n.local||"", rotulo:n.rotulo||"", sessao:n.sessao||"" };
+    var extras = docPaginasExtras(d.id);
+    if(extras.length) r.paginas = extras.map(function(p){
+      var herda = p.herda || [];
+      return { id:p.id, titulo:p.titulo||"", texto:p.texto||"", escrita:herda.indexOf("escrita")>-1 ? "" : (p.escrita||""), papel:herda.indexOf("papel")>-1 ? "" : (p.papel||""),
+        condicao:herda.indexOf("condicao")>-1 ? "" : (p.condicao||""), data:p.data||"", assinatura:p.assinatura||"", carimbo:p.carimbo||"", cabecalho:(p.cabecalho||["",""]).slice(0,2) };
+    });
+    return r;
   }
   function exportarDocs(){
     var docs = docsLista().map(docExportavel);
@@ -2769,7 +2947,20 @@
       var d = { id:id, titulo:x.titulo, texto:x.texto, escrita:x.escrita, papel:x.papel, condicao:x.condicao, data:x.data, assinatura:x.assinatura, carimbo:x.carimbo,
         cabecalho:(x.cabecalho && x.cabecalho.length) ? x.cabecalho : ["",""], autor:x.autor, achado:x.achado, achadoAlt:x.achado_alt||x.achadoAlt,
         notaMestre:x.nota_mestre||x.notaMestre, local:x.local||docNota(id).local||"", rotulo:x.rotulo||docNota(id).rotulo||"", sessao:x.sessao||docNota(id).sessao||"", entregues: existente ? existente.entregues : [], criadoEm: existente ? existente.criadoEm : new Date().toISOString() };
+      // Páginas a mais: mesma posição = mesma página (quem já recebeu continua recebendo).
+      var pgsImp = Array.isArray(x.paginas) ? x.paginas.filter(function(p){ return p && typeof p === "object"; }) : [];
+      var velhas = existente ? docPaginasExtras(id) : [], usados = {};
+      d.total = pgsImp.length + 1;
       ops.push({ tipo:"set", col:"documentos", id:id, data:docDadosPublicos(d) }, { tipo:"set", col:"documentosNotas", id:id, data:docDadosNotas(d) });
+      pgsImp.forEach(function(p, i){
+        var pid = idSeguro(p.id || (id+"_p"+(i+2)), "pag_");
+        var velha = velhas.filter(function(v){ return v.id===pid; })[0];
+        if(usados[pid] || (!velha && (shared.documentos||[]).some(function(v){ return v.id===pid; }))) pid = "pag_"+uid();
+        usados[pid] = 1;
+        var pg = { id:pid, titulo:p.titulo, texto:p.texto, escrita:p.escrita, papel:p.papel, condicao:p.condicao, data:p.data, assinatura:p.assinatura, carimbo:p.carimbo, cabecalho:p.cabecalho };
+        ops.push({ tipo:"set", col:"documentos", id:pid, data:docDadosPagina(d, pg, i+2, d.total, velha) });
+      });
+      velhas.forEach(function(v){ if(!usados[v.id]) ops.push({ tipo:"del", col:"documentos", id:v.id }); });
       n++; if(existente) existentes++;
     });
     return { ops:ops, n:n, existentes:existentes };
@@ -2791,20 +2982,31 @@
     var html = '<div class="card" id="gm-docs"><h2>Documentos da campanha</h2>';
     var ed = state.docEdit;
     if(ed){
-      var cab = ed.cabecalho || ["",""];
+      if(!ed.paginas) ed.paginas = [];
+      var iPag = state.docEditPag || 0; if(iPag > ed.paginas.length) iPag = state.docEditPag = 0;
+      var cur = iPag ? ed.paginas[iPag-1] : ed, nPag = ed.paginas.length + 1;
+      var cab = cur.cabecalho || ["",""];
+      var igual = iPag ? [["","Igual à página 1"]] : [];
+      var abasPag = '';
+      for(var ip=0; ip<nPag; ip++) abasPag += '<button type="button" role="tab" class="aba" data-docpag-ir="'+ip+'" aria-selected="'+(ip===iPag)+'">Página '+(ip+1)+'</button>';
+      html += '<div class="doc-paginas-ed"><div class="abas" role="tablist">'+abasPag+'<button type="button" class="aba" data-docacao="pag-nova">+ Página</button></div>' +
+        (iPag ? '<div class="row" style="gap:6px;margin-top:8px;flex-wrap:wrap"><button type="button" class="btn secondary doc-btn" data-docacao="pag-tras"'+(iPag<2?' disabled':'')+'>Mover para trás</button>' +
+          '<button type="button" class="btn secondary doc-btn" data-docacao="pag-frente"'+(iPag>=nPag-1?' disabled':'')+'>Mover para frente</button>' +
+          '<button type="button" class="btn secondary doc-btn" data-docacao="pag-remover">Remover esta página</button></div>' : '') +
+        (nPag > 1 ? '<div class="hint ajuda" style="margin:8px 0 0"><ul><li>Cada página é entregue em separado: o grupo pode achar uma agora e outra depois.</li><li>Escrita, papel e condição em <b>Igual à página 1</b> acompanham a primeira página.</li></ul></div>' : '') + '</div>';
       html += '<div class="doc-editor"><div class="doc-editor-campos">' +
-        '<div class="field"><label>Título</label><input type="text" data-docf="titulo" value="'+esc(ed.titulo)+'"></div>' +
-        '<div class="grid cols-3"><div class="field"><label>Escrita</label><select data-docf="escrita">'+selectOpts(PDOC_ESCRITAS, ed.escrita)+'</select></div>' +
-        '<div class="field"><label>Papel</label><select data-docf="papel">'+selectOpts([["liso","Liso"],["caderno","Caderno pautado"]], ed.papel)+'</select></div>' +
-        '<div class="field"><label>Condição</label><select data-docf="condicao">'+selectOpts(PDOC_CONDICOES, ed.condicao)+'</select></div></div>' +
-        '<div class="field"><label>Texto</label><textarea data-docf="texto" style="min-height:220px">'+esc(ed.texto)+'</textarea>' +
+        '<div class="field"><label>Título</label><input type="text" data-docf="titulo" value="'+esc(cur.titulo)+'"></div>' +
+        '<div class="grid cols-3"><div class="field"><label>Escrita</label><select data-docf="escrita">'+selectOpts(igual.concat(PDOC_ESCRITAS), cur.escrita||"")+'</select></div>' +
+        '<div class="field"><label>Papel</label><select data-docf="papel">'+selectOpts(igual.concat([["liso","Liso"],["caderno","Caderno pautado"]]), cur.papel||"")+'</select></div>' +
+        '<div class="field"><label>Condição</label><select data-docf="condicao">'+selectOpts(igual.concat(PDOC_CONDICOES), cur.condicao||"")+'</select></div></div>' +
+        '<div class="field"><label>Texto</label><textarea data-docf="texto" style="min-height:220px">'+esc(cur.texto)+'</textarea>' +
         '<div class="hint ajuda" style="margin:4px 0 0"><ul><li>Linha em branco = novo parágrafo</li><li><b>[ilegível]</b> = borrão · <b>~~texto~~</b> = riscado · <b>{{texto}}</b> = apagado · <b>**texto**</b> = destaque</li><li>Parágrafo começando com <b>&gt; </b> = anotação à mão de outra pessoa</li></ul></div></div>' +
-        '<div class="grid cols-3"><div class="field"><label>Data (opcional)</label><input type="text" data-docf="data" value="'+esc(ed.data)+'"></div>' +
-        '<div class="field"><label>Assinatura (opcional)</label><input type="text" data-docf="assinatura" value="'+esc(ed.assinatura)+'"></div>' +
-        '<div class="field"><label>Carimbo (opcional)</label><input type="text" data-docf="carimbo" value="'+esc(ed.carimbo)+'"></div></div>' +
+        '<div class="grid cols-3"><div class="field"><label>Data (opcional)</label><input type="text" data-docf="data" value="'+esc(cur.data)+'"></div>' +
+        '<div class="field"><label>Assinatura (opcional)</label><input type="text" data-docf="assinatura" value="'+esc(cur.assinatura)+'"></div>' +
+        '<div class="field"><label>Carimbo (opcional)</label><input type="text" data-docf="carimbo" value="'+esc(cur.carimbo)+'"></div></div>' +
         '<div class="grid cols-2"><div class="field"><label>Cabeçalho à esquerda (relatório)</label><input type="text" data-doccab="0" value="'+esc(cab[0]||"")+'"></div>' +
         '<div class="field"><label>Cabeçalho à direita (relatório)</label><input type="text" data-doccab="1" value="'+esc(cab[1]||"")+'"></div></div>' +
-        '<p class="hint" style="margin:12px 0 4px"><b>Só você vê</b> os campos abaixo.</p>' +
+        '<p class="hint" style="margin:12px 0 4px"><b>Só você vê</b> os campos abaixo'+(nPag>1?' (valem para o documento inteiro)':'')+'.</p>' +
         '<div class="field"><label>Nome na lista (opcional)</label><input type="text" data-docf="rotulo" value="'+esc(ed.rotulo||"")+'" placeholder="ex.: Carta do Guardião"></div>' +
         '<div class="field"><label>Sessão prevista (opcional)</label><input type="text" list="doc-sessoes" data-docf="sessao" value="'+esc(ed.sessao||"")+'" placeholder="ex.: Sessão 2">' +
           '<datalist id="doc-sessoes">'+docSessoesConhecidas().map(function(l){ return '<option value="'+esc(l)+'">'; }).join('')+'</datalist></div>' +
@@ -2814,7 +3016,7 @@
         '<div class="field"><label>Onde / como é achado</label><textarea data-docf="achado" style="min-height:60px">'+esc(ed.achado)+'</textarea></div>' +
         '<div class="field"><label>Nota do Assimilador</label><textarea data-docf="notaMestre" style="min-height:60px">'+esc(ed.notaMestre)+'</textarea></div>' +
         '<div class="btn-row"><button type="button" class="btn secondary" data-docacao="cancelar">Cancelar</button><button type="button" class="btn accent" data-docacao="salvar">Salvar documento</button></div>' +
-        '</div><div class="doc-editor-previa"><p class="hint" style="margin:0 0 8px">Prévia (é assim que os jogadores veem):</p><div id="doc-previa">'+renderDocumento(ed)+'</div></div></div>';
+        '</div><div class="doc-editor-previa"><p class="hint" style="margin:0 0 8px">Prévia'+(nPag>1?' da página '+(iPag+1):'')+' (é assim que os jogadores veem):</p><div id="doc-previa">'+renderDocumento(docPrevia(ed))+'</div></div></div>';
     } else {
       html += '<div class="hint ajuda" style="margin-bottom:10px"><p>Crie os papéis que o grupo vai encontrar e entregue na hora certa. O jogador lê na seção <b>Documentos</b> da ficha; quem não recebeu não vê.</p>' +
         '<ul><li><b>Exportar</b>: baixa todos os documentos e notas em .json (sem as entregas).</li><li>Para levar só um: <b>Copiar código</b> no documento e <b>Colar código</b> na outra campanha.</li></ul></div>';
@@ -2828,10 +3030,13 @@
       var chars = loadChars();
       var porSessao = state.docAgrupar === "sessao";
       // Abas: "A entregar" (ninguém recebeu ainda) e "Já entregues" (pelo menos um personagem).
-      var docEntregue = function(d){ return (d.entregues||[]).length > 0; };
+      // Documento de várias páginas: está em "Já entregues" se alguma página foi entregue,
+      // e continua em "A entregar" enquanto houver página que ninguém recebeu.
+      var docEntregue = function(d){ return docTodasPaginas(d).some(function(p){ return (p.entregues||[]).length > 0; }); };
+      var docAEntregar = function(d){ return docTodasPaginas(d).some(function(p){ return !(p.entregues||[]).length; }); };
       var aba = state.docAba === "entregues" ? "entregues" : "aentregar";
-      var nEntregues = todosDocs.filter(docEntregue).length, nAEntregar = todosDocs.length - nEntregues;
-      var lista = todosDocs.filter(function(d){ return aba === "entregues" ? docEntregue(d) : !docEntregue(d); });
+      var nEntregues = todosDocs.filter(docEntregue).length, nAEntregar = todosDocs.filter(docAEntregar).length;
+      var lista = todosDocs.filter(function(d){ return aba === "entregues" ? docEntregue(d) : docAEntregar(d); });
       if(todosDocs.length) html += '<div class="abas" role="tablist" style="margin-top:14px">' +
         '<button type="button" role="tab" class="aba" data-docaba="aentregar" aria-selected="'+(aba==="aentregar")+'">A entregar <span class="aba-n">'+nAEntregar+'</span></button>' +
         '<button type="button" role="tab" class="aba" data-docaba="entregues" aria-selected="'+(aba==="entregues")+'">Já entregues <span class="aba-n">'+nEntregues+'</span></button></div>';
@@ -2843,15 +3048,20 @@
       lista.forEach(function(d){ var n = docNota(d.id), l = porSessao ? (n.sessao || "Sem sessão prevista") : (n.local || "Sem local"); (grupos[l] = grupos[l] || []).push(d); });
       if(!state.docGruposAbertos) state.docGruposAbertos = {};
       (porSessao ? docOrdemSessoes(Object.keys(grupos)) : docOrdemLocais(Object.keys(grupos))).forEach(function(local){
-        var itens = grupos[local], entreguesN = itens.filter(function(d){ return (d.entregues||[]).length; }).length;
+        var itens = grupos[local], entreguesN = itens.filter(docEntregue).length;
         var aberto = state.docGruposAbertos[local] || itens.some(function(d){ return d.id===state.docEntregar; });
         html += '<details class="doc-grupo" data-docgrupo="'+esc(local)+'"'+(aberto?' open':'')+'><summary><b>'+esc(local)+'</b> <span class="hint">· '+itens.length+' documento'+(itens.length>1?'s':'')+(entreguesN?' · '+entreguesN+' entregue'+(entreguesN>1?'s':''):'')+'</span></summary>';
       itens.forEach(function(d){
-        var nota = docNota(d.id);
-        var nomes = (d.entregues||[]).map(function(cid){ var ch = getChar(cid); return ch ? ch.nomePersonagem : null; }).filter(Boolean);
+        var nota = docNota(d.id), pags = docTodasPaginas(d), multi = pags.length > 1;
+        var porChar = {}, ordemChars = [];
+        pags.forEach(function(p, ip){ (p.entregues||[]).forEach(function(cid){ if(!porChar[cid]){ porChar[cid] = []; ordemChars.push(cid); } porChar[cid].push(ip+1); }); });
+        var nomes = ordemChars.map(function(cid){ var ch = getChar(cid); if(!ch) return null; var ns = porChar[cid]; return ch.nomePersonagem + (multi && ns.length < pags.length ? " (pág. "+docFaixas(ns)+")" : ""); }).filter(Boolean);
+        var semEntrega = []; if(multi) pags.forEach(function(p, ip){ if(!(p.entregues||[]).length) semEntrega.push(ip+1); });
         html += '<div class="doc-linha">' +
-          '<div class="doc-linha-topo"><div><b>'+esc(docRotulo(d))+'</b> <span class="hint">· '+condicaoNome(d.condicao)+'</span>' +
+          '<div class="doc-linha-topo"><div><b>'+esc(docRotulo(d))+'</b> <span class="hint">· '+(multi ? pags.length+' páginas' : condicaoNome(d.condicao))+'</span>' +
+            (docRotulo(d) !== docRotuloJogador(d) ? '<div class="hint" style="margin:2px 0 0"><i>Jogadores veem:</i> '+esc(docRotuloJogador(d))+'</div>' : '') +
             '<div class="hint" style="margin:2px 0 0">'+(nomes.length ? 'Entregue a: '+esc(nomes.join(", ")) : 'Ainda não entregue')+'</div>' +
+            (multi && nomes.length && semEntrega.length ? '<div class="hint" style="margin:2px 0 0">Páginas que ninguém recebeu: '+docFaixas(semEntrega)+'</div>' : '') +
             (nota.achado ? '<div class="hint" style="margin:2px 0 0"><i>Achado:</i> '+esc(nota.achado)+'</div>' : '') +
             (nota.notaMestre ? '<div class="hint" style="margin:2px 0 0"><i>Nota:</i> '+esc(nota.notaMestre)+'</div>' : '') +
           '</div><div class="row" style="gap:6px;flex:0 1 auto;max-width:100%;min-width:0;flex-wrap:wrap;justify-content:flex-end">' +
@@ -2861,9 +3071,19 @@
             '<button type="button" class="btn secondary doc-btn" data-doccopiar="'+d.id+'" title="Copia só este documento em código, para colar em outra campanha (sem as entregas)">Copiar código</button>' +
             '<button type="button" class="btn secondary doc-btn" data-docexcluir="'+d.id+'">Excluir</button>' +
           '</div></div>';
-        if(state.docEntregar === d.id){
+        if(state.docEntregar === d.id && multi){
+          html += '<div class="doc-entrega"><p class="hint" style="margin:0 0 6px">Marque quem recebe cada página:</p><div class="doc-entrega-tabela"><table><thead><tr><th>Personagem</th>' +
+            pags.map(function(p, ip){ return '<th><span class="doc-pag-rot">Pág. </span>'+(ip+1)+'</th>'; }).join('') + '<th>Todas</th></tr></thead><tbody>' +
+            chars.map(function(ch){
+              var todas = pags.every(function(p){ return (p.entregues||[]).indexOf(ch.id) > -1; }), nome = esc(ch.nomePersonagem||"Sem nome");
+              return '<tr><td>'+nome+(ch.ehNpc?' <span class="hint">(NPC)</span>':'')+'</td>' +
+                pags.map(function(p, ip){ return '<td><input type="checkbox" data-docpara="'+ch.id+'" data-docpag="'+esc(p.id)+'"'+((p.entregues||[]).indexOf(ch.id)>-1?' checked':'')+' aria-label="'+nome+', página '+(ip+1)+'"></td>'; }).join('') +
+                '<td><input type="checkbox" data-doctodas="'+ch.id+'"'+(todas?' checked':'')+' aria-label="'+nome+', todas as páginas"></td></tr>';
+            }).join('') +
+            '</tbody></table></div><div class="btn-row" style="justify-content:flex-start;gap:8px;margin-top:8px"><button type="button" class="btn secondary doc-btn" data-docacao="marcar-todos">Todos os jogadores</button><button type="button" class="btn accent doc-btn" data-docacao="entregar-ok">Confirmar entrega</button><button type="button" class="btn secondary doc-btn" data-docacao="entregar-cancelar">Cancelar</button></div></div>';
+        } else if(state.docEntregar === d.id){
           html += '<div class="doc-entrega"><p class="hint" style="margin:0 0 6px">Marque quem recebe este documento:</p><div class="row" style="gap:6px 14px;flex-wrap:wrap">' +
-            chars.map(function(ch){ return '<label style="display:flex;align-items:center;gap:5px;text-transform:none;margin:0"><input type="checkbox" style="width:auto" data-docpara="'+ch.id+'"'+((d.entregues||[]).indexOf(ch.id)>-1?' checked':'')+'>'+esc(ch.nomePersonagem||"Sem nome")+(ch.ehNpc?' <span class="hint">(NPC)</span>':'')+'</label>'; }).join('') +
+            chars.map(function(ch){ return '<label style="display:flex;align-items:center;gap:5px;text-transform:none;margin:0"><input type="checkbox" style="width:auto" data-docpara="'+ch.id+'" data-docpag="'+esc(d.id)+'"'+((d.entregues||[]).indexOf(ch.id)>-1?' checked':'')+'>'+esc(ch.nomePersonagem||"Sem nome")+(ch.ehNpc?' <span class="hint">(NPC)</span>':'')+'</label>'; }).join('') +
             '</div><div class="btn-row" style="justify-content:flex-start;gap:8px;margin-top:8px"><button type="button" class="btn secondary doc-btn" data-docacao="marcar-todos">Todos os jogadores</button><button type="button" class="btn accent doc-btn" data-docacao="entregar-ok">Confirmar entrega</button><button type="button" class="btn secondary doc-btn" data-docacao="entregar-cancelar">Cancelar</button></div></div>';
         }
         html += '</div>';
@@ -2876,8 +3096,28 @@
   }
   function docDadosPublicos(d){
     return { id:d.id, titulo:d.titulo||"", texto:d.texto||"", escrita:d.escrita||"manuscrito", papel:d.papel||"liso", condicao:d.condicao||"gasto",
-      data:d.data||"", assinatura:d.assinatura||"", carimbo:d.carimbo||"", cabecalho:(d.cabecalho||["",""]).slice(0,2),
+      data:d.data||"", assinatura:d.assinatura||"", carimbo:d.carimbo||"", cabecalho:(d.cabecalho||["",""]).slice(0,2), total:d.total||1,
       entregues:(d.entregues||[]).slice(), leitores:leitoresDe(d.entregues), criadoEm:d.criadoEm||new Date().toISOString(), atualizadoEm:new Date().toISOString() };
+  }
+  // Página como ela aparece: escolha de visual em branco ("Igual à página 1") vem da página 1.
+  function docPaginaEfetiva(principal, pg){
+    var r = {}; Object.keys(pg).forEach(function(k){ r[k] = pg[k]; });
+    DOC_VISUAL.forEach(function(k){ if(!r[k]) r[k] = principal[k]; });
+    return r;
+  }
+  function docPrevia(ed){
+    var i = state.docEditPag || 0, n = (ed.paginas||[]).length + 1;
+    var p = i && ed.paginas[i-1] ? docPaginaEfetiva(ed, ed.paginas[i-1]) : ed;
+    return docPaginaParaVer(p, n);
+  }
+  // Registro público de uma página a mais (o visual herdado já vai resolvido, para quem
+  // recebeu só esta página ver certo). "velha" = a mesma página já gravada (mantém as entregas).
+  function docDadosPagina(principal, pg, ordem, total, velha){
+    var ef = docPaginaEfetiva(principal, pg), entregues = velha ? (velha.entregues||[]).slice() : [];
+    return { id:pg.id, paginaDe:principal.id, ordem:ordem, total:total, herda:DOC_VISUAL.filter(function(k){ return !pg[k]; }),
+      titulo:pg.titulo||"", texto:pg.texto||"", escrita:ef.escrita||"manuscrito", papel:ef.papel||"liso", condicao:ef.condicao||"gasto",
+      data:pg.data||"", assinatura:pg.assinatura||"", carimbo:pg.carimbo||"", cabecalho:(pg.cabecalho||["",""]).slice(0,2),
+      entregues:entregues, leitores:leitoresDe(entregues), criadoEm:principal.criadoEm||new Date().toISOString(), atualizadoEm:new Date().toISOString() };
   }
   function docDadosNotas(d){ return { id:d.id, autor:d.autor||"", achado:d.achado||"", achadoAlt:d.achadoAlt||"", notaMestre:d.notaMestre||"", local:d.local||"", rotulo:d.rotulo||"", sessao:d.sessao||"" }; }
   function bindGmDocs(rerender){
@@ -2890,24 +3130,75 @@
       leitor.onload = function(){ importarDocsArquivo(String(leitor.result||""), rerender); };
       leitor.readAsText(f);
     });
-    function previa(){ var p = raiz.querySelector("#doc-previa"); if(p) p.innerHTML = renderDocumento(ed); }
+    function previa(){ var p = raiz.querySelector("#doc-previa"); if(p) p.innerHTML = renderDocumento(docPrevia(ed)); }
+    function pagAtual(){ var i = state.docEditPag || 0; return i && ed.paginas && ed.paginas[i-1] ? ed.paginas[i-1] : ed; }
     raiz.querySelectorAll("[data-docf]").forEach(function(el){
-      el.addEventListener(el.tagName==="SELECT" ? "change" : "input", function(){ ed[el.getAttribute("data-docf")] = el.value; previa(); });
+      el.addEventListener(el.tagName==="SELECT" ? "change" : "input", function(){
+        var k = el.getAttribute("data-docf");
+        (DOC_CAMPOS_PAGINA.indexOf(k) > -1 ? pagAtual() : ed)[k] = el.value; previa();
+      });
     });
     raiz.querySelectorAll("[data-doccab]").forEach(function(el){
-      el.addEventListener("input", function(){ if(!ed.cabecalho) ed.cabecalho = ["",""]; ed.cabecalho[parseInt(el.getAttribute("data-doccab"),10)] = el.value; previa(); });
+      el.addEventListener("input", function(){ var alvo = pagAtual(); if(!alvo.cabecalho) alvo.cabecalho = ["",""]; alvo.cabecalho[parseInt(el.getAttribute("data-doccab"),10)] = el.value; previa(); });
     });
+    raiz.querySelectorAll("[data-docpag-ir]").forEach(function(b){
+      b.addEventListener("click", function(){ state.docEditPag = parseInt(b.getAttribute("data-docpag-ir"),10) || 0; rerender(); });
+    });
+    // Entrega de várias páginas: a coluna "Todas" marca/desmarca a linha inteira.
+    function acertarTodas(cid){
+      var t = raiz.querySelector('[data-doctodas="'+cid+'"]'); if(!t) return;
+      var cs = Array.prototype.slice.call(raiz.querySelectorAll("[data-docpara]")).filter(function(x){ return x.getAttribute("data-docpara")===cid; });
+      t.checked = cs.length > 0 && cs.every(function(x){ return x.checked; });
+    }
+    raiz.querySelectorAll("[data-doctodas]").forEach(function(t){
+      t.addEventListener("change", function(){
+        var cid = t.getAttribute("data-doctodas");
+        raiz.querySelectorAll("[data-docpara]").forEach(function(x){ if(x.getAttribute("data-docpara")===cid) x.checked = t.checked; });
+      });
+    });
+    raiz.querySelectorAll("[data-docpara]").forEach(function(x){ x.addEventListener("change", function(){ acertarTodas(x.getAttribute("data-docpara")); }); });
     raiz.querySelectorAll("[data-docacao]").forEach(function(b){
       b.addEventListener("click", function(){
         var acao = b.getAttribute("data-docacao");
-        if(acao === "novo"){ state.docEdit = novoDocRascunho(); state.docImportar = false; rerender(); }
-        else if(acao === "cancelar"){ state.docEdit = null; rerender(); }
+        if(acao === "novo"){ state.docEdit = novoDocRascunho(); state.docEditPag = 0; state.docImportar = false; rerender(); }
+        else if(acao === "cancelar"){ state.docEdit = null; state.docEditPag = 0; rerender(); }
+        else if(acao === "pag-nova"){
+          if(!ed.paginas) ed.paginas = [];
+          ed.paginas.push({ id:"pag_"+uid(), titulo:"", texto:"", escrita:"", papel:"", condicao:"", data:"", assinatura:"", carimbo:"", cabecalho:["",""] });
+          state.docEditPag = ed.paginas.length; rerender();
+        }
+        else if(acao === "pag-tras" || acao === "pag-frente"){
+          var ia = (state.docEditPag||0) - 1, ib = ia + (acao === "pag-tras" ? -1 : 1);
+          if(ia < 0 || ib < 0 || ib >= ed.paginas.length) return;
+          var tmp = ed.paginas[ia]; ed.paginas[ia] = ed.paginas[ib]; ed.paginas[ib] = tmp;
+          state.docEditPag = ib + 1; rerender();
+        }
+        else if(acao === "pag-remover"){
+          var ir = (state.docEditPag||0) - 1; if(ir < 0) return;
+          var gravada = (shared.documentos||[]).filter(function(x){ return x.id === ed.paginas[ir].id; })[0];
+          askConfirm("Remover a página "+(ir+2)+" deste documento?"+(gravada && (gravada.entregues||[]).length ? "\n\nQuem já recebeu esta página deixa de vê-la." : "")+"\n\nA remoção só vale quando você salvar o documento.", function(){
+            ed.paginas.splice(ir, 1); state.docEditPag = Math.min(ir+1, ed.paginas.length); rerender();
+          });
+        }
         else if(acao === "salvar"){
-          if(!ed.titulo.trim() && !ed.texto.trim()){ alert("Escreva ao menos um título ou um texto."); return; }
-          var existente = docsLista().filter(function(x){ return x.id===ed.id; })[0];
+          var pgs = ed.paginas || [];
+          if(!String(ed.titulo||"").trim() && !String(ed.texto||"").trim()){ if(state.docEditPag){ state.docEditPag = 0; rerender(); } alert("Escreva ao menos um título ou um texto"+(pgs.length?" na página 1":"")+"."); return; }
+          for(var ip = 0; ip < pgs.length; ip++){
+            if(!String(pgs[ip].titulo||"").trim() && !String(pgs[ip].texto||"").trim()){ state.docEditPag = ip+1; rerender(); alert("A página "+(ip+2)+" está vazia. Escreva um texto ou remova a página."); return; }
+          }
+          var existente = docAcharPorId(ed.id);
           if(existente){ ed.entregues = existente.entregues||[]; ed.criadoEm = existente.criadoEm; }
-          gravarDocs([{ tipo:"set", col:"documentos", id:ed.id, data:docDadosPublicos(ed) }, { tipo:"set", col:"documentosNotas", id:ed.id, data:docDadosNotas(ed) }]);
-          state.docEdit = null; rerender();
+          if(!ed.criadoEm) ed.criadoEm = new Date().toISOString();
+          ed.total = pgs.length + 1;
+          var opsS = [{ tipo:"set", col:"documentos", id:ed.id, data:docDadosPublicos(ed) }, { tipo:"set", col:"documentosNotas", id:ed.id, data:docDadosNotas(ed) }];
+          var velhasS = existente ? docPaginasExtras(ed.id) : [];
+          pgs.forEach(function(pg, i){
+            var velha = velhasS.filter(function(v){ return v.id===pg.id; })[0];
+            opsS.push({ tipo:"set", col:"documentos", id:pg.id, data:docDadosPagina(ed, pg, i+2, ed.total, velha) });
+          });
+          velhasS.forEach(function(v){ if(!pgs.some(function(pg){ return pg.id===v.id; })) opsS.push({ tipo:"del", col:"documentos", id:v.id }); });
+          gravarDocs(opsS);
+          state.docEdit = null; state.docEditPag = 0; rerender();
         }
         else if(acao === "importar"){ state.docImportar = !state.docImportar; rerender(); }
         else if(acao === "importar-arq"){ var arqD = raiz.querySelector("[data-docimpfile]"); if(arqD){ arqD.value = ""; arqD.click(); } }
@@ -2920,12 +3211,18 @@
         }
         else if(acao === "marcar-todos"){
           raiz.querySelectorAll("[data-docpara]").forEach(function(el){ var ch = getChar(el.getAttribute("data-docpara")); el.checked = !(ch && ch.ehNpc); });
+          raiz.querySelectorAll("[data-doctodas]").forEach(function(t){ acertarTodas(t.getAttribute("data-doctodas")); });
         }
         else if(acao === "entregar-cancelar"){ state.docEntregar = null; rerender(); }
         else if(acao === "entregar-ok"){
-          var d = docsLista().filter(function(x){ return x.id===state.docEntregar; })[0]; if(!d) return;
-          var para = Array.prototype.slice.call(raiz.querySelectorAll("[data-docpara]")).filter(function(el){ return el.checked; }).map(function(el){ return el.getAttribute("data-docpara"); });
-          gravarDocs([{ tipo:"update", col:"documentos", id:d.id, data:{ entregues:para, leitores:leitoresDe(para), atualizadoEm:new Date().toISOString() } }]);
+          var d = docAcharPorId(state.docEntregar); if(!d) return;
+          var marcadas = Array.prototype.slice.call(raiz.querySelectorAll("[data-docpara]")), agora = new Date().toISOString(), opsE = [];
+          docTodasPaginas(d).forEach(function(p){
+            var para = marcadas.filter(function(el){ return el.checked && el.getAttribute("data-docpag") === p.id; }).map(function(el){ return el.getAttribute("data-docpara"); });
+            if(JSON.stringify(para.slice().sort()) !== JSON.stringify((p.entregues||[]).slice().sort()))
+              opsE.push({ tipo:"update", col:"documentos", id:p.id, data:{ entregues:para, leitores:leitoresDe(para), atualizadoEm:agora } });
+          });
+          if(opsE.length) gravarDocs(opsE);
           state.docEntregar = null; rerender();
         }
       });
@@ -2939,22 +3236,29 @@
     raiz.querySelectorAll("[data-docgrupo]").forEach(function(el){
       el.addEventListener("toggle", function(){ if(!state.docGruposAbertos) state.docGruposAbertos = {}; state.docGruposAbertos[el.getAttribute("data-docgrupo")] = el.open; });
     });
-    raiz.querySelectorAll("[data-docver]").forEach(function(b){ b.addEventListener("click", function(){ var d = docsLista().filter(function(x){ return x.id===b.getAttribute("data-docver"); })[0]; if(d) abrirDocumento(d); }); });
+    raiz.querySelectorAll("[data-docver]").forEach(function(b){ b.addEventListener("click", function(){ var d = docAcharPorId(b.getAttribute("data-docver")); if(d) abrirDocumento(docTodasPaginas(d)); }); });
     raiz.querySelectorAll("[data-doceditar]").forEach(function(b){ b.addEventListener("click", function(){
-      var d = docsLista().filter(function(x){ return x.id===b.getAttribute("data-doceditar"); })[0]; if(!d) return;
+      var d = docAcharPorId(b.getAttribute("data-doceditar")); if(!d) return;
       var n = docNota(d.id);
-      state.docEdit = JSON.parse(JSON.stringify(d)); state.docEdit.autor = n.autor||""; state.docEdit.achado = n.achado||""; state.docEdit.achadoAlt = n.achadoAlt||""; state.docEdit.notaMestre = n.notaMestre||""; state.docEdit.local = n.local||""; state.docEdit.rotulo = n.rotulo||""; state.docEdit.sessao = n.sessao||"";
+      state.docEditPag = 0;
+      state.docEdit = JSON.parse(JSON.stringify(d));
+      state.docEdit.paginas = docPaginasExtras(d.id).map(function(p){
+        var pg = { id:p.id, titulo:p.titulo||"", texto:p.texto||"", escrita:p.escrita||"", papel:p.papel||"", condicao:p.condicao||"", data:p.data||"", assinatura:p.assinatura||"", carimbo:p.carimbo||"", cabecalho:(p.cabecalho||["",""]).slice(0,2) };
+        (p.herda||[]).forEach(function(k){ pg[k] = ""; });
+        return pg;
+      });
+      state.docEdit.autor = n.autor||""; state.docEdit.achado = n.achado||""; state.docEdit.achadoAlt = n.achadoAlt||""; state.docEdit.notaMestre = n.notaMestre||""; state.docEdit.local = n.local||""; state.docEdit.rotulo = n.rotulo||""; state.docEdit.sessao = n.sessao||"";
       rerender(); var el = app.querySelector("#gm-docs"); if(el) el.scrollIntoView();
     }); });
     raiz.querySelectorAll("[data-docentregar]").forEach(function(b){ b.addEventListener("click", function(){ state.docEntregar = b.getAttribute("data-docentregar"); rerender(); }); });
     raiz.querySelectorAll("[data-doccopiar]").forEach(function(b){ b.addEventListener("click", function(){
-      var d = docsLista().filter(function(x){ return x.id===b.getAttribute("data-doccopiar"); })[0]; if(!d) return;
+      var d = docAcharPorId(b.getAttribute("data-doccopiar")); if(!d) return;
       copiarTexto(codigoDeUm("documentos-assimilacao", "documentos", docExportavel(d)), b);
     }); });
     raiz.querySelectorAll("[data-docexcluir]").forEach(function(b){ b.addEventListener("click", function(){
-      var id = b.getAttribute("data-docexcluir"), d = docsLista().filter(function(x){ return x.id===id; })[0];
-      askConfirm('Excluir o documento "'+(d?d.titulo:"")+'"? Ele some também das fichas de quem recebeu.', function(){
-        gravarDocs([{ tipo:"del", col:"documentos", id:id }, { tipo:"del", col:"documentosNotas", id:id }]);
+      var id = b.getAttribute("data-docexcluir"), d = docAcharPorId(id), extras = docPaginasExtras(id);
+      askConfirm('Excluir o documento "'+(d?docRotulo(d):"")+'"'+(extras.length ? ' (todas as '+(extras.length+1)+' páginas)' : '')+'? Ele some também das fichas de quem recebeu.', function(){
+        gravarDocs([{ tipo:"del", col:"documentos", id:id }, { tipo:"del", col:"documentosNotas", id:id }].concat(extras.map(function(p){ return { tipo:"del", col:"documentos", id:p.id }; })));
       });
     }); });
   }
@@ -5998,6 +6302,7 @@
     renderConfirmOverlay();
     renderSyncBanner();
     tentar("Aparência", aplicarCorAcampamento);
+    if(typeof trilhas !== "undefined" && trilhas) tentar("Trilhas", trilhas.redesenhar);
   }
 
   // Aviso fixo no topo quando uma publicação falhou mesmo depois de tentar de
@@ -11058,6 +11363,13 @@
       console.warn("[Pangea] campanha", e);
       if(e && e.code === "permission-denied" && usuario === u){ avisoLobby = "Você não faz mais parte dessa campanha."; mostrarLobby(); }
     }));
+    // Trilhas sonoras: a escolha do Assimilador (meta/trilha) chega ao vivo para todos.
+    tentar("Trilhas", trilhas.ligar);
+    var pararTrilha = fb.ouvirDoc("meta", "trilha", function(d){
+      if(usuario !== u || !campanhaAtual || campanhaAtual.id !== cid) return;
+      tentar("Trilhas", function(){ trilhas.receber(d); });
+    }, function(e){ console.warn("[Pangea] trilha", e); });
+    ouvintes.push(function(){ try{ pararTrilha(); }catch(e){} tentar("Trilhas", trilhas.desligar); });
     var mestre = ehMestre();
     var chegou = { p:false, res:false, r:false, rn:!mestre };
     function talvezRevelar(){
@@ -11159,6 +11471,274 @@
     window.addEventListener("pangea-fb-erro", function(){ mostrarErroConexao(window.PANGEA_FB_ERRO); });
     setTimeout(function(){ if(!iniciou) mostrarErroConexao(null); }, 20000);
   }
+
+  // ---------- TRILHAS SONORAS (menu lateral) ----------
+  // O Assimilador escolhe a trilha e ela toca para a mesa toda ao mesmo tempo.
+  // A escolha mora em campanhas/{id}/meta/trilha: { id, inicio (ms), ts }.
+  // Quem entra depois ouve a partir do ponto certo (calculado pelo "inicio").
+  // Toda trilha repete sem parar; quem não quiser ouvir silencia no próprio aparelho.
+  // Jogadores não veem o nome da música: o banco guarda só um id neutro e os
+  // arquivos têm nomes neutros (t1, t2...). O nome aparece só para o Assimilador.
+  // O volume é de cada um: fica só neste aparelho e não muda nada para os outros.
+  // Arquivos em public/trilhas/ (MP3 convertido dos WAV originais).
+  var TRILHAS = [
+    { id:"t1", nome:"Canto Ley", arquivo:"trilhas/t1.mp3" },
+    { id:"t2", nome:"Combate Teste", arquivo:"trilhas/t2.mp3" }
+  ];
+  var trilhas = (function(){
+    var VOL_KEY = "pangea:trilhaVol", MUDO_KEY = "pangea:trilhaMudo";
+    var ICO_NOTA = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>';
+    var ICO_SOM = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M19 5a10 10 0 0 1 0 14"/></svg>';
+    var ICO_MUDO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="m23 9-6 6"/><path d="m17 9 6 6"/></svg>';
+    var estado = null;            // documento meta/trilha recebido do banco
+    var ligado = false, aberto = false, bloqueado = false, erroMsg = "";
+    var audio = null, ctx = null, ganho = null;
+    var tocandoChave = null;      // id + inicio da trilha carregada no <audio>
+    var ultimoPode = null;
+    var fade = 1, fadeTimer = null;
+    var aba = null, painel = null;
+
+    function trilhaPorId(id){ return TRILHAS.filter(function(t){ return t.id === id; })[0] || null; }
+    function vol(){ var v = parseFloat(lerPref(VOL_KEY, "0.6")); return isFinite(v) ? Math.min(1, Math.max(0, v)) : 0.6; }
+    function mudo(){ return lerPref(MUDO_KEY, "0") === "1"; }
+    function ativa(){ return !!(estado && estado.id && trilhaPorId(estado.id)); }
+    function podeEscolher(){ return temAcessoTotal() && ehMestre(); }
+
+    // Volume: no iPhone o volume do <audio> é fixo, então o som passa por um
+    // ganho do Web Audio (criado no primeiro toque na página).
+    function aplicarVolume(){
+      if(!audio) return;
+      var v = (mudo() ? 0 : vol()) * fade;
+      if(ganho){ ganho.gain.value = v; audio.volume = 1; }
+      else { try{ audio.volume = v; }catch(e){} }
+    }
+    function garantirAudio(){
+      if(audio) return audio;
+      audio = new Audio(); audio.preload = "auto"; audio.loop = true;
+      // Segurança: se algum navegador ignorar o loop, recomeça do início.
+      audio.addEventListener("ended", function(){
+        if(!ativa() || !tocandoChave) return;
+        try{ audio.currentTime = 0; }catch(e){}
+        tocar();
+      });
+      return audio;
+    }
+    function garantirCtx(){
+      if(ctx || !audio) return;
+      var AC = window.AudioContext || window.webkitAudioContext;
+      if(!AC) return;
+      try{
+        ctx = new AC();
+        ganho = ctx.createGain();
+        ctx.createMediaElementSource(audio).connect(ganho);
+        ganho.connect(ctx.destination);
+        aplicarVolume();
+      }catch(e){ console.warn("[Pangea] trilha: Web Audio", e); ctx = null; ganho = null; }
+    }
+    // Navegadores só deixam tocar som depois de um toque/clique na página.
+    function destravar(){
+      if(!ligado) return;
+      garantirAudio(); garantirCtx();
+      if(ctx && ctx.state === "suspended") ctx.resume().catch(function(){});
+      if(bloqueado && ativa()) sincronizar(true);
+    }
+    function rampa(alvo, ms, depois){
+      clearInterval(fadeTimer);
+      var ini = fade, t0 = Date.now();
+      if(ms <= 0 || animacoesReduzidas()){ fade = alvo; aplicarVolume(); if(depois) depois(); return; }
+      fadeTimer = setInterval(function(){
+        var k = Math.min(1, (Date.now() - t0) / ms);
+        fade = ini + (alvo - ini) * k; aplicarVolume();
+        if(k >= 1){ clearInterval(fadeTimer); fadeTimer = null; if(depois) depois(); }
+      }, 40);
+    }
+    function pararLocal(suave){
+      tocandoChave = null; bloqueado = false;
+      if(!audio || audio.paused){ return; }
+      rampa(0, suave ? 700 : 0, function(){ if(!tocandoChave){ audio.pause(); } });
+    }
+    function posicaoAtual(dur){
+      var s = Math.max(0, (Date.now() - (Number(estado.inicio) || Date.now())) / 1000);
+      if(!isFinite(dur) || dur <= 0) return s;
+      return s % dur; // toda trilha repete
+    }
+    function tocar(){
+      var a = audio;
+      var p;
+      try{ p = a.play(); }catch(e){ p = Promise.reject(e); }
+      Promise.resolve(p).then(function(){
+        bloqueado = false; rampa(1, 600); desenhar();
+      }).catch(function(e){
+        if(e && e.name === "AbortError") return;
+        bloqueado = true; desenhar();
+      });
+    }
+    function sincronizar(forcar){
+      if(!ligado) return;
+      if(!ativa()){ pararLocal(true); desenhar(); return; }
+      var t = trilhaPorId(estado.id);
+      var chave = estado.id + "|" + estado.inicio;
+      garantirAudio();
+      audio.loop = true;
+      if(chave === tocandoChave && !forcar){ desenhar(); return; }
+      var trocar = function(){
+        tocandoChave = chave;
+        fade = 0; aplicarVolume();
+        var url = new URL(t.arquivo, location.href).href;
+        var posicionar = function(){
+          var dur = audio.duration, pos = posicaoAtual(dur);
+          try{ audio.currentTime = pos; }catch(e){}
+          tocar();
+        };
+        if(audio.src !== url){
+          audio.src = url;
+          audio.addEventListener("loadedmetadata", function um(){ audio.removeEventListener("loadedmetadata", um); if(tocandoChave === chave) posicionar(); });
+          audio.load();
+        } else if(audio.readyState >= 1) posicionar();
+        else audio.addEventListener("loadedmetadata", function um(){ audio.removeEventListener("loadedmetadata", um); if(tocandoChave === chave) posicionar(); });
+      };
+      if(audio && !audio.paused && tocandoChave && tocandoChave !== chave){
+        tocandoChave = chave; // evita duas trocas ao mesmo tempo
+        rampa(0, 500, function(){ audio.pause(); tocandoChave = null; if(ativa() && (estado.id + "|" + estado.inicio) === chave) trocar(); });
+      } else trocar();
+      desenhar();
+    }
+
+    function gravar(dados){
+      if(!FB || !podeEscolher()) return;
+      erroMsg = "";
+      dados.ts = new Date().toISOString();
+      dados.porUid = usuario ? usuario.uid : null;
+      Promise.resolve(FB.escrever([{ tipo:"set", col:"meta", id:"trilha", data:dados }])).catch(function(e){
+        console.warn("[Pangea] trilha: gravar", e);
+        erroMsg = "Não deu pra trocar a trilha agora. Confira a conexão e tente de novo.";
+        desenhar();
+      });
+    }
+    function escolher(id){
+      destravar();
+      var t = trilhaPorId(id); if(!t) return;
+      gravar({ id:t.id, inicio:Date.now() });
+    }
+    function parar(){ destravar(); gravar({ id:null }); }
+
+    // ----- Tela -----
+    function montar(){
+      if(aba) return;
+      aba = document.createElement("button");
+      aba.type = "button"; aba.className = "trilha-aba";
+      aba.setAttribute("aria-expanded", "false"); aba.setAttribute("aria-controls", "trilha-painel");
+      aba.innerHTML = ICO_NOTA + '<span class="trilha-ondas" aria-hidden="true"><i></i><i></i><i></i></span><span class="trilha-aba-rot">Trilhas</span>';
+      aba.addEventListener("click", function(){ destravar(); abrir(!aberto); });
+      painel = document.createElement("aside");
+      painel.id = "trilha-painel"; painel.className = "trilha-painel";
+      painel.setAttribute("role", "dialog"); painel.setAttribute("aria-label", "Trilhas sonoras");
+      document.body.appendChild(painel); document.body.appendChild(aba);
+      painel.addEventListener("click", function(e){
+        var b = e.target.closest("button, input"); if(!b) return;
+        if(b.hasAttribute("data-trilha-fechar")){ abrir(false); aba.focus(); return; }
+        if(b.hasAttribute("data-trilha-destravar")){ destravar(); return; }
+        if(b.hasAttribute("data-trilha-mudo")){ gravarPref(MUDO_KEY, mudo() ? "0" : "1"); aplicarVolume(); desenhar(); return; }
+        if(b.hasAttribute("data-trilha-tocar")){
+          var id = b.getAttribute("data-trilha-tocar");
+          if(ativa() && estado.id === id) parar(); else escolher(id);
+          return;
+        }
+        if(b.hasAttribute("data-trilha-parar")){ parar(); return; }
+      });
+      painel.addEventListener("input", function(e){
+        var r = e.target;
+        if(r.hasAttribute("data-trilha-vol")){
+          var v = Math.max(0, Math.min(100, parseInt(r.value, 10) || 0));
+          gravarPref(VOL_KEY, String(v / 100));
+          if(v > 0 && mudo()) gravarPref(MUDO_KEY, "0");
+          aplicarVolume();
+          var n = painel.querySelector(".trilha-vol-num"); if(n) n.textContent = v + "%";
+          var m = painel.querySelector("[data-trilha-mudo]");
+          if(m){ m.setAttribute("aria-pressed", mudo() ? "true" : "false"); m.innerHTML = mudo() ? ICO_MUDO : ICO_SOM; }
+        }
+      });
+      document.addEventListener("keydown", function(e){ if(e.key === "Escape" && aberto){ abrir(false); aba.focus(); } });
+      document.addEventListener("click", function(e){
+        if(aberto && e.target.isConnected && !painel.contains(e.target) && !aba.contains(e.target)
+           && !(e.target.closest && e.target.closest(".aparencia-painel, .aparencia-btn"))) abrir(false);
+      });
+      ["pointerdown", "keydown", "touchend"].forEach(function(ev){ document.addEventListener(ev, destravar, true); });
+      document.addEventListener("visibilitychange", function(){
+        if(document.visibilityState === "visible" && ligado && ativa()){
+          if(ctx && ctx.state === "suspended") ctx.resume().catch(function(){});
+          if(audio && audio.paused) sincronizar(true);
+        }
+      });
+    }
+    function abrir(sim){
+      aberto = !!sim;
+      if(!painel) return;
+      painel.classList.toggle("aberto", aberto);
+      aba.setAttribute("aria-expanded", aberto ? "true" : "false");
+      if(aberto){ desenhar(); var f = painel.querySelector("[data-trilha-fechar]"); if(f) f.focus({ preventScroll:true }); }
+    }
+    function desenhar(){
+      if(!aba) return;
+      var on = ativa(), t = on ? trilhaPorId(estado.id) : null;
+      var verNome = podeEscolher(); // jogadores não veem o nome da música
+      var soando = on && tocandoChave && audio && !audio.paused && !bloqueado;
+      aba.style.display = ligado ? "" : "none";
+      aba.classList.toggle("tocando", !!soando);
+      aba.classList.toggle("bloqueado", on && bloqueado);
+      aba.title = on ? (verNome ? "Trilha: " + t.nome : "Trilha tocando") : "Trilhas sonoras";
+      aba.setAttribute("aria-label", on ? "Trilhas sonoras: " + (verNome ? "tocando " + t.nome : "trilha tocando") : "Trilhas sonoras");
+      if(!ligado){ abrir(false); }
+      if(!aberto) return;
+      var v = Math.round(vol() * 100), m = mudo();
+      var h = '<div class="trilha-topo"><h3>Trilhas sonoras</h3><button type="button" class="trilha-fechar" data-trilha-fechar aria-label="Fechar">×</button></div><div class="trilha-corpo">';
+      h += '<div class="trilha-sec"><p class="trilha-rot">Tocando agora</p><div class="trilha-agora' + (soando ? ' tocando' : '') + '">';
+      if(on){
+        h += '<b>' + (verNome ? esc(t.nome) : 'Trilha tocando') + '</b>';
+        if(bloqueado) h += '<p class="hint">O navegador segurou o som. Toque no botão para ouvir.</p><button type="button" class="btn accent trilha-destravar" data-trilha-destravar>Toque para ouvir</button>';
+        else if(!soando) h += '<p class="hint">Carregando…</p>';
+        else h += '<p class="hint">' + (verNome ? 'Repete até você trocar ou parar.' : 'Repete sem parar. Para não ouvir, silencie abaixo.') + '</p>';
+      } else h += '<b>Nenhuma trilha</b><p class="hint">' + (podeEscolher() ? 'Escolha abaixo o que a mesa vai ouvir.' : 'Quando o Assimilador escolher uma trilha, ela toca aqui.') + '</p>';
+      h += '</div></div>';
+      h += '<div class="trilha-sec"><p class="trilha-rot">Seu volume</p><div class="trilha-vol' + (on ? '' : ' desligado') + '">' +
+        '<button type="button" class="trilha-mudo" data-trilha-mudo aria-pressed="' + m + '" aria-label="' + (m ? 'Ligar o som' : 'Silenciar') + '"' + (on ? '' : ' disabled') + '>' + (m ? ICO_MUDO : ICO_SOM) + '</button>' +
+        '<input type="range" min="0" max="100" step="1" value="' + v + '" data-trilha-vol aria-label="Volume da trilha"' + (on ? '' : ' disabled') + '>' +
+        '<span class="trilha-vol-num">' + v + '%</span></div>' +
+        '<p class="hint">' + (on ? 'Só muda o som neste aparelho.' : 'Libera quando uma trilha começar.') + '</p></div>';
+      if(podeEscolher()){
+        h += '<div class="trilha-sec"><p class="trilha-rot">Escolher para a mesa</p><div class="trilha-lista">';
+        TRILHAS.forEach(function(x){
+          var atual = on && estado.id === x.id;
+          h += '<button type="button" class="trilha-item" data-trilha-tocar="' + x.id + '" aria-pressed="' + atual + '">' +
+            '<span class="trilha-item-ico" aria-hidden="true">' + (atual ? '■' : '▶') + '</span>' +
+            '<span class="trilha-item-nome">' + esc(x.nome) + '</span></button>';
+        });
+        h += '</div>';
+        if(on) h += '<button type="button" class="btn secondary trilha-parar" data-trilha-parar>Parar a trilha</button>';
+        if(erroMsg) h += '<p class="trilha-erro">' + esc(erroMsg) + '</p>';
+        h += '</div>';
+      }
+      h += '</div>';
+      var foco = document.activeElement, focoSel = null;
+      if(foco && painel.contains(foco)){
+        ["data-trilha-fechar","data-trilha-mudo","data-trilha-vol","data-trilha-parar","data-trilha-destravar"].forEach(function(a){ if(foco.hasAttribute(a)) focoSel = "[" + a + "]"; });
+        if(foco.hasAttribute("data-trilha-tocar")) focoSel = '[data-trilha-tocar="' + foco.getAttribute("data-trilha-tocar") + '"]';
+      }
+      var rolagem = painel.querySelector(".trilha-corpo"), topoRol = rolagem ? rolagem.scrollTop : 0;
+      painel.innerHTML = h;
+      var nr = painel.querySelector(".trilha-corpo"); if(nr) nr.scrollTop = topoRol;
+      if(focoSel){ var nf = painel.querySelector(focoSel); if(nf) nf.focus({ preventScroll:true }); }
+    }
+
+    return {
+      ligar: function(){ montar(); ligado = true; estado = null; erroMsg = ""; desenhar(); },
+      desligar: function(){ ligado = false; estado = null; erroMsg = ""; pararLocal(false); if(audio){ try{ audio.pause(); }catch(e){} } desenhar(); },
+      receber: function(d){ estado = d || null; if(!ativa()) erroMsg = ""; sincronizar(false); },
+      // Chamado a cada render da página: só redesenha se mudou quem pode escolher
+      // (ex.: "Ver como Jogador"), pra não atrapalhar quem está mexendo no volume.
+      redesenhar: function(){ var p = ligado && podeEscolher(); if(p !== ultimoPode){ ultimoPode = p; desenhar(); } }
+    };
+  })();
 
   initCapabilities();
 })();
