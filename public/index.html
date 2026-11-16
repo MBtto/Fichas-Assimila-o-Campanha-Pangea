@@ -250,6 +250,57 @@
   .lobby-vazio{ text-align:center; }
   .lobby-vazio p{ margin:0; }
   .lobby-vazio .hint{ margin-top:4px; }
+  /* ===== Plataforma 2: avisos, entrada, lobby com capa ===== */
+  #avisos{ position:fixed; top:calc(10px + env(safe-area-inset-top,0px)); left:0; right:0; margin:0 auto; z-index:10050;
+    display:flex; flex-direction:column; gap:8px; max-width:464px; padding:0 12px; box-sizing:border-box; pointer-events:none; }
+  .aviso{ pointer-events:auto; display:flex; align-items:flex-start; gap:10px; padding:10px 10px 10px 14px;
+    background:var(--surface); color:var(--ink); border:1px solid var(--border-strong); border-left:5px solid var(--accent);
+    border-radius:var(--radius); box-shadow:0 6px 18px rgba(0,0,0,.28); font-size:14px; line-height:1.4; animation:aviso-in .18s ease-out; }
+  .aviso.erro{ border-left-color:var(--danger); }
+  .aviso.ok{ border-left-color:var(--good); }
+  .aviso span{ flex:1; min-width:0; overflow-wrap:anywhere; }
+  .aviso button{ flex:none; width:28px; height:28px; padding:0; border:0; background:transparent; color:var(--ink-muted); font-size:20px; line-height:1; cursor:pointer; border-radius:var(--radius); }
+  .aviso button:hover{ color:var(--ink); background:var(--surface-2); }
+  @keyframes aviso-in{ from{ opacity:0; transform:translateY(-8px); } to{ opacity:1; transform:none; } }
+
+  .entrada{ max-width:720px; margin:0 auto; padding:clamp(28px, 9vh, 96px) 4px 0; text-align:center; }
+  .entrada-marca{ font-size:clamp(46px, 11vw, 84px); line-height:1; letter-spacing:.06em; margin:0; }
+  .entrada-frase{ text-align:center; font-size:17px; color:var(--ink-muted); margin:14px auto 26px; max-width:30em; }
+  .entrada-btn{ font-size:15px; padding:13px 26px; margin:0 auto; }
+  .entrada-sis{ margin-top:16px; }
+  .selo-sis{ display:inline-block; padding:3px 11px; border:1px solid var(--border-strong); border-radius:999px; font-size:11.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-muted); }
+  .entrada-tres{ list-style:none; padding:0; margin:clamp(30px, 7vh, 64px) 0 0; display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:12px; }
+  .entrada-tres li{ display:flex; flex-direction:column; align-items:center; gap:6px; padding:18px 12px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow); color:var(--ink); }
+  .entrada-tres svg{ color:var(--accent); }
+  .entrada-tres b{ font-family:"Oswald","Arial Narrow",sans-serif; font-size:15px; text-transform:uppercase; letter-spacing:.04em; }
+  .entrada-tres span{ font-size:13px; color:var(--ink-muted); line-height:1.35; overflow-wrap:anywhere; }
+  .entrada-rodape{ max-width:720px; margin:36px auto 0; }
+  @media (max-width:600px){ .entrada-tres{ grid-template-columns:1fr; } .entrada-tres li{ flex-direction:row; flex-wrap:wrap; justify-content:flex-start; text-align:left; padding:12px 14px; gap:4px 10px; } .entrada-tres span{ flex-basis:100%; } }
+
+  .lobby-titulo{ justify-content:space-between; align-items:center; margin:22px 0 12px; gap:8px; flex-wrap:wrap; }
+  .cmp-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(min(250px, 100%), 1fr)); gap:16px; }
+  .cmp-card{ display:flex; flex-direction:column; min-width:0; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+    box-shadow:var(--shadow); overflow:hidden; cursor:pointer; transition:transform .12s ease; }
+  .cmp-card:hover{ border-color:var(--border-strong); transform:translateY(-2px); }
+  .cmp-capa{ position:relative; height:104px; overflow:hidden; background-color:var(--capa, var(--accent));
+    background-image:linear-gradient(135deg, rgba(255,255,255,.18), rgba(0,0,0,.30)); background-size:cover; background-position:center; }
+  .cmp-inicial{ position:absolute; left:14px; bottom:-14px; font-family:"Oswald","Arial Narrow",sans-serif; font-size:96px; font-weight:700; line-height:1; color:rgba(255,255,255,.24); text-transform:uppercase; pointer-events:none; }
+  .cmp-selo{ position:absolute; top:10px; right:10px; padding:3px 10px; border-radius:999px; background:rgba(0,0,0,.6); color:#fff; font-size:11px; font-weight:600; letter-spacing:.07em; text-transform:uppercase; }
+  .cmp-corpo{ display:flex; flex-direction:column; flex:1; min-width:0; padding:14px 16px 16px; }
+  .cmp-corpo h3{ font-size:17px; margin:0 0 3px; overflow-wrap:anywhere; }
+  .cmp-corpo .camp-tag{ font-size:11px; color:var(--ink-muted); text-transform:uppercase; letter-spacing:.06em; overflow-wrap:anywhere; }
+  .cmp-fichas{ margin-top:8px; font-size:13.5px; color:var(--ink); overflow-wrap:anywhere; }
+  .cmp-fichas.vazio{ color:var(--ink-muted); }
+  .cmp-acoes{ display:flex; flex-wrap:wrap; gap:8px; margin-top:auto; padding-top:14px; }
+  .cmp-acoes .cmp-sair{ margin-left:auto; }
+  .capa-cfg{ display:flex; flex-direction:column; gap:12px; }
+  .capa-previa{ height:84px; max-width:320px; border-radius:var(--radius); border:1px solid var(--border); }
+  .capa-cores{ display:flex; flex-wrap:wrap; gap:8px; }
+  .capa-cor{ width:34px; height:34px; padding:0; border-radius:50%; border:2px solid var(--surface); box-shadow:0 0 0 1px var(--border-strong); cursor:pointer; }
+  .capa-cor.sel{ box-shadow:0 0 0 3px var(--ink); }
+  .capa-cor:focus-visible{ outline:2px solid var(--ink); outline-offset:3px; }
+  .cmp-corpo h3{ color:var(--ink); }
+  .cmp-acoes .btn{ padding:8px 12px; font-size:12.5px; }
   .hint.attr-desc{ min-height:2.6em; line-height:1.3; }
   /* Textos de ajuda em blocos (11/10/2026): parágrafos curtos e listas. */
   .ajuda > p{ margin:0 0 6px; }
@@ -2791,7 +2842,7 @@
   }
   function gravarDocs(ops){
     if(!FB) return Promise.resolve();
-    return FB.escrever(ops).catch(function(e){ console.error("[Pangea] documentos", e); alert("Não consegui salvar o documento. Confira a conexão e as regras do Firestore."); });
+    return FB.escrever(ops).catch(function(e){ console.error("[Pangea] documentos", e); avisar("Não consegui salvar o documento. Confira a conexão e as regras do Firestore."); });
   }
   function sincronizarLeitoresDocs(){
     if(!ehMestre() || !FB) return;
@@ -2940,15 +2991,15 @@
   // de importação antigo). Devolve a lista ou null (já avisou).
   function lerListaArquivo(texto, tipoEsperado, chave, nomeCoisa, comoCodigo){
     var dados, oque = comoCodigo ? "código" : "arquivo";
-    try{ dados = JSON.parse(texto); }catch(e){ alert(comoCodigo ? "Código inválido: confira se copiou tudo." : "Esse arquivo não é um .json válido de "+nomeCoisa+"."); return null; }
+    try{ dados = JSON.parse(texto); }catch(e){ avisar(comoCodigo ? "Código inválido: confira se copiou tudo." : "Esse arquivo não é um .json válido de "+nomeCoisa+"."); return null; }
     if(dados && !Array.isArray(dados) && dados.tipo && dados.tipo !== tipoEsperado){
       var outro = (comoCodigo
         ? { "catalogo-criaturas-assimilacao":"criaturas (cole no Colar código do Bestiário)", "documentos-assimilacao":"documentos (cole no Colar código de Documentos da campanha)", "itens-assimilacao":"itens (cole no Colar código de Itens achados)" }
         : { "catalogo-criaturas-assimilacao":"criaturas (use Importar catálogo no Bestiário)", "documentos-assimilacao":"documentos (use Importar documentos)", "itens-assimilacao":"itens (use Importar itens)" })[dados.tipo];
-      alert("Esse "+oque+" é de "+(outro || "outra coisa")+", não de "+nomeCoisa+"."); return null;
+      avisar("Esse "+oque+" é de "+(outro || "outra coisa")+", não de "+nomeCoisa+"."); return null;
     }
     var lista = Array.isArray(dados) ? dados : (dados && Array.isArray(dados[chave]) ? dados[chave] : (dados && typeof dados === "object" ? [dados] : null));
-    if(!lista || !lista.length){ alert("Não achei "+nomeCoisa+" nesse "+oque+"."); return null; }
+    if(!lista || !lista.length){ avisar("Não achei "+nomeCoisa+" nesse "+oque+"."); return null; }
     return lista;
   }
   // Lista sem "tipo" (código antigo) que não serviu: tenta dizer de que ela parece ser.
@@ -2956,7 +3007,7 @@
     var x = (lista||[]).filter(function(o){ return o && typeof o === "object"; })[0] || {};
     var parece = (x.pilha || x.grupos || x.suc != null) ? "criaturas" : (x.titulo != null || x.texto != null) ? "documentos" : (x.nome != null && (x.traits || x.escassez !== undefined || x.efeito != null || x.desc != null)) ? "itens" : null;
     var oque = comoCodigo ? "código" : "arquivo";
-    if(parece && parece !== nomeCoisa){ alert("Esse "+oque+" parece ser de "+parece+", não de "+nomeCoisa+"."); return true; }
+    if(parece && parece !== nomeCoisa){ avisar("Esse "+oque+" parece ser de "+parece+", não de "+nomeCoisa+"."); return true; }
     return false;
   }
   // "Copiar código" de um elemento só: o mesmo formato do arquivo exportado, com uma
@@ -2975,7 +3026,7 @@
       document.body.appendChild(ta); ta.select();
       var foi = false; try{ foi = document.execCommand("copy"); }catch(e){}
       ta.remove();
-      if(foi) ok(); else alert("Não consegui copiar sozinho. Use Exportar e mande o arquivo.");
+      if(foi) ok(); else avisar("Não consegui copiar sozinho. Use Exportar e mande o arquivo.");
     }
     if(navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(texto).then(ok, reserva);
     else reserva();
@@ -3047,7 +3098,7 @@
   function importarDocsArquivo(texto, rerender, comoCodigo, aoConfirmar){
     var lista = lerListaArquivo(texto, "documentos-assimilacao", "documentos", "documentos", comoCodigo); if(!lista) return;
     var r = docsOpsImportar(lista);
-    if(!r.ops.length){ if(!avisoTipoProvavel(lista, "documentos", comoCodigo)) alert("Não achei documentos com título ou texto nesse "+(comoCodigo?"código":"arquivo")+"."); return; }
+    if(!r.ops.length){ if(!avisoTipoProvavel(lista, "documentos", comoCodigo)) avisar("Não achei documentos com título ou texto nesse "+(comoCodigo?"código":"arquivo")+"."); return; }
     var nome = (campanhaAtual && campanhaAtual.nome) || "esta campanha";
     var um = r.n === 1 && lista.length === 1 && (lista[0].rotulo || lista[0].titulo);
     askConfirm((um ? 'Importar o documento "'+um+'" para '+nome+'?' : "Importar "+r.n+" documento"+(r.n>1?"s":"")+" para "+nome+"?")+(r.existentes?(um ? "\n\nEle já existe e será substituído (quem já recebeu continua recebendo)." : "\n\n"+r.existentes+" já existe"+(r.existentes>1?"m":"")+" e ser"+(r.existentes>1?"ão substituídos":"á substituído")+" (quem já recebeu continua recebendo)."):""), function(){
@@ -3095,9 +3146,7 @@
         '<div class="btn-row"><button type="button" class="btn secondary" data-docacao="cancelar">Cancelar</button><button type="button" class="btn accent" data-docacao="salvar">Salvar documento</button></div>' +
         '</div><div class="doc-editor-previa"><p class="hint" style="margin:0 0 8px">Prévia'+(nPag>1?' da página '+(iPag+1):'')+' (é assim que os jogadores veem):</p><div id="doc-previa">'+renderDocumento(docPrevia(ed))+'</div></div></div>';
     } else {
-      html += '<div class="hint ajuda" style="margin-bottom:10px"><p>Crie os papéis que o grupo vai encontrar e entregue na hora certa. O jogador lê na seção <b>Documentos</b> da ficha; quem não recebeu não vê.</p>' +
-        '<ul><li><b>Exportar</b>: baixa todos os documentos e notas em .json (sem as entregas).</li><li>Para levar só um: <b>Copiar código</b> no documento e <b>Colar código</b> na outra campanha.</li></ul></div>';
-      html += '<div class="btn-row" style="justify-content:flex-start;gap:8px;flex-wrap:wrap"><button type="button" class="btn accent" data-docacao="novo">+ Novo documento</button><button type="button" class="btn secondary" data-docacao="importar-arq">Importar documentos</button><button type="button" class="btn secondary" data-docacao="exportar"'+(docsLista().length?'':' disabled')+'>Exportar documentos</button><button type="button" class="btn secondary" data-docacao="importar">Colar código</button><input type="file" accept=".json,application/json" data-docimpfile style="display:none"></div>';
+      html += '<div class="btn-row" style="justify-content:flex-start;gap:8px;flex-wrap:wrap"><button type="button" class="btn accent" data-docacao="novo">+ Documento</button><button type="button" class="btn secondary" data-docacao="importar-arq" title="Importar um arquivo .json de documentos">Importar</button><button type="button" class="btn secondary" data-docacao="exportar" title="Baixar todos os documentos em .json (sem as entregas)"'+(docsLista().length?'':' disabled')+'>Exportar</button><button type="button" class="btn secondary" data-docacao="importar">Colar código</button><input type="file" accept=".json,application/json" data-docimpfile style="display:none"></div>';
       if(state.docImportar){
         html += '<div class="field" style="margin-top:10px"><label>Cole o código (do Copiar código ou de um arquivo exportado)</label><textarea id="doc-import" style="min-height:120px" placeholder="{ &quot;tipo&quot;: &quot;documentos-assimilacao&quot;, ... }"></textarea>' +
           '<div class="btn-row" style="justify-content:flex-start;gap:8px"><button type="button" class="btn accent" data-docacao="importar-ok">Importar</button><button type="button" class="btn secondary" data-docacao="importar-cancelar">Cancelar</button></div></div>';
@@ -3142,11 +3191,11 @@
             (nota.achado ? '<div class="hint" style="margin:2px 0 0"><i>Achado:</i> '+esc(nota.achado)+'</div>' : '') +
             (nota.notaMestre ? '<div class="hint" style="margin:2px 0 0"><i>Nota:</i> '+esc(nota.notaMestre)+'</div>' : '') +
           '</div><div class="row" style="gap:6px;flex:0 1 auto;max-width:100%;min-width:0;flex-wrap:wrap;justify-content:flex-end">' +
-            '<button type="button" class="btn secondary doc-btn" data-docver="'+d.id+'">Ver</button>' +
-            '<button type="button" class="btn secondary doc-btn" data-doceditar="'+d.id+'">Editar</button>' +
-            '<button type="button" class="btn accent doc-btn" data-docentregar="'+d.id+'">Entregar</button>' +
-            '<button type="button" class="btn secondary doc-btn" data-doccopiar="'+d.id+'" title="Copia só este documento em código, para colar em outra campanha (sem as entregas)">Copiar código</button>' +
-            '<button type="button" class="btn secondary doc-btn" data-docexcluir="'+d.id+'">Excluir</button>' +
+            '<button type="button" class="btn secondary doc-btn" data-docver="'+esc(d.id)+'">Ver</button>' +
+            '<button type="button" class="btn secondary doc-btn" data-doceditar="'+esc(d.id)+'">Editar</button>' +
+            '<button type="button" class="btn accent doc-btn" data-docentregar="'+esc(d.id)+'">Entregar</button>' +
+            '<button type="button" class="btn secondary doc-btn" data-doccopiar="'+esc(d.id)+'" title="Copia só este documento em código, para colar em outra campanha (sem as entregas)">Copiar código</button>' +
+            '<button type="button" class="btn secondary doc-btn" data-docexcluir="'+esc(d.id)+'">Excluir</button>' +
           '</div></div>';
         if(state.docEntregar === d.id && multi){
           html += '<div class="doc-entrega"><p class="hint" style="margin:0 0 6px">Marque quem recebe cada página:</p><div class="doc-entrega-tabela"><table><thead><tr><th>Personagem</th>' +
@@ -3154,13 +3203,13 @@
             chars.map(function(ch){
               var todas = pags.every(function(p){ return (p.entregues||[]).indexOf(ch.id) > -1; }), nome = esc(ch.nomePersonagem||"Sem nome");
               return '<tr><td>'+nome+(ch.ehNpc?' <span class="hint">(NPC)</span>':'')+'</td>' +
-                pags.map(function(p, ip){ return '<td><input type="checkbox" data-docpara="'+ch.id+'" data-docpag="'+esc(p.id)+'"'+((p.entregues||[]).indexOf(ch.id)>-1?' checked':'')+' aria-label="'+nome+', página '+(ip+1)+'"></td>'; }).join('') +
-                '<td><input type="checkbox" data-doctodas="'+ch.id+'"'+(todas?' checked':'')+' aria-label="'+nome+', todas as páginas"></td></tr>';
+                pags.map(function(p, ip){ return '<td><input type="checkbox" data-docpara="'+esc(ch.id)+'" data-docpag="'+esc(p.id)+'"'+((p.entregues||[]).indexOf(ch.id)>-1?' checked':'')+' aria-label="'+nome+', página '+(ip+1)+'"></td>'; }).join('') +
+                '<td><input type="checkbox" data-doctodas="'+esc(ch.id)+'"'+(todas?' checked':'')+' aria-label="'+nome+', todas as páginas"></td></tr>';
             }).join('') +
             '</tbody></table></div><div class="btn-row" style="justify-content:flex-start;gap:8px;margin-top:8px"><button type="button" class="btn secondary doc-btn" data-docacao="marcar-todos">Todos os jogadores</button><button type="button" class="btn accent doc-btn" data-docacao="entregar-ok">Confirmar entrega</button><button type="button" class="btn secondary doc-btn" data-docacao="entregar-cancelar">Cancelar</button></div></div>';
         } else if(state.docEntregar === d.id){
           html += '<div class="doc-entrega"><p class="hint" style="margin:0 0 6px">Marque quem recebe este documento:</p><div class="row" style="gap:6px 14px;flex-wrap:wrap">' +
-            chars.map(function(ch){ return '<label style="display:flex;align-items:center;gap:5px;text-transform:none;margin:0"><input type="checkbox" style="width:auto" data-docpara="'+ch.id+'" data-docpag="'+esc(d.id)+'"'+((d.entregues||[]).indexOf(ch.id)>-1?' checked':'')+'>'+esc(ch.nomePersonagem||"Sem nome")+(ch.ehNpc?' <span class="hint">(NPC)</span>':'')+'</label>'; }).join('') +
+            chars.map(function(ch){ return '<label style="display:flex;align-items:center;gap:5px;text-transform:none;margin:0"><input type="checkbox" style="width:auto" data-docpara="'+esc(ch.id)+'" data-docpag="'+esc(d.id)+'"'+((d.entregues||[]).indexOf(ch.id)>-1?' checked':'')+'>'+esc(ch.nomePersonagem||"Sem nome")+(ch.ehNpc?' <span class="hint">(NPC)</span>':'')+'</label>'; }).join('') +
             '</div><div class="btn-row" style="justify-content:flex-start;gap:8px;margin-top:8px"><button type="button" class="btn secondary doc-btn" data-docacao="marcar-todos">Todos os jogadores</button><button type="button" class="btn accent doc-btn" data-docacao="entregar-ok">Confirmar entrega</button><button type="button" class="btn secondary doc-btn" data-docacao="entregar-cancelar">Cancelar</button></div></div>';
         }
         html += '</div>';
@@ -3223,7 +3272,7 @@
     });
     // Entrega de várias páginas: a coluna "Todas" marca/desmarca a linha inteira.
     function acertarTodas(cid){
-      var t = raiz.querySelector('[data-doctodas="'+cid+'"]'); if(!t) return;
+      var t = raiz.querySelector('[data-doctodas="'+esc(cid)+'"]'); if(!t) return;
       var cs = Array.prototype.slice.call(raiz.querySelectorAll("[data-docpara]")).filter(function(x){ return x.getAttribute("data-docpara")===cid; });
       t.checked = cs.length > 0 && cs.every(function(x){ return x.checked; });
     }
@@ -3259,9 +3308,9 @@
         }
         else if(acao === "salvar"){
           var pgs = ed.paginas || [];
-          if(!String(ed.titulo||"").trim() && !String(ed.texto||"").trim()){ if(state.docEditPag){ state.docEditPag = 0; rerender(); } alert("Escreva ao menos um título ou um texto"+(pgs.length?" na página 1":"")+"."); return; }
+          if(!String(ed.titulo||"").trim() && !String(ed.texto||"").trim()){ if(state.docEditPag){ state.docEditPag = 0; rerender(); } avisar("Escreva ao menos um título ou um texto"+(pgs.length?" na página 1":"")+"."); return; }
           for(var ip = 0; ip < pgs.length; ip++){
-            if(!String(pgs[ip].titulo||"").trim() && !String(pgs[ip].texto||"").trim()){ state.docEditPag = ip+1; rerender(); alert("A página "+(ip+2)+" está vazia. Escreva um texto ou remova a página."); return; }
+            if(!String(pgs[ip].titulo||"").trim() && !String(pgs[ip].texto||"").trim()){ state.docEditPag = ip+1; rerender(); avisar("A página "+(ip+2)+" está vazia. Escreva um texto ou remova a página."); return; }
           }
           var existente = docAcharPorId(ed.id);
           if(existente){ ed.entregues = existente.entregues||[]; ed.criadoEm = existente.criadoEm; }
@@ -3283,7 +3332,7 @@
         else if(acao === "importar-cancelar"){ state.docImportar = false; rerender(); }
         else if(acao === "importar-ok"){
           var txt = String((raiz.querySelector("#doc-import")||{}).value || "").trim();
-          if(!txt){ alert("Cole o código primeiro."); return; }
+          if(!txt){ avisar("Cole o código primeiro."); return; }
           importarDocsArquivo(txt, rerender, true, function(){ state.docImportar = false; });
         }
         else if(acao === "marcar-todos"){
@@ -3359,7 +3408,7 @@
   // DONO da campanha (campo donoUid), não mais um e-mail fixo. O e-mail abaixo só
   // serve pra uma coisa: autorizar a migração única da mesa antiga para a
   // campanha Pangea (ver migrarParaCampanhas).
-  var MIGRACAO_EMAIL = "marcoa.barreto14@gmail.com";
+  var MIGRACAO_UID = "mClFt8yHDIatLCUT6L1ipdqBgEG2";
   var CAMPANHA_PADRAO = "pangea";
   var campanhaAtual = null; // documento campanhas/{id} da campanha aberta
   // Etapa H: ficha-base aberta fora de campanha (Criar ficha / Abrir em Minhas fichas).
@@ -3455,7 +3504,7 @@
 
   function podeEditar(){
     if(caps.mode !== "mesa") return true;
-    if(!caps.canEdit){ alert("Este link é só de visualização: peça ao Assimilador um link com permissão de edição pra poder mexer nas fichas."); return false; }
+    if(!caps.canEdit){ avisar("Este link é só de visualização: peça ao Assimilador um link com permissão de edição pra poder mexer nas fichas."); return false; }
     return true;
   }
 
@@ -3549,7 +3598,7 @@
     }
     p.then(function(){ doPublish(); render(); }).catch(function(err){
       console.error("[Pangea] falha ao limpar", err);
-      alert("Não deu pra confirmar essa limpeza com o servidor agora. Tente de novo em alguns segundos.");
+      avisar("Não deu pra confirmar essa limpeza com o servidor agora. Tente de novo em alguns segundos.");
       render();
     });
   }
@@ -3653,18 +3702,14 @@
   }
   function mostrarLogin(){
     document.getElementById("rollfeed").innerHTML = "";
-    app.innerHTML = '<div class="card" style="max-width:460px;margin:60px auto 0;text-align:center">' +
-      '<h1 style="margin-bottom:6px">Pangea</h1>' +
-      '<p class="hint" style="margin:0 auto 18px">Campanhas, fichas e mesa ao vivo · Assimilação RPG</p>' +
-      '<button type="button" class="btn accent" data-action="entrar-google" style="margin:0 auto">Entrar com Google</button>' +
-    '</div>' + '<div class="footer-note" style="max-width:460px;margin:24px auto 0">'+avisoFanMadeHtml()+'</div>';
+    app.innerHTML = entradaHtml() + '<div class="footer-note entrada-rodape">'+avisoFanMadeHtml()+'</div>';
     var b = app.querySelector('[data-action="entrar-google"]');
     b.addEventListener("click", function(){
       b.disabled = true; b.textContent = "Abrindo o login…";
       FB.entrar().catch(function(err){
         b.disabled = false; b.textContent = "Entrar com Google";
         if(err && err.code === "auth/popup-closed-by-user") return;
-        alert("Não deu pra entrar: " + (err && (err.code || err.message) || "erro desconhecido"));
+        avisar("Não deu pra entrar: " + (err && (err.code || err.message) || "erro desconhecido"));
       });
     });
   }
@@ -3833,7 +3878,6 @@
   //  fichas/{bid}/guardadas/{fid}       cópia de uma campanha que a ficha deixou (volta com tudo)
   // ======================================================================
   // Site privado por enquanto: só esta conta cria campanhas (a regra do Firestore confere o mesmo).
-  var CRIADOR_EMAIL = MIGRACAO_EMAIL;
   // Campanha nova: criação padrão do livro e o mínimo de automação. A etapa C vai
   // ler isto para ligar/desligar cada coisa; até lá a criação segue a da Pangea.
   var CONFIG_PADRAO = {
@@ -4003,7 +4047,7 @@
   // Plataforma aberta (16/11/2026): qualquer conta cria campanhas (as regras do banco acompanham).
   function podeCriarCampanha(){ return !!(usuario && usuario.uid); }
   // A conferência da migração antiga (mesa única -> campanhas) continua só na conta que migrou.
-  function ehContaDaMigracao(){ return !!(usuario && usuario.email && usuario.email.toLowerCase() === CRIADOR_EMAIL); }
+  function ehContaDaMigracao(){ return !!(usuario && usuario.uid === MIGRACAO_UID); }
   function codigoAleatorio(n){
     var abc = "abcdefghijkmnpqrstuvwxyz23456789", s = "", a = null;
     try{ a = new Uint8Array(n); crypto.getRandomValues(a); }catch(e){ a = null; }
@@ -4204,24 +4248,30 @@
   function lobbyCardCampanhaHtml(cmp, comoMestre){
     var minhas = (lobby.copias[cmp.id]||[]).filter(function(c){ return !c.ehNpc; });
     var nJog = (cmp.membros||[]).filter(function(x){ return x !== cmp.donoUid; }).length;
-    var mestreNome = cmp.donoNome || cmp.donoEmail || "mestre";
-    var html = '<div class="char-card lobby-cmp" data-abrircmp="'+esc(cmp.id)+'">' +
-      '<h3>'+esc(cmp.nome || "Campanha sem nome")+'</h3>' +
-      '<div class="camp-tag">'+(comoMestre ? 'Você é o mestre · '+nJog+' jogador'+(nJog===1?'':'es') : 'Mestre: '+esc(mestreNome))+'</div>';
-    if(minhas.length){
-      html += '<div class="hint" style="margin-top:6px">'+(comoMestre ? 'Suas fichas aqui: ' : 'Sua ficha: ')+minhas.map(function(c){ return '<b>'+esc(c.nomePersonagem||"Sem nome")+'</b>'; }).join(", ")+'</div>';
-    } else if(!comoMestre){
-      html += '<div class="hint" style="margin-top:6px">Ainda sem ficha nesta mesa.</div>';
-    }
+    var nome = String(cmp.nome || "").trim() || "Campanha sem nome";
+    var capa = capaDe(cmp);
     var meuPedido = !comoMestre && lobby.pedidos && lobby.pedidos[cmp.id];
-    if(meuPedido && meuPedido.membro && meuPedido.status === "pendente"){
-      html += '<div class="hint" style="margin-top:4px">Pedido para levar <b>'+esc(meuPedido.fichaNome||"uma ficha")+'</b> aguardando o mestre.</div>';
+    var pendente = !!(meuPedido && meuPedido.status === "pendente");
+    var html = '<div class="cmp-card lobby-cmp" data-abrircmp="'+esc(cmp.id)+'" style="--capa:'+esc(capa.cor)+'">' +
+      '<div class="cmp-capa"'+(capa.img ? ' style="background-image:url(&quot;'+esc(capa.img)+'&quot;)"' : '')+'>' +
+        (capa.img ? '' : '<span class="cmp-inicial" aria-hidden="true">'+esc(Array.from(nome)[0] || "")+'</span>') +
+        '<span class="cmp-selo">'+(comoMestre ? 'Mestre' : 'Jogador')+'</span>' +
+      '</div>' +
+      '<div class="cmp-corpo"><h3>'+esc(nome)+'</h3>' +
+      '<div class="camp-tag">'+esc(sistemaNome(cmp.sistema))+' · '+(comoMestre ? nJog+' jogador'+(nJog===1?'':'es') : esc(cmp.donoNome || "mestre"))+'</div>';
+    if(minhas.length){
+      html += '<div class="cmp-fichas">'+minhas.map(function(c){ return '<b>'+esc(c.nomePersonagem||"Sem nome")+'</b>'; }).join(", ")+'</div>';
+    } else if(!comoMestre && !pendente){
+      html += '<div class="cmp-fichas vazio">Sem ficha</div>';
     }
-    html += '<div class="row" style="margin-top:12px;gap:8px;flex-wrap:wrap">' +
+    if(pendente && meuPedido.membro){
+      html += '<div class="cmp-fichas vazio"><b>'+esc(meuPedido.fichaNome||"Ficha")+'</b> aguardando o mestre</div>';
+    }
+    html += '<div class="cmp-acoes">' +
       '<button type="button" class="btn accent" data-abrircmp="'+esc(cmp.id)+'">Abrir</button>' +
-      (comoMestre || (meuPedido && meuPedido.status === "pendente") ? '' : '<button type="button" class="btn secondary" data-levarcmp="'+esc(cmp.id)+'" title="Leva uma ficha da sua conta para esta campanha (o mestre aprova)">Levar uma ficha</button>') +
-      (comoMestre ? '' : '<button type="button" class="btn secondary" data-saircmp="'+esc(cmp.id)+'">Sair da campanha</button>') +
-    '</div></div>';
+      (comoMestre || pendente ? '' : '<button type="button" class="btn secondary" data-levarcmp="'+esc(cmp.id)+'">Levar ficha</button>') +
+      (comoMestre ? '' : '<button type="button" class="btn secondary cmp-sair" data-saircmp="'+esc(cmp.id)+'" title="Sair da campanha" aria-label="Sair da campanha">Sair</button>') +
+    '</div></div></div>';
     return html;
   }
 
@@ -4329,7 +4379,7 @@
     var levaBase = !!(esc0.base && !esc0.guardada);
     var pedeGrupo = levaBase && opsGrupo.length > 0 && !opsGrupo.some(function(o){ return o.id === esc0.base.acampamento; });
     var pedeExtras = levaBase ? (cr.camposExtras||[]).filter(function(x){ return x && x.id && !String(((esc0.base.extras)||{})[x.id]||"").trim(); }) : [];
-    html += '<div class="hint ajuda" style="margin:0 0 10px"><p>Escolha a ficha. A campanha recebe uma cópia dela; a sua ficha-base continua na sua conta.</p><p>A ficha só entra na mesa depois que o mestre aprovar.</p></div><div class="lobby-opcoes">';
+    html += '<p class="hint" style="margin:0 0 10px">A campanha recebe uma cópia. O mestre aprova a entrada.</p><div class="lobby-opcoes">';
     opcoes.forEach(function(o){
       html += '<label class="lobby-opcao'+(o.valor===lv.escolha?' sel':'')+'"><input type="radio" name="lev-ficha" value="'+esc(o.valor)+'"'+(o.valor===lv.escolha?' checked':'')+'>' +
         '<span><b>'+esc(o.titulo)+'</b><br><span class="hint">'+o.detalhe+'</span></span></label>';
@@ -4405,7 +4455,7 @@
 
   function lobbyFichasHtml(){
     var bases = lobby.bases || [];
-    var html = '<div class="row" style="justify-content:space-between;align-items:center;margin:24px 0 6px"><h2 style="margin:0">Minhas fichas</h2></div>' +
+    var html = '<div class="row lobby-titulo"><h2 style="margin:0">Fichas</h2><div class="row lobby-criar" style="gap:8px"><button type="button" class="btn secondary" data-lobby="criar-ficha">+ Ficha</button></div></div>' +
       '';
     if(!bases.length){
       return html + '<div class="card lobby-vazio"><p>Nenhuma ficha ainda.</p><p class="hint">Cada campanha recebe uma cópia da ficha que você levar.</p></div>';
@@ -4435,8 +4485,8 @@
     var digitando = ativo && app.contains(ativo) && (ativo.tagName === "TEXTAREA" || (ativo.tagName === "INPUT" && !/^(radio|checkbox|button)$/i.test(ativo.type||"")));
     if(digitando){ lobbyRenderAdiado = true; return; }
     var nomeCurto = esc(((usuario && (usuario.displayName || usuario.email)) || "").split(" ")[0]);
-    var html = '<header class="top"><div class="brand"><h1 id="brand-title">Pangea</h1><small>campanhas e fichas · Assimilação RPG · '+esc((usuario&&usuario.email)||"")+'</small></div>' +
-      '<nav class="tabs"><button type="button" class="btn secondary" data-action="sair">Sair ('+nomeCurto+')</button></nav></header>';
+    var html = '<header class="top"><div class="brand"><h1 id="brand-title">Pangea</h1></div>' +
+      '<nav class="tabs"><button type="button" class="btn secondary" data-action="sair" title="'+esc((usuario&&usuario.email)||"")+'">Sair ('+nomeCurto+')</button></nav></header>';
     if(avisoLobby){
       html += '<div class="card tight" style="border-color:var(--accent)"><div class="row" style="justify-content:space-between;gap:8px"><span>'+esc(avisoLobby)+'</span><button type="button" class="btn secondary" data-lobby="fechar-aviso">OK</button></div></div>';
     }
@@ -4450,10 +4500,9 @@
     html += lobbyPedidosHtml();
     var mestro = lobby.campanhas.filter(function(c){ return c.donoUid === usuario.uid; });
     var jogo = lobby.campanhas.filter(function(c){ return c.donoUid !== usuario.uid; });
-    html += '<div class="row" style="justify-content:space-between;align-items:center;margin:20px 0 10px;gap:8px"><h2 style="margin:0">Minhas campanhas</h2>' +
+    html += '<div class="row lobby-titulo"><h2 style="margin:0">Campanhas</h2>' +
       '<div class="row lobby-criar" style="gap:8px">' +
-        '<button type="button" class="btn secondary" data-lobby="criar-ficha" title="Cria um personagem fora de campanha, com a criação padrão">+ Criar ficha</button>' +
-        (podeCriarCampanha() && !lobby.criando ? '<button type="button" class="btn secondary" data-lobby="criar">+ Criar campanha</button>' : '') +
+        (podeCriarCampanha() && !lobby.criando ? '<button type="button" class="btn accent" data-lobby="criar">+ Campanha</button>' : '') +
       '</div></div>';
     if(lobby.criando){
       html += '<div class="card"><h2>Nova campanha</h2>' +
@@ -4463,12 +4512,9 @@
     }
     if(!lobby.campanhas.length){
       html += '<div class="card lobby-vazio"><p>Nenhuma campanha por aqui.</p><p class="hint">Crie a sua ou abra um link de convite.</p></div>';
-    }
-    if(mestro.length){
-      html += '<h3 class="lobby-sub">Como mestre</h3><div class="roster-grid">' + mestro.map(function(c){ return lobbyCardCampanhaHtml(c, true); }).join("") + '</div>';
-    }
-    if(jogo.length){
-      html += '<h3 class="lobby-sub">Como jogador</h3><div class="roster-grid">' + jogo.map(function(c){ return lobbyCardCampanhaHtml(c, false); }).join("") + '</div>';
+    } else {
+      html += '<div class="cmp-grid">' + mestro.map(function(c){ return lobbyCardCampanhaHtml(c, true); }).join("") +
+        jogo.map(function(c){ return lobbyCardCampanhaHtml(c, false); }).join("") + '</div>';
     }
     html += lobbyFichasHtml();
     html += '<div class="footer-note" style="margin-top:28px">'+avisoFanMadeHtml()+'</div>';
@@ -4500,7 +4546,7 @@
             carregarExtrasLobby();
           }).catch(function(err){
             console.error("[Pangea] sair da campanha", err);
-            alert("Não deu pra sair da campanha agora: " + (err && (err.code || err.message) || "erro desconhecido") + ". Nada foi apagado.");
+            avisar("Não deu pra sair da campanha agora: " + (err && (err.code || err.message) || "erro desconhecido") + ". Nada foi apagado.");
             renderLobby();
           });
         });
@@ -4608,7 +4654,7 @@
     var cid = "c" + codigoAleatorio(12);
     var cmp = {
       id: cid, nome: nome, sistema: "assimilacao",
-      donoUid: usuario.uid, donoEmail: usuario.email || null, donoNome: usuario.displayName || null,
+      donoUid: usuario.uid, donoNome: usuario.displayName || null,
       membros: [usuario.uid], membrosInfo: {}, criadaEm: agoraIso(), config: clonar(CONFIG_PADRAO)
     };
     return FB.escrever([{ tipo:"set", col:"/campanhas", id:cid, data:cmp }]).then(function(){ return cmp; });
@@ -4723,7 +4769,7 @@
       if(!modoBase) return;
       if(state.syncFalhou){
         modoBase.saindo = false;
-        alert("A última mudança ainda não foi salva no servidor. Espere a conexão voltar antes de sair da ficha.");
+        avisar("A última mudança ainda não foi salva no servidor. Espere a conexão voltar antes de sair da ficha.");
         if(state.charId && getChar(state.charId)) goto("sheet", { charId: state.charId });
         return;
       }
@@ -4757,7 +4803,7 @@
     flushPendente();
     var p = temPendencias() ? (clearTimeout(publishTimer), doPublish()) : null;
     Promise.resolve(p).then(function(){
-      if(state.syncFalhou){ alert("A última mudança ainda não foi salva no servidor. Espere a conexão voltar antes de trocar de campanha."); return; }
+      if(state.syncFalhou){ avisar("A última mudança ainda não foi salva no servidor. Espere a conexão voltar antes de trocar de campanha."); return; }
       state.view = "roster"; state.charId = null;
       mostrarLobby();
     });
@@ -4809,7 +4855,7 @@
   function gmConfigHtml(){
     if(!campanhaAtual || !ehMestre()) return "";
     var d = cfgDraftAtual(), cr = d.criacao, v = cr.valores, ab = state.cfgAbertos || (state.cfgAbertos = {});
-    function det(id, titulo, corpo){ return '<details class="cfg-sec" data-cfgdet="'+id+'"'+(ab[id]?' open':'')+'><summary><b>'+titulo+'</b></summary><div class="cfg-corpo">'+corpo+'</div></details>'; }
+    function det(id, titulo, corpo){ return '<details class="cfg-sec" data-cfgdet="'+esc(id)+'"'+(ab[id]?' open':'')+'><summary><b>'+titulo+'</b></summary><div class="cfg-corpo">'+corpo+'</div></details>'; }
     function chk(attr, lig, txt, ajuda){ return '<label class="cfg-chk"><input type="checkbox" '+attr+(lig?' checked':'')+'><span><b>'+txt+'</b>'+(ajuda?'<span class="hint">'+ajuda+'</span>':'')+'</span></label>'; }
     function num(k, txt, min, max){ return '<div class="field cfg-num"><label>'+txt+'</label><input type="number" min="'+min+'" max="'+max+'" data-cfgval="'+k+'" value="'+v[k]+'"></div>'; }
     // Criação
@@ -4828,7 +4874,6 @@
         '</div>';
       });
       grupo += '<button type="button" class="btn secondary doc-btn" data-cfgopadd="1">+ Opção</button>';
-      grupo += '<p class="hint" style="margin:6px 0 0">Tirar uma opção não muda as fichas que já a escolheram.</p>';
     }
     grupo += '</div>';
     var pp = cr.propPers || {};
@@ -4858,15 +4903,15 @@
       (cr.caboGuerra.ligado ? '<div class="cfg-linha cfg-cabo">' +
         '<div class="field cfg-num"><label>Determinação mínima</label><input type="number" min="1" max="10" data-cfgcabonum="detMin" value="'+cr.caboGuerra.detMin+'"></div>' +
         '<div class="field cfg-num"><label>Determinação máxima</label><input type="number" min="1" max="10" data-cfgcabonum="detMax" value="'+cr.caboGuerra.detMax+'"></div>' +
-      '</div><div class="hint ajuda" style="margin:0 0 8px"><ul><li>Vai de 1 a 10 (Determinação 10 = Assimilação 0). O 0 fica de fora: a ficha começaria Suscetível.</li><li>Cada Nível de Assimilação inicial deixa um Teste de Assimilação pendente.</li><li>Fichas que já existem (inclusive as levadas para a campanha) não mudam.</li></ul></div>' : '') +
+      '</div><div class="hint ajuda" style="margin:0 0 8px"><p>De 1 a 10. Cada Nível de Assimilação inicial deixa um Teste de Assimilação pendente.</p></div>' : '') +
       '</div>';
     var valores = '<div class="cfg-bloco cfg-grade">' +
       num("instintoLivres", "Pontos livres de Instinto", 0, 12) + num("instintoMax", "Máximo por Instinto na criação", 1, 6) +
       num("cpPontos", "Pontos de Conhecimentos e Práticas", 0, 30) + num("cpMax", "Máximo por Conhecimento/Prática", 1, 6) +
       num("xpInicial", "Experiência inicial", 0, 50) + num("escassezArtefato", "Escassez máxima do Artefato", 0, 6) +
-      '</div><div class="hint ajuda" style="margin:0"><p>Padrão: 3, 3, 7, 2, 7 e 3.</p><p>A Experiência inicial fica gravada em cada ficha nova; mudar aqui não mexe nas fichas que já existem.</p></div>';
+      '</div><div class="hint ajuda" style="margin:0"><p>Padrão: 3, 3, 7, 2, 7 e 3. Fichas que já existem não mudam.</p></div>';
     var extras = '<div class="cfg-bloco">';
-    if(!(cr.camposExtras||[]).length) extras += '<p class="hint" style="margin:0 0 8px">Nenhum campo extra. Eles aparecem no primeiro passo da criação e na Origem da ficha.</p>';
+    if(!(cr.camposExtras||[]).length) extras += '<p class="hint" style="margin:0 0 8px">Nenhum campo extra.</p>';
     (cr.camposExtras||[]).forEach(function(f, i){
       extras += '<div class="cfg-linha">' +
         '<div class="field"><label>Nome do campo</label><input type="text" data-cfgex="'+i+'" data-k="rotulo" value="'+esc(f.rotulo||"")+'"></div>' +
@@ -4880,11 +4925,10 @@
     var criacao = '<h3 class="lobby-sub" style="margin-top:4px">Grupo</h3>'+grupo+'<h3 class="lobby-sub">Formato e etapas</h3>'+formatos+
       '<h3 class="lobby-sub">Valores das regras</h3>'+valores+'<h3 class="lobby-sub">Campos extras</h3>'+extras;
     // Automações
-    var autos = '<div class="cfg-bloco">' + AUTOMACOES_INFO.map(function(a){ return chk('data-cfgauto="'+a[0]+'"', d.automacoes[a[0]], a[1], a[2]); }).join('') + '</div>' +
-      '<div class="hint ajuda" style="margin:0"><p>Sempre automáticos, em qualquer campanha:</p><ul><li>Usos, Escassez e Espaço pelas características;</li><li>Cabo de Guerra e Saúde;</li><li>custos e requisitos de Experiência e a trava de Instintos;</li><li>perda da ficha por Pressão (só as Inoportunas, somadas às do Teste de Assimilação).</li></ul></div>';
+    var autos = '<div class="cfg-bloco">' + AUTOMACOES_INFO.map(function(a){ return chk('data-cfgauto="'+a[0]+'"', d.automacoes[a[0]], a[1], a[2]); }).join('') + '</div>';
     // Locais
     var locs = '<div class="cfg-bloco">';
-    if(!(d.locais||[]).length) locs += '<p class="hint" style="margin:0 0 8px">Nenhum local ainda. Locais organizam documentos e itens achados e definem como a Qualidade do item é sorteada.</p>';
+    if(!(d.locais||[]).length) locs += '<p class="hint" style="margin:0 0 8px">Nenhum local ainda.</p>';
     (d.locais||[]).forEach(function(l, i){
       locs += '<div class="cfg-linha cfg-local">' +
         '<div class="field"><label>Local</label><input type="text" data-cfgloc="'+i+'" value="'+esc(l.nome||"")+'"></div>' +
@@ -4893,13 +4937,13 @@
       '</div>';
     });
     locs += '<button type="button" class="btn secondary doc-btn" data-cfglocadd="1">+ Local</button>' +
-      '<div class="hint ajuda" style="margin:6px 0 0"><ul><li>A ordem aqui é a ordem das listas.</li><li>Mudar o nome de um local não muda os documentos e itens que já usam o nome antigo.</li>'+(d.automacoes.qualidadePorLocal?'':'<li>O sorteio da Qualidade está desligado nas Automações: os itens saem em Padrão (3).</li>')+'</ul></div></div>';
+      (d.automacoes.qualidadePorLocal?'':'<p class="hint" style="margin:6px 0 0">Sorteio da Qualidade desligado nas Automações: os itens saem em Padrão (3).</p>')+'</div>';
     var body = '<div id="gm-config">' +
-      '<p class="hint" style="margin-top:0">Vale só para <b>'+esc(campanhaAtual.nome||"esta campanha")+'</b>. As mudanças só valem depois de <b>Salvar configuração</b>.</p>' +
+      det("capa", "Capa", capaConfigHtml()) +
       det("criacao", "Criação de personagem", criacao) + det("autos", "Automações", autos) + det("locais", "Locais e Qualidade por local", locs) +
-      '<div class="row" style="gap:8px;margin-top:12px;flex-wrap:wrap"><button type="button" class="btn accent" data-cfgsalvar="1"'+(state.cfgSujo?'':' disabled')+'>Salvar configuração</button>' +
-        '<button type="button" class="btn secondary" data-cfgdescartar="1"'+(state.cfgSujo?'':' disabled')+'>Descartar mudanças</button>' +
-        '<span class="hint" id="cfg-status" style="margin:0;align-self:center">'+(state.cfgSujo?'Há mudanças não salvas.':'')+'</span></div>' +
+      '<div class="row" style="gap:8px;margin-top:12px;flex-wrap:wrap"><button type="button" class="btn accent" data-cfgsalvar="1"'+(state.cfgSujo?'':' disabled')+'>Salvar</button>' +
+        '<button type="button" class="btn secondary" data-cfgdescartar="1"'+(state.cfgSujo?'':' disabled')+'>Descartar</button>' +
+        '<span class="hint" id="cfg-status" style="margin:0;align-self:center">'+(state.cfgSujo?'Não salvo':'')+'</span></div>' +
     '</div>';
     return sectionCard("gmconfig", "Configuração da campanha", body);
   }
@@ -4910,7 +4954,7 @@
     function sujo(re){
       state.cfgSujo = true;
       if(re){ rerender(); return; }
-      var st = raiz.querySelector("#cfg-status"); if(st) st.textContent = "Há mudanças não salvas.";
+      var st = raiz.querySelector("#cfg-status"); if(st) st.textContent = "Não salvo";
       raiz.querySelectorAll("[data-cfgsalvar],[data-cfgdescartar]").forEach(function(b){ b.disabled = false; });
     }
     function idx(el, a){ return parseInt(el.getAttribute(a),10); }
@@ -4962,10 +5006,11 @@
     on("[data-cfglocadd]", "click", function(){ d.locais.push({ nome:"", tendencia:"geral" }); sujo(true); });
     on("[data-cfglocdel]", "click", function(el){ d.locais.splice(idx(el,"data-cfglocdel"),1); sujo(true); });
     on("[data-cfglocmover]", "click", function(el){ mover(d.locais, idx(el,"data-cfglocmover"), idx(el,"data-dir")); sujo(true); });
+    bindCapaConfig(raiz, rerender);
     on("[data-cfgdescartar]", "click", function(){ state.cfgDraft = null; state.cfgSujo = false; rerender(); });
     on("[data-cfgsalvar]", "click", function(el){
       var limpo = limparConfig(d);
-      if(limpo.erro){ alert(limpo.erro); return; }
+      if(limpo.erro){ avisar(limpo.erro); return; }
       el.disabled = true;
       var cid = campanhaAtual.id;
       FB.escrever([{ tipo:"update", col:"/campanhas", id:cid, data:{ config: limpo.cfg, configAtualizadaEm: agoraIso() } }]).then(function(){
@@ -4973,7 +5018,7 @@
         state.cfgDraft = null; state.cfgSujo = false; rerender();
       }).catch(function(err){
         console.error("[Pangea] config", err);
-        alert("Não deu pra salvar a configuração: " + (err && (err.code || err.message) || "erro desconhecido"));
+        avisar("Não deu pra salvar a configuração: " + (err && (err.code || err.message) || "erro desconhecido"));
         el.disabled = false;
       });
     });
@@ -5029,18 +5074,17 @@
       });
     }
     html += '<h3 class="lobby-sub">Na mesa</h3>';
-    if(!membros.length) html += '<p class="hint" style="margin:0 0 8px">Nenhum jogador ainda. Gere um link de convite abaixo.</p>';
+    if(!membros.length) html += '<p class="hint" style="margin:0 0 8px">Nenhum jogador ainda.</p>';
     membros.forEach(function(m){
       var q = nomeDoMembro(m);
       var fichas = chars.filter(function(c){ return c.donoUid === m; }).map(function(c){ return esc(c.nomePersonagem||"Sem nome"); });
       html += '<div class="row gm-membro" style="justify-content:space-between;gap:8px;padding:6px 0;border-top:1px solid var(--border)">' +
         '<div style="min-width:0;flex:1 1 200px"><b>'+esc(q.nome||q.email||"Conta sem nome")+'</b>'+(q.email && q.nome?' <span class="hint">'+esc(q.email)+'</span>':'')+
-          '<div class="hint">'+(fichas.length ? 'Ficha: '+fichas.join(", ") : 'Ainda sem ficha nesta mesa (ele cria a dele, ou você passa um NPC em Personagens da Mesa)')+'</div></div>' +
+          '<div class="hint">'+(fichas.length ? 'Ficha: '+fichas.join(", ") : 'Sem ficha')+'</div></div>' +
         '<button type="button" class="btn secondary" data-gmremover="'+esc(m)+'" style="padding:4px 10px;font-size:11px">remover da mesa</button>' +
       '</div>';
     });
-    html += '<h3 class="lobby-sub">Link de convite</h3>' +
-      '<div class="hint ajuda" style="margin:0 0 8px"><p>Quem abrir o link entra com a conta Google, escolhe a ficha e manda um pedido. Só entra na mesa depois que você aprovar.</p><p>Desative o link quando não precisar mais.</p></div>';
+    html += '<h3 class="lobby-sub">Link de convite</h3>';
     (shared.convites||[]).filter(function(c){ return c.ativo; }).forEach(function(c){
       html += '<div class="row" style="gap:8px;margin:6px 0"><input type="text" readonly value="'+esc(linkConvite(cmp.id, c.codigo))+'" data-gmlink="'+esc(c.codigo)+'" style="flex:1 1 220px;min-width:0">' +
         '<button type="button" class="btn secondary" data-gmcopiarconv="'+esc(c.codigo)+'">Copiar</button>' +
@@ -5051,7 +5095,7 @@
   }
   function bindGmJogadores(rerender){
     var raiz = app.querySelector("#gm-jogadores"); if(!raiz) return;
-    var falhou = function(oque){ return function(err){ console.error("[Pangea] "+oque, err); alert("Não deu pra "+oque+": " + (err && (err.code || err.message) || "erro desconhecido")); rerender(); }; };
+    var falhou = function(oque){ return function(err){ console.error("[Pangea] "+oque, err); avisar("Não deu pra "+oque+": " + (err && (err.code || err.message) || "erro desconhecido")); rerender(); }; };
     var novo = raiz.querySelector("[data-gmnovoconv]");
     if(novo) novo.addEventListener("click", function(){
       novo.disabled = true;
@@ -5622,7 +5666,7 @@
     try{ return window.matchMedia("(prefers-reduced-motion: reduce)").matches || animacoesReduzidas(); }catch(_){ return false; }
   }
   function fnavIrPara(id){
-    var alvo = app.querySelector('[data-secid="'+id+'"]');
+    var alvo = app.querySelector('[data-secid="'+esc(id)+'"]');
     if(!alvo) return;
     alvo.scrollIntoView({ behavior: fnavMovimentoReduzido() ? "auto" : "smooth", block:"start" });
     if(!fnavMovimentoReduzido()){
@@ -5955,9 +5999,9 @@
     var ib = c.instintosAssimBonus || {}, cb = c.conhPratAssimBonus || {};
     function linha(kind, id, rot, v){
       return '<div class="bonus-lin"><span title="'+rot+'">'+rot+'</span><span class="bonus-step">' +
-        '<button type="button" class="stepper-btn" data-bpk="'+kind+'" data-bpid="'+id+'" data-bpdir="-1" aria-label="Menos '+rot+'"'+(v<=0?' disabled':'')+'>&minus;</button>' +
-        '<input type="number" min="0" max="99" data-bpin="'+kind+'" data-bpid="'+id+'" value="'+v+'" aria-label="Bônus em '+rot+'">' +
-        '<button type="button" class="stepper-btn" data-bpk="'+kind+'" data-bpid="'+id+'" data-bpdir="1" aria-label="Mais '+rot+'">+</button>' +
+        '<button type="button" class="stepper-btn" data-bpk="'+kind+'" data-bpid="'+esc(id)+'" data-bpdir="-1" aria-label="Menos '+rot+'"'+(v<=0?' disabled':'')+'>&minus;</button>' +
+        '<input type="number" min="0" max="99" data-bpin="'+kind+'" data-bpid="'+esc(id)+'" value="'+v+'" aria-label="Bônus em '+rot+'">' +
+        '<button type="button" class="stepper-btn" data-bpk="'+kind+'" data-bpid="'+esc(id)+'" data-bpdir="1" aria-label="Mais '+rot+'">+</button>' +
       '</span></div>';
     }
     var html = '<div class="hint ajuda" style="margin:0 0 6px"><p>Quando uma Assimilação aumenta um Instinto, Conhecimento ou Prática além do normal.</p><p>Soma em cima da base em todo lugar (tabelas, testes, Painel).</p></div>';
@@ -6001,15 +6045,15 @@
     var fechado = !forcarAberto && !!state.collapsed[id];
     if(fechado) abre = abre.replace(/\s+id="[^"]*"/, "");
     return abre + '<div class="card-headrow">' + h2 +
-      '<button type="button" class="card-toggle" data-collapse-toggle="'+id+'" title="'+(fechado?"Expandir":"Minimizar")+'">'+(fechado?"▸":"▾")+'</button></div>' +
+      '<button type="button" class="card-toggle" data-collapse-toggle="'+esc(id)+'" title="'+(fechado?"Expandir":"Minimizar")+'">'+(fechado?"▸":"▾")+'</button></div>' +
       (fechado ? '' : corpo) + '</div>';
   }
   function sectionCard(id, title, bodyHtml){
     var collapsed = !!state.collapsed[id];
-    return '<div class="card" data-secid="'+id+'">' +
+    return '<div class="card" data-secid="'+esc(id)+'">' +
       '<div class="card-headrow">' +
         '<h2>'+title+'</h2>' +
-        '<button type="button" class="card-toggle" data-collapse-toggle="'+id+'" title="'+(collapsed?"Expandir":"Minimizar")+'">'+(collapsed?"▸":"▾")+'</button>' +
+        '<button type="button" class="card-toggle" data-collapse-toggle="'+esc(id)+'" title="'+(collapsed?"Expandir":"Minimizar")+'">'+(collapsed?"▸":"▾")+'</button>' +
       '</div>' +
       (collapsed ? '' : bodyHtml) +
     '</div>';
@@ -6373,6 +6417,101 @@
   // página continua (botão Editar, Assimilação, etc.) e aparece um aviso com a
   // mensagem do erro, pra dar pra mandar um print. Antes, um erro no meio da
   // ficha cortava tudo o que vinha depois sem avisar (relato do Marco, 30/09/2026).
+  // ---------- PLATAFORMA 2 (16/11/2026) ----------
+  // Aviso curto no alto da tela, no lugar do alert(): não trava a página e some sozinho.
+  function avisar(msg, tipo){
+    msg = String(msg == null ? "" : msg);
+    if(!tipo) tipo = /^(Não deu|Não consegui|Algo deu errado)/.test(msg) ? "erro" : "";
+    var cx = document.getElementById("avisos");
+    if(!cx){
+      cx = document.createElement("div"); cx.id = "avisos";
+      cx.setAttribute("role", "status"); cx.setAttribute("aria-live", "polite");
+      document.body.appendChild(cx);
+    }
+    // O mesmo aviso repetido não empilha; no máximo 3 na tela.
+    Array.prototype.slice.call(cx.children).forEach(function(f){ if(f.getAttribute("data-msg") === msg) cx.removeChild(f); });
+    while(cx.children.length >= 3) cx.removeChild(cx.firstChild);
+    var el = document.createElement("div"); el.className = "aviso" + (tipo ? " " + tipo : ""); el.setAttribute("data-msg", msg);
+    var sp = document.createElement("span"); sp.textContent = msg;
+    var bt = document.createElement("button"); bt.type = "button"; bt.setAttribute("aria-label", "Fechar"); bt.textContent = "×";
+    function fechar(){ if(el.parentNode) el.parentNode.removeChild(el); }
+    bt.addEventListener("click", fechar);
+    el.appendChild(sp); el.appendChild(bt); cx.appendChild(el);
+    setTimeout(fechar, Math.min(14000, 4500 + msg.length * 50));
+  }
+  var SISTEMAS_NOME = { assimilacao: "Assimilação", ordem: "Ordem Paranormal" };
+  function sistemaNome(s){ return SISTEMAS_NOME[s] || SISTEMAS_NOME.assimilacao; }
+  // Capa da campanha: cor e imagem escolhidas pelo mestre (campo "capa" da campanha).
+  // Sem escolha, a cor sai do id da campanha (sempre a mesma para a mesma campanha).
+  var CAPA_CORES = ["#a8492b", "#b07a1e", "#5d7a3a", "#2f7a6b", "#2f5f8a", "#5a4a8a", "#8a3a5f", "#4a4a4a"];
+  function capaDe(cmp){
+    var cp = (cmp && cmp.capa && typeof cmp.capa === "object") ? cmp.capa : {};
+    var cor = /^#[0-9a-f]{6}$/i.test(String(cp.cor || "")) ? cp.cor : "";
+    if(!cor){
+      var s = String((cmp && cmp.id) || ""), n = 0;
+      for(var i = 0; i < s.length; i++) n = (n * 31 + s.charCodeAt(i)) % 9973;
+      cor = CAPA_CORES[n % CAPA_CORES.length];
+    }
+    var img = cp.img ? imgSegura(cp.img) : "";
+    if(/[\\()]/.test(img)) img = "";
+    return { cor: cor, img: img };
+  }
+  function capaConfigHtml(){
+    var cp = capaDe(campanhaAtual), bruta = (campanhaAtual.capa && campanhaAtual.capa.img) || "";
+    return '<div class="cfg-bloco capa-cfg">' +
+      '<div class="cmp-capa capa-previa" style="--capa:'+esc(cp.cor)+(cp.img ? ';background-image:url(&quot;'+esc(cp.img)+'&quot;)' : '')+'">' +
+        (cp.img ? '' : '<span class="cmp-inicial" aria-hidden="true">'+esc(Array.from(String(campanhaAtual.nome||"").trim())[0] || "")+'</span>') + '</div>' +
+      '<div class="capa-cores" role="group" aria-label="Cor da capa">' + CAPA_CORES.map(function(c){
+        return '<button type="button" class="capa-cor'+(c === cp.cor ? ' sel' : '')+'" data-capacor="'+c+'" style="background:'+c+'" aria-label="Cor '+c+'" aria-pressed="'+(c === cp.cor)+'"></button>';
+      }).join('') + '</div>' +
+      '<div class="row" style="gap:8px;flex-wrap:wrap;align-items:flex-end">' +
+        '<div class="field" style="flex:1;min-width:200px;margin:0"><label>Imagem</label><input type="text" data-capaimg value="'+esc(bruta)+'" placeholder="https://…"></div>' +
+        '<button type="button" class="btn secondary" data-capaimgok="1">Aplicar</button>' +
+      '</div></div>';
+  }
+  function bindCapaConfig(raiz, rerender){
+    function gravar(capa){
+      var cid = campanhaAtual.id;
+      FB.escrever([{ tipo:"update", col:"/campanhas", id:cid, data:{ capa: capa } }]).then(function(){
+        if(campanhaAtual && campanhaAtual.id === cid){ campanhaAtual.capa = capa; }
+        rerender();
+      }).catch(function(err){
+        console.error("[Pangea] capa", err);
+        avisar("Não deu pra salvar a capa: " + (err && (err.code || err.message) || "erro desconhecido"));
+      });
+    }
+    function atual(){ var c = campanhaAtual.capa || {}; return { cor: capaDe(campanhaAtual).cor, img: String(c.img || "") }; }
+    raiz.querySelectorAll("[data-capacor]").forEach(function(b){
+      b.addEventListener("click", function(){ var c = atual(); c.cor = b.getAttribute("data-capacor"); gravar(c); });
+    });
+    var ok = raiz.querySelector("[data-capaimgok]"), campo = raiz.querySelector("[data-capaimg]");
+    function aplicarImg(){
+      var v = String(campo.value || "").trim();
+      if(v && (!/^https:\/\//i.test(v) || !imgSegura(v) || /[\\()]/.test(v))){ avisar("Use o endereço de uma imagem começando com https://"); return; }
+      var c = atual(); c.img = v; gravar(c);
+    }
+    if(ok && campo){
+      ok.addEventListener("click", aplicarImg);
+      campo.addEventListener("keydown", function(e){ if(e.key === "Enter"){ e.preventDefault(); aplicarImg(); } });
+    }
+  }
+  // Tela de entrada (antes do login).
+  function entradaHtml(){
+    function ico(d){ return '<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+d+'</svg>'; }
+    var tres = [
+      [ico('<path d="M7 3h8l4 4v14H7z"/><path d="M15 3v4h4"/><path d="M10 12h6M10 16h6"/>'), "Fichas", "Criação guiada e testes num toque"],
+      [ico('<rect x="4" y="4" width="16" height="16" rx="3"/><circle cx="9" cy="9" r="1.1" fill="currentColor"/><circle cx="15" cy="15" r="1.1" fill="currentColor"/><circle cx="15" cy="9" r="1.1" fill="currentColor"/><circle cx="9" cy="15" r="1.1" fill="currentColor"/>'), "Mesa ao vivo", "Rolagens, documentos e trilhas"],
+      [ico('<path d="M12 3l8 3v6c0 4.5-3.2 7.8-8 9-4.8-1.2-8-4.5-8-9V6z"/><path d="M9 12l2 2 4-4"/>'), "Painel do mestre", "Convites, bestiário e itens"]
+    ];
+    var convite = !!conviteGuardado();
+    return '<div class="entrada">' +
+      '<h1 class="entrada-marca">Pangea</h1>' +
+      '<p class="entrada-frase">'+(convite ? 'Você recebeu um convite. Entre para responder.' : 'Suas campanhas de RPG, com fichas e mesa ao vivo.')+'</p>' +
+      '<button type="button" class="btn accent entrada-btn" data-action="entrar-google">Entrar com Google</button>' +
+      '<div class="entrada-sis"><span class="selo-sis">Assimilação RPG</span></div>' +
+      '<ul class="entrada-tres">' + tres.map(function(t){ return '<li>'+t[0]+'<b>'+t[1]+'</b><span>'+t[2]+'</span></li>'; }).join('') + '</ul>' +
+    '</div>';
+  }
   function avisarErro(onde, e){
     var msg = (e && e.message) ? e.message : String(e);
     try{ console.error("[Pangea] " + onde + ":", e); }catch(_){}
@@ -6383,7 +6522,7 @@
       document.body.appendChild(el);
     }
     el.innerHTML = '<b>Algo deu errado em "' + esc(onde) + '":</b> ' + esc(msg) +
-      '<br><span style="opacity:.9">O resto da página continua funcionando. Tire um print desta mensagem e mande pro Claude.</span> ' +
+      '<br><span style="opacity:.9">O resto da página continua funcionando.</span> ' +
       '<button type="button" style="margin-left:8px;background:#fff;color:#000;border:0;border-radius:4px;padding:2px 8px;cursor:pointer" onclick="this.parentNode.remove()">fechar</button>';
   }
   function tentar(onde, fn){ try{ fn(); }catch(e){ avisarErro(onde, e); } }
@@ -6463,7 +6602,7 @@
   function topbar(active){
     if(modoBase){
       return '<header class="top">' +
-        '<div class="brand"><h1 id="brand-title">Minha ficha</h1><small>fora de campanha · Assimilação RPG</small></div>' +
+        '<div class="brand"><h1 id="brand-title">Minha ficha</h1><small>Assimilação RPG</small></div>' +
         '<nav class="tabs">' +
           '<button type="button" class="btn secondary" data-action="lobby" title="Minhas campanhas e fichas">⇦ Campanhas</button>' +
           (usuario ? '<button type="button" class="btn secondary" data-action="sair" title="'+esc(usuario.email||"")+'">Sair ('+esc((usuario.displayName||usuario.email||"").split(" ")[0])+')</button>' : "") +
@@ -6478,7 +6617,7 @@
     var donoAtivo = caps.isOwner && !state.gmPreviewJogador;
     var showGm = caps.mode === "mesa" && donoAtivo;
     var html = '<header class="top">' +
-      '<div class="brand"><h1 id="brand-title">'+(campanhaAtual ? 'Fichas de '+esc(campanhaAtual.nome||"campanha") : 'Fichas de Pangea')+'</h1><small>calculadora de personagens · Assimilação RPG'+(caps.mode==="mesa"?" · mesa ao vivo":"")+(state.gmPreviewJogador?" · vendo como jogador":"")+'</small></div>' +
+      '<div class="brand"><h1 id="brand-title">'+(campanhaAtual ? esc(campanhaAtual.nome||"Campanha") : 'Pangea')+'</h1><small>'+esc(sistemaNome(campanhaAtual && campanhaAtual.sistema))+' RPG'+(state.gmPreviewJogador?" · vendo como jogador":"")+'</small></div>' +
       '<nav class="tabs">' +
         (caps.mode==="mesa" && usuario ? '<button type="button" class="btn secondary" data-action="lobby" title="Minhas campanhas e fichas">⇦ Campanhas</button>' : "") +
         '<button data-nav="roster" aria-current="'+(active==="roster")+'">'+(caps.mode==="mesa"?"Personagens da Mesa":"Meus Personagens")+'</button>' +
@@ -6541,7 +6680,7 @@
         var camp = c.acampamento ? CAMPS[c.acampamento] : null;
         var maxNivelRoster = saudePontosMax(c);
         var pontosRoster = c.saudePontosAtuais!=null ? c.saudePontosAtuais : maxNivelRoster;
-        html += '<div class="char-card" style="--camp-color:'+(camp?camp.cor:'var(--accent)')+'" data-open="'+c.id+'">' +
+        html += '<div class="char-card" style="--camp-color:'+(camp?camp.cor:'var(--accent)')+'" data-open="'+esc(c.id)+'">' +
           (camp && camp.img ? '<img class="badge" src="'+esc(camp.img)+'" alt="">' : '') +
           '<h3>'+esc(c.nomePersonagem||"Sem nome")+npcBadgeHtml(c)+'</h3>' +
           '<div class="camp-tag">'+(camp?esc(camp.nome):(grupoLigado()?esc(grupoRotulo().toLowerCase())+" não definido":"&nbsp;"))+(c.nomeJogador?" · "+esc(c.nomeJogador):"")+'</div>' +
@@ -6625,7 +6764,7 @@
   function restaurarBackupAntigo(data, rerender){
     if(!podeEditar()) return;
     if(data && !Array.isArray(data) && Array.isArray(data.personagens)) data = data.personagens;
-    if(!data || !Array.isArray(data)){ alert("Esse arquivo não é um backup."); return; }
+    if(!data || !Array.isArray(data)){ avisar("Esse arquivo não é um backup."); return; }
     askConfirm("Esse é um backup antigo, só com fichas. Restaurar "+data.length+" ficha(s) em \""+(campanhaAtual.nome||"")+"\"?\n\nFichas com o mesmo código serão substituídas pela versão do arquivo.", function(){
       var list = loadChars();
       data.forEach(function(nc){
@@ -6645,7 +6784,7 @@
   function restaurarBackupCampanha(b, status){
     var cmp = campanhaAtual;
     if(b.campanha.id !== cmp.id){
-      alert("Esse backup é da campanha \""+((b.campanha.data && b.campanha.data.nome) || b.campanha.id)+"\". Abra essa campanha pra restaurar.");
+      avisar("Esse backup é da campanha \""+((b.campanha.data && b.campanha.data.nome) || b.campanha.id)+"\". Abra essa campanha pra restaurar.");
       return;
     }
     var quando = ""; try{ quando = new Date(b.geradoEm).toLocaleString("pt-BR"); }catch(e){}
@@ -6668,7 +6807,7 @@
       }).catch(function(err){
         console.error("[Pangea] restaurar backup", err);
         status("");
-        alert("Não deu pra restaurar: " + (err && (err.code || err.message) || "erro desconhecido") + ". Se algo já foi regravado, é só tentar de novo com o mesmo arquivo.");
+        avisar("Não deu pra restaurar: " + (err && (err.code || err.message) || "erro desconhecido") + ". Se algo já foi regravado, é só tentar de novo com o mesmo arquivo.");
       });
     });
   }
@@ -6682,7 +6821,7 @@
       baixarBackupCampanha("").then(function(b){
         status("Backup baixado: " + (resumoContagem(b, false) || "campanha vazia") + "." + (b.erros.length ? " Não deu pra ler: " + b.erros.join("; ") : ""));
       }).catch(function(err){
-        status(""); alert("Não deu pra baixar o backup: " + (err && (err.code || err.message) || "erro desconhecido"));
+        status(""); avisar("Não deu pra baixar o backup: " + (err && (err.code || err.message) || "erro desconhecido"));
       }).then(function(){ var bb = app.querySelector('[data-backup="baixar"]'); if(bb) bb.disabled = false; });
     });
     raiz.querySelector('[data-backup="arquivo"]').addEventListener("change", function(e){
@@ -6691,10 +6830,10 @@
       var r = new FileReader();
       r.onload = function(){
         var data = null;
-        try{ data = JSON.parse(String(r.result||"")); }catch(_){ alert("Esse arquivo não é um backup (não deu pra ler o .json)."); return; }
+        try{ data = JSON.parse(String(r.result||"")); }catch(_){ avisar("Esse arquivo não é um backup (não deu pra ler o .json)."); return; }
         if(data && data.tipo === "backup-campanha" && data.campanha && data.colecoes) restaurarBackupCampanha(data, status);
-        else if(data && data.tipo === "backup-completo-banco") alert("Esse é o backup do banco inteiro (feito pelo Console). Ele serve de cópia de segurança e não é restaurado por aqui.");
-        else if(data && data.tipo && data.tipo !== "backup-pangea") alert("Esse arquivo não é um backup de campanha (é de outro tipo: "+data.tipo+").");
+        else if(data && data.tipo === "backup-completo-banco") avisar("Esse é o backup do banco inteiro (feito pelo Console). Ele serve de cópia de segurança e não é restaurado por aqui.");
+        else if(data && data.tipo && data.tipo !== "backup-pangea") avisar("Esse arquivo não é um backup de campanha (é de outro tipo: "+data.tipo+").");
         else restaurarBackupAntigo(data, rerender);
       };
       r.readAsText(f);
@@ -6771,7 +6910,7 @@
         if(action === "back"){ state.wizStep = etapas[Math.max(0, pos-1)]; render(); return; }
         if(action === "next"){
           var v = validateStep(c, step);
-          if(!v.ok){ alert(v.msg); return; }
+          if(!v.ok){ avisar(v.msg); return; }
           state.wizStep = etapas[Math.min(etapas.length-1, pos+1)];
           render();
           return;
@@ -6780,7 +6919,7 @@
           // Confere todos os passos da campanha (pode ter pulado algum pelas bolinhas).
           for(var ie=0; ie<etapas.length; ie++){
             var vf = validateStep(c, etapas[ie]);
-            if(!vf.ok){ state.wizStep = etapas[ie]; render(); alert(vf.msg); return; }
+            if(!vf.ok){ state.wizStep = etapas[ie]; render(); avisar(vf.msg); return; }
           }
           var pend = fichaPendencias(c);
           if(pend.length && !c.__pendOk){
@@ -6896,9 +7035,9 @@
       '<label>'+label+'</label>' +
       (desc ? '<p class="hint attr-desc" style="margin-top:-2px">'+desc+'</p>' : '') +
       '<div class="stepper">' +
-        '<button type="button" class="stepper-btn" data-stepbtn="'+kind+'" data-id="'+id+'" data-dir="-1"'+(disabled?' disabled':'')+'>&minus;</button>' +
+        '<button type="button" class="stepper-btn" data-stepbtn="'+kind+'" data-id="'+esc(id)+'" data-dir="-1"'+(disabled?' disabled':'')+'>&minus;</button>' +
         '<input type="number" min="'+min+'" max="'+max+'" data-'+kind+'="'+id+'" value="'+value+'"'+(disabled?' disabled':'')+'>' +
-        '<button type="button" class="stepper-btn" data-stepbtn="'+kind+'" data-id="'+id+'" data-dir="1"'+(disabled?' disabled':'')+'>+</button>' +
+        '<button type="button" class="stepper-btn" data-stepbtn="'+kind+'" data-id="'+esc(id)+'" data-dir="1"'+(disabled?' disabled':'')+'>+</button>' +
       '</div>' +
     '</div>';
   }
@@ -7155,13 +7294,13 @@
           // Requisito vale sempre, inclusive na edição livre do Assimilador (pedido do Marco, 10/10/2026):
           // sem o requisito a caixa fica travada; uma que já estava marcada pode ser desmarcada.
           var ok = reqAtendido(c, t);
-          html += '<label class="trait'+(checked?" checked":"")+'"'+(!ok&&!checked?' style="opacity:.55"':'')+'><input type="checkbox" data-carac="'+t.id+'" '+(checked?"checked":"")+((!ok&&!checked)?" disabled":"")+'>' +
+          html += '<label class="trait'+(checked?" checked":"")+'"'+(!ok&&!checked?' style="opacity:.55"':'')+'><input type="checkbox" data-carac="'+esc(t.id)+'" '+(checked?"checked":"")+((!ok&&!checked)?" disabled":"")+'>' +
             '<span class="cost">'+t.custo+'</span><span class="txt"><b>'+t.nome+'</b>' +
             '<span class="hint" style="display:block;margin:1px 0 3px;'+(ok?'':'color:var(--danger)')+'">'+reqTexto(t)+(ok?'':' — falta '+reqFaltando(c, t))+'</span>' +
             '<span>'+iconizarTexto(t.txt)+'</span>';
           if(t.escolha && checked){
             var esc0 = (c.caracEscolhas||{})[t.id]||"";
-            html += '<div class="row" style="margin-top:6px"><label style="margin:0">Sentido:</label><select data-caracescolha="'+t.id+'"><option value="">escolha…</option>' +
+            html += '<div class="row" style="margin-top:6px"><label style="margin:0">Sentido:</label><select data-caracescolha="'+esc(t.id)+'"><option value="">escolha…</option>' +
               t.escolha.map(function(o){ return '<option value="'+o+'"'+(esc0===o?" selected":"")+'>'+o+'</option>'; }).join('') + '</select></div>';
           }
           html += '</span></label>';
@@ -7194,7 +7333,7 @@
       html += '<button type="button" class="kit-opt'+(!c.kitInicial?' selected':'')+'" data-kit="">' +
         '<h4>Nenhum</h4><p>Só o Artefato inicial.</p></button>';
       KITS_INICIAIS.forEach(function(k){
-        html += '<button type="button" class="kit-opt'+(c.kitInicial===k.id?' selected':'')+'" data-kit="'+k.id+'">' +
+        html += '<button type="button" class="kit-opt'+(c.kitInicial===k.id?' selected':'')+'" data-kit="'+esc(k.id)+'">' +
           '<h4>'+esc(k.nome)+'</h4>' +
           '<p>'+k.itens.map(function(it){ return esc(it[1]>1 ? it[0]+' x'+it[1] : it[0]); }).join(", ")+'</p>' +
         '</button>';
@@ -7684,7 +7823,7 @@
     app.querySelector('[data-itemaction="cancel"]').addEventListener("click", function(){ state.itemDraft = null; renderSheet(); });
     app.querySelector('[data-itemaction="add"]').addEventListener("click", function(){
       var nome = draft.nome.trim();
-      if(!nome){ alert("Dê um nome ao item."); return; }
+      if(!nome){ avisar("Dê um nome ao item."); return; }
       c.inventarioExtra.push(novoItem(nome, draft.desc||"", draft.traits));
       marcarPendenteOuSalvar(c, "inv");
       state.itemDraft = null;
@@ -8371,7 +8510,7 @@
     var collapseId = "mutcard-"+cat+"-"+cardIdx;
     var collapsed = !!state.collapsed[collapseId];
     var html = '<div class="card tight" style="margin-bottom:8px">' +
-      '<div class="row" style="justify-content:space-between;cursor:pointer" data-mutcardtoggle="'+collapseId+'">' +
+      '<div class="row" style="justify-content:space-between;cursor:pointer" data-mutcardtoggle="'+esc(collapseId)+'">' +
         '<b>'+esc(card[0])+'</b><span class="hint" style="margin:0">'+esc(card[1])+' · '+(collapsed?"▸":"▾")+'</span>' +
       '</div>';
     if(!collapsed){
@@ -8442,7 +8581,7 @@
         inoportunasComC.forEach(function(m){
           var card = MUT_DECKS[m.cat][m.cardIdx]; var tier = card[2][m.tierIdx];
           var total = custoSimbolos(m.custo).p;
-          body += '<button type="button" class="btn secondary" data-action="assim-clareza-c" data-mutid="'+m.id+'">'+esc(card[0]+" — "+tier[1])+' ('+(total-(m.neutralizadas||0))+'/'+total+' '+dadoHtml("p")+')</button>';
+          body += '<button type="button" class="btn secondary" data-action="assim-clareza-c" data-mutid="'+esc(m.id)+'">'+esc(card[0]+" — "+tier[1])+' ('+(total-(m.neutralizadas||0))+'/'+total+' '+dadoHtml("p")+')</button>';
         });
         body += '</div>';
       } else {
@@ -8514,7 +8653,7 @@
       '<p>'+formatEfeito(tier[2], true)+'</p>' +
       (totalP && m.cat==="H" ? '<p class="hint">'+(totalP-neutP)+' de '+totalP+' '+dadoHtml("p")+' ainda contam para a perda'+(neutP>=totalP?' · efeito cessado':'')+'. A Clareza de Propósito retira Pressão.</p>' : '') +
       (totalP && m.cat!=="H" ? '<p class="hint">Pressão de carta que não é Inoportuna não conta para a perda da ficha.</p>' : '') +
-      '<div class="cx-acoes"><button type="button" class="btn secondary" data-action="assim-remover" data-mutid="'+m.id+'">Remover mutação</button></div>';
+      '<div class="cx-acoes"><button type="button" class="btn secondary" data-action="assim-remover" data-mutid="'+esc(m.id)+'">Remover mutação</button></div>';
     return { titulo:esc(card[0]+" — "+tier[1]), corpo:corpo, lado:"direita", largura:420 };
   };
   function bindMutacoesCard(c){
@@ -8601,7 +8740,7 @@
     if(addManBtn) addManBtn.addEventListener("click", function(){
       var cat = manCatSel.value;
       var cardIdx = parseInt(manCardSel.value,10), tierIdx = parseInt(manTierSel.value,10);
-      if(tierJaAdquirido(c, cat, cardIdx, tierIdx)){ alert("Essa mutação já foi registrada."); return; }
+      if(tierJaAdquirido(c, cat, cardIdx, tierIdx)){ avisar("Essa mutação já foi registrada."); return; }
       var tier = MUT_DECKS[cat][cardIdx][2][tierIdx];
       c.mutAdquiridas.push({ id:uid(), cat:cat, cardIdx:cardIdx, tierIdx:tierIdx, custo:tier[0], neutralizadas:0, ts:new Date().toISOString() });
       perdidoParaAssimilacao(c);
@@ -8697,15 +8836,15 @@
       html += pedidas.map(function(id){
         var d = carDef(id); if(!d) return '';
         return '<div class="evol-item" style="margin-bottom:6px"><span><b>'+esc(d.nome)+'</b> · '+d.custo+' XP · '+(gm?'pedido do jogador':'aguardando o Assimilador')+(d.resumo?'<span class="hint" style="display:block">'+esc(d.resumo)+'</span>':'')+'</span><span class="row" style="gap:6px;flex:none">' +
-          (gm?'<button type="button" class="btn accent evol-btn" data-evolaprovar="'+id+'"'+(d.custo>saldo?" disabled":"")+'>Aprovar</button>':'') +
-          '<button type="button" class="btn secondary evol-btn" data-evolcancelar="'+id+'">'+(gm?'Recusar':'Cancelar pedido')+'</button></span></div>';
+          (gm?'<button type="button" class="btn accent evol-btn" data-evolaprovar="'+esc(id)+'"'+(d.custo>saldo?" disabled":"")+'>Aprovar</button>':'') +
+          '<button type="button" class="btn secondary evol-btn" data-evolcancelar="'+esc(id)+'">'+(gm?'Recusar':'Cancelar pedido')+'</button></span></div>';
       }).join('');
     }
     if(gm && (c.caracComp||[]).length){
       html += '<p class="hint" style="margin:0 0 6px">Compradas (só você, Assimilador, vê o botão de devolver):</p>';
       html += (c.caracComp||[]).map(function(id){
         var d = carDef(id); if(!d) return '';
-        return '<div class="evol-item" style="margin-bottom:6px"><span><b>'+esc(d.nome)+'</b> · '+d.custo+' XP</span><button type="button" class="btn secondary evol-btn" data-evolremover="'+id+'">Remover · devolve '+d.custo+'</button></div>';
+        return '<div class="evol-item" style="margin-bottom:6px"><span><b>'+esc(d.nome)+'</b> · '+d.custo+' XP</span><button type="button" class="btn secondary evol-btn" data-evolremover="'+esc(id)+'">Remover · devolve '+d.custo+'</button></div>';
       }).join('');
     }
     var elegiveis = CARACTERISTICAS.filter(function(d){ return !d.soCriacao && !temCarac(c,d.id) && pedidas.indexOf(d.id)===-1 && reqAtendido(c,d); });
@@ -9380,10 +9519,10 @@
         var m = modsDoTeste(c, t).filter(function(x){ return x.id === id; })[0];
         if(!m) return;
         var ligar = !modAtivo(m, t);
-        if(ligar && m.det && !determinacaoDisponivel(c)){ alert("Sem Pontos de Determinação para isso agora."); return; }
-        if(ligar && m.assim && !assimilacaoDisponivel(c)){ alert("Sem Pontos de Assimilação para isso agora."); return; }
+        if(ligar && m.det && !determinacaoDisponivel(c)){ avisar("Sem Pontos de Determinação para isso agora."); return; }
+        if(ligar && m.assim && !assimilacaoDisponivel(c)){ avisar("Sem Pontos de Assimilação para isso agora."); return; }
         // Mexer em quantos dados ficam mantidos depois de rolar não vale: só antes.
-        if(m.keep && t.results.length){ alert("Isso muda quantos dados são mantidos: ligue ou desligue antes de rolar."); return; }
+        if(m.keep && t.results.length){ avisar("Isso muda quantos dados são mantidos: ligue ou desligue antes de rolar."); return; }
         t.mods = t.mods || {};
         t.mods[id] = ligar;
         renderSheet();
@@ -9393,7 +9532,7 @@
     if(agirChk) agirChk.addEventListener("change", function(){
       var ligar = agirChk.checked;
       if(ligar){
-        if(!agirPorInstintoDisponivel(c)){ agirChk.checked = false; alert("Sem Pontos de Assimilação nem de Determinação: não dá pra Agir por Instinto agora."); return; }
+        if(!agirPorInstintoDisponivel(c)){ agirChk.checked = false; avisar("Sem Pontos de Assimilação nem de Determinação: não dá pra Agir por Instinto agora."); return; }
         if(assimilacaoDisponivel(c)){
           t.agirUsouAssim = true;
           gastarAssimilacao(c,1);
@@ -9416,7 +9555,7 @@
     if(extraChk) extraChk.addEventListener("change", function(){
       var ligar = extraChk.checked;
       if(ligar){
-        if(!extraDadoDisponivel(c)){ extraChk.checked = false; alert("Sem pontos de Determinação: não dá pra manter um dado extra agora."); return; }
+        if(!extraDadoDisponivel(c)){ extraChk.checked = false; avisar("Sem pontos de Determinação: não dá pra manter um dado extra agora."); return; }
         t.extraSnapshot = { caixaAtual:c.determinacao.caixaAtual, pontosAtual:c.determinacao.pontosAtual };
         if(gastarDeterminacao(c,1)) marcarFlashSuscetivel(c);
       } else if(t.extraSnapshot){
@@ -9434,7 +9573,7 @@
       var baseInst2 = (t.agir && t.instinto2Key) ? valorInstinto(c,t.instinto2Key) : 0;
       var dInst = baseInst + baseInst2;
       var d10 = (!t.agir && t.cpKey) ? valorCP(c,t.cpKey) : 0;
-      if(dInst+d10 <= 0){ alert("Esse Instinto (e Prática/Conhecimento, se não for Agir por Instinto) está em 0: não há dados pra rolar."); return; }
+      if(dInst+d10 <= 0){ avisar("Esse Instinto (e Prática/Conhecimento, se não for Agir por Instinto) está em 0: não há dados pra rolar."); return; }
       // O número de dados mantidos (keepN) é decidido AQUI, antes da rolagem: base de
       // 1 (ou 2, Agir por Instinto) mais 1 se "manter +1 dado extra" foi declarado
       // antes de rolar. Isso é o que o jogador vai poder ajustar (trocar QUAIS dados,
@@ -9498,7 +9637,7 @@
     var confirmBtn = app.querySelector('[data-testaction="confirm"]');
     if(confirmBtn) confirmBtn.addEventListener("click", function(){
       var keptNow = t.results.filter(function(d){return d.kept;});
-      if(!keptNow.length){ alert("Marque pelo menos um dado pra manter."); return; }
+      if(!keptNow.length){ avisar("Marque pelo menos um dado pra manter."); return; }
       var totS = sum(keptNow.map(function(d){return d.s;}));
       var totA = sum(keptNow.map(function(d){return d.a;}));
       var totP = sum(keptNow.map(function(d){return d.p;}));
@@ -9599,14 +9738,14 @@
       goto("sheet", {charId:id});
     });
     app.querySelector('[data-editaction="save"]').addEventListener("click", function(){
-      if(!draft.nomePersonagem || !draft.nomePersonagem.trim()){ alert("Dê um nome ao personagem."); return; }
+      if(!draft.nomePersonagem || !draft.nomePersonagem.trim()){ avisar("Dê um nome ao personagem."); return; }
       var semReqMsg = caracSemRequisitoMsg(draft);
-      if(semReqMsg){ alert(semReqMsg); return; }
+      if(semReqMsg){ avisar(semReqMsg); return; }
       var problemas = [];
       for(var s=3;s<=6;s++){
         var v = validateStep(draft, s);
         if(!v.ok){
-          if(!livre){ alert(v.msg); return; }
+          if(!livre){ avisar(v.msg); return; }
           problemas.push(v.msg);
         }
       }
@@ -9677,7 +9816,7 @@
     var camp = c.acampamento ? CAMPS[c.acampamento] : null;
     var cardStyle = (camp?'--camp-color:'+camp.cor+';':'')+'border-left:6px solid '+(camp?camp.cor:'var(--accent)')+';cursor:'+(soLeitura?'default':'pointer');
     var maxNivel = c.saudeMax != null ? c.saudeMax : (c.instintos ? saudePontosMax(c) : 1);
-    return '<div class="char-card" style="'+cardStyle+'"'+(soLeitura?'':' data-mesaopen="'+c.id+'"')+'>' +
+    return '<div class="char-card" style="'+cardStyle+'"'+(soLeitura?'':' data-mesaopen="'+esc(c.id)+'"')+'>' +
       (camp && camp.img ? '<img class="badge" src="'+esc(camp.img)+'" alt="">' : '') +
       '<h3>'+esc(c.nomePersonagem||"Sem nome")+npcBadgeHtml(c)+'</h3>' +
       '<div class="camp-tag">'+(camp?esc(camp.nome):(grupoLigado()?esc(grupoRotulo().toLowerCase())+" não definido":"&nbsp;"))+(c.nomeJogador?" · "+esc(c.nomeJogador):"")+'</div>' +
@@ -9714,7 +9853,7 @@
       '<div style="margin-bottom:10px"><span class="hint" style="display:block;margin-bottom:3px">Saúde (nível '+(c.saudeNivel!=null?c.saudeNivel:"?")+'/6'+(c.saudeNivel!=null&&NIVEIS_SAUDE[c.saudeNivel]?' · '+NIVEIS_SAUDE[c.saudeNivel]:'')+')</span>'+diamondsMini(c.saudePontosAtuais||0, maxNivel, "c-saude")+'</div>' +
       tugMiniBarHtml(c) +
       (d.soLeitura ? '<p class="hint" style="margin:10px 0 0">Ficha de outro jogador: só o resumo.</p>'
-        : '<div class="cx-acoes"><button type="button" class="btn accent" data-mesaopen="'+c.id+'">Abrir ficha</button></div>');
+        : '<div class="cx-acoes"><button type="button" class="btn accent" data-mesaopen="'+esc(c.id)+'">Abrir ficha</button></div>');
     return { titulo:esc(c.nomePersonagem||"Sem nome")+npcBadgeHtml(c), tituloTexto:c.nomePersonagem||"Ficha", corpo:corpo, lado:"direita", largura:380, cor:camp?camp.cor:null };
   };
   // Aba Mesa: no lugar do antigo rolador avulso de dados. Mostra o histórico geral
@@ -9954,7 +10093,6 @@
       var totA = sum(kept.map(function(d){return d.a;}));
       var totP = sum(kept.map(function(d){return d.p;}));
       body += '<div style="margin-top:14px">' +
-        '<p class="hint">Todos os dados contam por padrão. Clique num dado pra soltá-lo (ou clicar de novo pra mantê-lo).</p>' +
         '<div class="row" style="flex-wrap:wrap;gap:8px">';
       t.results.forEach(function(d, idx){
         body += '<button type="button" class="btn secondary" data-gmdrytoggle="'+idx+'" style="font-family:\'IBM Plex Mono\',monospace'+(d.kept?'':';opacity:.4;text-decoration:line-through')+'">d'+d.sides+': <b>'+d.face+'</b>'+(numeros?'':' ('+diceResultHtml(d)+')')+'</button>';
@@ -9962,8 +10100,7 @@
       body += '</div>';
       var somaFaces = sum(kept.map(function(d){ return d.face; }));
       body += '<div class="budget ok" style="margin-top:12px"><span>'+(t.mostrado?'Resultado (mostrado para a mesa)':'Resultado (só você vê)')+'</span><span class="num">'+(numeros ? 'Mantidos: '+(kept.map(function(d){ return d.face; }).join(", ")||"-")+' · Soma '+somaFaces : resultBadges(totS,totA,totP))+'</span></div>';
-      body += '<div class="row" style="gap:8px;align-items:center;flex-wrap:wrap"><button type="button" class="btn accent" data-gmdryaction="mostrar"'+(t.mostrado?' disabled':'')+'>'+(t.mostrado?'Mostrado para a mesa ✓':'📣 Mostrar para a mesa')+'</button>' +
-        '<span class="hint" style="margin:0">Abre a animação no centro da tela de todo mundo e entra no Histórico de Rolagens. Solte os dados que não contam antes de mostrar.</span></div>';
+      body += '<div class="row" style="gap:8px;align-items:center;flex-wrap:wrap"><button type="button" class="btn accent" data-gmdryaction="mostrar"'+(t.mostrado?' disabled':'')+'>'+(t.mostrado?'Mostrado para a mesa ✓':'📣 Mostrar para a mesa')+'</button></div>';
       body += '</div>';
     }
     return sectionCard("gmdryroll", "Rolagem Seca (Criaturas e NPCs)", body);
@@ -10175,7 +10312,7 @@
     var ops = [ apagar ? { tipo:"del", col:"encontros", id:enc.id } : { tipo:"set", col:"encontros", id:enc.id, data:JSON.parse(JSON.stringify(enc)) },
       pub ? { tipo:"set", col:"encontrosMesa", id:enc.id, data:pub } : { tipo:"del", col:"encontrosMesa", id:enc.id } ];
     if(!FB) return;
-    FB.escrever(ops).catch(function(e){ console.error("[Pangea] bestiário", e); alert("Não consegui salvar a criatura em cena. Confira a conexão e se as regras do Firestore têm os blocos encontros e encontrosMesa."); });
+    FB.escrever(ops).catch(function(e){ console.error("[Pangea] bestiário", e); avisar("Não consegui salvar a criatura em cena. Confira a conexão e se as regras do Firestore têm os blocos encontros e encontrosMesa."); });
   }
   // Descrição personalizada de uma criatura (o que os jogadores leem ao revelar):
   // fica guardada em "documentosNotas" com o id "bestdesc_<criatura>", coleção que
@@ -10188,7 +10325,7 @@
     shared.criaturas = lista;
     if(!FB) return Promise.resolve();
     return FB.escrever([ apagar ? { tipo:"del", col:"criaturas", id:cri.id } : { tipo:"set", col:"criaturas", id:cri.id, data:JSON.parse(JSON.stringify(cri)) } ])
-      .catch(function(e){ console.error("[Pangea] criaturas", e); alert("Não consegui salvar a criatura. Confira a conexão e se as regras do Firestore têm o bloco criaturas."); });
+      .catch(function(e){ console.error("[Pangea] criaturas", e); avisar("Não consegui salvar a criatura. Confira a conexão e se as regras do Firestore têm o bloco criaturas."); });
   }
   function gravarBestDesc(criId, texto){
     var cri = bestCriatura(criId); if(!cri) return;
@@ -10237,12 +10374,12 @@
         if(rep && (rep.s||rep.a||rep.p)){
           repTxt = '<span class="best-represa" title="Pontos já investidos nesta Ativação (ficam represados pra próxima rodada)">represado: ' +
             ["s","a","p"].filter(function(k){ return c[k]; }).map(function(k){ return (rep[k]||0)+'/'+c[k]+' '+dadoHtml(k); }).join(' ') +
-            '<button type="button" class="best-mini" data-bdesrepresar="'+enc.id+'" data-bg="'+gi+'" data-ba="'+ai+'" title="Devolver os pontos represados">↩</button></span>';
+            '<button type="button" class="best-mini" data-bdesrepresar="'+esc(enc.id)+'" data-bg="'+gi+'" data-ba="'+ai+'" title="Devolver os pontos represados">↩</button></span>';
         }
         html += '<div class="best-ativ best-ativ-'+tipo+'"><div class="best-ativ-cab"><b>'+esc(a.n)+'</b>'+bestCustoHtml(c, a.x) + repTxt +
           (enc && temCusto ? '<span class="best-ativ-acoes">' +
-            (podeRepresar ? '<button type="button" class="btn secondary doc-btn" data-brepresar="'+enc.id+'" data-bg="'+gi+'" data-ba="'+ai+'" title="Investe o que der agora; o resto fica pra próxima rodada">Represar</button>' : '') +
-            '<button type="button" class="btn '+(pode?'accent':'secondary')+' doc-btn best-pagar" data-bpagar="'+enc.id+'" data-bg="'+gi+'" data-ba="'+ai+'"'+(pode?'':' disabled')+' title="Desconta o custo (usa primeiro o que já está represado)">Pagar</button></span>' : '') +
+            (podeRepresar ? '<button type="button" class="btn secondary doc-btn" data-brepresar="'+esc(enc.id)+'" data-bg="'+gi+'" data-ba="'+ai+'" title="Investe o que der agora; o resto fica pra próxima rodada">Represar</button>' : '') +
+            '<button type="button" class="btn '+(pode?'accent':'secondary')+' doc-btn best-pagar" data-bpagar="'+esc(enc.id)+'" data-bg="'+gi+'" data-ba="'+ai+'"'+(pode?'':' disabled')+' title="Desconta o custo (usa primeiro o que já está represado)">Pagar</button></span>' : '') +
           '</div><p>'+bestTextoHtml(a.t, chave+"-"+gi+"-"+ai)+'</p></div>';
       });
     });
@@ -10262,8 +10399,8 @@
     var html = '<div class="best-desg"><p class="best-grupo-tit best-tipo-desg" style="margin-top:0">Desgaste'+(faseNum?' (fase '+faseNum+')':'')+'</p>';
     if(enc){
       html += '<div class="row" style="gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:6px"><span>Sucessos rolados pela criatura: <b>'+atual+'</b></span>' +
-        '<button type="button" class="best-mini" data-bdesg="'+enc.id+'" data-bv="-1"'+(atual<=0?' disabled':'')+'>−</button>' +
-        '<button type="button" class="best-mini" data-bdesg="'+enc.id+'" data-bv="1">+</button>' +
+        '<button type="button" class="best-mini" data-bdesg="'+esc(enc.id)+'" data-bv="-1"'+(atual<=0?' disabled':'')+'>−</button>' +
+        '<button type="button" class="best-mini" data-bdesg="'+esc(enc.id)+'" data-bv="1">+</button>' +
         '<span class="hint" style="margin:0">(soma sozinho a cada Rolar Ativação)</span></div>';
     }
     lista.forEach(function(d, i){
@@ -10296,48 +10433,48 @@
   }
   function bestEncontroHtml(enc){
     var cri = encCri(enc);
-    if(!cri) return '<div class="item-card"><p class="hint">Criatura desconhecida ('+esc(enc.criaturaId)+').</p><button type="button" class="btn secondary doc-btn" data-bencerrar="'+enc.id+'">Tirar de cena</button></div>';
+    if(!cri) return '<div class="item-card"><p class="hint">Criatura desconhecida ('+esc(enc.criaturaId)+').</p><button type="button" class="btn secondary doc-btn" data-bencerrar="'+esc(enc.id)+'">Tirar de cena</button></div>';
     var fase = bestFaseAtual(cri, enc.suc||0);
     var p = enc.pontos || {s:0,a:0,p:0};
     var aberto = !(state.bestEncFechado||{})[enc.id];
-    var html = '<details class="item-card best-enc" data-benc="'+enc.id+'"'+(aberto?' open':'')+'><summary class="best-enc-cab">' +
+    var html = '<details class="item-card best-enc" data-benc="'+esc(enc.id)+'"'+(aberto?' open':'')+'><summary class="best-enc-cab">' +
       '<span class="best-enc-nome">'+esc(enc.nome)+'</span>' +
       '<span class="item-chips"><span class="item-chip">'+bestPilhaTexto(cri.pilha)+'</span>' +
         '<span class="item-chip esc">'+(enc.suc||0)+'/'+enc.alvo+'</span>' +
         (enc.revelada?'<span class="item-chip">revelada</span>':'')+(enc.progresso?'<span class="item-chip">progresso visível</span>':'')+'</span></summary>';
     if(fase) html += '<p class="best-fase">'+esc(fase.nome)+'</p>';
-    html += bestContadorHtml("Neutralizar Ameaça", enc.suc||0, enc.alvo, 'data-bcont="'+enc.id+'" data-btrilha="-1"', null, false);
+    html += bestContadorHtml("Neutralizar Ameaça", enc.suc||0, enc.alvo, 'data-bcont="'+esc(enc.id)+'" data-btrilha="-1"', null, false);
     (enc.trilhas||[]).forEach(function(t, ti){
-      html += bestContadorHtml(t.nome, t.atual||0, t.alvo, 'data-bcont="'+enc.id+'" data-btrilha="'+ti+'"', 'data-btrmostrar="'+enc.id+'" data-btrilha="'+ti+'"', t.mostrar);
+      html += bestContadorHtml(t.nome, t.atual||0, t.alvo, 'data-bcont="'+esc(enc.id)+'" data-btrilha="'+ti+'"', 'data-btrmostrar="'+esc(enc.id)+'" data-btrilha="'+ti+'"', t.mostrar);
     });
     // Pontos da Ameaça (o que sobrou das rolagens de Ativação, represado)
     html += '<div class="best-pontos"><span class="hint" style="margin:0">Pontos da Ameaça:</span>' +
       ["s","a","p"].map(function(k){
         return '<span class="best-ponto">'+dadoHtml(k)+' <b>'+(p[k]||0)+'</b>' +
-          '<button type="button" class="best-mini" data-bponto="'+enc.id+'" data-bk="'+k+'" data-bv="-1"'+((p[k]||0)<=0?' disabled':'')+'>−</button>' +
-          '<button type="button" class="best-mini" data-bponto="'+enc.id+'" data-bk="'+k+'" data-bv="1">+</button></span>';
+          '<button type="button" class="best-mini" data-bponto="'+esc(enc.id)+'" data-bk="'+k+'" data-bv="-1"'+((p[k]||0)<=0?' disabled':'')+'>−</button>' +
+          '<button type="button" class="best-mini" data-bponto="'+esc(enc.id)+'" data-bk="'+k+'" data-bv="1">+</button></span>';
       }).join('') +
-      '<button type="button" class="btn accent doc-btn" data-brolar="'+enc.id+'">🎲 Rolar Ativação</button>' +
-      '<button type="button" class="btn secondary doc-btn" data-bzerar="'+enc.id+'"'+((p.s||p.a||p.p)?'':' disabled')+' title="Pontos livres que não pagaram nem foram represados em nenhuma Ativação se perdem">Fim da rodada: descartar sobras</button></div>';
+      '<button type="button" class="btn accent doc-btn" data-brolar="'+esc(enc.id)+'">🎲 Rolar Ativação</button>' +
+      '<button type="button" class="btn secondary doc-btn" data-bzerar="'+esc(enc.id)+'"'+((p.s||p.a||p.p)?'':' disabled')+' title="Pontos livres que não pagaram nem foram represados em nenhuma Ativação se perdem">Fim da rodada: descartar sobras</button></div>';
     html += '<div class="hint ajuda" style="margin:4px 0 0"><p>A rolagem mantém todos os dados e soma aos pontos (Sucesso, Adaptação e Pressão). Todo ponto deve ser investido na rodada:</p><ul><li><b>Pagar</b> uma Ativação;</li><li><b>Represar</b> numa incompleta (fica guardado nela para a próxima rodada).</li></ul><p>O que não pagar nada se perde no fim da rodada.</p></div>';
-    html += bestRolagemHtml(enc.rolagem, 'data-bmostrar="'+enc.id+'"', 'data-bfecharrol="'+enc.id+'"');
+    html += bestRolagemHtml(enc.rolagem, 'data-bmostrar="'+esc(enc.id)+'"', 'data-bfecharrol="'+esc(enc.id)+'"');
     if((cri.cond||[]).length) html += '<div class="lx-lista" style="margin:8px 0">'+caixaLinha("bcond", enc.id, "Condicionantes", esc(cri.cond.map(function(x){ return x.n; }).join(" · ")), '<span class="lx-sel">'+cri.cond.length+'</span>')+'</div>';
     html += '<div class="best-ativs">'+bestAtivacoesHtml(cri, "e"+enc.id, enc)+'</div>';
     html += bestDesgasteHtml(cri, enc, "e"+enc.id);
     if(cri.nota) html += '<p class="item-nota">'+bestTextoHtml(cri.nota, "e"+enc.id+"-nota")+'</p>';
     // O que a mesa vê
     html += '<div class="best-mesa"><p class="best-grupo-tit" style="margin-top:0">O que os jogadores veem</p>' +
-      '<label class="best-check"><input type="checkbox" data-brevelar="'+enc.id+'"'+(enc.revelada?' checked':'')+'> Revelar criatura (nome e descrição, com aviso na tela de todos)</label>' +
-      '<label class="best-check"><input type="checkbox" data-bprogresso="'+enc.id+'"'+(enc.progresso?' checked':'')+'> Mostrar o progresso para Neutralizar</label>' +
+      '<label class="best-check"><input type="checkbox" data-brevelar="'+esc(enc.id)+'"'+(enc.revelada?' checked':'')+'> Revelar criatura (nome e descrição, com aviso na tela de todos)</label>' +
+      '<label class="best-check"><input type="checkbox" data-bprogresso="'+esc(enc.id)+'"'+(enc.progresso?' checked':'')+'> Mostrar o progresso para Neutralizar</label>' +
       ((state.bestEditEnc||{})[enc.id]
-        ? '<div class="best-edit"><div class="field" style="margin:6px 0 0"><label>Nome mostrado</label><input type="text" data-bnome="'+enc.id+'" value="'+esc(enc.nome)+'"></div>' +
-          '<div class="field" style="margin:6px 0 0"><label>Descrição para os jogadores</label><textarea data-bdesc="'+enc.id+'" style="min-height:90px">'+esc(enc.descMesa||"")+'</textarea></div>' +
-          '<label class="best-check"><input type="checkbox" data-bdescpadrao="'+enc.id+'"> Usar esta descrição como padrão da criatura (próximas vezes em cena)</label>' +
-          '<div class="row" style="gap:6px;margin-top:6px"><button type="button" class="btn accent doc-btn" data-bsalvaredit="'+enc.id+'">Salvar</button><button type="button" class="btn secondary doc-btn" data-bcanceledit="'+enc.id+'">Cancelar</button></div></div>'
+        ? '<div class="best-edit"><div class="field" style="margin:6px 0 0"><label>Nome mostrado</label><input type="text" data-bnome="'+esc(enc.id)+'" value="'+esc(enc.nome)+'"></div>' +
+          '<div class="field" style="margin:6px 0 0"><label>Descrição para os jogadores</label><textarea data-bdesc="'+esc(enc.id)+'" style="min-height:90px">'+esc(enc.descMesa||"")+'</textarea></div>' +
+          '<label class="best-check"><input type="checkbox" data-bdescpadrao="'+esc(enc.id)+'"> Usar esta descrição como padrão da criatura (próximas vezes em cena)</label>' +
+          '<div class="row" style="gap:6px;margin-top:6px"><button type="button" class="btn accent doc-btn" data-bsalvaredit="'+esc(enc.id)+'">Salvar</button><button type="button" class="btn secondary doc-btn" data-bcanceledit="'+esc(enc.id)+'">Cancelar</button></div></div>'
         : '<div class="best-previa"><div class="best-enc-nome">'+esc(enc.nome)+'</div><p class="item-nota" style="margin-top:2px">'+(enc.descMesa ? esc(enc.descMesa) : '<i>Sem descrição.</i>')+'</p>' +
-          '<button type="button" class="btn secondary doc-btn" data-beditenc="'+enc.id+'">✏️ Editar o que os jogadores veem</button></div>') +
+          '<button type="button" class="btn secondary doc-btn" data-beditenc="'+esc(enc.id)+'">✏️ Editar o que os jogadores veem</button></div>') +
       '<p class="hint" style="margin:4px 0 0">'+(enc.revelada||enc.progresso ? 'Visível na aba Mesa e no Histórico flutuante.' : 'Escondida: os jogadores não veem nada desta criatura.')+'</p></div>';
-    html += '<div class="btn-row" style="margin-top:8px"><span></span><button type="button" class="btn secondary doc-btn" data-bencerrar="'+enc.id+'">Tirar de cena</button></div>';
+    html += '<div class="btn-row" style="margin-top:8px"><span></span><button type="button" class="btn secondary doc-btn" data-bencerrar="'+esc(enc.id)+'">Tirar de cena</button></div>';
     return html + '</details>';
   }
   function bestCatalogoHtml(){
@@ -10355,12 +10492,12 @@
             '<span class="item-chip">'+bestPilhaTexto(cri.pilha)+'</span><span class="item-chip esc">'+cri.suc+' Sucessos</span></span></div>' +
           ((cri.sub||cri.perfil) ? '<p class="item-nota" style="margin-top:2px">'+esc([cri.sub, cri.perfil].filter(Boolean).join(" · "))+'</p>' : '') +
           '<div class="row" style="gap:6px;flex-wrap:wrap;margin-top:8px">' +
-            '<button type="button" class="btn accent doc-btn" data-bcena="'+cri.id+'">⚔ Colocar em cena</button>' +
+            '<button type="button" class="btn accent doc-btn" data-bcena="'+esc(cri.id)+'">⚔ Colocar em cena</button>' +
             '<button type="button" class="btn secondary doc-btn" '+caixaAttr("bficha", cri.id)+' aria-haspopup="dialog">Ver ficha ›</button>' +
-            '<button type="button" class="btn secondary doc-btn" data-brolcat="'+cri.id+'">🎲 Rolar Ativação</button>' +
-            '<button type="button" class="btn secondary doc-btn" data-beditar="'+cri.id+'">✏️ Editar</button>' +
-            '<button type="button" class="btn secondary doc-btn" data-bcopiar="'+cri.id+'" title="Copia só esta criatura em código, para colar em outra campanha">Copiar código</button></div>' +
-          bestRolagemHtml(rolCat[cri.id], 'data-bmostrarcat="'+cri.id+'"', 'data-bfecharrolcat="'+cri.id+'"');
+            '<button type="button" class="btn secondary doc-btn" data-brolcat="'+esc(cri.id)+'">🎲 Rolar Ativação</button>' +
+            '<button type="button" class="btn secondary doc-btn" data-beditar="'+esc(cri.id)+'">✏️ Editar</button>' +
+            '<button type="button" class="btn secondary doc-btn" data-bcopiar="'+esc(cri.id)+'" title="Copia só esta criatura em código, para colar em outra campanha">Copiar código</button></div>' +
+          bestRolagemHtml(rolCat[cri.id], 'data-bmostrarcat="'+esc(cri.id)+'"', 'data-bfecharrolcat="'+esc(cri.id)+'"');
         html += '</div>';
       });
       html += '</details>';
@@ -10371,11 +10508,11 @@
   function bestFichaCaixaHtml(cri){
           var editCat = (state.bestEditCat||{})[cri.id], custom = false;
           var html = '<div class="best-ficha">' + (editCat
-            ? '<div class="field" style="margin:0"><label>Descrição para os jogadores (padrão desta criatura)</label><textarea data-bdesccat="'+cri.id+'" style="min-height:90px">'+esc(bestDescMesa(cri))+'</textarea></div>' +
-              '<div class="row" style="gap:6px;margin:6px 0 8px;flex-wrap:wrap"><button type="button" class="btn accent doc-btn" data-bsalvacat="'+cri.id+'">Salvar</button><button type="button" class="btn secondary doc-btn" data-bcancelcat="'+cri.id+'">Cancelar</button>' +
+            ? '<div class="field" style="margin:0"><label>Descrição para os jogadores (padrão desta criatura)</label><textarea data-bdesccat="'+esc(cri.id)+'" style="min-height:90px">'+esc(bestDescMesa(cri))+'</textarea></div>' +
+              '<div class="row" style="gap:6px;margin:6px 0 8px;flex-wrap:wrap"><button type="button" class="btn accent doc-btn" data-bsalvacat="'+esc(cri.id)+'">Salvar</button><button type="button" class="btn secondary doc-btn" data-bcancelcat="'+esc(cri.id)+'">Cancelar</button>' +
               '</div>'
             : '<p class="item-nota" style="margin-top:0"><b>Descrição (jogadores'+(custom?', editada':'')+'):</b> '+esc(bestDescMesa(cri))+'</p>' +
-              '<button type="button" class="btn secondary doc-btn" data-beditcat="'+cri.id+'" style="margin-bottom:6px">✏️ Editar descrição</button>') +
+              '<button type="button" class="btn secondary doc-btn" data-beditcat="'+esc(cri.id)+'" style="margin-bottom:6px">✏️ Editar descrição</button>') +
             ((cri.trilhas||[]).length ? '<p class="item-nota">'+cri.trilhas.map(function(t){ return '<b>'+esc(t.nome)+':</b> '+t.alvo+' Sucessos'; }).join(' · ')+'</p>' : '') +
             bestCondHtml(cri, "c"+cri.id) + bestAtivacoesHtml(cri, "c"+cri.id, null) + bestDesgasteHtml(cri, null, "c"+cri.id) +
             (cri.nota ? '<p class="item-nota">'+bestTextoHtml(cri.nota, "c"+cri.id+"-nota")+'</p>' : '') + '</div>';
@@ -10564,7 +10701,7 @@
     on("[data-becancelar]", "click", function(){ state.bestEdit = null; rerender(); });
     on("[data-besalvar]", "click", function(){
       var limpa = criaturaLimpa(c);
-      if(!limpa.nome){ alert("Dê um nome à criatura."); return; }
+      if(!limpa.nome){ avisar("Dê um nome à criatura."); return; }
       if(ed.nova){
         limpa.id = slugCriatura(limpa.nome);
         limpa.ordem = criaturasLista().reduce(function(m, x){ return Math.max(m, x.ordem||0); }, 0) + 1;
@@ -10608,7 +10745,7 @@
     var oque = comoCodigo ? "código" : "arquivo";
     var lista = lerListaArquivo(texto, "catalogo-criaturas-assimilacao", "criaturas", "criaturas", comoCodigo); if(!lista) return;
     var validas = lista.filter(function(c){ return c && typeof c === "object" && String(c.nome||"").trim() && (c.pilha || c.grupos || c.suc != null || c.categoria || c.cat); });
-    if(!validas.length){ if(!avisoTipoProvavel(lista, "criaturas", comoCodigo)) alert("Não achei criaturas com nome nesse "+oque+"."); return; }
+    if(!validas.length){ if(!avisoTipoProvavel(lista, "criaturas", comoCodigo)) avisar("Não achei criaturas com nome nesse "+oque+"."); return; }
     var existentes = validas.filter(function(c){ return c.id && bestCriatura(c.id); }).length;
     var nomeCmp = (campanhaAtual && campanhaAtual.nome) || "esta campanha";
     var uma = validas.length === 1 && validas[0].nome;
@@ -10631,8 +10768,8 @@
       var ids = novas.map(function(c){ return c.id; });
       shared.criaturas = (shared.criaturas||[]).filter(function(x){ return ids.indexOf(x.id) < 0; }).concat(novas);
       rerender();
-      if(FB) FB.escrever(ops).then(function(){ alert(novas.length+" criatura"+(novas.length>1?"s importadas":" importada")+"."); })
-        .catch(function(e){ console.error("[Pangea] importar criaturas", e); alert("Não deu pra importar: " + (e && (e.code || e.message) || "erro desconhecido") + ". Confira se as regras do Firestore têm o bloco criaturas."); });
+      if(FB) FB.escrever(ops).then(function(){ avisar(novas.length+" criatura"+(novas.length>1?"s importadas":" importada")+".", "ok"); })
+        .catch(function(e){ console.error("[Pangea] importar criaturas", e); avisar("Não deu pra importar: " + (e && (e.code || e.message) || "erro desconhecido") + ". Confira se as regras do Firestore têm o bloco criaturas."); });
     });
   }
 
@@ -10640,7 +10777,7 @@
     var encs = encontrosLista();
     var body = '<div id="gm-bestiario">';
     body += '<p class="best-grupo-tit" style="margin-top:0">Em cena'+(encs.length?' ('+encs.length+')':'')+'</p>';
-    if(!encs.length) body += '<div class="hint ajuda"><p>Nenhuma criatura em cena. Escolha uma no catálogo e clique em “Colocar em cena”.</p><p>Os jogadores só veem o que você revelar.</p></div>';
+    if(!encs.length) body += '<p class="hint">Nenhuma criatura em cena.</p>';
     encs.forEach(function(enc){ body += bestEncontroHtml(enc); });
     body += '<p class="best-grupo-tit">Catálogo</p>';
     if(state.bestEdit){ body += bestEditorHtml(); }
@@ -10656,7 +10793,6 @@
         '<div class="field" style="max-width:320px;margin:0 0 6px"><input type="search" id="best-busca" placeholder="Buscar criatura…" value="'+esc(state.bestBusca||"")+'"></div>';
       body += bestCatalogoHtml();
     }
-    body += '<div class="hint ajuda" style="margin-top:10px"><p>Os gimmicks não são automáticos: as condicionantes ficam descritas, e você decide quando valem.</p><p>Os botões 🎲 nos textos rolam só o dano.</p></div>';
     return sectionCard("gmbestiario", "Bestiário", body + '</div>');
   }
   function bestAplicarBusca(raiz){
@@ -10690,7 +10826,7 @@
     on("[data-bcolarcancel]", "click", function(){ state.bestColar = false; rerender(); });
     on("[data-bcolarok]", "click", function(){
       var txt = String((raiz.querySelector("#best-colar")||{}).value || "").trim();
-      if(!txt){ alert("Cole o código primeiro."); return; }
+      if(!txt){ avisar("Cole o código primeiro."); return; }
       importarCatalogo(txt, rerender, true, function(){ state.bestColar = false; });
     });
     var arq = raiz.querySelector("[data-bimpfile]");
@@ -10815,7 +10951,7 @@
     on("[data-beditenc]", "click", function(el){ (state.bestEditEnc = state.bestEditEnc || {})[el.getAttribute("data-beditenc")] = true; rerender(); });
     on("[data-bcanceledit]", "click", function(el){ delete (state.bestEditEnc||{})[el.getAttribute("data-bcanceledit")]; rerender(); });
     on("[data-bsalvaredit]", "click", function(el){ comEnc(el, "data-bsalvaredit", function(enc){
-      var nome = raiz.querySelector('[data-bnome="'+enc.id+'"]'), desc = raiz.querySelector('[data-bdesc="'+enc.id+'"]'), pad = raiz.querySelector('[data-bdescpadrao="'+enc.id+'"]');
+      var nome = raiz.querySelector('[data-bnome="'+esc(enc.id)+'"]'), desc = raiz.querySelector('[data-bdesc="'+esc(enc.id)+'"]'), pad = raiz.querySelector('[data-bdescpadrao="'+esc(enc.id)+'"]');
       if(nome) enc.nome = nome.value.trim() || enc.nome;
       if(desc) enc.descMesa = desc.value;
       if(pad && pad.checked) gravarBestDesc(enc.criaturaId, enc.descMesa);
@@ -10825,7 +10961,7 @@
     on("[data-beditcat]", "click", function(el){ (state.bestEditCat = state.bestEditCat || {})[el.getAttribute("data-beditcat")] = true; rerender(); });
     on("[data-bcancelcat]", "click", function(el){ delete (state.bestEditCat||{})[el.getAttribute("data-bcancelcat")]; rerender(); });
     on("[data-bsalvacat]", "click", function(el){
-      var id = el.getAttribute("data-bsalvacat"), ta = raiz.querySelector('[data-bdesccat="'+id+'"]');
+      var id = el.getAttribute("data-bsalvacat"), ta = raiz.querySelector('[data-bdesccat="'+esc(id)+'"]');
       if(ta) gravarBestDesc(id, ta.value);
       delete (state.bestEditCat||{})[id]; rerender();
     });
@@ -10903,7 +11039,7 @@
   // nome opcional, uma meta de Sucessos e uma contagem que sobe/desce.
   function renderGmConflitos(){
     var conflitos = loadLS("pangea:gm:conflitos", []);
-    var body = '<div class="hint ajuda"><p>Monte um conflito (perseguição, cerco, negociação prolongada…) com quantos Sucessos ele exige para ser resolvido.</p><p>Vá somando o placar conforme os testes acontecem na mesa.</p></div>';
+    var body = '';
     body += '<div class="row" style="gap:8px;flex-wrap:wrap;align-items:flex-end">' +
       '<div class="field" style="max-width:220px;margin:0"><label>Nome do conflito (opcional)</label><input type="text" id="conflito-nome" placeholder="ex: Fuga do posto avançado"></div>' +
       '<div class="field" style="max-width:150px;margin:0"><label>Sucessos p/ resolver</label><input type="number" id="conflito-alvo" min="1" max="99" value="5"></div>' +
@@ -10918,9 +11054,9 @@
         body += '<div class="trait'+(resolvido?" checked":"")+'" style="cursor:default;align-items:center">' +
           '<span class="txt"><b>'+esc(cf.nome||"Conflito")+'</b><span>'+cf.atual+' / '+cf.alvo+' Sucessos'+(resolvido?' — resolvido!':'')+'</span></span>' +
           '<div class="row" style="gap:4px;flex-wrap:nowrap;flex:none">' +
-            '<button type="button" class="btn secondary" data-conflito="menos" data-id="'+cf.id+'" style="padding:2px 8px" '+(cf.atual<=0?"disabled":"")+'>&minus;</button>' +
-            '<button type="button" class="btn secondary" data-conflito="mais" data-id="'+cf.id+'" style="padding:2px 8px" '+(cf.atual>=cf.alvo?"disabled":"")+'>+</button>' +
-            '<button type="button" class="btn secondary" data-conflito="remover" data-id="'+cf.id+'" style="padding:2px 8px">remover</button>' +
+            '<button type="button" class="btn secondary" data-conflito="menos" data-id="'+esc(cf.id)+'" style="padding:2px 8px" '+(cf.atual<=0?"disabled":"")+'>&minus;</button>' +
+            '<button type="button" class="btn secondary" data-conflito="mais" data-id="'+esc(cf.id)+'" style="padding:2px 8px" '+(cf.atual>=cf.alvo?"disabled":"")+'>+</button>' +
+            '<button type="button" class="btn secondary" data-conflito="remover" data-id="'+esc(cf.id)+'" style="padding:2px 8px">remover</button>' +
           '</div>' +
         '</div>';
       });
@@ -11089,7 +11225,7 @@
   function importarItensArquivo(texto, rerender, comoCodigo, aoConfirmar){
     var lista = lerListaArquivo(texto, "itens-assimilacao", "itens", "itens", comoCodigo); if(!lista) return;
     var r = itensOpsImportar(lista);
-    if(!r.ops.length){ if(!avisoTipoProvavel(lista, "itens", comoCodigo)) alert("Não achei itens com nome nesse "+(comoCodigo?"código":"arquivo")+"."); return; }
+    if(!r.ops.length){ if(!avisoTipoProvavel(lista, "itens", comoCodigo)) avisar("Não achei itens com nome nesse "+(comoCodigo?"código":"arquivo")+"."); return; }
     var nome = (campanhaAtual && campanhaAtual.nome) || "esta campanha";
     var um = r.n === 1 && lista.length === 1 && lista[0].nome;
     askConfirm((um ? 'Importar o item "'+um+'" para '+nome+'?' : "Importar "+r.n+" ite"+(r.n>1?"ns":"m")+" para "+nome+"?")+(r.existentes?(um ? "\n\nEle já existe e será substituído (quem já recebeu continua com o seu)." : "\n\n"+r.existentes+" já existe"+(r.existentes>1?"m":"")+" e ser"+(r.existentes>1?"ão substituídos":"á substituído")+" (quem já recebeu continua com o seu)."):""), function(){
@@ -11100,7 +11236,7 @@
   }
   function gravarItensPool(ops){
     if(!FB) return Promise.resolve();
-    return FB.escrever(ops).catch(function(e){ console.error("[Pangea] itens", e); alert("Não consegui salvar o item. Confira a conexão e se as regras do Firestore têm o bloco itensPool."); });
+    return FB.escrever(ops).catch(function(e){ console.error("[Pangea] itens", e); avisar("Não consegui salvar o item. Confira a conexão e se as regras do Firestore têm o bloco itensPool."); });
   }
   function itensPoolFiltrados(){
     var f = state.itemFiltro || {};
@@ -11133,8 +11269,6 @@
       html += '</div>';
       return html;
     }
-    html += '<div class="hint ajuda" style="margin-bottom:10px"><p>Itens que o grupo pode encontrar. Os jogadores não veem esta lista. Ao entregar, o item vai direto para o Inventário adicional do personagem.</p>' +
-      '<ul><li><b>Exportar</b>: baixa todos os itens em .json (sem as entregas).</li><li>Para levar só um: abra o item, use <b>Copiar código</b> e <b>Colar código</b> na outra campanha.</li></ul></div>';
     html += '<div class="btn-row" style="justify-content:flex-start;gap:8px;flex-wrap:wrap"><button type="button" class="btn accent" data-ipacao="novo">+ Novo item</button><button type="button" class="btn secondary" data-ipacao="importar-arq">Importar itens</button><button type="button" class="btn secondary" data-ipacao="exportar"'+(itensPoolLista().length?'':' disabled')+'>Exportar itens</button><button type="button" class="btn secondary" data-ipacao="importar">Colar código</button><input type="file" accept=".json,application/json" data-ipimpfile style="display:none"></div>';
     if(state.itemImportar){
       html += '<div class="field" style="margin-top:10px"><label>Cole o código (do Copiar código ou de um arquivo exportado)</label><textarea id="item-import" style="min-height:120px" placeholder="{ &quot;tipo&quot;: &quot;itens-assimilacao&quot;, ... }"></textarea>' +
@@ -11191,12 +11325,12 @@
       '<p class="item-nota"><b>Qualidade:</b> '+esc(itemQualTexto(it))+(nomes.length ? ' · <b>Entregue a:</b> '+esc(nomes.join(", ")) : '')+'</p>' +
       (it.nota ? '<p class="item-nota"><b>Nota:</b> '+esc(it.nota)+'</p>' : '') +
       '<div class="item-controles"><span class="grupo fim">' +
-        '<button type="button" class="btn accent" data-ipentregar="'+it.id+'">Entregar</button>' +
-        (sorteado ? '' : '<button type="button" class="btn secondary" data-ipeditar="'+it.id+'">Editar</button><button type="button" class="btn secondary" data-ipcopiar="'+it.id+'" title="Copia só este item em código, para colar em outra campanha (sem as entregas)">Copiar código</button><button type="button" class="btn secondary" data-ipexcluir="'+it.id+'">Excluir</button>') +
+        '<button type="button" class="btn accent" data-ipentregar="'+esc(it.id)+'">Entregar</button>' +
+        (sorteado ? '' : '<button type="button" class="btn secondary" data-ipeditar="'+esc(it.id)+'">Editar</button><button type="button" class="btn secondary" data-ipcopiar="'+esc(it.id)+'" title="Copia só este item em código, para colar em outra campanha (sem as entregas)">Copiar código</button><button type="button" class="btn secondary" data-ipexcluir="'+esc(it.id)+'">Excluir</button>') +
       '</span></div>';
     if(state.itemEntregar === it.id && (sorteado || state.itemSorteado !== it.id)){
       html += '<div class="doc-entrega"><p class="hint" style="margin:0 0 6px">Quem fica com o item?</p><div class="row" style="gap:6px 14px;flex-wrap:wrap">' +
-        loadChars().map(function(ch, i){ return '<label style="display:flex;align-items:center;gap:5px;text-transform:none;margin:0"><input type="radio" name="ippara" style="width:auto" data-ippara="'+ch.id+'"'+(i===0?' checked':'')+'>'+esc(ch.nomePersonagem||"Sem nome")+(ch.ehNpc?' <span class="hint">(NPC)</span>':'')+'</label>'; }).join('') +
+        loadChars().map(function(ch, i){ return '<label style="display:flex;align-items:center;gap:5px;text-transform:none;margin:0"><input type="radio" name="ippara" style="width:auto" data-ippara="'+esc(ch.id)+'"'+(i===0?' checked':'')+'>'+esc(ch.nomePersonagem||"Sem nome")+(ch.ehNpc?' <span class="hint">(NPC)</span>':'')+'</label>'; }).join('') +
         '</div><div class="row" style="gap:8px;margin-top:8px;align-items:center;flex-wrap:wrap"><span class="hint" style="margin:0">Estado em que foi achado'+(it.qualidade==null && autoLigada("qualidadePorLocal")?' (sorteado, pode trocar)':'')+':</span>' +
           '<select data-ipqual style="max-width:220px">'+[0,1,2,3,4,5,6].map(function(n){ return '<option value="'+n+'"'+(n===state.itemEntregarQual?' selected':'')+'>'+n+' · '+QUALIDADES[n]+'</option>'; }).join('')+'</select>' +
           (it.qualidade==null && autoLigada("qualidadePorLocal")?'<button type="button" class="btn secondary doc-btn" data-ipacao="ressortear">🎲 Sortear de novo</button>':'')+'</div>' +
@@ -11254,7 +11388,7 @@
         if(acao === "novo"){ state.itemPoolEdit = { id:"it_"+uid(), nome:"", desc:"", efeito:"", qualidade:"", nota:"", local:(state.itemFiltro||{}).local||"", escassez:"", traits:[], qtd:1, entregues:[] }; state.itemImportar = false; rerender(); }
         else if(acao === "cancelar"){ state.itemPoolEdit = null; rerender(); }
         else if(acao === "salvar"){
-          if(!String(ed.nome||"").trim()){ alert("Dê um nome ao item."); return; }
+          if(!String(ed.nome||"").trim()){ avisar("Dê um nome ao item."); return; }
           var existente = itensPoolLista().filter(function(x){ return x.id===ed.id; })[0];
           if(existente){ ed.entregues = existente.entregues||[]; ed.criadoEm = existente.criadoEm; }
           gravarItensPool([{ tipo:"set", col:"itensPool", id:ed.id, data:itemPoolDados(ed) }]);
@@ -11266,12 +11400,12 @@
         else if(acao === "importar-cancelar"){ state.itemImportar = false; rerender(); }
         else if(acao === "importar-ok"){
           var txt = String((raiz.querySelector("#item-import")||{}).value || "").trim();
-          if(!txt){ alert("Cole o código primeiro."); return; }
+          if(!txt){ avisar("Cole o código primeiro."); return; }
           importarItensArquivo(txt, rerender, true, function(){ state.itemImportar = false; });
         }
         else if(acao === "sortear"){
           var lista = itensPoolFiltrados();
-          if(!lista.length){ alert("Nenhum item com esses filtros pra sortear."); return; }
+          if(!lista.length){ avisar("Nenhum item com esses filtros pra sortear."); return; }
           state.itemSorteado = lista[Math.floor(Math.random()*lista.length)].id;
           state.itemEntregar = null; rerender();
         }
@@ -11304,9 +11438,9 @@
     if(!jogadores.length) return '';
     var nPed = jogadores.reduce(function(t,c){ return t + (Array.isArray(c.caracPedidas) ? c.caracPedidas.length : 0); }, 0);
     var html = '<div class="card"><h2>Dar Experiência'+(nPed?' <span class="badge-pill" style="vertical-align:middle">'+nPed+' pedido'+(nPed>1?'s':'')+'</span>':'')+'</h2>' +
-      '<div class="hint ajuda"><p>Valores de referência, no fim da sessão:</p><ul><li>Propósito alcançado 2–4 · Conflito 1–6 · Avanço no Refúgio 1–2</li><li>Conclusão de arco 2–6 · Grande descoberta 1–3 · Interpretação inspirada 1</li></ul></div>' +
+      '<p class="hint" style="margin:0 0 8px">Propósito 2–4 · Conflito 1–6 · Refúgio 1–2 · Arco 2–6 · Descoberta 1–3 · Interpretação 1</p>' +
       '<div class="gm-xp" style="border-top:0;margin-top:0;padding-top:0"><div class="row" style="margin-bottom:8px">' +
-      jogadores.map(function(c){ return '<label style="display:flex;align-items:center;gap:5px;text-transform:none;margin:0 10px 0 0"><input type="checkbox" style="width:auto" data-gmxptodos="'+c.id+'"'+(c.ehNpc?'':' checked')+'>'+esc(c.nomePersonagem||"Sem nome")+(c.ehNpc?' <span class="hint" style="margin:0">(NPC)</span>':'')+'</label>'; }).join('') +
+      jogadores.map(function(c){ return '<label style="display:flex;align-items:center;gap:5px;text-transform:none;margin:0 10px 0 0"><input type="checkbox" style="width:auto" data-gmxptodos="'+esc(c.id)+'"'+(c.ehNpc?'':' checked')+'>'+esc(c.nomePersonagem||"Sem nome")+(c.ehNpc?' <span class="hint" style="margin:0">(NPC)</span>':'')+'</label>'; }).join('') +
       '</div><div class="row"><select data-gmxpmotivo="todos">'+xpMotivoOptions()+'</select>' +
       '<input type="number" min="1" max="20" value="1" data-gmxpqtd="todos">' +
       '<input type="text" placeholder="detalhe (opcional)" data-gmxpdet="todos" style="flex:1 1 160px">' +
@@ -11335,7 +11469,7 @@
   }
   function gmXpGastosHtml(jogadores){
     var html = '<div class="gm-xp gm-xpgastos"><h3 style="margin:0 0 4px">Pedidos e compras por personagem</h3>' +
-      '<p class="hint" style="margin:0 0 8px">O que cada personagem pediu ou comprou com Experiência (inclui os XP da criação).</p>';
+      '';
     var algum = false;
     jogadores.forEach(function(c){
       var pedidas = (Array.isArray(c.caracPedidas) ? c.caracPedidas : []).filter(function(id){ return carDef(id); });
@@ -11372,18 +11506,18 @@
     return '<div class="gm-xp">' +
       (c.precisaRefazer ? '<p class="hint" style="margin:0 0 6px">Esta ficha ainda vai ser refeita no sistema oficial: a Experiência dada agora fica guardada e entra no saldo depois.</p>' : '') +
       '<div class="row" style="justify-content:space-between"><span><b>Experiência</b> · disponível '+xpSaldo(c)+' · recebida '+x.recebida+'</span>' +
-      '<label style="display:flex;align-items:center;gap:5px;text-transform:none;margin:0"><input type="checkbox" style="width:auto" data-gmxpinst="'+c.id+'"'+(x.liberarInstinto?' checked':'')+'> Liberar Instintos (passou por mutação)</label></div>' +
+      '<label style="display:flex;align-items:center;gap:5px;text-transform:none;margin:0"><input type="checkbox" style="width:auto" data-gmxpinst="'+esc(c.id)+'"'+(x.liberarInstinto?' checked':'')+'> Liberar Instintos (passou por mutação)</label></div>' +
       (pedidas.length?'<p class="hint" style="margin:6px 0;color:var(--accent)">Pedido de Característica: '+pedidas.map(function(id){ var d=carDef(id); return d?esc(d.nome)+' ('+d.custo+' XP)':''; }).join(', ')+'. Aprove ou recuse em Dar Experiência, no alto do Painel.</p>':'') +
-      '<div class="row" style="margin-top:6px"><select data-gmxpmotivo="'+c.id+'">'+xpMotivoOptions()+'</select>' +
-      '<input type="number" min="1" max="50" value="1" data-gmxpqtd="'+c.id+'">' +
-      '<input type="text" placeholder="detalhe (opcional)" data-gmxpdet="'+c.id+'" style="flex:1 1 140px">' +
-      '<button type="button" class="btn secondary" data-gmxpdar="'+c.id+'" style="padding:4px 10px;font-size:11px">Dar</button>' +
-      '<button type="button" class="btn secondary" data-gmxpdar="'+c.id+'" data-gmxpsinal="-1" style="padding:4px 10px;font-size:11px">Retirar</button></div>' +
+      '<div class="row" style="margin-top:6px"><select data-gmxpmotivo="'+esc(c.id)+'">'+xpMotivoOptions()+'</select>' +
+      '<input type="number" min="1" max="50" value="1" data-gmxpqtd="'+esc(c.id)+'">' +
+      '<input type="text" placeholder="detalhe (opcional)" data-gmxpdet="'+esc(c.id)+'" style="flex:1 1 140px">' +
+      '<button type="button" class="btn secondary" data-gmxpdar="'+esc(c.id)+'" style="padding:4px 10px;font-size:11px">Dar</button>' +
+      '<button type="button" class="btn secondary" data-gmxpdar="'+esc(c.id)+'" data-gmxpsinal="-1" style="padding:4px 10px;font-size:11px">Retirar</button></div>' +
     '</div>';
   }
   function bindGmXp(){
     function motivoTexto(chave){
-      var sel = app.querySelector('[data-gmxpmotivo="'+chave+'"]'), det = app.querySelector('[data-gmxpdet="'+chave+'"]');
+      var sel = app.querySelector('[data-gmxpmotivo="'+esc(chave)+'"]'), det = app.querySelector('[data-gmxpdet="'+esc(chave)+'"]');
       var m = XP_MOTIVOS.filter(function(x){ return x[0]===sel.value; })[0];
       var t = m ? m[1] : "Experiência";
       if(det && det.value.trim()) t += ": " + det.value.trim();
@@ -11401,7 +11535,7 @@
         e.stopPropagation();
         if(!temAcessoTotal()) return;
         var chave = btn.getAttribute("data-gmxpdar");
-        var qtd = Math.abs(parseInt(app.querySelector('[data-gmxpqtd="'+chave+'"]').value, 10)||0);
+        var qtd = Math.abs(parseInt(app.querySelector('[data-gmxpqtd="'+esc(chave)+'"]').value, 10)||0);
         if(!qtd) return;
         if(btn.getAttribute("data-gmxpsinal") === "-1") qtd = -qtd;
         var motivo = (qtd<0?'Retirado · ':'') + motivoTexto(chave);
@@ -11495,15 +11629,15 @@
         var camp = c.acampamento ? CAMPS[c.acampamento] : null;
         var cardStyle = (camp?'--camp-color:'+camp.cor+';':'')+'border-left:6px solid '+(camp?camp.cor:'var(--accent)')+';margin-bottom:12px;cursor:pointer';
         var dobraId = "gmc_" + c.id, charFechado = !!state.collapsed[dobraId];
-        html += '<div class="card" style="'+cardStyle+'" data-gmopen="'+c.id+'">';
+        html += '<div class="card" style="'+cardStyle+'" data-gmopen="'+esc(c.id)+'">';
         html += '<div class="gm-pc-cab"><div class="row" style="justify-content:space-between;align-items:flex-start">' +
           '<div><h3 style="color:'+(camp?camp.cor:'var(--ink)')+';font-size:17px;margin-bottom:2px">'+esc(c.nomePersonagem||"Sem nome")+npcBadgeHtml(c)+'</h3>' +
           '<span class="camp-tag">jogador(a): '+esc(c.nomeJogador||"não informado")+(camp?' · '+esc(camp.nome):(grupoLigado()?' · '+esc(grupoRotulo().toLowerCase())+' não definido':''))+'</span>' +
           '<div class="hint" style="margin-top:2px">'+(c.donoUid ? 'Conta: '+esc(c.donoEmail||c.donoNome||"vinculada") : (c.ehNpc ? 'NPC (só o Assimilador)' : '<span style="color:var(--danger)">Ficha de jogador sem conta</span>'))+'</div></div>' +
           '<div class="row gm-acoes" style="gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end;min-width:0">' +
-            '<label class="gm-npc" style="display:flex;align-items:center;gap:5px;text-transform:none;margin:0;font-size:12px"><input type="checkbox" style="width:auto" data-gmnpc="'+c.id+'"'+(c.ehNpc?' checked':'')+'> NPC</label>' +
+            '<label class="gm-npc" style="display:flex;align-items:center;gap:5px;text-transform:none;margin:0;font-size:12px"><input type="checkbox" style="width:auto" data-gmnpc="'+esc(c.id)+'"'+(c.ehNpc?' checked':'')+'> NPC</label>' +
             (!c.donoUid ? passarParaHtml(c) : '') +
-            (caps.canEdit ? '<button class="btn secondary" data-gmdelmesa="'+c.id+'" style="padding:4px 10px;font-size:11px">excluir</button>' : '') +
+            (caps.canEdit ? '<button class="btn secondary" data-gmdelmesa="'+esc(c.id)+'" style="padding:4px 10px;font-size:11px">excluir</button>' : '') +
           '</div>' +
         '</div><button type="button" class="card-toggle" data-collapse-toggle="'+dobraId+'" title="'+(charFechado?"Expandir":"Minimizar")+'">'+(charFechado?"▸":"▾")+'</button>' +
         '</div>';
@@ -11565,7 +11699,7 @@
         askConfirm('Passar "'+(c.nomePersonagem||"esta ficha")+'" para '+quem+'?\n\n'+(c.ehNpc ? 'Ela deixa de ser NPC, passa' : 'Ela passa')+' a aparecer na conta de '+quem+' (que pode abrir e mexer nela) e ganha uma ficha-base lá.\n\nVocê continua vendo e ajustando como mestre.', function(){
           passarParaJogador(c.id, m).then(function(){ renderGmMesa(); }).catch(function(err){
             console.error("[Pangea] passar ficha", err);
-            alert("Não deu pra passar a ficha: " + (err && (err.code || err.message) || "erro desconhecido"));
+            avisar("Não deu pra passar a ficha: " + (err && (err.code || err.message) || "erro desconhecido"));
           });
         });
       });
