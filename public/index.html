@@ -301,6 +301,21 @@
   .capa-cor:focus-visible{ outline:2px solid var(--ink); outline-offset:3px; }
   .cmp-corpo h3{ color:var(--ink); }
   .cmp-acoes .btn{ padding:8px 12px; font-size:12.5px; }
+  /* ===== Ajuda: link de imagem ===== */
+  .link-ajuda{ display:inline; padding:0; margin:0 0 0 6px; border:0; background:none; color:var(--accent); font:inherit; font-size:11.5px;
+    text-transform:none; letter-spacing:0; text-decoration:underline; text-underline-offset:2px; cursor:pointer; }
+  .link-ajuda:hover{ color:var(--ink); }
+  .link-ajuda:focus-visible{ outline:2px solid var(--ink); outline-offset:2px; border-radius:2px; }
+  .ajuda-ov{ z-index:10000; overflow:auto; }
+  .ajuda-box{ position:relative; max-width:380px; max-height:100%; overflow:auto; box-sizing:border-box; padding:16px 18px 14px; }
+  .ajuda-box h3{ margin:0 34px 10px 0; font-size:16px; color:var(--ink); }
+  .ajuda-box ol{ margin:0; padding-left:20px; }
+  .ajuda-box li{ margin:0 0 6px; line-height:1.4; overflow-wrap:anywhere; }
+  .ajuda-box .hint{ margin:10px 0 0; white-space:normal; }
+  .ajuda-x{ position:absolute; top:8px; right:8px; width:30px; height:30px; padding:0; border:0; background:transparent; color:var(--ink-muted);
+    font-size:22px; line-height:1; cursor:pointer; border-radius:var(--radius); }
+  .ajuda-x:hover{ color:var(--ink); background:var(--surface-2); }
+  .ajuda-x:focus-visible{ outline:2px solid var(--ink); outline-offset:1px; }
   .hint.attr-desc{ min-height:2.6em; line-height:1.3; }
   /* Textos de ajuda em blocos (11/10/2026): parágrafos curtos e listas. */
   .ajuda > p{ margin:0 0 6px; }
@@ -4867,7 +4882,7 @@
         grupo += '<div class="cfg-linha cfg-opcao">' +
           '<div class="field"><label>Nome</label><input type="text" data-cfgop="'+i+'" data-k="nome" value="'+esc(o.nome||"")+'"></div>' +
           '<div class="field cfg-cor"><label>Cor</label><span class="row" style="gap:6px;flex-wrap:nowrap"><input type="color" data-cfgopcor="'+i+'" value="'+corParaPicker(o.cor)+'"><input type="text" data-cfgop="'+i+'" data-k="cor" value="'+esc(o.cor||"")+'" placeholder="#a05a2c"></span></div>' +
-          '<div class="field"><label>Imagem (endereço)</label><input type="text" data-cfgop="'+i+'" data-k="img" value="'+esc(o.img||"")+'" placeholder="opcional: https://… ou logo.png"></div>' +
+          '<div class="field"><label>Imagem'+ajudaImgLink()+'</label><input type="text" data-cfgop="'+i+'" data-k="img" value="'+esc(o.img||"")+'" placeholder="opcional: https://… ou logo.png"></div>' +
           '<div class="field"><label>Frase</label><input type="text" data-cfgop="'+i+'" data-k="frase" value="'+esc(o.frase||"")+'" placeholder="opcional"></div>' +
           '<div class="field cfg-larga"><label>Descrição</label><input type="text" data-cfgop="'+i+'" data-k="desc" value="'+esc(o.desc||"")+'" placeholder="opcional"></div>' +
           '<div class="cfg-acoes"><button type="button" class="btn secondary doc-btn" data-cfgopmover="'+i+'" data-dir="-1"'+(i===0?' disabled':'')+' title="Subir">↑</button><button type="button" class="btn secondary doc-btn" data-cfgopmover="'+i+'" data-dir="1"'+(i===cr.grupo.opcoes.length-1?' disabled':'')+' title="Descer">↓</button><button type="button" class="btn secondary doc-btn" data-cfgopdel="'+i+'">Remover</button></div>' +
@@ -6465,7 +6480,7 @@
         return '<button type="button" class="capa-cor'+(c === cp.cor ? ' sel' : '')+'" data-capacor="'+c+'" style="background:'+c+'" aria-label="Cor '+c+'" aria-pressed="'+(c === cp.cor)+'"></button>';
       }).join('') + '</div>' +
       '<div class="row" style="gap:8px;flex-wrap:wrap;align-items:flex-end">' +
-        '<div class="field" style="flex:1;min-width:200px;margin:0"><label>Imagem</label><input type="text" data-capaimg value="'+esc(bruta)+'" placeholder="https://…"></div>' +
+        '<div class="field" style="flex:1;min-width:200px;margin:0"><label>Imagem'+ajudaImgLink()+'</label><input type="text" data-capaimg value="'+esc(bruta)+'" placeholder="https://…"></div>' +
         '<button type="button" class="btn secondary" data-capaimgok="1">Aplicar</button>' +
       '</div></div>';
   }
@@ -6512,6 +6527,45 @@
       '<ul class="entrada-tres">' + tres.map(function(t){ return '<li>'+t[0]+'<b>'+t[1]+'</b><span>'+t[2]+'</span></li>'; }).join('') + '</ul>' +
     '</div>';
   }
+  // ---------- AJUDA: LINK DE IMAGEM (16/11/2026) ----------
+  // Link ao lado de todo campo de imagem por endereço; abre um passo a passo curto.
+  function ajudaImgLink(){ return ' <button type="button" class="link-ajuda" data-ajudaimg="1" aria-haspopup="dialog">Como gerar o link?</button>'; }
+  var ajudaImgOrigem = null;
+  function fecharAjudaImg(){
+    var el = document.getElementById("ajuda-img");
+    if(!el) return;
+    el.parentNode.removeChild(el);
+    var o = ajudaImgOrigem; ajudaImgOrigem = null;
+    if(o && o.isConnected) o.focus();
+  }
+  function abrirAjudaImg(origem){
+    fecharAjudaImg();
+    ajudaImgOrigem = origem || null;
+    var el = document.createElement("div"); el.id = "ajuda-img";
+    el.innerHTML = '<div class="confirm-overlay ajuda-ov">' +
+      '<div class="confirm-box ajuda-box" role="dialog" aria-modal="true" aria-labelledby="ajuda-img-t">' +
+        '<button type="button" class="ajuda-x" data-ajudafechar="1" aria-label="Fechar">×</button>' +
+        '<h3 id="ajuda-img-t">Link de imagem</h3>' +
+        '<ol>' +
+          '<li>Abra <a href="https://imgbb.com" target="_blank" rel="noopener noreferrer">imgbb.com</a> ou <a href="https://postimages.org" target="_blank" rel="noopener noreferrer">postimages.org</a> (grátis, sem conta).</li>' +
+          '<li>Envie a imagem.</li>' +
+          '<li>Copie o <b>link direto</b> (termina em .jpg, .png ou .webp) e cole no campo.</li>' +
+        '</ol>' +
+        '<p class="hint">Links do Google Drive e do Discord não funcionam.</p>' +
+      '</div></div>';
+    document.body.appendChild(el);
+    el.querySelector(".ajuda-ov").addEventListener("click", function(ev){
+      if(ev.target === ev.currentTarget || (ev.target.closest && ev.target.closest("[data-ajudafechar]"))) fecharAjudaImg();
+    });
+    el.querySelector(".ajuda-x").focus();
+  }
+  document.addEventListener("click", function(ev){
+    var b = ev.target && ev.target.closest && ev.target.closest("[data-ajudaimg]");
+    if(b){ ev.preventDefault(); abrirAjudaImg(b); }
+  });
+  document.addEventListener("keydown", function(ev){
+    if(ev.key === "Escape" && document.getElementById("ajuda-img")){ ev.stopPropagation(); fecharAjudaImg(); }
+  }, true);
   function avisarErro(onde, e){
     var msg = (e && e.message) ? e.message : String(e);
     try{ console.error("[Pangea] " + onde + ":", e); }catch(_){}
