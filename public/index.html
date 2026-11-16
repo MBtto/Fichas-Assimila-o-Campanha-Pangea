@@ -316,6 +316,13 @@
     font-size:22px; line-height:1; cursor:pointer; border-radius:var(--radius); }
   .ajuda-x:hover{ color:var(--ink); background:var(--surface-2); }
   .ajuda-x:focus-visible{ outline:2px solid var(--ink); outline-offset:1px; }
+  /* ===== Envio de imagem ===== */
+  .capa-cfg.img-solta .capa-previa, .cfg-img.img-solta input[type="text"]{ outline:2px dashed var(--accent); outline-offset:2px; }
+  .capa-pos input[type=range]{ width:100%; margin:0; accent-color:var(--accent); display:block; height:36px; }
+  .cfg-linha .field.cfg-img{ flex:2 1 280px; min-width:min(280px, 100%); }
+  .cfg-img .row > input[type="text"]{ flex:1 1 110px; min-width:0; width:auto; }
+  .cfg-img .row > .btn{ flex:none; }
+  .cfg-thumb{ flex:none; width:36px; height:36px; object-fit:contain; border:1px solid var(--border); border-radius:var(--radius); background:var(--bg); }
   .hint.attr-desc{ min-height:2.6em; line-height:1.3; }
   /* Textos de ajuda em blocos (11/10/2026): parágrafos curtos e listas. */
   .ajuda > p{ margin:0 0 6px; }
@@ -4268,7 +4275,7 @@
     var meuPedido = !comoMestre && lobby.pedidos && lobby.pedidos[cmp.id];
     var pendente = !!(meuPedido && meuPedido.status === "pendente");
     var html = '<div class="cmp-card lobby-cmp" data-abrircmp="'+esc(cmp.id)+'" style="--capa:'+esc(capa.cor)+'">' +
-      '<div class="cmp-capa"'+(capa.img ? ' style="background-image:url(&quot;'+esc(capa.img)+'&quot;)"' : '')+'>' +
+      '<div class="cmp-capa"'+(capa.img ? ' style="background-image:url(&quot;'+esc(capa.img)+'&quot;);background-position:50% '+capa.pos+'%"' : '')+'>' +
         (capa.img ? '' : '<span class="cmp-inicial" aria-hidden="true">'+esc(Array.from(nome)[0] || "")+'</span>') +
         '<span class="cmp-selo">'+(comoMestre ? 'Mestre' : 'Jogador')+'</span>' +
       '</div>' +
@@ -4882,7 +4889,12 @@
         grupo += '<div class="cfg-linha cfg-opcao">' +
           '<div class="field"><label>Nome</label><input type="text" data-cfgop="'+i+'" data-k="nome" value="'+esc(o.nome||"")+'"></div>' +
           '<div class="field cfg-cor"><label>Cor</label><span class="row" style="gap:6px;flex-wrap:nowrap"><input type="color" data-cfgopcor="'+i+'" value="'+corParaPicker(o.cor)+'"><input type="text" data-cfgop="'+i+'" data-k="cor" value="'+esc(o.cor||"")+'" placeholder="#a05a2c"></span></div>' +
-          '<div class="field"><label>Imagem'+ajudaImgLink()+'</label><input type="text" data-cfgop="'+i+'" data-k="img" value="'+esc(o.img||"")+'" placeholder="opcional: https://… ou logo.png"></div>' +
+          '<div class="field cfg-img" data-cfgopsolta="'+i+'"><label>Imagem'+ajudaImgLink()+'</label><span class="row" style="gap:6px">' +
+            (/^data:/i.test(o.img||"") && imgSegura(o.img) ? '<img class="cfg-thumb" src="'+esc(o.img)+'" alt="">' : '') +
+            '<input type="text" data-cfgop="'+i+'" data-k="img" value="'+esc(/^data:/i.test(o.img||"") ? "" : (o.img||""))+'" placeholder="'+(/^data:/i.test(o.img||"") ? 'Imagem enviada' : 'opcional: https://… ou logo.png')+'">' +
+            '<button type="button" class="btn secondary doc-btn" data-cfgopenviar="'+i+'">Enviar</button>' +
+            (/^data:/i.test(o.img||"") ? '<button type="button" class="btn secondary doc-btn" data-cfgoplimpar="'+i+'" title="Remover imagem" aria-label="Remover imagem">×</button>' : '') +
+          '</span></div>' +
           '<div class="field"><label>Frase</label><input type="text" data-cfgop="'+i+'" data-k="frase" value="'+esc(o.frase||"")+'" placeholder="opcional"></div>' +
           '<div class="field cfg-larga"><label>Descrição</label><input type="text" data-cfgop="'+i+'" data-k="desc" value="'+esc(o.desc||"")+'" placeholder="opcional"></div>' +
           '<div class="cfg-acoes"><button type="button" class="btn secondary doc-btn" data-cfgopmover="'+i+'" data-dir="-1"'+(i===0?' disabled':'')+' title="Subir">↑</button><button type="button" class="btn secondary doc-btn" data-cfgopmover="'+i+'" data-dir="1"'+(i===cr.grupo.opcoes.length-1?' disabled':'')+' title="Descer">↓</button><button type="button" class="btn secondary doc-btn" data-cfgopdel="'+i+'">Remover</button></div>' +
@@ -4982,6 +4994,10 @@
     });
     on("[data-cfggruporot]", "input", function(el){ cr.grupo.rotulo = el.value; sujo(); });
     on("[data-cfgop]", "input", function(el){ var o = cr.grupo.opcoes[idx(el,"data-cfgop")]; if(o){ o[el.getAttribute("data-k")] = el.value; sujo(); } });
+    function imgDoGrupo(o, arq){ prepararImagem(arq, "logo").then(function(u){ o.img = u; sujo(true); }).catch(function(e){ avisar(e.message, "erro"); }); }
+    on("[data-cfgopenviar]", "click", function(el){ var o = cr.grupo.opcoes[idx(el,"data-cfgopenviar")]; if(o) escolherImagem(function(arq){ imgDoGrupo(o, arq); }); });
+    on("[data-cfgoplimpar]", "click", function(el){ var o = cr.grupo.opcoes[idx(el,"data-cfgoplimpar")]; if(o){ o.img = ""; sujo(true); } });
+    raiz.querySelectorAll("[data-cfgopsolta]").forEach(function(el){ var o = cr.grupo.opcoes[idx(el,"data-cfgopsolta")]; if(o) soltarImagem(el, function(arq){ imgDoGrupo(o, arq); }); });
     on("[data-cfgopcor]", "input", function(el){
       var i = idx(el,"data-cfgopcor"), o = cr.grupo.opcoes[i]; if(!o) return;
       o.cor = el.value; var t = raiz.querySelector('[data-cfgop="'+i+'"][data-k="cor"]'); if(t) t.value = el.value; sujo();
@@ -5050,6 +5066,7 @@
     if(corRuim) return { erro:"A cor de \""+corRuim.nome+"\" não é válida. Use o seletor de cor." };
     var imgRuim = cr.grupo.opcoes.filter(function(o){ return o.img && /^\s*javascript:/i.test(o.img); })[0];
     if(imgRuim) return { erro:"O endereço da imagem de \""+imgRuim.nome+"\" não é válido." };
+    if(cr.grupo.opcoes.reduce(function(t, o){ return t + (/^data:/i.test(o.img) ? o.img.length : 0); }, 0) > 600000) return { erro:"As imagens enviadas nas opções somam mais do que a campanha comporta. Remova algumas ou use endereços." };
     if(cr.propositos === "personalizado"){
       var pp = cr.propPers || {};
       ["1","2"].forEach(function(n){ pp["nome"+n] = String(pp["nome"+n]||"").trim(); pp["item"+n] = String(pp["item"+n]||"").trim(); });
@@ -6469,20 +6486,89 @@
     }
     var img = cp.img ? imgSegura(cp.img) : "";
     if(/[\\()]/.test(img)) img = "";
-    return { cor: cor, img: img };
+    var pos = Number(cp.pos); if(!(pos >= 0 && pos <= 100)) pos = 50;
+    return { cor: cor, img: img, pos: Math.round(pos) };
+  }
+  // ---------- ENVIO DE IMAGEM (16/11/2026) ----------
+  // O site reduz a imagem no navegador e guarda o resultado dentro da própria campanha
+  // (endereço "data:"), sem depender de site de hospedagem.
+  var IMG_MODOS = {
+    capa: { larg:640, alt:400, limite:90000, corta:true },   // faixa larga; mais alta que isso, corta pelo centro
+    logo: { larg:256, alt:256, limite:30000, corta:false }   // cabe inteira, mantém transparência
+  };
+  function prepararImagem(arq, modo){
+    var m = IMG_MODOS[modo] || IMG_MODOS.logo;
+    return new Promise(function(ok, falha){
+      if(!arq || !/^image\/(png|jpeg|webp|gif)$/i.test(arq.type || "")){ falha(new Error("Envie uma imagem PNG, JPG, WebP ou GIF.")); return; }
+      if(arq.size > 20 * 1024 * 1024){ falha(new Error("Essa imagem passa de 20 MB.")); return; }
+      var url = URL.createObjectURL(arq), im = new Image();
+      im.onerror = function(){ URL.revokeObjectURL(url); falha(new Error("Essa imagem não abriu. Tente outro arquivo.")); };
+      im.onload = function(){
+        try{
+          var sw = im.naturalWidth, sh = im.naturalHeight;
+          if(!sw || !sh) throw new Error("vazia");
+          var sx = 0, sy = 0, cw = sw, ch = sh;
+          if(m.corta && sh / sw > m.alt / m.larg){ ch = Math.round(sw * m.alt / m.larg); sy = Math.round((sh - ch) / 2); }
+          var esc0 = Math.min(1, m.larg / cw, m.alt / ch);
+          var desenhar = function(f, tipo, q){
+            var c = document.createElement("canvas");
+            c.width = Math.max(1, Math.round(cw * esc0 * f)); c.height = Math.max(1, Math.round(ch * esc0 * f));
+            var x = c.getContext("2d");
+            if(tipo === "image/jpeg"){ x.fillStyle = "#1c1814"; x.fillRect(0, 0, c.width, c.height); }
+            x.imageSmoothingQuality = "high";
+            x.drawImage(im, sx, sy, cw, ch, 0, 0, c.width, c.height);
+            return c.toDataURL(tipo, q);
+          };
+          // WebP onde o navegador grava; senão JPEG na capa e PNG no logo (transparência).
+          var tipo = "image/webp", saida = desenhar(1, tipo, 0.82);
+          if(saida.indexOf("data:image/webp") !== 0){ tipo = m.corta ? "image/jpeg" : "image/png"; saida = desenhar(1, tipo, 0.82); }
+          var passos = [[1, 0.7], [1, 0.55], [0.8, 0.7], [0.65, 0.65], [0.5, 0.6], [0.4, 0.55], [0.3, 0.5]];
+          for(var i = 0; i < passos.length && saida.length > m.limite; i++) saida = desenhar(passos[i][0], tipo, passos[i][1]);
+          URL.revokeObjectURL(url);
+          if(saida.length > m.limite || !imgSegura(saida)){ falha(new Error("Não deu pra reduzir essa imagem. Tente outra.")); return; }
+          ok(saida);
+        }catch(e){ URL.revokeObjectURL(url); falha(new Error("Essa imagem não abriu. Tente outro arquivo.")); }
+      };
+      im.src = url;
+    });
+  }
+  function escolherImagem(aoEscolher){
+    var i = document.createElement("input");
+    i.type = "file"; i.accept = "image/png,image/jpeg,image/webp,image/gif"; i.style.display = "none";
+    i.addEventListener("change", function(){ var f = i.files && i.files[0]; if(i.parentNode) i.parentNode.removeChild(i); if(f) aoEscolher(f); });
+    document.body.appendChild(i);
+    i.click();
+  }
+  // Soltar um arquivo de imagem em cima de "el".
+  function soltarImagem(el, aoSoltar){
+    if(!el) return;
+    function temArquivo(e){ var t = e.dataTransfer && e.dataTransfer.types; return !!t && Array.prototype.indexOf.call(t, "Files") >= 0; }
+    el.addEventListener("dragover", function(e){ if(!temArquivo(e)) return; e.preventDefault(); el.classList.add("img-solta"); });
+    el.addEventListener("dragleave", function(e){ if(!el.contains(e.relatedTarget)) el.classList.remove("img-solta"); });
+    el.addEventListener("drop", function(e){
+      if(!temArquivo(e)) return;
+      e.preventDefault(); el.classList.remove("img-solta");
+      var f = e.dataTransfer.files && e.dataTransfer.files[0]; if(f) aoSoltar(f);
+    });
   }
   function capaConfigHtml(){
-    var cp = capaDe(campanhaAtual), bruta = (campanhaAtual.capa && campanhaAtual.capa.img) || "";
+    var cp = capaDe(campanhaAtual), bruta = String((campanhaAtual.capa && campanhaAtual.capa.img) || ""), enviada = /^data:/i.test(bruta);
     return '<div class="cfg-bloco capa-cfg">' +
-      '<div class="cmp-capa capa-previa" style="--capa:'+esc(cp.cor)+(cp.img ? ';background-image:url(&quot;'+esc(cp.img)+'&quot;)' : '')+'">' +
+      '<div class="cmp-capa capa-previa" data-capaprevia="1" style="--capa:'+esc(cp.cor)+(cp.img ? ';background-image:url(&quot;'+esc(cp.img)+'&quot;);background-position:50% '+cp.pos+'%' : '')+'">' +
         (cp.img ? '' : '<span class="cmp-inicial" aria-hidden="true">'+esc(Array.from(String(campanhaAtual.nome||"").trim())[0] || "")+'</span>') + '</div>' +
       '<div class="capa-cores" role="group" aria-label="Cor da capa">' + CAPA_CORES.map(function(c){
         return '<button type="button" class="capa-cor'+(c === cp.cor ? ' sel' : '')+'" data-capacor="'+c+'" style="background:'+c+'" aria-label="Cor '+c+'" aria-pressed="'+(c === cp.cor)+'"></button>';
       }).join('') + '</div>' +
       '<div class="row" style="gap:8px;flex-wrap:wrap;align-items:flex-end">' +
-        '<div class="field" style="flex:1;min-width:200px;margin:0"><label>Imagem'+ajudaImgLink()+'</label><input type="text" data-capaimg value="'+esc(bruta)+'" placeholder="https://…"></div>' +
+        '<div class="field" style="flex:1;min-width:min(200px, 100%);margin:0"><label>Imagem'+ajudaImgLink()+'</label><input type="text" data-capaimg value="'+esc(enviada ? "" : bruta)+'" placeholder="'+(enviada ? 'Imagem enviada' : 'https://…')+'"></div>' +
         '<button type="button" class="btn secondary" data-capaimgok="1">Aplicar</button>' +
-      '</div></div>';
+        '<button type="button" class="btn secondary" data-capaenviar="1">Enviar imagem</button>' +
+      '</div>' +
+      (cp.img ? '<div class="row capa-pos" style="gap:8px;flex-wrap:wrap;align-items:flex-end">' +
+        '<div class="field" style="flex:1;min-width:min(160px, 100%);margin:0"><label for="capa-pos">Posição</label><input type="range" id="capa-pos" min="0" max="100" step="1" value="'+cp.pos+'" data-capapos="1"></div>' +
+        '<button type="button" class="btn secondary" data-caparemover="1">Remover</button>' +
+      '</div>' : '') +
+    '</div>';
   }
   function bindCapaConfig(raiz, rerender){
     function gravar(capa){
@@ -6495,20 +6581,39 @@
         avisar("Não deu pra salvar a capa: " + (err && (err.code || err.message) || "erro desconhecido"));
       });
     }
-    function atual(){ var c = campanhaAtual.capa || {}; return { cor: capaDe(campanhaAtual).cor, img: String(c.img || "") }; }
+    function atual(){ var c = campanhaAtual.capa || {}, cp = capaDe(campanhaAtual); return { cor: cp.cor, img: String(c.img || ""), pos: cp.pos }; }
     raiz.querySelectorAll("[data-capacor]").forEach(function(b){
       b.addEventListener("click", function(){ var c = atual(); c.cor = b.getAttribute("data-capacor"); gravar(c); });
     });
     var ok = raiz.querySelector("[data-capaimgok]"), campo = raiz.querySelector("[data-capaimg]");
     function aplicarImg(){
-      var v = String(campo.value || "").trim();
+      var v = String(campo.value || "").trim(), c = atual();
       if(v && (!/^https:\/\//i.test(v) || !imgSegura(v) || /[\\()]/.test(v))){ avisar("Use o endereço de uma imagem começando com https://"); return; }
-      var c = atual(); c.img = v; gravar(c);
+      if(!v && /^data:/i.test(c.img)) return; // campo vazio com imagem enviada: quem tira é o Remover
+      if(v !== c.img) c.pos = 50;
+      c.img = v; gravar(c);
     }
     if(ok && campo){
       ok.addEventListener("click", aplicarImg);
       campo.addEventListener("keydown", function(e){ if(e.key === "Enter"){ e.preventDefault(); aplicarImg(); } });
     }
+    function receber(arq){
+      var cid = campanhaAtual.id;
+      prepararImagem(arq, "capa").then(function(u){
+        if(!campanhaAtual || campanhaAtual.id !== cid) return;
+        var c = atual(); c.img = u; c.pos = 50; gravar(c);
+      }).catch(function(e){ avisar(e.message, "erro"); });
+    }
+    var enviar = raiz.querySelector("[data-capaenviar]");
+    if(enviar) enviar.addEventListener("click", function(){ escolherImagem(receber); });
+    soltarImagem(raiz.querySelector(".capa-cfg"), receber);
+    var pos = raiz.querySelector("[data-capapos]"), previa = raiz.querySelector("[data-capaprevia]");
+    if(pos){
+      pos.addEventListener("input", function(){ if(previa) previa.style.backgroundPosition = "50% " + pos.value + "%"; });
+      pos.addEventListener("change", function(){ var c = atual(); c.pos = Math.max(0, Math.min(100, parseInt(pos.value, 10) || 0)); gravar(c); });
+    }
+    var remover = raiz.querySelector("[data-caparemover]");
+    if(remover) remover.addEventListener("click", function(){ var c = atual(); c.img = ""; c.pos = 50; gravar(c); });
   }
   // Tela de entrada (antes do login).
   function entradaHtml(){
