@@ -353,6 +353,9 @@
   .evol-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(230px, 1fr)); gap:6px 14px; }
   .evol-item{ display:flex; justify-content:space-between; align-items:center; gap:8px; padding:4px 0; border-bottom:1px dashed var(--line, rgba(128,128,128,.3)); }
   .evol-btn{ padding:3px 9px !important; font-size:11px !important; white-space:nowrap; }
+  .evol-hist li{ display:flex; align-items:center; justify-content:space-between; gap:8px; padding:3px 0; border-bottom:1px dashed var(--line, rgba(128,128,128,.3)); }
+  .evol-hist li > span{ min-width:0; overflow-wrap:anywhere; }
+  .evol-hist .evol-btn{ flex:none; }
   .gm-xp{ margin-top:12px; padding-top:10px; border-top:1px dashed var(--line, rgba(128,128,128,.3)); }
   .gm-xp .row{ gap:6px; flex-wrap:wrap; align-items:center; }
   .gm-xp input[type=number]{ width:64px; }
@@ -360,8 +363,10 @@
   .gm-xppc{ padding:6px 0 6px 10px; margin:0 0 8px; min-width:0; }
   .gm-xppc .evol-item{ flex-wrap:wrap; }
   .gm-xppc .evol-item > span:first-child{ min-width:0; flex:1 1 180px; overflow-wrap:anywhere; }
-  .gm-xplista{ list-style:none; margin:4px 0 0; padding:0; display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:2px 14px; }
-  .gm-xplista li{ overflow-wrap:anywhere; }
+  .gm-xplista{ list-style:none; margin:4px 0 0; padding:0; display:grid; grid-template-columns:repeat(auto-fill, minmax(min(300px, 100%), 1fr)); gap:2px 22px; }
+  .gm-xplista li{ overflow-wrap:anywhere; display:flex; align-items:center; justify-content:space-between; gap:8px; padding:2px 0; }
+  .gm-xplista li > span{ min-width:0; }
+  .gm-xplista .evol-btn{ flex:none; }
   .field-stepper .stepper{ margin-top:auto; }
   .stepper input{ text-align:center; }
   .stepper-btn{
@@ -1492,6 +1497,14 @@
 .pdoc-paginador .btn:disabled{ opacity:.3; cursor:default; }
 .pdoc-paginador span{ font-variant-numeric:tabular-nums; white-space:nowrap; padding:0 4px; }
 .pdoc-folha .pdoc{ min-height:min(72vh, 720px); }
+/* Folhas (16/11/2026): texto que não cabe numa folha passa para a seguinte. A divisão é
+   medida numa folha padrão (560 x 780), fora da tela, igual em qualquer aparelho. */
+#pdoc-medidor{ position:fixed; left:-9999px; top:0; width:560px; max-width:none; margin:0; visibility:hidden; pointer-events:none; filter:none; }
+.pdoc-medida .pdoc{ min-height:0; transform:none; padding:44px 46px 48px; }
+.pdoc-medida .pdoc.papel-caderno{ padding-left:52px; }
+.pdoc-medida .escrita-manuscrito{ font-size:23px; } .pdoc-medida .escrita-rabisco{ font-size:24px; }
+.pdoc-medida .escrita-datilografado{ font-size:14.5px; } .pdoc-medida .escrita-relatorio{ font-size:14px; }
+.pdoc-medida .pdoc-texto{ transform:none; filter:none; }
 .pdoc-faltando{ display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; min-height:min(72vh, 720px); border:2px dashed rgba(239,228,200,.45); border-radius:6px; background:rgba(20,15,10,.9); color:#efe4c8; text-align:center; padding:24px; }
 .pdoc-faltando b{ font-size:1.15em; }
 @keyframes pdocViraD{ from{ opacity:0; transform:translateX(26px); } to{ opacity:1; transform:none; } }
@@ -1506,6 +1519,9 @@
   .escrita-datilografado, .escrita-relatorio{ font-size:13px; }
   .pdoc-carimbo{ right:14px; bottom:18px; font-size:12px; }
   .pdoc-com-carimbo{ padding-bottom:72px; }
+  /* folha cheia no celular fica mais alta: menos giro, para os cantos não saírem da tela */
+  .pdoc-folha .pdoc{ transform:rotate(calc(var(--giro,0deg) * .4)); }
+  .pdoc-folha .escrita-rabisco .pdoc-texto{ transform:rotate(-1deg); }
 }
 
 /* Documentos na ficha e no Painel */
@@ -1530,10 +1546,18 @@
 @media (max-width:560px){ .doc-entrega-tabela th, .doc-entrega-tabela td{ padding:4px 6px; } .doc-entrega-tabela th:first-child, .doc-entrega-tabela td:first-child{ min-width:0; } .doc-pag-rot{ display:none; } }
 .doc-paginas-ed{ margin-bottom:12px; }
 .doc-paginas-ed .abas{ flex-wrap:wrap; }
-.doc-editor{ display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:20px; align-items:start; }
-.doc-editor-previa{ position:sticky; top:10px; background:#2a241c; border-radius:10px; padding:22px 16px; }
+.doc-editor{ display:grid; grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr); gap:20px; align-items:start; }
+.doc-editor-previa{ position:sticky; top:10px; background:#2a241c; border-radius:10px; padding:14px 16px 22px; max-height:calc(100vh - 20px); max-height:calc(100dvh - 20px); overflow:auto; overscroll-behavior:contain; }
 .doc-editor-previa .hint{ color:#cdbb95; }
-@media (max-width:820px){ .doc-editor{ grid-template-columns:1fr; } .doc-editor-previa{ position:static; } }
+.doc-previa-topo{ display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap; margin:0 0 12px; color:#cdbb95; }
+.doc-previa-nav{ display:inline-flex; align-items:center; gap:6px; font-variant-numeric:tabular-nums; white-space:nowrap; }
+.doc-editor-previa .doc-btn{ background:transparent !important; color:#efe4c8 !important; border:1px solid rgba(239,228,200,.4) !important; min-width:28px; }
+.doc-editor-previa .doc-btn:disabled{ opacity:.35; cursor:default; }
+#doc-previa{ min-width:0; }
+#doc-previa .pdoc-folha .pdoc{ min-height:780px; }
+:root[data-texto="grande"] .doc-editor-previa{ max-height:calc((100vh - 20px) / 1.15); }
+:root[data-texto="maior"] .doc-editor-previa{ max-height:calc((100vh - 20px) / 1.3); }
+@media (max-width:820px){ .doc-editor{ grid-template-columns:1fr; } .doc-editor-previa{ position:static; max-height:none; overflow:visible; } }
 /* ===== Trilhas sonoras (menu lateral) =====
    Aba fixa na borda esquerda, no meio da tela. O Assimilador escolhe a trilha
    (vale para a mesa toda); cada um regula só o próprio volume. */
@@ -2643,6 +2667,9 @@
     var giroMax = { preservado:.6, amassado:4, pedacos:1.5 }[cond] || 2.4;
     var giro = ((rnd()-.5) * giroMax).toFixed(2);
     var estilo = "--giro:"+giro+"deg;", sujeira = [], relevo = null, extras = "";
+    // Folha cheia de um texto dividido em folhas: sem canto arrancado, para o rasgo não
+    // levar um trecho que foi o site (e não o mestre) que pôs ali.
+    var folhaCheia = doc.folhas > 1 && doc.folha < doc.folhas;
 
     if(cond === "gasto"){
       // manchas de uso, pintas de oxidação, dedos sujos, desbotado, dobras e orelha (sem o anel de xícara)
@@ -2669,13 +2696,13 @@
     if(cond === "rasgado"){
       var lados = { t:rnd()<.5, r:rnd()<.5, b:rnd()<.6, l:rnd()<.4 };
       if(!lados.t && !lados.r && !lados.b && !lados.l) lados.b = true;
-      var cantos = doc.titulo ? ["bl","br"] : ["tl","tr","bl","br"];  // não arranca o título
-      estilo += "clip-path:"+pdocBorda(rnd, {t:3.5,r:3,b:4,l:3}, lados, { canto:cantos[Math.floor(rnd()*cantos.length)], w:18+rnd()*16, h:14+rnd()*14 })+";";
+      var cantos = (doc.titulo || doc.folhas > 1) ? ["bl","br"] : ["tl","tr","bl","br"];  // não arranca o título
+      estilo += "clip-path:"+pdocBorda(rnd, {t:3.5,r:3,b:4,l:3}, lados, folhaCheia ? null : { canto:cantos[Math.floor(rnd()*cantos.length)], w:18+rnd()*16, h:14+rnd()*14 })+";";
       sujeira = sujeira.concat(pdocPintas(rnd, 10, "rgba(120,70,20,.4)"));
       relevo = pdocRelevo(rnd, 0.03, 1.2, 3);
     }
     if(cond === "queimado"){
-      estilo += "clip-path:"+pdocBorda(rnd, {t:4,r:4,b:5,l:4}, {t:true,r:true,b:true,l:true}, rnd()<.6 ? { canto:["tl","tr","bl","br"][Math.floor(rnd()*4)], w:14+rnd()*12, h:12+rnd()*12 } : null)+";";
+      estilo += "clip-path:"+pdocBorda(rnd, {t:4,r:4,b:5,l:4}, {t:true,r:true,b:true,l:true}, (rnd()<.6 && !folhaCheia) ? { canto:["tl","tr","bl","br"][Math.floor(rnd()*4)], w:14+rnd()*12, h:12+rnd()*12 } : null)+";";
       for(var q=0;q<5;q++){
         var lado = Math.floor(rnd()*4), pos = (10+rnd()*80).toFixed(1), rr = Math.round(40+rnd()*70);
         var xy = lado===0 ? pos+"% 0%" : lado===1 ? "100% "+pos+"%" : lado===2 ? pos+"% 100%" : "0% "+pos+"%";
@@ -2814,6 +2841,132 @@
     document.body.appendChild(d);
   }
 
+  // ===== Folhas (16/11/2026) =====
+  // O papel tem tamanho de folha. Texto que não cabe passa para a folha seguinte, na hora
+  // de mostrar: nada muda no banco, e documentos antigos longos ganham folhas sozinhos.
+  // A conta é feita numa folha padrão (560 x 780) fora da tela, com a letra do computador,
+  // para a divisão sair igual em qualquer aparelho. Documento curto continua como sempre.
+  var PDOC_FOLHA_L = 560, PDOC_FOLHA_A = 780, PDOC_FOLHA_FOLGA = 1.22;
+  var pdocFontesEpoca = 0, pdocFolhasMemo = {}, pdocAoMudarFontes = [];
+  function pdocMedidor(){
+    var m = document.getElementById("pdoc-medidor");
+    if(!m){
+      m = document.createElement("div"); m.id = "pdoc-medidor"; m.setAttribute("aria-hidden", "true");
+      m.className = "pdoc-wrap pdoc-folha pdoc-medida";
+      document.body.appendChild(m);
+      // A letra do papel chega depois da página: quando chegar, as medidas mudam.
+      if(document.fonts && document.fonts.addEventListener) document.fonts.addEventListener("loadingdone", function(){
+        pdocFontesEpoca++; pdocFolhasMemo = {};
+        pdocAoMudarFontes.slice().forEach(function(fn){ try{ fn(); }catch(e){ console.warn("[Pangea] folhas", e); } });
+      });
+    }
+    return m;
+  }
+  // Desenha o texto inteiro na folha de medida, palavra por palavra, e devolve as linhas:
+  // { a: posição no texto onde a linha começa, t/b: topo e pé, inicioPar, nota }.
+  function pdocMedirLinhas(doc, texto){
+    var escrita = doc.escrita || "manuscrito", mao = escrita === "manuscrito" || escrita === "rabisco";
+    var h = '<div class="pdoc escrita-'+pdocEsc(escrita)+(doc.papel==="caderno"?" papel-caderno":"")+(doc.titulo?"":" pdoc-sem-titulo")+'"><div class="pdoc-corpo">';
+    if(escrita === "relatorio" && doc.cabecalho && (doc.cabecalho[0]||doc.cabecalho[1])) h += '<div class="pdoc-cabecalho"><span>'+pdocEsc(doc.cabecalho[0]||"")+'</span><span>'+pdocEsc(doc.cabecalho[1]||"")+'</span></div>';
+    if(doc.data) h += '<div class="pdoc-data">'+pdocEsc(doc.data)+'</div>';
+    if(doc.titulo) h += '<div class="pdoc-titulo">'+pdocEsc(doc.titulo)+'</div>';
+    h += '<div class="pdoc-texto">';
+    var re = /\n\s*\n/g, ini = 0, m, pars = [];
+    while((m = re.exec(texto))){ pars.push([ini, texto.slice(ini, m.index)]); ini = m.index + m[0].length; }
+    pars.push([ini, texto.slice(ini)]);
+    var notas = [];
+    pars.forEach(function(par, ip){
+      var bruto = par[1], base = par[0], nota = /^\s*> /.test(bruto);
+      notas.push(nota);
+      if(!bruto.trim()) return;
+      h += '<p'+(nota?' class="pdoc-nota"':'')+'>';
+      var rw = /\S+|\n/g, w, teve = false;
+      rw.lastIndex = nota ? bruto.indexOf("> ") + 2 : 0;
+      while((w = rw.exec(bruto))){
+        if(w[0] === "\n"){ if(teve) h += "<br>"; continue; }
+        teve = true;
+        var vis = pdocEsc(w[0]).replace(/\[ileg[ií]vel\]/gi, '<span class="ilegivel"></span>').replace(/\*\*|~~|\{\{|\}\}/g, "");
+        h += '<span'+(mao && !nota ? ' class="pdoc-palavra"' : '')+' data-a="'+(base+w.index)+'" data-p="'+ip+'">'+(vis || "&#8203;")+'</span> ';
+      }
+      h += '</p>';
+    });
+    h += '</div>';
+    if(doc.assinatura) h += '<div class="pdoc-assinatura">'+pdocEsc(doc.assinatura)+'</div>';
+    h += '</div></div>';
+    var med = pdocMedidor(); med.innerHTML = h;
+    var papel = med.firstChild, corpo = papel.firstChild, cs = getComputedStyle(papel);
+    // Com "Tamanho do texto" maior a página inteira é ampliada: a escala tira isso da conta.
+    var escala = (med.getBoundingClientRect().width / PDOC_FOLHA_L) || 1;
+    var rc = corpo.getBoundingClientRect(), topo = rc.top, linhas = [], ult = null;
+    Array.prototype.forEach.call(med.querySelectorAll("span[data-a]"), function(sp){
+      var r = sp.getBoundingClientRect(), p = +sp.getAttribute("data-p"), t = (r.top - topo) / escala, b = (r.bottom - topo) / escala;
+      if(ult && ult.p === p && Math.abs(t - ult.t) < 6){ if(b > ult.b) ult.b = b; return; }
+      ult = { a:+sp.getAttribute("data-a"), p:p, t:t, b:b, inicioPar:!ult || ult.p !== p, nota:notas[p] };
+      linhas.push(ult);
+    });
+    var r = { linhas:linhas, total:rc.height / escala, limite:PDOC_FOLHA_A - (parseFloat(cs.paddingTop)||0) - (parseFloat(cs.paddingBottom)||0) };
+    med.innerHTML = "";
+    return r;
+  }
+  // Onde cada folha nova começa (posições no texto). Lista vazia = cabe numa folha só.
+  function pdocCortes(doc, texto){
+    var m = pdocMedirLinhas(doc, texto), L = m.linhas, lim = m.limite, cortes = [];
+    if(L.length < 2 || !(lim > 100) || m.total <= lim * PDOC_FOLHA_FOLGA) return cortes;
+    var i = 0, y0 = 0;
+    for(var guarda = 0; guarda < 400; guarda++){
+      var j = i; while(j+1 < L.length && L[j+1].b - y0 <= lim) j++;
+      if(j >= L.length-1) break;
+      var k = j+1;
+      // a primeira linha de um parágrafo não fica sozinha no pé da folha
+      if(!L[k].inicioPar && L[j].inicioPar && j > i) k = j;
+      cortes.push({ a:L[k].a, meio:!L[k].inicioPar, nota:!!L[k].nota, linha:k });
+      y0 = L[k].t; i = k;
+    }
+    // última folha com duas ou três linhas: fica na anterior, se couber com folga
+    if(cortes.length){
+      var uc = cortes[cortes.length-1], yAnt = cortes.length > 1 ? L[cortes[cortes.length-2].linha].t : 0;
+      if(L.length - uc.linha <= 3 && m.total - yAnt <= lim * PDOC_FOLHA_FOLGA) cortes.pop();
+    }
+    return cortes;
+  }
+  // Devolve as folhas de um documento (ou página): cada uma é um "documento" pronto para
+  // o renderDocumento. Uma folha só = o próprio documento, sem mudança nenhuma.
+  function pdocFolhas(doc){
+    doc = doc || {};
+    var texto = String(doc.texto||"").replace(/\r/g,"");
+    // texto curto (e sem muitas quebras de linha) cabe numa folha: nem mede
+    if((texto.length < 400 && texto.split("\n").length < 14) || doc.tamanho === "bilhete" || doc.continuacao || typeof document === "undefined" || !document.body) return [doc];
+    var chave = [pdocFontesEpoca, doc.escrita, doc.papel, doc.titulo, doc.data, doc.assinatura, (doc.cabecalho||[]).join("\u0002"), texto].join("\u0001");
+    var memo = doc.id ? pdocFolhasMemo[doc.id] : null, cortes;
+    if(memo && memo.chave === chave) cortes = memo.cortes;
+    else {
+      cortes = [];
+      try{ cortes = pdocCortes(doc, texto); }catch(e){ console.warn("[Pangea] folhas", e); }
+      if(doc.id) pdocFolhasMemo[doc.id] = { chave:chave, cortes:cortes };
+    }
+    if(!cortes.length) return [doc];
+    var n = cortes.length + 1, folhas = [], prefixo = "";
+    for(var i = 0; i < n; i++){
+      var a = i ? cortes[i-1].a : 0, b = i < n-1 ? cortes[i].a : texto.length;
+      var t = prefixo + texto.slice(a, b).replace(/\s+$/, ""), corte = cortes[i];
+      prefixo = "";
+      if(corte){
+        // marcação aberta no fim da folha (destaque, riscado, apagado) fecha aqui e reabre na próxima
+        var reabre = "";
+        if((t.match(/\*\*/g)||[]).length % 2){ t += "**"; reabre += "**"; }
+        if((t.match(/~~/g)||[]).length % 2){ t += "~~"; reabre += "~~"; }
+        if((t.match(/\{\{/g)||[]).length > (t.match(/\}\}/g)||[]).length){ t += "}}"; reabre += "{{"; }
+        prefixo = (corte.meio && corte.nota ? "> " : "") + reabre;
+      }
+      var f = {}; Object.keys(doc).forEach(function(k){ f[k] = doc[k]; });
+      f.texto = t; f.tamanho = "pagina"; f.folha = i+1; f.folhas = n; f.txtIni = a; f.txtFim = b;
+      if(i){ f.id = String(doc.id || doc.titulo || "doc")+"~"+(i+1); f.titulo = ""; f.data = ""; f.cabecalho = ["",""]; f.continuacao = true; }
+      if(i < n-1){ f.assinatura = ""; f.carimbo = ""; }
+      folhas.push(f);
+    }
+    return folhas;
+  }
+
   // ---------- DOCUMENTOS DA CAMPANHA ----------
   // Coleção "documentos": o papel em si (quem recebeu lê). Coleção "documentosNotas":
   // onde/como é achado e a nota do Assimilador (só o Assimilador lê). "entregues" são
@@ -2883,47 +3036,66 @@
   // o personagem ainda não recebeu). Com várias páginas: setas, teclado e deslizar.
   function abrirDocumento(d, inicio){
     pdocInstalarFiltros();
-    var pags = Array.isArray(d) ? d : [d], total = pags.length, atual = Math.max(0, Math.min(total-1, inicio||0));
-    if(!pags[atual]) for(var i=0;i<total;i++) if(pags[i]){ atual = i; break; }
+    var pags = Array.isArray(d) ? d : [d], nPag = pags.length;
+    // "telas" = o que se folheia: as folhas de cada página, na ordem. Página não recebida = uma tela.
+    function montarTelas(){
+      var t = [];
+      pags.forEach(function(p, ip){
+        if(!p){ t.push({ pag:ip, doc:null }); return; }
+        pdocFolhas(docPaginaParaVer(p, nPag)).forEach(function(f){ t.push({ pag:ip, doc:f }); });
+      });
+      return t;
+    }
+    var telas = montarTelas(), atual = 0, i;
+    for(i = 0; i < telas.length; i++) if(telas[i].pag === (inicio||0)){ atual = i; break; }
+    if(!telas[atual].doc) for(i = 0; i < telas.length; i++) if(telas[i].doc){ atual = i; break; }
     var el = document.getElementById("pdoc-overlay-root");
     if(!el){ el = document.createElement("div"); el.id = "pdoc-overlay-root"; document.body.appendChild(el); }
-    el.innerHTML = '<div class="pdoc-overlay'+(total>1?' pdoc-com-paginas':'')+'" data-pdocfechar><button type="button" class="btn secondary pdoc-fechar" data-pdocfechar>Fechar ✕</button>' +
-      (total > 1 ? '<div class="pdoc-paginador" data-pdocnav><button type="button" class="btn" data-pdocir="-1" aria-label="Página anterior">‹</button><span data-pdocnum aria-live="polite"></span><button type="button" class="btn" data-pdocir="1" aria-label="Próxima página">›</button></div>' : '') +
+    el.innerHTML = '<div class="pdoc-overlay" data-pdocfechar><button type="button" class="btn secondary pdoc-fechar" data-pdocfechar>Fechar ✕</button>' +
+      '<div class="pdoc-paginador" data-pdocnav hidden><button type="button" class="btn" data-pdocir="-1" aria-label="Página anterior">‹</button><span data-pdocnum aria-live="polite"></span><button type="button" class="btn" data-pdocir="1" aria-label="Próxima página">›</button></div>' +
       '<div style="width:100%;max-width:620px" data-pdocpapel></div></div>';
-    var overlay = el.querySelector(".pdoc-overlay"), papel = el.querySelector("[data-pdocpapel]"), num = el.querySelector("[data-pdocnum]");
+    var overlay = el.querySelector(".pdoc-overlay"), papel = el.querySelector("[data-pdocpapel]"), num = el.querySelector("[data-pdocnum]"), nav = el.querySelector("[data-pdocnav]");
     function mostrar(dir){
-      var p = pags[atual];
-      papel.innerHTML = p ? renderDocumento(docPaginaParaVer(p, total)) : '<div class="pdoc-faltando"><b>Página '+(atual+1)+'</b><span>Vocês ainda não encontraram esta página.</span></div>';
-      if(num){
-        num.textContent = "Página "+(atual+1)+" de "+total;
-        el.querySelector('[data-pdocir="-1"]').disabled = atual === 0;
-        el.querySelector('[data-pdocir="1"]').disabled = atual === total-1;
-      }
+      var total = telas.length, p = telas[atual].doc;
+      papel.innerHTML = p ? renderDocumento(p) : '<div class="pdoc-faltando"><b>Página '+(atual+1)+'</b><span>Vocês ainda não encontraram esta página.</span></div>';
+      overlay.classList.toggle("pdoc-com-paginas", total > 1);
+      nav.hidden = total < 2;
+      num.textContent = "Página "+(atual+1)+" de "+total;
+      el.querySelector('[data-pdocir="-1"]').disabled = atual === 0;
+      el.querySelector('[data-pdocir="1"]').disabled = atual === total-1;
       if(dir){ papel.classList.remove("pdoc-vira-e","pdoc-vira-d"); void papel.offsetWidth; papel.classList.add(dir > 0 ? "pdoc-vira-d" : "pdoc-vira-e"); overlay.scrollTop = 0; }
     }
-    function ir(dir){ var n = atual + dir; if(n < 0 || n >= total) return; atual = n; mostrar(dir); }
+    function ir(dir){ var n = atual + dir; if(n < 0 || n >= telas.length) return; atual = n; mostrar(dir); }
+    // A letra do papel acabou de chegar: refaz a divisão e fica no mesmo trecho do texto.
+    function refazer(){
+      var ref = telas[atual], novas = montarTelas(), achou = 0;
+      novas.forEach(function(t, k){ if(t.pag === ref.pag && (!ref.doc || !t.doc || (t.doc.txtIni||0) <= (ref.doc.txtIni||0))) achou = k; });
+      telas = novas; atual = achou; mostrar(0);
+    }
+    pdocAoMudarFontes.push(refazer);
     mostrar(0);
     document.body.style.overflow = "hidden";
-    function fechar(){ el.innerHTML = ""; document.body.style.overflow = ""; document.removeEventListener("keydown", esc1); }
+    function fechar(){
+      el.innerHTML = ""; document.body.style.overflow = ""; document.removeEventListener("keydown", esc1);
+      var ix = pdocAoMudarFontes.indexOf(refazer); if(ix > -1) pdocAoMudarFontes.splice(ix, 1);
+    }
     function esc1(e){
       if(e.key === "Escape") fechar();
-      else if(total > 1 && e.key === "ArrowRight"){ e.preventDefault(); ir(1); }
-      else if(total > 1 && e.key === "ArrowLeft"){ e.preventDefault(); ir(-1); }
+      else if(telas.length > 1 && e.key === "ArrowRight"){ e.preventDefault(); ir(1); }
+      else if(telas.length > 1 && e.key === "ArrowLeft"){ e.preventDefault(); ir(-1); }
     }
     document.addEventListener("keydown", esc1);
-    if(total > 1){
-      var tx = null, ty = 0;
-      overlay.addEventListener("touchstart", function(e){ if(e.touches.length !== 1){ tx = null; return; } tx = e.touches[0].clientX; ty = e.touches[0].clientY; }, { passive:true });
-      overlay.addEventListener("touchend", function(e){
-        if(tx === null) return;
-        var t = e.changedTouches[0], dx = t.clientX - tx, dy = t.clientY - ty; tx = null;
-        if(Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)*1.5) ir(dx < 0 ? 1 : -1);
-      });
-    }
+    var tx = null, ty = 0;
+    overlay.addEventListener("touchstart", function(e){ if(e.touches.length !== 1){ tx = null; return; } tx = e.touches[0].clientX; ty = e.touches[0].clientY; }, { passive:true });
+    overlay.addEventListener("touchend", function(e){
+      if(tx === null || telas.length < 2) return;
+      var t = e.changedTouches[0], dx = t.clientX - tx, dy = t.clientY - ty; tx = null;
+      if(Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)*1.5) ir(dx < 0 ? 1 : -1);
+    });
     el.querySelectorAll("[data-pdocfechar]").forEach(function(b){
       b.addEventListener("click", function(e){
-        var nav = e.target.closest("[data-pdocnav]");
-        if(nav){ var bt = e.target.closest("[data-pdocir]"); if(bt && !bt.disabled) ir(parseInt(bt.getAttribute("data-pdocir"),10)); return; }
+        var nv = e.target.closest("[data-pdocnav]");
+        if(nv){ var bt = e.target.closest("[data-pdocir]"); if(bt && !bt.disabled) ir(parseInt(bt.getAttribute("data-pdocir"),10)); return; }
         if(e.target.closest("[data-pdocpapel]") && !e.target.closest(".pdoc-fechar")) return;
         fechar();
       });
@@ -3170,7 +3342,9 @@
         '<div class="field"><label>Onde / como é achado</label><textarea data-docf="achado" style="min-height:60px">'+esc(ed.achado)+'</textarea></div>' +
         '<div class="field"><label>Nota do Assimilador</label><textarea data-docf="notaMestre" style="min-height:60px">'+esc(ed.notaMestre)+'</textarea></div>' +
         '<div class="btn-row"><button type="button" class="btn secondary" data-docacao="cancelar">Cancelar</button><button type="button" class="btn accent" data-docacao="salvar">Salvar documento</button></div>' +
-        '</div><div class="doc-editor-previa"><p class="hint" style="margin:0 0 8px">Prévia'+(nPag>1?' da página '+(iPag+1):'')+' (é assim que os jogadores veem):</p><div id="doc-previa">'+renderDocumento(docPrevia(ed))+'</div></div></div>';
+        '</div><div class="doc-editor-previa"><div class="doc-previa-topo"><span>Prévia'+(nPag>1?' da página '+(iPag+1):'')+'</span>' +
+          '<span class="doc-previa-nav" data-docprevnav hidden><button type="button" class="btn doc-btn" data-docprevir="-1" aria-label="Folha anterior">‹</button><span data-docprevnum></span><button type="button" class="btn doc-btn" data-docprevir="1" aria-label="Próxima folha">›</button></span>' +
+          '<button type="button" class="btn doc-btn" data-docacao="previa-cheia">Ampliar</button></div><div id="doc-previa"></div></div></div>';
     } else {
       html += '<div class="btn-row" style="justify-content:flex-start;gap:8px;flex-wrap:wrap"><button type="button" class="btn accent" data-docacao="novo">+ Documento</button><button type="button" class="btn secondary" data-docacao="importar-arq" title="Importar um arquivo .json de documentos">Importar</button><button type="button" class="btn secondary" data-docacao="exportar" title="Baixar todos os documentos em .json (sem as entregas)"'+(docsLista().length?'':' disabled')+'>Exportar</button><button type="button" class="btn secondary" data-docacao="importar">Colar código</button><input type="file" accept=".json,application/json" data-docimpfile style="display:none"></div>';
       if(state.docImportar){
@@ -3282,19 +3456,66 @@
       leitor.onload = function(){ importarDocsArquivo(String(leitor.result||""), rerender); };
       leitor.readAsText(f);
     });
-    function previa(){ var p = raiz.querySelector("#doc-previa"); if(p) p.innerHTML = renderDocumento(docPrevia(ed)); }
+    // Prévia: uma folha por vez, em miniatura fiel (a folha inteira cabe na coluna e não
+    // muda de tamanho enquanto se escreve). "cursor" = posição no texto: a prévia mostra a
+    // folha onde se está escrevendo.
+    var previaEspera = null;
+    function previa(cursor){
+      var p = raiz.querySelector("#doc-previa"); if(!p || !ed) return;
+      pdocInstalarFiltros();
+      var folhas = pdocFolhas(docPrevia(ed)), ver = state.docPreviaFolha || 0;
+      if(cursor != null) folhas.forEach(function(f, i){ if(!i || cursor >= f.txtIni) ver = i; });
+      ver = state.docPreviaFolha = Math.max(0, Math.min(folhas.length-1, ver));
+      p.innerHTML = renderDocumento(folhas[ver]);
+      var w = p.firstChild, largP = p.getBoundingClientRect().width;
+      if(w && largP > 0 && window.CSS && CSS.supports && CSS.supports("zoom", "1")){
+        // mede a folha na largura padrão, no mesmo espaço da coluna, e reduz na proporção
+        w.style.width = PDOC_FOLHA_L+"px"; w.style.maxWidth = "none";
+        var largW = w.getBoundingClientRect().width, k = largW > 0 ? Math.min(1, largP / largW) : 1;
+        if(k >= 1 || w.classList.contains("pdoc-bilhete")){ w.style.width = ""; w.style.maxWidth = ""; }
+        if(k < 1) w.style.zoom = k.toFixed(4);
+      }
+      var nav = raiz.querySelector("[data-docprevnav]");
+      if(nav){
+        nav.hidden = folhas.length < 2;
+        nav.querySelector("[data-docprevnum]").textContent = "Folha "+(ver+1)+" de "+folhas.length;
+        nav.querySelector('[data-docprevir="-1"]').disabled = ver === 0;
+        nav.querySelector('[data-docprevir="1"]').disabled = ver === folhas.length-1;
+      }
+    }
+    function previaDepois(cursor, longo){
+      clearTimeout(previaEspera);
+      if(!longo){ previa(cursor); return; }
+      previaEspera = setTimeout(function(){ previa(cursor); }, 140);
+    }
     function pagAtual(){ var i = state.docEditPag || 0; return i && ed.paginas && ed.paginas[i-1] ? ed.paginas[i-1] : ed; }
-    raiz.querySelectorAll("[data-docf]").forEach(function(el){
-      el.addEventListener(el.tagName==="SELECT" ? "change" : "input", function(){
-        var k = el.getAttribute("data-docf");
-        (DOC_CAMPOS_PAGINA.indexOf(k) > -1 ? pagAtual() : ed)[k] = el.value; previa();
+    if(ed){
+      previa();
+      raiz.querySelectorAll("[data-docprevir]").forEach(function(b){
+        b.addEventListener("click", function(){ state.docPreviaFolha = (state.docPreviaFolha||0) + parseInt(b.getAttribute("data-docprevir"),10); previa(); });
       });
+      // a letra do papel chegou (ou a janela mudou de largura): refaz a prévia
+      var refazPrevia = function(){ if(!raiz.isConnected || state.docEdit !== ed){ var ix = pdocAoMudarFontes.indexOf(refazPrevia); if(ix > -1) pdocAoMudarFontes.splice(ix, 1); window.removeEventListener("resize", refazPrevia); return; } previa(); };
+      pdocAoMudarFontes.push(refazPrevia);
+      window.addEventListener("resize", refazPrevia);
+    }
+    raiz.querySelectorAll("[data-docf]").forEach(function(el){
+      var k = el.getAttribute("data-docf"), ehTexto = k === "texto";
+      el.addEventListener(el.tagName==="SELECT" ? "change" : "input", function(){
+        (DOC_CAMPOS_PAGINA.indexOf(k) > -1 ? pagAtual() : ed)[k] = el.value;
+        previaDepois(ehTexto ? el.selectionStart : null, String(pagAtual().texto||"").length > 4000);
+      });
+      // clicar ou andar com as setas no texto leva a prévia para a folha daquele trecho
+      if(ehTexto){
+        var segue = function(){ if((pdocFolhas(docPrevia(ed))).length > 1) previa(el.selectionStart); };
+        el.addEventListener("click", segue); el.addEventListener("keyup", function(e){ if(/^(Arrow|Page|Home|End)/.test(e.key)) segue(); });
+      }
     });
     raiz.querySelectorAll("[data-doccab]").forEach(function(el){
       el.addEventListener("input", function(){ var alvo = pagAtual(); if(!alvo.cabecalho) alvo.cabecalho = ["",""]; alvo.cabecalho[parseInt(el.getAttribute("data-doccab"),10)] = el.value; previa(); });
     });
     raiz.querySelectorAll("[data-docpag-ir]").forEach(function(b){
-      b.addEventListener("click", function(){ state.docEditPag = parseInt(b.getAttribute("data-docpag-ir"),10) || 0; rerender(); });
+      b.addEventListener("click", function(){ state.docEditPag = parseInt(b.getAttribute("data-docpag-ir"),10) || 0; state.docPreviaFolha = 0; rerender(); });
     });
     // Entrega de várias páginas: a coluna "Todas" marca/desmarca a linha inteira.
     function acertarTodas(cid){
@@ -3312,24 +3533,27 @@
     raiz.querySelectorAll("[data-docacao]").forEach(function(b){
       b.addEventListener("click", function(){
         var acao = b.getAttribute("data-docacao");
-        if(acao === "novo"){ state.docEdit = novoDocRascunho(); state.docEditPag = 0; state.docImportar = false; rerender(); }
-        else if(acao === "cancelar"){ state.docEdit = null; state.docEditPag = 0; rerender(); }
+        if(acao === "novo"){ state.docEdit = novoDocRascunho(); state.docEditPag = 0; state.docPreviaFolha = 0; state.docImportar = false; rerender(); }
+        else if(acao === "cancelar"){ state.docEdit = null; state.docEditPag = 0; state.docPreviaFolha = 0; rerender(); }
+        else if(acao === "previa-cheia"){
+          abrirDocumento([ed].concat((ed.paginas||[]).map(function(pg){ return docPaginaEfetiva(ed, pg); })), state.docEditPag||0);
+        }
         else if(acao === "pag-nova"){
           if(!ed.paginas) ed.paginas = [];
           ed.paginas.push({ id:"pag_"+uid(), titulo:"", texto:"", escrita:"", papel:"", condicao:"", data:"", assinatura:"", carimbo:"", cabecalho:["",""] });
-          state.docEditPag = ed.paginas.length; rerender();
+          state.docEditPag = ed.paginas.length; state.docPreviaFolha = 0; rerender();
         }
         else if(acao === "pag-tras" || acao === "pag-frente"){
           var ia = (state.docEditPag||0) - 1, ib = ia + (acao === "pag-tras" ? -1 : 1);
           if(ia < 0 || ib < 0 || ib >= ed.paginas.length) return;
           var tmp = ed.paginas[ia]; ed.paginas[ia] = ed.paginas[ib]; ed.paginas[ib] = tmp;
-          state.docEditPag = ib + 1; rerender();
+          state.docEditPag = ib + 1; state.docPreviaFolha = 0; rerender();
         }
         else if(acao === "pag-remover"){
           var ir = (state.docEditPag||0) - 1; if(ir < 0) return;
           var gravada = (shared.documentos||[]).filter(function(x){ return x.id === ed.paginas[ir].id; })[0];
           askConfirm("Remover a página "+(ir+2)+" deste documento?"+(gravada && (gravada.entregues||[]).length ? "\n\nQuem já recebeu esta página deixa de vê-la." : "")+"\n\nA remoção só vale quando você salvar o documento.", function(){
-            ed.paginas.splice(ir, 1); state.docEditPag = Math.min(ir+1, ed.paginas.length); rerender();
+            ed.paginas.splice(ir, 1); state.docEditPag = Math.min(ir+1, ed.paginas.length); state.docPreviaFolha = 0; rerender();
           });
         }
         else if(acao === "salvar"){
@@ -3350,7 +3574,7 @@
           });
           velhasS.forEach(function(v){ if(!pgs.some(function(pg){ return pg.id===v.id; })) opsS.push({ tipo:"del", col:"documentos", id:v.id }); });
           gravarDocs(opsS);
-          state.docEdit = null; state.docEditPag = 0; rerender();
+          state.docEdit = null; state.docEditPag = 0; state.docPreviaFolha = 0; rerender();
         }
         else if(acao === "importar"){ state.docImportar = !state.docImportar; rerender(); }
         else if(acao === "importar-arq"){ var arqD = raiz.querySelector("[data-docimpfile]"); if(arqD){ arqD.value = ""; arqD.click(); } }
@@ -3392,7 +3616,7 @@
     raiz.querySelectorAll("[data-doceditar]").forEach(function(b){ b.addEventListener("click", function(){
       var d = docAcharPorId(b.getAttribute("data-doceditar")); if(!d) return;
       var n = docNota(d.id);
-      state.docEditPag = 0;
+      state.docEditPag = 0; state.docPreviaFolha = 0;
       state.docEdit = JSON.parse(JSON.stringify(d));
       state.docEdit.paginas = docPaginasExtras(d.id).map(function(p){
         var pg = { id:p.id, titulo:p.titulo||"", texto:p.texto||"", escrita:p.escrita||"", papel:p.papel||"", condicao:p.condicao||"", data:p.data||"", assinatura:p.assinatura||"", carimbo:p.carimbo||"", cabecalho:(p.cabecalho||["",""]).slice(0,2) };
@@ -4187,7 +4411,7 @@
       if(desviou || usuario !== u || !lobby) return;
       lobbyOuvintes.push(FB.ouvir("/campanhas", function(lista){
         if(usuario !== u || !lobby) return;
-        lobby.campanhas = lista.slice().sort(function(a,b){ return String(a.nome||"").localeCompare(String(b.nome||"")); });
+        lobby.campanhas = lista.filter(function(c){ return c && !c.apagada; }).sort(function(a,b){ return String(a.nome||"").localeCompare(String(b.nome||"")); });
         carregarExtrasLobby();
       }, function(e){
         // Plano B se a lista for recusada: abre uma a uma as campanhas já conhecidas neste aparelho.
@@ -4195,7 +4419,7 @@
         var ids = (loadLS(CONHECIDAS_KEY, [])||[]).concat([CAMPANHA_PADRAO]).filter(function(x, i, a){ return a.indexOf(x) === i; });
         Promise.all(ids.map(function(id){ return FB.lerDoc("/campanhas", id).catch(function(){ return null; }); })).then(function(l){
           if(usuario !== u || !lobby) return;
-          lobby.campanhas = l.filter(function(c){ return c && ehMembroDe(c) && (!c.migracao || c.migracao.etapa === "ok"); });
+          lobby.campanhas = l.filter(function(c){ return c && !c.apagada && ehMembroDe(c) && (!c.migracao || c.migracao.etapa === "ok"); });
           carregarExtrasLobby();
         });
       }, ["membros", u.uid, "array-contains"]));
@@ -4812,6 +5036,7 @@
     limparMesaLocal();
     modoBase = null; cfgCache.chave = null;
     campanhaAtual = cmp;
+    if(cmp.apagada){ campanhaAtual = null; avisoLobby = "Essa campanha não existe mais."; mostrarLobby(); return; }
     if(!ehMembro()){ campanhaAtual = null; avisoLobby = "Você não participa mais dessa campanha."; mostrarLobby(); return; }
     FB.abrirCampanha(cmp.id);
     try{ sessionStorage.setItem(CAMPANHA_ABERTA_KEY, cmp.id); }catch(e){}
@@ -4970,11 +5195,12 @@
     locs += '<button type="button" class="btn secondary doc-btn" data-cfglocadd="1">+ Local</button>' +
       (d.automacoes.qualidadePorLocal?'':'<p class="hint" style="margin:6px 0 0">Sorteio da Qualidade desligado nas Automações: os itens saem em Padrão (3).</p>')+'</div>';
     var body = '<div id="gm-config">' +
-      det("capa", "Capa", capaConfigHtml()) +
+      det("capa", "Nome e capa", nomeConfigHtml() + capaConfigHtml()) +
       det("criacao", "Criação de personagem", criacao) + det("autos", "Automações", autos) + det("locais", "Locais e Qualidade por local", locs) +
       '<div class="row" style="gap:8px;margin-top:12px;flex-wrap:wrap"><button type="button" class="btn accent" data-cfgsalvar="1"'+(state.cfgSujo?'':' disabled')+'>Salvar</button>' +
         '<button type="button" class="btn secondary" data-cfgdescartar="1"'+(state.cfgSujo?'':' disabled')+'>Descartar</button>' +
         '<span class="hint" id="cfg-status" style="margin:0;align-self:center">'+(state.cfgSujo?'Não salvo':'')+'</span></div>' +
+      det("apagar", "Apagar campanha", apagarConfigHtml()) +
     '</div>';
     return sectionCard("gmconfig", "Configuração da campanha", body);
   }
@@ -5042,6 +5268,7 @@
     on("[data-cfglocdel]", "click", function(el){ d.locais.splice(idx(el,"data-cfglocdel"),1); sujo(true); });
     on("[data-cfglocmover]", "click", function(el){ mover(d.locais, idx(el,"data-cfglocmover"), idx(el,"data-dir")); sujo(true); });
     bindCapaConfig(raiz, rerender);
+    bindNomeApagarConfig(raiz, rerender);
     on("[data-cfgdescartar]", "click", function(){ state.cfgDraft = null; state.cfgSujo = false; rerender(); });
     on("[data-cfgsalvar]", "click", function(el){
       var limpo = limparConfig(d);
@@ -6564,6 +6791,170 @@
       if(!temArquivo(e)) return;
       e.preventDefault(); el.classList.remove("img-solta");
       var f = e.dataTransfer.files && e.dataTransfer.files[0]; if(f) aoSoltar(f);
+    });
+  }
+  // ----- Nome da campanha e Apagar campanha (16/11/2026) -----
+  function nomeConfigHtml(){
+    return '<div class="cfg-bloco"><div class="row" style="gap:8px;align-items:flex-end;flex-wrap:wrap">' +
+      '<div class="field" style="flex:1;min-width:min(220px, 100%);margin:0"><label for="cfg-nome">Nome</label><input type="text" id="cfg-nome" maxlength="60" data-cfgnome value="'+esc(campanhaAtual.nome||"")+'"></div>' +
+      '<button type="button" class="btn secondary" data-cfgnomeok="1">Renomear</button></div></div>';
+  }
+  function apagarConfigHtml(){
+    if(!state.cfgApagar) return '<div class="cfg-bloco"><button type="button" class="btn danger" data-cfgapagar="abrir">Apagar esta campanha…</button></div>';
+    return '<div class="cfg-bloco"><ul class="hint" style="margin:0 0 10px 18px;padding:0">' +
+        '<li>As fichas dos jogadores ficam guardadas na conta de cada um.</li>' +
+        '<li>Documentos, criaturas, itens, NPCs, rolagens e trilhas enviadas são apagados.</li>' +
+        '<li>Um backup é baixado antes, para consulta. Não dá para desfazer.</li></ul>' +
+      '<div class="row" style="gap:8px;align-items:flex-end;flex-wrap:wrap">' +
+        '<div class="field" style="flex:1;min-width:min(220px, 100%);margin:0"><label for="cfg-apagar-nome">Digite o nome da campanha</label><input type="text" id="cfg-apagar-nome" data-cfgapagarnome autocomplete="off" placeholder="'+esc(campanhaAtual.nome||"")+'"></div>' +
+        '<button type="button" class="btn danger" data-cfgapagar="ok" disabled>Apagar para sempre</button>' +
+        '<button type="button" class="btn secondary" data-cfgapagar="cancelar">Cancelar</button></div></div>';
+  }
+  function bindNomeApagarConfig(raiz, rerender){
+    var campo = raiz.querySelector("[data-cfgnome]"), okNome = raiz.querySelector("[data-cfgnomeok]");
+    function renomear(){
+      var cid = campanhaAtual.id, novo = String(campo.value||"").replace(/\s+/g, " ").trim().slice(0, 60);
+      if(!novo){ avisar("Escreva um nome para a campanha."); return; }
+      if(novo === (campanhaAtual.nome||"")) return;
+      // os links de convite ativos mostram o nome: acompanham a mudança
+      var ops = [{ tipo:"update", col:"/campanhas", id:cid, data:{ nome:novo } }];
+      (shared.convites||[]).forEach(function(cv){ if(cv && cv.codigo) ops.push({ tipo:"update", col:"convites", id:cv.codigo, data:{ campanhaNome:novo } }); });
+      okNome.disabled = true;
+      FB.escrever(ops).then(function(){
+        if(campanhaAtual && campanhaAtual.id === cid) campanhaAtual.nome = novo;
+        avisar("Campanha renomeada.", "ok"); render();
+      }).catch(function(err){
+        console.error("[Pangea] renomear campanha", err); okNome.disabled = false;
+        avisar("Não deu pra renomear: " + (err && (err.code || err.message) || "erro desconhecido"));
+      });
+    }
+    if(campo && okNome){
+      okNome.addEventListener("click", renomear);
+      campo.addEventListener("keydown", function(e){ if(e.key === "Enter"){ e.preventDefault(); renomear(); } });
+    }
+    var conf = raiz.querySelector("[data-cfgapagarnome]"), okAp = raiz.querySelector('[data-cfgapagar="ok"]');
+    function confere(){ return !!conf && conf.value.trim().toLowerCase() === String(campanhaAtual.nome||"").trim().toLowerCase(); }
+    if(conf && okAp) conf.addEventListener("input", function(){ okAp.disabled = !confere(); });
+    raiz.querySelectorAll("[data-cfgapagar]").forEach(function(b){
+      b.addEventListener("click", function(){
+        var a = b.getAttribute("data-cfgapagar");
+        if(a === "abrir"){ state.cfgApagar = true; state.cfgAbertos.apagar = true; rerender(); var c2 = app.querySelector("[data-cfgapagarnome]"); if(c2) c2.focus(); }
+        else if(a === "cancelar"){ state.cfgApagar = false; rerender(); }
+        else if(a === "ok" && confere()){ state.cfgApagar = false; apagarCampanha(); }
+      });
+    });
+  }
+  // Guarda na conta do dono a ficha que está numa campanha (o mesmo que o "remover da
+  // mesa" faz): cria a ficha-base se ela não tiver e grava a cópia como "guardada".
+  function guardarFichaDaCampanha(c, cid, nomeCmp){
+    function ops(bid, comBase){
+      var l = [];
+      if(comBase) l.push({ tipo:"set", col:"/fichas", id:bid, data:paraFirestore(baseDaCopia(c, cid)) });
+      var g = clonar(c); g.campanhaId = cid; g.campanhaNome = nomeCmp; g.guardadaEm = agoraIso(); g.baseId = bid;
+      l.push({ tipo:"set", col:"/fichas/"+bid+"/guardadas", id:c.id, data:paraFirestore(g) });
+      return l;
+    }
+    var bid = c.baseId || c.id;
+    return FB.escrever(ops(bid, !c.baseId)).then(function(){ return { bid:bid, id:c.id }; }).catch(function(e1){
+      // A ficha-base sumiu (o jogador apagou): recria a base com o código da própria cópia
+      // (é o que as regras deixam o mestre criar) e guarda ali. Base que existe e é de outra
+      // conta nunca é regravada: as regras recusam, e a falha sobe para o mestre decidir.
+      if(!c.baseId) throw e1;
+      var velha = c.baseId, aponta = velha === c.id ? Promise.resolve() :
+        FB.escrever([{ tipo:"update", col:"/campanhas/"+cid+"/fichas", id:c.id, data:{ baseId:c.id } }]);
+      return aponta.then(function(){ c.baseId = c.id; return FB.escrever(ops(c.id, true)); }).then(function(){ return { bid:c.id, id:c.id }; }, function(e2){
+        c.baseId = velha;
+        var volta = velha === c.id ? Promise.resolve() : FB.escrever([{ tipo:"update", col:"/campanhas/"+cid+"/fichas", id:c.id, data:{ baseId:velha } }]).catch(function(){});
+        return volta.then(function(){ throw e2; });
+      });
+    });
+  }
+  // Apagar a campanha aberta. Só o dono. A ordem não deixa nada órfão (as regras só
+  // deixam apagar o que está dentro de uma campanha enquanto ela existe):
+  //  1. baixa um backup;
+  //  2. guarda na conta de cada dono as fichas que não são NPC;
+  //  3. tira os jogadores de "membros" (ninguém mais grava ali);
+  //  4. apaga tudo das coleções da campanha (a lista é a mesma do backup);
+  //  5. por último, apaga a campanha.
+  // Se parar no meio, a campanha continua na lista do mestre: é só apagar de novo.
+  // A campanha "pangea" (a da migração) não some do banco: fica só uma marca "apagada",
+  // senão o site ofereceria de novo a migração da mesa antiga.
+  function apagarCampanha(){
+    var cmp = campanhaAtual, u = usuario; if(!FB || !cmp || !u || !ehMestre()) return;
+    var cid = cmp.id, nome = cmp.nome || "", raizCol = "/campanhas/"+cid+"/", guardadas = [];
+    function status(t){ var el = document.getElementById("apagar-status"); if(el) el.textContent = t; }
+    function txtErro(e){ return (e && (e.code || e.message)) || "erro desconhecido"; }
+    function apagarColecoes(){
+      return BACKUP_COLECOES.reduce(function(p, par){
+        return p.then(function(){
+          status("Apagando " + (BACKUP_NOMES[par[0]] || par[0]) + "…");
+          return FB.lerColecao(raizCol + par[0]);
+        }).then(function(l){
+          return l.length ? FB.escrever(l.map(function(x){ return { tipo:"del", col:raizCol + par[0], id:String(x.id) }; })) : null;
+        });
+      }, Promise.resolve());
+    }
+    function desistir(msg){
+      // tira as guardadas que este processo criou (as fichas continuam na campanha)
+      return Promise.all(guardadas.map(function(g){ return FB.escrever([{ tipo:"del", col:"/fichas/"+g.bid+"/guardadas", id:g.id }]).catch(function(){}); })).then(function(){
+        if(msg) avisar(msg, "erro");
+        if(usuario === u) entrarNaCampanha(cmp);
+      });
+    }
+    fecharCaixa();
+    flushPendente();
+    var pend = temPendencias() ? (clearTimeout(publishTimer), doPublish()) : null;
+    Promise.resolve(pend).then(function(){
+      if(state.syncFalhou) throw new Error("a última mudança ainda não foi salva; espere a conexão voltar");
+      appPronto = false;
+      pararOuvintes();
+      document.getElementById("rollfeed").innerHTML = "";
+      app.innerHTML = '<div class="card" style="margin-top:40px"><h2>Apagando “'+esc(nome)+'”</h2><p id="apagar-status" aria-live="polite" style="font-weight:600">Baixando o backup…</p><p class="hint" id="apagar-dica">Não feche esta aba até terminar.</p><div id="apagar-acoes"></div></div>';
+      return baixarBackupCampanha("_antes-de-apagar");
+    }).then(function(b){
+      if(b.erros && b.erros.length) throw new Error("não consegui ler a campanha inteira (" + b.erros[0] + ")");
+      var fichas = (b.colecoes.fichas||[]).map(function(x){ return x.data; }).filter(function(c){ return c && c.id && c.donoUid && !c.ehNpc; });
+      var falhas = [];
+      status(fichas.length ? "Guardando as fichas dos jogadores…" : "Preparando…");
+      return fichas.reduce(function(p, c){
+        return p.then(function(){ return guardarFichaDaCampanha(c, cid, nome); }).then(function(g){ if(g) guardadas.push(g); }, function(e){ console.warn("[Pangea] guardar ficha", c.id, e); falhas.push(c.nomePersonagem || "Sem nome"); });
+      }, Promise.resolve()).then(function(){ return falhas; });
+    }).then(function(falhas){
+      if(!falhas.length) return true;
+      // Alguma ficha não pôde ser guardada: quem decide é o mestre.
+      return new Promise(function(resolver){
+        status("Não consegui guardar na conta do jogador: " + falhas.join(", ") + ".");
+        var dica = document.getElementById("apagar-dica"), acoes = document.getElementById("apagar-acoes");
+        if(dica) dica.textContent = "Se apagar agora, " + (falhas.length > 1 ? "essas fichas ficam" : "essa ficha fica") + " só no backup que acabou de ser baixado.";
+        if(!acoes){ resolver(false); return; }
+        acoes.innerHTML = '<div class="btn-row"><button type="button" class="btn secondary" data-apg="nao">Cancelar</button><button type="button" class="btn danger" data-apg="sim">Apagar mesmo assim</button></div>';
+        acoes.querySelector('[data-apg="nao"]').addEventListener("click", function(){ resolver(false); });
+        acoes.querySelector('[data-apg="sim"]').addEventListener("click", function(){ acoes.innerHTML = ""; if(dica) dica.textContent = "Não feche esta aba até terminar."; resolver(true); });
+      });
+    }).then(function(seguir){
+      if(!seguir) return desistir(null);
+      status("Fechando a campanha para os jogadores…");
+      return FB.escrever([{ tipo:"update", col:"/campanhas", id:cid, data:{ membros:[u.uid], apagandoEm:agoraIso() } }])
+        .then(function(){ guardadas = []; return apagarColecoes(); })
+        .then(apagarColecoes) // segunda passada: o que alguém gravou enquanto a primeira corria
+        .then(function(){
+          status("Apagando a campanha…");
+          if(cid === CAMPANHA_PADRAO){
+            var marca = { id:cid, nome:nome, donoUid:u.uid, membros:[u.uid], apagada:agoraIso() };
+            if(cmp.sistema) marca.sistema = cmp.sistema;
+            if(cmp.migracao) marca.migracao = clonar(cmp.migracao);
+            return FB.escrever([{ tipo:"set", col:"/campanhas", id:cid, data:marca }]);
+          }
+          return FB.escrever([{ tipo:"del", col:"/campanhas", id:cid }]);
+        }).then(function(){
+          var conhecidas = (loadLS(CONHECIDAS_KEY, []) || []).filter(function(x){ return x !== cid; });
+          saveLS(CONHECIDAS_KEY, conhecidas);
+          state.view = "roster"; state.charId = null; state.cfgDraft = null; state.cfgSujo = false;
+          if(usuario === u){ avisoLobby = 'Campanha "'+nome+'" apagada.'; mostrarLobby(); }
+        });
+    }).catch(function(err){
+      console.error("[Pangea] apagar campanha", err);
+      return desistir("Não deu pra apagar tudo: " + txtErro(err) + ". A campanha continua na sua lista: abra o Painel e apague de novo.");
     });
   }
   function capaConfigHtml(){
@@ -8640,8 +9031,25 @@
     var custo = custoSimbolos(tier[0]);
     var pool = c.assimTesteAtual;
     pool.sPool -= custo.s; pool.aPool -= custo.a; pool.pPool -= custo.p;
-    c.mutAdquiridas.push({ id:uid(), cat:cat, cardIdx:cardIdx, tierIdx:tierIdx, custo:tier[0], neutralizadas:0, ts:new Date().toISOString() });
+    c.mutAdquiridas.push({ id:uid(), cat:cat, cardIdx:cardIdx, tierIdx:tierIdx, custo:tier[0], neutralizadas:0, ts:new Date().toISOString(), teste:pool.ts });
     perdidoParaAssimilacao(c);
+    return true;
+  }
+  // Desfazer (16/11/2026): mutação comprada no Teste que ainda está aberto volta para a
+  // carta e os símbolos voltam para o pool. "teste" guarda de qual Teste a compra saiu;
+  // mutação de Teste já encerrado (ou registrada à mão) só sai pelo "Remover mutação".
+  function mutDoTesteAtual(c, m){ var pool = c.assimTesteAtual; return !!(pool && m && m.teste && m.teste === pool.ts); }
+  // Se a perda veio só das Pressões acumuladas e elas voltaram a ficar abaixo de 10, a perda cai.
+  function reverPerdaAcumulada(c){
+    if(c.assimPerdido && c.assimPerdidoMotivo && c.assimPerdidoMotivo.tipo === "acumulada" && pressaoInoportunas(c) < 10){ c.assimPerdido = false; c.assimPerdidoMotivo = null; }
+  }
+  function desfazerTier(c, mutId){
+    var m = (c.mutAdquiridas||[]).filter(function(x){ return x.id === mutId; })[0];
+    if(!mutDoTesteAtual(c, m)) return false;
+    var custo = custoSimbolos(m.custo), pool = c.assimTesteAtual;
+    pool.sPool += custo.s; pool.aPool += custo.a; pool.pPool += custo.p;
+    c.mutAdquiridas = c.mutAdquiridas.filter(function(x){ return x.id !== mutId; });
+    reverPerdaAcumulada(c);
     return true;
   }
   // Clareza de Propósito (pág. 62 do livro definitivo): ao concluir um arco satisfatoriamente,
@@ -8693,10 +9101,12 @@
       card[2].forEach(function(tier, tierIdx){
         var owned = tierJaAdquirido(c, cat, cardIdx, tierIdx);
         var pode = opts.comPool ? podeAdquirirTier(c, cat, cardIdx, tierIdx) : false;
+        var mDesf = owned && opts.comPool ? (c.mutAdquiridas||[]).filter(function(m){ return m.cat===cat && m.cardIdx===cardIdx && m.tierIdx===tierIdx && mutDoTesteAtual(c, m); })[0] : null;
         html += '<div class="trait mut-tier'+(owned?" checked":"")+'">' +
           '<span class="mut-custo">'+custoChipHtml(tier[0])+'</span>' +
           '<span class="txt"><b>'+esc(tier[1])+(tier[3]?' <span class="hint">(E'+tier[3]+'+)</span>':'')+'</b><span>'+formatEfeito(tier[2], true)+'</span></span>' +
-          (owned ? '<span class="badge-pill good mut-acao">adquirida</span>' :
+          (mDesf ? '<button type="button" class="btn secondary mut-acao" data-mutundo="'+esc(mDesf.id)+'" title="Devolve os símbolos ao pool">Desfazer</button>' :
+           owned ? '<span class="badge-pill good mut-acao">adquirida</span>' :
             (opts.comPool ? '<button type="button" class="btn secondary mut-acao" data-mutbuy="'+cat+'|'+cardIdx+'|'+tierIdx+'" '+(pode?'':'disabled')+'>Adquirir</button>' : '')) +
         '</div>';
       });
@@ -8884,6 +9294,13 @@
         renderSheet();
       });
     });
+    app.querySelectorAll('[data-mutundo]').forEach(function(btn){
+      btn.addEventListener("click", function(){
+        if(!desfazerTier(c, btn.getAttribute("data-mutundo"))) return;
+        marcarPendenteOuSalvar(c, "assim");
+        renderSheet();
+      });
+    });
     var encerrarBtn = app.querySelector('[data-action="assim-encerrar"]');
     if(encerrarBtn) encerrarBtn.addEventListener("click", function(){
       encerrarTesteAssimilacao(c);
@@ -8932,6 +9349,7 @@
         // tinha ficado de fora daquela correção). Bug relatado pelo Marco em 27/09/2026.
         askConfirm("Remover esta mutação da ficha? Essa ação não pode ser desfeita.", function(){
           c.mutAdquiridas = (c.mutAdquiridas||[]).filter(function(m){ return m.id!==mutId; });
+          if(temAcessoTotal()) reverPerdaAcumulada(c);
           marcarPendenteOuSalvar(c, "assim");
           renderSheet();
         });
@@ -8953,23 +9371,35 @@
     }
     // Cada grupo (Histórico, Conhecimentos e Práticas, Instintos, Características) é uma
     // linha que abre na caixa ao lado com os botões de compra (ver CAIXAS.evol).
-    var pedidasN = (Array.isArray(c.caracPedidas) ? c.caracPedidas : []).length;
+    var pedidasN = (Array.isArray(c.caracPedidas) ? c.caracPedidas : []).length, compras = xpComprasDe(c);
     var baratoCP = Math.min.apply(null, CONH_PRAT.map(function(p){ return 2*(valorCPBase(c, p[0])+1); }));
     var baratoI = Math.min.apply(null, INSTINTOS.map(function(i){ return 3*(instintoBase(c, i[0])+1); }));
     html += '<div class="lx-lista" style="margin-top:6px">' +
       caixaLinha("evol", "cp", "Conhecimentos e Práticas", "Custa o dobro do nível que vai atingir", '<span class="lx-sel'+(baratoCP<=saldo?' forte':'')+'">a partir de '+baratoCP+' XP</span>') +
       caixaLinha("evol", "inst", "Instintos", (x.liberarInstinto ? "Liberado pelo Assimilador · custa o triplo do nível" : (gm ? "Ainda não liberado pro jogador" : "Só depois de uma sessão com mutação")), '<span class="lx-sel'+(x.liberarInstinto&&baratoI<=saldo?' forte':'')+'">'+(x.liberarInstinto||gm ? 'a partir de '+baratoI+' XP' : 'bloqueado')+'</span>') +
       caixaLinha("evol", "carac", "Características", gm ? "Conceder ou devolver Características" : "Pedir ao Assimilador", pedidasN ? '<span class="lx-sel alerta">'+pedidasN+' pedido'+(pedidasN>1?'s':'')+'</span>' : '') +
+      (compras.length ? caixaLinha("evol", "compras", "Compras", "Desfazer devolve a Experiência", '<span class="lx-sel">'+compras.length+'</span>') : '') +
       (x.historico.length ? caixaLinha("evol", "hist", "Histórico", esc(x.historico.slice(-1)[0].motivo||""), '<span class="lx-sel">'+x.historico.length+'</span>') : '') +
     '</div>';
     return html;
   }
   function evolHistHtml(c){
     var x = xpDados(c);
-    return '<ul class="hint" style="margin:0 0 0 18px;padding:0">' +
-      x.historico.slice().reverse().map(function(e){
-        return '<li>'+esc((e.ts||"").slice(0,10).split("-").reverse().join("/"))+' · '+(e.qtd?(e.qtd>0?'+':'')+e.qtd+' · ':'')+esc(e.motivo||"")+'</li>';
+    var gm = temAcessoTotal(), n = x.historico.length;
+    return '<ul class="hint evol-hist" style="margin:0;padding:0;list-style:none">' +
+      x.historico.slice().reverse().map(function(e, i){
+        return '<li><span>'+esc((e.ts||"").slice(0,10).split("-").reverse().join("/"))+' · '+(e.qtd?(e.qtd>0?'+':'')+e.qtd+' · ':'')+esc(e.motivo||"")+'</span>' +
+          (gm ? '<button type="button" class="btn secondary evol-btn" data-evolhistdel="'+(n-1-i)+'" title="Apagar esta entrada" aria-label="Apagar esta entrada">×</button>' : '')+'</li>';
       }).join('') + '</ul>';
+  }
+  // Tudo o que foi comprado com Experiência, num lugar só, com o Desfazer de cada compra.
+  function evolComprasHtml(c){
+    var l = xpComprasDe(c);
+    if(!l.length) return '<p class="hint" style="margin:0">Nenhuma compra para desfazer.</p>';
+    return l.map(function(k){
+      return '<div class="evol-item"><span><span class="hint" style="margin:0">'+k.tipo+'</span> '+esc(k.nome)+' · <b>'+k.custo+' XP</b></span>' +
+        '<button type="button" class="btn secondary evol-btn" data-evoldesfazer="'+k.k+'" data-id="'+esc(k.id)+'">'+(k.niveis > 1 ? '−1 nível' : 'Desfazer')+'</button></div>';
+    }).join('');
   }
   function evolCpHtml(c){
     var saldo = xpSaldo(c), gm = temAcessoTotal(), html = '';
@@ -8977,7 +9407,7 @@
     html += '<p class="hint" style="margin-top:0">Custa o dobro do nível que vai atingir (de 2 pra 3 custa 6, de 3 pra 4 custa 8).</p><div class="evol-grid">';
     CONH_PRAT.forEach(function(p){
       var atual = valorCPBase(c, p[0]), custo = 2*(atual+1);
-      var podeDesfazer = gm && (c.caracAumentos||{})[p[0]] > ((c.conhPrat&&c.conhPrat[p[0]])||0);
+      var podeDesfazer = (c.caracAumentos||{})[p[0]] > ((c.conhPrat&&c.conhPrat[p[0]])||0);
       html += '<div class="evol-item"><span>'+p[1]+' <b>'+atual+'</b></span><span class="row" style="gap:6px;flex:none">' +
         (podeDesfazer?'<button type="button" class="btn secondary evol-btn" data-evolmenos="cp" data-id="'+p[0]+'" title="Desfaz a última compra e devolve a Experiência">−1 · devolve '+(2*atual)+'</button>':'') +
         '<button type="button" class="btn secondary evol-btn" data-evol="cp" data-id="'+p[0]+'"'+(custo>saldo?" disabled":"")+'>+1 · '+custo+' XP</button></span></div>';
@@ -8992,7 +9422,7 @@
       html += '<div class="hint ajuda" style="margin-top:0;margin-bottom:8px"><p>Custa o triplo do nível novo (de 2 para 3 custa 9).</p><p>'+(x.liberarInstinto?'<b>Liberado pelo Assimilador.</b>':'Ainda não liberado para o jogador (só você, Assimilador, vê os botões).')+'</p></div><div class="evol-grid">';
       INSTINTOS.forEach(function(i){
         var atual = instintoBase(c, i[0]), custo = 3*(atual+1);
-        var podeDesfazerI = gm && (c.instintosEvol||{})[i[0]] > ((c.instintos&&c.instintos[i[0]])||0);
+        var podeDesfazerI = (c.instintosEvol||{})[i[0]] > ((c.instintos&&c.instintos[i[0]])||0);
         html += '<div class="evol-item"><span>'+i[1]+' <b>'+atual+'</b></span><span class="row" style="gap:6px;flex:none">' +
           (podeDesfazerI?'<button type="button" class="btn secondary evol-btn" data-evolmenos="inst" data-id="'+i[0]+'" title="Desfaz a última compra e devolve a Experiência">−1 · devolve '+(3*atual)+'</button>':'') +
           '<button type="button" class="btn secondary evol-btn" data-evol="inst" data-id="'+i[0]+'"'+(custo>saldo?" disabled":"")+'>+1 · '+custo+' XP</button></span></div>';
@@ -9015,8 +9445,8 @@
           '<button type="button" class="btn secondary evol-btn" data-evolcancelar="'+esc(id)+'">'+(gm?'Recusar':'Cancelar pedido')+'</button></span></div>';
       }).join('');
     }
-    if(gm && (c.caracComp||[]).length){
-      html += '<p class="hint" style="margin:0 0 6px">Compradas (só você, Assimilador, vê o botão de devolver):</p>';
+    if((c.caracComp||[]).length){
+      html += '<p class="hint" style="margin:0 0 6px">Compradas:</p>';
       html += (c.caracComp||[]).map(function(id){
         var d = carDef(id); if(!d) return '';
         return '<div class="evol-item" style="margin-bottom:6px"><span><b>'+esc(d.nome)+'</b> · '+d.custo+' XP</span><button type="button" class="btn secondary evol-btn" data-evolremover="'+esc(id)+'">Remover · devolve '+d.custo+'</button></div>';
@@ -9040,8 +9470,8 @@
   CAIXAS.evol = function(k){
     var c = fichaAtual(); if(!c || c.precisaRefazer) return null;
     var saldo = xpSaldo(c);
-    var tit = { cp:"Conhecimentos e Práticas", inst:"Instintos", carac:"Características", hist:"Histórico de Experiência" }[k];
-    var corpo = k==="cp" ? evolCpHtml(c) : k==="inst" ? evolInstHtml(c) : k==="carac" ? evolCaracHtml(c) : k==="hist" ? evolHistHtml(c) : null;
+    var tit = { cp:"Conhecimentos e Práticas", inst:"Instintos", carac:"Características", compras:"Compras", hist:"Histórico de Experiência" }[k];
+    var corpo = k==="cp" ? evolCpHtml(c) : k==="inst" ? evolInstHtml(c) : k==="carac" ? evolCaracHtml(c) : k==="compras" ? evolComprasHtml(c) : k==="hist" ? evolHistHtml(c) : null;
     if(!tit || corpo == null) return null;
     return { titulo:tit+' <span class="hint" style="font-weight:400">· '+saldo+' XP disponíveis</span>', tituloTexto:tit, corpo:corpo, lado:"direita", largura:440 };
   };
@@ -9067,15 +9497,31 @@
         }
       });
     });
-    // Desfazer compras (só o Assimilador vê esses botões): pra quando alguém
-    // comprou sem querer. A Experiência volta sozinha, porque o gasto é sempre
-    // recalculado a partir do que está comprado. Fica anotado no histórico.
-    function anotar(txt){
-      if(!temAcessoTotal()) return;
-      var x = c.xp || {}; x.historico = (x.historico||[]).concat([{ qtd:0, motivo:txt, ts:new Date().toISOString() }]);
-      if(x.recebida == null) x.recebida = 0;
-      c.xp = x;
+    // Desfazer compras: pra quando alguém comprou sem querer. O dono da ficha desfaz as
+    // próprias; o mestre, as de qualquer ficha (e fica anotado no histórico).
+    function desfazer(k, id){
+      var d = xpDesfazer(c, k, id); if(!d) return;
+      askConfirm(d.pergunta, function(){ var d2 = xpDesfazer(c, k, id); if(!d2) return; d2.fazer(); salvar(); });
     }
+    // Apagar uma entrada do histórico (só o mestre): a Experiência daquela entrada sai junto.
+    app.querySelectorAll('[data-evolhistdel]').forEach(function(btn){
+      btn.addEventListener("click", function(){
+        if(!temAcessoTotal()) return;
+        var i = parseInt(btn.getAttribute("data-evolhistdel"), 10), x = xpDados(c), e = x.historico[i]; if(!e) return;
+        var q = e.qtd || 0, ts = e.ts, motivo = e.motivo;
+        askConfirm('Apagar esta entrada do histórico?\n\n'+(q ? (q>0?'+':'')+q+' · ' : '')+(motivo||"")+(q ? '\n\nA Experiência recebida '+(q>0?'cai ':'sobe ')+Math.abs(q)+'.' : ''), function(){
+          var x2 = xpDados(c), j = -1;
+          x2.historico.forEach(function(h, k){ if(j < 0 && h.ts === ts && h.motivo === motivo && (h.qtd||0) === q) j = k; });
+          if(j < 0) return;
+          x2.historico = x2.historico.slice(0, j).concat(x2.historico.slice(j+1));
+          x2.recebida = Math.max(0, x2.recebida - q);
+          c.xp = x2; salvar();
+        });
+      });
+    });
+    app.querySelectorAll('[data-evoldesfazer]').forEach(function(btn){
+      btn.addEventListener("click", function(){ desfazer(btn.getAttribute("data-evoldesfazer"), btn.getAttribute("data-id")); });
+    });
     app.querySelectorAll('[data-evolxp]').forEach(function(btn){
       btn.addEventListener("click", function(){
         if(!temAcessoTotal()) return;
@@ -9089,35 +9535,10 @@
       });
     });
     app.querySelectorAll('[data-evolmenos]').forEach(function(btn){
-      btn.addEventListener("click", function(){
-        var k = btn.getAttribute("data-id"), tipo = btn.getAttribute("data-evolmenos");
-        if(tipo === "cp"){
-          var atual = valorCPBase(c,k), base = (c.conhPrat&&c.conhPrat[k])||0;
-          askConfirm('Voltar '+nomeAtributo(k)+' de '+atual+' pra '+(atual-1)+' e devolver '+(2*atual)+' de Experiência?', function(){
-            if(atual-1 <= base) delete c.caracAumentos[k]; else c.caracAumentos[k] = atual-1;
-            anotar('Desfeito: '+nomeAtributo(k)+' '+atual+' → '+(atual-1)+' (devolveu '+(2*atual)+')');
-            salvar();
-          });
-        } else {
-          var atualI = instintoBase(c,k), baseI = (c.instintos&&c.instintos[k])||0;
-          askConfirm('Voltar '+nomeAtributo(k)+' de '+atualI+' pra '+(atualI-1)+' e devolver '+(3*atualI)+' de Experiência?', function(){
-            if(atualI-1 <= baseI) delete c.instintosEvol[k]; else c.instintosEvol[k] = atualI-1;
-            anotar('Desfeito: '+nomeAtributo(k)+' '+atualI+' → '+(atualI-1)+' (devolveu '+(3*atualI)+')');
-            salvar();
-          });
-        }
-      });
+      btn.addEventListener("click", function(){ desfazer(btn.getAttribute("data-evolmenos"), btn.getAttribute("data-id")); });
     });
     app.querySelectorAll('[data-evolremover]').forEach(function(btn){
-      btn.addEventListener("click", function(){
-        var id = btn.getAttribute("data-evolremover"), d = carDef(id); if(!d) return;
-        askConfirm('Remover "'+d.nome+'" de '+(c.nomePersonagem||"este personagem")+' e devolver '+d.custo+' de Experiência?', function(){
-          c.caracComp = (c.caracComp||[]).filter(function(x){ return x!==id; });
-          if(c.caracEscolhas) delete c.caracEscolhas[id];
-          anotar('Desfeito: removida a Característica '+d.nome+' (devolveu '+d.custo+')');
-          salvar();
-        });
-      });
+      btn.addEventListener("click", function(){ desfazer("carac", btn.getAttribute("data-evolremover")); });
     });
     var selCarac = app.querySelector('#evol-carac'), prevCarac = app.querySelector('#evol-carac-prev');
     if(selCarac && prevCarac) selCarac.addEventListener("change", function(){
@@ -10671,7 +11092,8 @@
             '<button type="button" class="btn secondary doc-btn" '+caixaAttr("bficha", cri.id)+' aria-haspopup="dialog">Ver ficha ›</button>' +
             '<button type="button" class="btn secondary doc-btn" data-brolcat="'+esc(cri.id)+'">🎲 Rolar Ativação</button>' +
             '<button type="button" class="btn secondary doc-btn" data-beditar="'+esc(cri.id)+'">✏️ Editar</button>' +
-            '<button type="button" class="btn secondary doc-btn" data-bcopiar="'+esc(cri.id)+'" title="Copia só esta criatura em código, para colar em outra campanha">Copiar código</button></div>' +
+            '<button type="button" class="btn secondary doc-btn" data-bcopiar="'+esc(cri.id)+'" title="Copia só esta criatura em código, para colar em outra campanha">Copiar código</button>' +
+            '<button type="button" class="btn secondary doc-btn" data-bexcluircat="'+esc(cri.id)+'">Excluir</button></div>' +
           bestRolagemHtml(rolCat[cri.id], 'data-bmostrarcat="'+esc(cri.id)+'"', 'data-bfecharrolcat="'+esc(cri.id)+'"');
         html += '</div>';
       });
@@ -10984,6 +11406,13 @@
     function on(sel, ev, fn){ raiz.querySelectorAll(sel).forEach(function(el){ el.addEventListener(ev, function(e){ fn(el, e); }); }); }
     if(state.bestEdit){ bindBestEditor(raizCard, rerender); }
     on("[data-bnova]", "click", function(){ state.bestEdit = { cri:criaturaNova(), nova:true }; rerender(); });
+    on("[data-bexcluircat]", "click", function(el){
+      var criX = bestCriatura(el.getAttribute("data-bexcluircat")); if(!criX) return;
+      askConfirm('Excluir "'+(criX.nome||"esta criatura")+'" do catálogo desta campanha? Quem já está em cena continua.', function(){
+        var x = bestCriatura(criX.id); if(x) gravarCriatura(x, true);
+        rerender();
+      });
+    });
     on("[data-beditar]", "click", function(el){
       var cri = bestCriatura(el.getAttribute("data-beditar")); if(!cri) return;
       var d = JSON.parse(JSON.stringify(cri));
@@ -11226,11 +11655,22 @@
       body += '<div class="trait-list" style="margin-top:10px">';
       conflitos.forEach(function(cf){
         var resolvido = cf.atual >= cf.alvo;
+        if(state.conflitoEdit === cf.id){
+          body += '<div class="trait" style="cursor:default;align-items:flex-end;flex-wrap:wrap;gap:8px;min-width:0">' +
+            '<div class="field" style="flex:1 1 120px;min-width:0;max-width:100%;margin:0"><label>Nome</label><input type="text" data-conflitoed="nome" style="min-width:0;width:100%;box-sizing:border-box" value="'+esc(cf.nome||"")+'"></div>' +
+            '<div class="field" style="flex:0 1 110px;min-width:0;margin:0"><label>Sucessos</label><input type="number" min="1" max="99" data-conflitoed="alvo" style="min-width:0;width:100%;box-sizing:border-box" value="'+cf.alvo+'"></div>' +
+            '<div class="row" style="gap:4px;flex-wrap:nowrap;flex:none">' +
+              '<button type="button" class="btn accent" data-conflito="salvar" data-id="'+esc(cf.id)+'" style="padding:2px 8px">salvar</button>' +
+              '<button type="button" class="btn secondary" data-conflito="cancelar" data-id="'+esc(cf.id)+'" style="padding:2px 8px">cancelar</button>' +
+            '</div></div>';
+          return;
+        }
         body += '<div class="trait'+(resolvido?" checked":"")+'" style="cursor:default;align-items:center">' +
           '<span class="txt"><b>'+esc(cf.nome||"Conflito")+'</b><span>'+cf.atual+' / '+cf.alvo+' Sucessos'+(resolvido?' — resolvido!':'')+'</span></span>' +
           '<div class="row" style="gap:4px;flex-wrap:nowrap;flex:none">' +
             '<button type="button" class="btn secondary" data-conflito="menos" data-id="'+esc(cf.id)+'" style="padding:2px 8px" '+(cf.atual<=0?"disabled":"")+'>&minus;</button>' +
             '<button type="button" class="btn secondary" data-conflito="mais" data-id="'+esc(cf.id)+'" style="padding:2px 8px" '+(cf.atual>=cf.alvo?"disabled":"")+'>+</button>' +
+            '<button type="button" class="btn secondary" data-conflito="editar" data-id="'+esc(cf.id)+'" style="padding:2px 8px">editar</button>' +
             '<button type="button" class="btn secondary" data-conflito="remover" data-id="'+esc(cf.id)+'" style="padding:2px 8px">remover</button>' +
           '</div>' +
         '</div>';
@@ -11256,8 +11696,19 @@
         var acao = btn.getAttribute("data-conflito");
         var id = btn.getAttribute("data-id");
         var conflitos = loadLS("pangea:gm:conflitos", []);
-        if(acao === "remover"){
+        if(acao === "editar"){ state.conflitoEdit = id; renderGm(); return; }
+        if(acao === "cancelar"){ state.conflitoEdit = null; renderGm(); return; }
+        if(acao === "salvar"){
+          var cfE = conflitos.filter(function(c){ return c.id===id; })[0];
+          if(cfE){
+            cfE.nome = String((app.querySelector('[data-conflitoed="nome"]')||{}).value||"").trim();
+            cfE.alvo = clamp(parseInt((app.querySelector('[data-conflitoed="alvo"]')||{}).value,10)||1, 1, 99);
+            cfE.atual = clamp(cfE.atual, 0, cfE.alvo);
+          }
+          state.conflitoEdit = null;
+        } else if(acao === "remover"){
           conflitos = conflitos.filter(function(c){ return c.id!==id; });
+          if(state.conflitoEdit === id) state.conflitoEdit = null;
         } else {
           var cf = conflitos.filter(function(c){ return c.id===id; })[0];
           if(cf){
@@ -11631,16 +12082,55 @@
     var l = [];
     CONH_PRAT.forEach(function(p){
       var base = (c.conhPrat && c.conhPrat[p[0]]) || 0, fim = (c.caracAumentos||{})[p[0]];
-      if(fim && fim > base) l.push({ tipo:"Con/Prá", nome:p[1]+' '+base+' → '+fim, custo:custoAumento(base, fim) });
+      if(fim && fim > base) l.push({ tipo:"Con/Prá", k:"cp", id:p[0], niveis:fim-base, nome:p[1]+' '+base+' → '+fim, custo:custoAumento(base, fim) });
     });
     INSTINTOS.forEach(function(i){
       var base = (c.instintos && c.instintos[i[0]]) || 0, fim = (c.instintosEvol||{})[i[0]];
-      if(fim && fim > base) l.push({ tipo:"Instinto", nome:i[1]+' '+base+' → '+fim, custo:custoAumentoInstinto(base, fim) });
+      if(fim && fim > base) l.push({ tipo:"Instinto", k:"inst", id:i[0], niveis:fim-base, nome:i[1]+' '+base+' → '+fim, custo:custoAumentoInstinto(base, fim) });
     });
     (c.caracComp||[]).forEach(function(id){
-      var d = carDef(id); if(d) l.push({ tipo:"Característica", nome:d.nome, custo:d.custo });
+      var d = carDef(id); if(d) l.push({ tipo:"Característica", k:"carac", id:id, niveis:1, nome:d.nome, custo:d.custo });
     });
     return l;
+  }
+  // Desfazer uma compra feita com Experiência (16/11/2026: o jogador desfaz as próprias,
+  // o mestre desfaz as de qualquer ficha, na ficha ou no Painel). k: "cp" (Conhecimento
+  // ou Prática, um nível), "inst" (Instinto, um nível) ou "carac" (Característica).
+  // Devolve { pergunta, fazer } ou null se não há o que desfazer. A Experiência volta
+  // sozinha, porque o gasto é sempre recalculado a partir do que está comprado.
+  function xpDesfazer(c, k, id){
+    var pergunta, nota, aplicar, reverter;
+    if(k === "cp" || k === "inst"){
+      var mapa = k === "cp" ? "caracAumentos" : "instintosEvol", mapaBase = k === "cp" ? "conhPrat" : "instintos", mult = k === "cp" ? 2 : 3;
+      var base = (c[mapaBase] && c[mapaBase][id]) || 0, atual = (c[mapa]||{})[id];
+      if(!(atual > base)) return null;
+      aplicar = function(){ if(atual-1 <= base) delete c[mapa][id]; else c[mapa][id] = atual-1; };
+      reverter = function(){ c[mapa][id] = atual; };
+      pergunta = 'Voltar '+nomeAtributo(id)+' de '+atual+' para '+(atual-1)+' e devolver '+(mult*atual)+' de Experiência?';
+      nota = 'Desfeito: '+nomeAtributo(id)+' '+atual+' → '+(atual-1)+' (devolveu '+(mult*atual)+')';
+    } else if(k === "carac"){
+      var d = carDef(id); if(!d || !temCarac(c, id)) return null;
+      var compAntes = c.caracComp.slice(), temEsc = !!(c.caracEscolhas && Object.prototype.hasOwnProperty.call(c.caracEscolhas, id)), escAntes = temEsc ? c.caracEscolhas[id] : null;
+      aplicar = function(){ c.caracComp = c.caracComp.filter(function(x){ return x !== id; }); if(c.caracEscolhas) delete c.caracEscolhas[id]; };
+      reverter = function(){ c.caracComp = compAntes; if(temEsc) c.caracEscolhas[id] = escAntes; };
+      pergunta = 'Remover "'+d.nome+'" de '+(c.nomePersonagem||"este personagem")+' e devolver '+d.custo+' de Experiência?';
+      nota = 'Desfeito: removida a Característica '+d.nome+' (devolveu '+d.custo+')';
+    } else return null;
+    // Características que só valem com o que está sendo desfeito
+    var valiam = (c.caracComp||[]).filter(function(x){ var dx = carDef(x); return dx && x !== id && reqAtendido(c, dx); });
+    aplicar();
+    var quebram = valiam.filter(function(x){ return temCarac(c, x) && !reqAtendido(c, carDef(x)); }).map(function(x){ return carDef(x).nome; });
+    reverter();
+    if(quebram.length) pergunta += '\n\n'+quebram.join(", ")+(quebram.length > 1 ? ' deixam' : ' deixa')+' de cumprir o requisito.';
+    return { pergunta:pergunta, fazer:function(){
+      aplicar();
+      // o histórico de Experiência é do mestre (as regras não deixam o jogador gravar nele)
+      if(temAcessoTotal()){
+        var x = c.xp || {}; x.historico = (x.historico||[]).concat([{ qtd:0, motivo:nota, ts:new Date().toISOString() }]);
+        if(x.recebida == null) x.recebida = 0;
+        c.xp = x;
+      }
+    } };
   }
   function gmXpGastosHtml(jogadores){
     var html = '<div class="gm-xp gm-xpgastos"><h3 style="margin:0 0 4px">Pedidos e compras por personagem</h3>' +
@@ -11668,7 +12158,8 @@
       }
       if(compras.length){
         html += '<ul class="gm-xplista">' + compras.map(function(k){
-          return '<li><span class="hint" style="margin:0">'+k.tipo+'</span> '+esc(k.nome)+' <b>'+k.custo+' XP</b></li>';
+          return '<li><span><span class="hint" style="margin:0">'+k.tipo+'</span> '+esc(k.nome)+' <b>'+k.custo+' XP</b></span>' +
+            '<button type="button" class="btn secondary evol-btn" data-gmxpdesfazer="'+esc(c.id)+'" data-k="'+k.k+'" data-id="'+esc(k.id)+'">'+(k.niveis > 1 ? '−1 nível' : 'Desfazer')+'</button></li>';
         }).join('') + '</ul>';
       }
       html += '</div>';
@@ -11719,7 +12210,7 @@
           : [chave];
         if(!ids.length) return;
         var nomes = ids.map(function(id){ var c = getChar(id); return c ? c.nomePersonagem : ""; }).filter(Boolean);
-        askConfirm((qtd>0?'Dar ':'Retirar ')+Math.abs(qtd)+' de Experiência ('+motivo+')'+(qtd>0?' pra: ':' de: ')+nomes.join(", ")+'?'+(qtd<0?'\n\nSe o saldo de alguém ficar negativo, desfaça compras na seção Evoluir da ficha.':''), function(){
+        askConfirm((qtd>0?'Dar ':'Retirar ')+Math.abs(qtd)+' de Experiência ('+motivo+')'+(qtd>0?' pra: ':' de: ')+nomes.join(", ")+'?'+(qtd<0?'\n\nSe o saldo de alguém ficar negativo, desfaça compras logo abaixo, por personagem.':''), function(){
           ids.forEach(function(id){ var c = getChar(id); if(c){ darExperiencia(c, qtd, motivo); updateChar(c); } });
           if(caps.mode==="mesa"){ clearTimeout(publishTimer); doPublish(); }
           renderGmMesa();
@@ -11744,6 +12235,15 @@
           if(!temCarac(c,id)) c.caracComp.push(id);
           gravarGm(c);
         });
+      });
+    });
+    app.querySelectorAll('[data-gmxpdesfazer]').forEach(function(btn){
+      btn.addEventListener("click", function(e){
+        e.stopPropagation();
+        if(!temAcessoTotal()) return;
+        var c = getChar(btn.getAttribute("data-gmxpdesfazer")); if(!c) return;
+        var k = btn.getAttribute("data-k"), id = btn.getAttribute("data-id"), d = xpDesfazer(c, k, id); if(!d) return;
+        askConfirm(d.pergunta, function(){ var d2 = xpDesfazer(c, k, id); if(!d2) return; d2.fazer(); gravarGm(c); });
       });
     });
     app.querySelectorAll('[data-gmxprecusar]').forEach(function(btn){
@@ -11989,7 +12489,7 @@
     // Mudanças no documento da campanha (membros, configurações) chegam ao vivo.
     ouvintes.push(fb.ouvirDoc("/campanhas", cid, function(cmp){
       if(usuario !== u || !campanhaAtual || campanhaAtual.id !== cid) return;
-      if(!cmp){ avisoLobby = "Essa campanha não existe mais."; mostrarLobby(); return; }
+      if(!cmp || cmp.apagada){ avisoLobby = "Essa campanha não existe mais."; mostrarLobby(); return; }
       campanhaAtual = cmp;
       if(!ehMembro()){ avisoLobby = 'Você não faz mais parte de "'+(cmp.nome||"")+'".'; mostrarLobby(); return; }
       agendarRender();
