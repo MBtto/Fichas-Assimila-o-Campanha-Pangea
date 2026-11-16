@@ -299,6 +299,10 @@
   .capa-cor{ width:34px; height:34px; padding:0; border-radius:50%; border:2px solid var(--surface); box-shadow:0 0 0 1px var(--border-strong); cursor:pointer; }
   .capa-cor.sel{ box-shadow:0 0 0 3px var(--ink); }
   .capa-cor:focus-visible{ outline:2px solid var(--ink); outline-offset:3px; }
+  /* Capa sem fundo (16/11/2026): o PNG transparente aparece direto sobre o cartão. */
+  .cmp-capa.sem-fundo{ background-color:transparent; background-image:none; }
+  .cmp-capa.sem-fundo .cmp-inicial{ color:var(--ink-muted); opacity:.3; }
+  .capa-cor.sem-fundo{ background-color:#fff; background-image:repeating-conic-gradient(#b9b9b9 0% 25%, #fff 0% 50%); background-size:12px 12px; }
   .cmp-corpo h3{ color:var(--ink); }
   .cmp-acoes .btn{ padding:8px 12px; font-size:12.5px; }
   /* ===== Ajuda: link de imagem ===== */
@@ -4275,7 +4279,7 @@
     var meuPedido = !comoMestre && lobby.pedidos && lobby.pedidos[cmp.id];
     var pendente = !!(meuPedido && meuPedido.status === "pendente");
     var html = '<div class="cmp-card lobby-cmp" data-abrircmp="'+esc(cmp.id)+'" style="--capa:'+esc(capa.cor)+'">' +
-      '<div class="cmp-capa"'+(capa.img ? ' style="background-image:url(&quot;'+esc(capa.img)+'&quot;);background-position:50% '+capa.pos+'%"' : '')+'>' +
+      '<div class="cmp-capa'+(capa.semFundo ? ' sem-fundo' : '')+'"'+(capa.img ? ' style="background-image:url(&quot;'+esc(capa.img)+'&quot;);background-position:50% '+capa.pos+'%"' : '')+'>' +
         (capa.img ? '' : '<span class="cmp-inicial" aria-hidden="true">'+esc(Array.from(nome)[0] || "")+'</span>') +
         '<span class="cmp-selo">'+(comoMestre ? 'Mestre' : 'Jogador')+'</span>' +
       '</div>' +
@@ -6476,9 +6480,11 @@
   // Capa da campanha: cor e imagem escolhidas pelo mestre (campo "capa" da campanha).
   // Sem escolha, a cor sai do id da campanha (sempre a mesma para a mesma campanha).
   var CAPA_CORES = ["#a8492b", "#b07a1e", "#5d7a3a", "#2f7a6b", "#2f5f8a", "#5a4a8a", "#8a3a5f", "#4a4a4a"];
+  // "Sem fundo": opção extra de cor, fora da lista acima para não mexer na cor automática das campanhas que já existem.
+  var CAPA_SEM_FUNDO = "transparent";
   function capaDe(cmp){
     var cp = (cmp && cmp.capa && typeof cmp.capa === "object") ? cmp.capa : {};
-    var cor = /^#[0-9a-f]{6}$/i.test(String(cp.cor || "")) ? cp.cor : "";
+    var cor = (cp.cor === CAPA_SEM_FUNDO || /^#[0-9a-f]{6}$/i.test(String(cp.cor || ""))) ? cp.cor : "";
     if(!cor){
       var s = String((cmp && cmp.id) || ""), n = 0;
       for(var i = 0; i < s.length; i++) n = (n * 31 + s.charCodeAt(i)) % 9973;
@@ -6487,7 +6493,7 @@
     var img = cp.img ? imgSegura(cp.img) : "";
     if(/[\\()]/.test(img)) img = "";
     var pos = Number(cp.pos); if(!(pos >= 0 && pos <= 100)) pos = 50;
-    return { cor: cor, img: img, pos: Math.round(pos) };
+    return { cor: cor, img: img, pos: Math.round(pos), semFundo: cor === CAPA_SEM_FUNDO };
   }
   // ---------- ENVIO DE IMAGEM (16/11/2026) ----------
   // O site reduz a imagem no navegador e guarda o resultado dentro da própria campanha
@@ -6510,6 +6516,15 @@
           var sx = 0, sy = 0, cw = sw, ch = sh;
           if(m.corta && sh / sw > m.alt / m.larg){ ch = Math.round(sw * m.alt / m.larg); sy = Math.round((sh - ch) / 2); }
           var esc0 = Math.min(1, m.larg / cw, m.alt / ch);
+          var temTransparencia = function(){
+            try{
+              var t = document.createElement("canvas"); t.width = 64; t.height = 64;
+              var tx = t.getContext("2d"); tx.drawImage(im, sx, sy, cw, ch, 0, 0, 64, 64);
+              var d = tx.getImageData(0, 0, 64, 64).data;
+              for(var k = 3; k < d.length; k += 4){ if(d[k] < 250) return true; }
+            }catch(e){}
+            return false;
+          };
           var desenhar = function(f, tipo, q){
             var c = document.createElement("canvas");
             c.width = Math.max(1, Math.round(cw * esc0 * f)); c.height = Math.max(1, Math.round(ch * esc0 * f));
@@ -6519,9 +6534,9 @@
             x.drawImage(im, sx, sy, cw, ch, 0, 0, c.width, c.height);
             return c.toDataURL(tipo, q);
           };
-          // WebP onde o navegador grava; senão JPEG na capa e PNG no logo (transparência).
+          // WebP onde o navegador grava; senão PNG no logo e na capa com transparência, JPEG na capa sem.
           var tipo = "image/webp", saida = desenhar(1, tipo, 0.82);
-          if(saida.indexOf("data:image/webp") !== 0){ tipo = m.corta ? "image/jpeg" : "image/png"; saida = desenhar(1, tipo, 0.82); }
+          if(saida.indexOf("data:image/webp") !== 0){ tipo = (m.corta && !temTransparencia()) ? "image/jpeg" : "image/png"; saida = desenhar(1, tipo, 0.82); }
           var passos = [[1, 0.7], [1, 0.55], [0.8, 0.7], [0.65, 0.65], [0.5, 0.6], [0.4, 0.55], [0.3, 0.5]];
           for(var i = 0; i < passos.length && saida.length > m.limite; i++) saida = desenhar(passos[i][0], tipo, passos[i][1]);
           URL.revokeObjectURL(url);
@@ -6554,10 +6569,11 @@
   function capaConfigHtml(){
     var cp = capaDe(campanhaAtual), bruta = String((campanhaAtual.capa && campanhaAtual.capa.img) || ""), enviada = /^data:/i.test(bruta);
     return '<div class="cfg-bloco capa-cfg">' +
-      '<div class="cmp-capa capa-previa" data-capaprevia="1" style="--capa:'+esc(cp.cor)+(cp.img ? ';background-image:url(&quot;'+esc(cp.img)+'&quot;);background-position:50% '+cp.pos+'%' : '')+'">' +
+      '<div class="cmp-capa capa-previa'+(cp.semFundo ? ' sem-fundo' : '')+'" data-capaprevia="1" style="--capa:'+esc(cp.cor)+(cp.img ? ';background-image:url(&quot;'+esc(cp.img)+'&quot;);background-position:50% '+cp.pos+'%' : '')+'">' +
         (cp.img ? '' : '<span class="cmp-inicial" aria-hidden="true">'+esc(Array.from(String(campanhaAtual.nome||"").trim())[0] || "")+'</span>') + '</div>' +
-      '<div class="capa-cores" role="group" aria-label="Cor da capa">' + CAPA_CORES.map(function(c){
-        return '<button type="button" class="capa-cor'+(c === cp.cor ? ' sel' : '')+'" data-capacor="'+c+'" style="background:'+c+'" aria-label="Cor '+c+'" aria-pressed="'+(c === cp.cor)+'"></button>';
+      '<div class="capa-cores" role="group" aria-label="Cor da capa">' + CAPA_CORES.concat([CAPA_SEM_FUNDO]).map(function(c){
+        var sf = c === CAPA_SEM_FUNDO;
+        return '<button type="button" class="capa-cor'+(sf ? ' sem-fundo' : '')+(c === cp.cor ? ' sel' : '')+'" data-capacor="'+c+'"'+(sf ? ' title="Sem fundo" aria-label="Sem fundo, transparente"' : ' style="background:'+c+'" aria-label="Cor '+c+'"')+' aria-pressed="'+(c === cp.cor)+'"></button>';
       }).join('') + '</div>' +
       '<div class="row" style="gap:8px;flex-wrap:wrap;align-items:flex-end">' +
         '<div class="field" style="flex:1;min-width:min(200px, 100%);margin:0"><label>Imagem'+ajudaImgLink()+'</label><input type="text" data-capaimg value="'+esc(enviada ? "" : bruta)+'" placeholder="'+(enviada ? 'Imagem enviada' : 'https://…')+'"></div>' +
