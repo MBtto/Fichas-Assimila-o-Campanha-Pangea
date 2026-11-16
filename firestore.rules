@@ -1,16 +1,19 @@
 rules_version = '2';
-// Etapa H2 (09/10/2026). Base: claude/site/rascunho_G/firestore.rules (no Console desde a etapa G; a H não mudou regras).
-// Mudança única: em campanhas/{cid}/pedidos, quem JÁ É JOGADOR da campanha pode mandar um
-// pedido sem convite, marcado com membro: true, para levar mais uma ficha (o mestre aprova).
-// Todo o resto é igual à etapa G.
+// Plataforma 1 (16/11/2026). Base: regras da etapa H2 (no Console desde 09/10/2026).
+// Mudanças:
+//  1. campanhas: QUALQUER conta logada cria a própria campanha (antes só a conta do Marco),
+//     com conferência dos campos na criação (dono = quem cria, só ele em "membros",
+//     nome de 1 a 60 letras, sistema conhecido).
+//  2. campanhas: o sistema da campanha não muda depois de definido.
+// Todo o resto é igual à etapa H2.
 service cloud.firestore {
   match /databases/{database}/documents {
 
     function logado() {
       return request.auth != null && request.auth.token.firebase.sign_in_provider == 'google.com';
     }
-    // Conta do Marco: autorizou a migração única e, enquanto o site é privado,
-    // é a única que cria campanhas novas.
+    // Conta do Marco: autorizou a migração única e é a única que lê as coleções
+    // antigas da raiz. (Desde a Plataforma 1 ela não é mais exigida para criar campanhas.)
     function contaCriadora() {
       return logado()
         && request.auth.token.email == 'marcoa.barreto14@gmail.com'
@@ -69,14 +72,22 @@ service cloud.firestore {
                                  || request.auth.uid in resource.data.get('membros', []));
       // Listar: só as campanhas em que a conta está (tela inicial: membros contém a conta).
       allow list: if logado() && request.auth.uid in resource.data.membros;
-      // Criar: a conta criadora, que vira o dono e está na própria lista de membros.
-      allow create: if contaCriadora()
+      // Criar: qualquer conta logada. Quem cria vira o dono e é o único em "membros".
+      allow create: if logado()
         && request.resource.data.donoUid == request.auth.uid
-        && request.auth.uid in request.resource.data.get('membros', []);
+        && request.resource.data.membros == [request.auth.uid]
+        && request.resource.data.id == cid
+        && request.resource.data.nome is string
+        && request.resource.data.nome.size() >= 1
+        && request.resource.data.nome.size() <= 60
+        && request.resource.data.get('sistema', 'assimilacao') in ['assimilacao', 'ordem'];
       allow update: if
         // o dono altera (inclusive a configuração, etapa C) e não passa a campanha pra outra conta
+        // (o sistema, depois de definido, não muda)
         (logado() && resource.data.donoUid == request.auth.uid
-          && request.resource.data.donoUid == request.auth.uid)
+          && request.resource.data.donoUid == request.auth.uid
+          && (resource.data.get('sistema', null) == null
+              || request.resource.data.get('sistema', null) == resource.data.get('sistema', null)))
         // um jogador sai sozinho: só tira a própria conta de "membros"
         || (logado() && resource.data.donoUid != request.auth.uid
           && request.auth.uid in resource.data.get('membros', [])
