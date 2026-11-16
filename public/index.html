@@ -1494,6 +1494,60 @@
 .trilha-item-nome{ flex:1 1 auto; min-width:0; overflow-wrap:anywhere; }
 .trilha-parar{ margin-top:10px; width:100%; justify-content:center; }
 .trilha-erro{ color:var(--danger); font-size:12.5px; margin:8px 0 0; }
+/* Trilhas: barra de progresso com partes (só o Assimilador) e organizar a lista */
+.trilha-painel.gerenciando{ width:min(400px, calc(100vw - 40px)); }
+:root[data-texto="grande"] .trilha-painel.gerenciando{ width:min(400px, calc((100vw - 40px) / 1.15)); }
+:root[data-texto="maior"] .trilha-painel.gerenciando{ width:min(400px, calc((100vw - 40px) / 1.3)); }
+.trilha-barra{ position:relative; margin-top:12px; padding-top:8px; }
+.trilha-barra input[type=range]{ width:100%; margin:0; accent-color:var(--accent); display:block; }
+.trilha-marcas{ position:absolute; left:8px; right:8px; top:0; height:8px; pointer-events:none; }
+.trilha-marcas i{ position:absolute; top:0; width:2px; height:8px; margin-left:-1px; background:var(--accent); border-radius:1px; }
+.trilha-tempo{ display:flex; justify-content:space-between; font-size:12px; font-variant-numeric:tabular-nums; color:var(--ink-muted); margin-top:2px; }
+.trilha-rot-partes{ margin-top:10px; }
+.trilha-partes{ display:flex; flex-wrap:wrap; gap:6px; }
+.trilha-parte{ padding:5px 10px; border-radius:999px; border:1px solid var(--border-strong); background:var(--surface); color:var(--ink);
+  font:inherit; font-size:12.5px; cursor:pointer; max-width:100%; overflow-wrap:anywhere; text-align:left; }
+.trilha-parte:hover{ border-color:var(--accent); }
+.trilha-parte.atual{ background:var(--accent); color:var(--accent-ink); border-color:var(--accent); font-weight:600; }
+.trilha-marcar{ margin-top:10px; width:100%; justify-content:center; font-size:12.5px; padding:6px 10px; }
+.trilha-sec-topo{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:6px; }
+.trilha-sec-topo .trilha-rot{ margin:0; }
+.trilha-ger, .trilha-mini-btn{ flex:none; padding:4px 10px; border-radius:6px; border:1px solid var(--border-strong); background:transparent;
+  color:var(--ink); font:inherit; font-size:12px; cursor:pointer; }
+.trilha-ger[aria-pressed="true"]{ background:var(--accent); color:var(--accent-ink); border-color:var(--accent); }
+.trilha-ajuda{ margin:0 0 8px; }
+.trilha-gitem{ border:1px solid var(--border); border-radius:8px; background:var(--surface-2); }
+.trilha-gitem.atual{ border:2px solid var(--accent); }
+.trilha-gtopo{ display:flex; align-items:center; gap:8px; padding:6px 8px; }
+.trilha-gtopo .trilha-item-nome{ font-size:14px; }
+.trilha-gtopo small{ font-size:10.5px; padding:1px 5px; border-radius:4px; border:1px solid var(--border-strong); color:var(--ink-muted); }
+.trilha-ordem{ flex:none; display:flex; flex-direction:column; gap:2px; }
+.trilha-ordem button{ width:24px; height:18px; padding:0; font-size:9px; line-height:1; border-radius:4px; border:1px solid var(--border);
+  background:var(--surface); color:var(--ink); cursor:pointer; }
+.trilha-ordem button:disabled{ opacity:.3; cursor:default; }
+.trilha-ed{ padding:4px 10px 10px; border-top:1px dashed var(--border); }
+.trilha-campo{ display:block; margin:8px 0 10px; }
+.trilha-campo span{ display:block; font-size:12px; color:var(--ink-muted); margin-bottom:3px; }
+.trilha-ed input[type=text]{ width:100%; box-sizing:border-box; min-width:0; margin:0; padding:5px 7px; font:inherit; font-size:13px; }
+.trilha-pt{ display:flex; align-items:center; gap:5px; margin-bottom:5px; }
+.trilha-pt .trilha-pt-t{ flex:0 0 58px; width:58px; text-align:center; font-variant-numeric:tabular-nums; }
+.trilha-pt .trilha-pt-n{ flex:1 1 auto; }
+.trilha-pt-ouvir, .trilha-pt-del{ flex:none; width:26px; height:26px; padding:0; border-radius:6px; border:1px solid var(--border-strong);
+  background:transparent; color:var(--ink); cursor:pointer; font-size:11px; line-height:1; }
+.trilha-pt-del{ font-size:16px; }
+.trilha-pt-del:hover{ border-color:var(--danger); color:var(--danger); }
+.btn.trilha-mini{ padding:5px 10px; font-size:12px; }
+.trilha-ed-acoes{ display:flex; flex-wrap:wrap; gap:6px; align-items:center; margin-top:10px; }
+.trilha-confirma{ font-size:12.5px; font-weight:600; color:var(--danger); }
+.trilha-ed .hint{ margin:8px 0 0; }
+.trilha-enviar{ margin-top:10px; width:100%; justify-content:center; cursor:pointer; box-sizing:border-box; }
+.trilha-envio{ margin:10px 0 0; font-size:13px; font-weight:600; }
+.trilha-ocultas{ display:grid; gap:5px; }
+.trilha-oculta{ display:flex; align-items:center; justify-content:space-between; gap:8px; font-size:13px; padding:5px 8px;
+  border:1px dashed var(--border); border-radius:6px; }
+.trilha-oculta span{ min-width:0; overflow-wrap:anywhere; }
+.trilha-aviso{ font-size:12.5px; margin:8px 0 0; color:var(--ink); padding:6px 8px; border-left:3px solid var(--accent); background:var(--surface-2); }
+.trilha-painel button:focus-visible, .trilha-painel label:focus-within{ outline:3px solid var(--accent); outline-offset:2px; }
 </style>
 <script>
   (function(){ try{
@@ -6484,7 +6538,10 @@
     var out = { tipo:"backup-campanha", versao:1, geradoEm:agoraIso(), campanha:{ id:cmp.id, data:clonar(cmp) }, colecoes:{}, contagem:{}, erros:[] };
     return FB.lerDoc("/campanhas", cmp.id).then(function(d){ if(d) out.campanha.data = d; }).catch(function(){}).then(function(){
       return Promise.all(BACKUP_COLECOES.map(function(par){
-        return FB.lerColecao(par[1]).then(function(l){ out.colecoes[par[0]] = l; out.contagem[par[0]] = l.length; })
+        return FB.lerColecao(par[1]).then(function(l){
+          // MP3 enviados nas Trilhas ficam fora do arquivo (deixariam o backup enorme).
+          if(par[0] === "meta") l = l.filter(function(x){ return String(x.id).indexOf("trilhaArq_") !== 0; });
+          out.colecoes[par[0]] = l; out.contagem[par[0]] = l.length; })
           .catch(function(e){ out.colecoes[par[0]] = []; out.contagem[par[0]] = 0; out.erros.push(par[0]+": "+(e && (e.code||e.message))); });
       }));
     }).then(function(){ return out; });
@@ -11370,6 +11427,14 @@
       tentar("Trilhas", function(){ trilhas.receber(d); });
     }, function(e){ console.warn("[Pangea] trilha", e); });
     ouvintes.push(function(){ try{ pararTrilha(); }catch(e){} tentar("Trilhas", trilhas.desligar); });
+    // Lista de trilhas da campanha (nomes, partes, MP3 enviados): só o Assimilador lê.
+    if(ehMestre()){
+      var pararListaTrilhas = fb.ouvirDoc("notas", "trilhas", function(d){
+        if(usuario !== u || !campanhaAtual || campanhaAtual.id !== cid) return;
+        tentar("Trilhas", function(){ trilhas.receberLista(d); });
+      }, function(e){ console.warn("[Pangea] lista de trilhas", e); });
+      ouvintes.push(function(){ try{ pararListaTrilhas(); }catch(e){} });
+    }
     var mestre = ehMestre();
     var chegou = { p:false, res:false, r:false, rn:!mestre };
     function talvezRevelar(){
@@ -11474,36 +11539,191 @@
 
   // ---------- TRILHAS SONORAS (menu lateral) ----------
   // O Assimilador escolhe a trilha e ela toca para a mesa toda ao mesmo tempo.
-  // A escolha mora em campanhas/{id}/meta/trilha: { id, inicio (ms), ts }.
+  // A escolha mora em campanhas/{id}/meta/trilha: { id, inicio (ms), ts, arq? }.
   // Quem entra depois ouve a partir do ponto certo (calculado pelo "inicio").
+  // Pular para outro ponto = o Assimilador grava um "inicio" novo (vale pra mesa toda).
   // Toda trilha repete sem parar; quem não quiser ouvir silencia no próprio aparelho.
-  // Jogadores não veem o nome da música: o banco guarda só um id neutro e os
-  // arquivos têm nomes neutros (t1, t2...). O nome aparece só para o Assimilador.
+  // Jogadores não veem o nome da música: meta/trilha guarda só um id neutro.
+  // A lista da campanha (nomes, partes, ordem, ocultas) fica em notas/trilhas,
+  // que só o Assimilador lê. Trilhas padrão: arquivos neutros em public/trilhas/.
+  // MP3 enviados pelo site: em pedaços em meta/trilhaArq_<id>_<n> (base64), lidos
+  // pelos jogadores só quando a trilha toca, e guardados no aparelho (IndexedDB).
   // O volume é de cada um: fica só neste aparelho e não muda nada para os outros.
-  // Arquivos em public/trilhas/ (MP3 convertido dos WAV originais).
   var TRILHAS = [
-    { id:"t1", nome:"Canto Ley", arquivo:"trilhas/t1.mp3" },
-    { id:"t2", nome:"Combate Teste", arquivo:"trilhas/t2.mp3" }
+    { id:"t1", nome:"Canto Ley", arquivo:"trilhas/t1.mp3", partes:[] },
+    { id:"t2", nome:"Combate Teste", arquivo:"trilhas/t2.mp3", partes:[] },
+    { id:"t3", nome:"Exploração (mata e ruínas)", arquivo:"trilhas/t3.mp3", dur:240,
+      partes:[{t:0,nome:"Amanhecer"},{t:37.9,nome:"Trilha"},{t:113.7,nome:"Ruínas"},{t:176.8,nome:"Clareira"}] },
+    { id:"t4", nome:"Tensão e perseguição", arquivo:"trilhas/t4.mp3", dur:218,
+      partes:[{t:0,nome:"Silêncio no mato"},{t:40,nome:"Rastro"},{t:97.8,nome:"Perseguição"},{t:177.8,nome:"Fôlego"}] },
+    { id:"t5", nome:"D'lém / Árvore", arquivo:"trilhas/t5.mp3", dur:224,
+      partes:[{t:0,nome:"Raízes"},{t:48,nome:"Canto"},{t:112,nome:"Ley Line"},{t:176,nome:"Seiva"}] },
+    { id:"t6", nome:"Rêverie", arquivo:"trilhas/t6.mp3", dur:210,
+      partes:[{t:0,nome:"Biblioteca"},{t:34.3,nome:"Valsa"},{t:102.9,nome:"Enfermaria"},{t:158.6,nome:"Arquivo"}] },
+    { id:"t7", nome:"Traúm", arquivo:"trilhas/t7.mp3", dur:214,
+      partes:[{t:0,nome:"Forja acesa"},{t:31.3,nome:"Martelo"},{t:104.3,nome:"Fole"},{t:167,nome:"Brasa"}] },
+    { id:"t8", nome:"Mriya", arquivo:"trilhas/t8.mp3", dur:216,
+      partes:[{t:0,nome:"Aurora"},{t:36,nome:"Lavoura"},{t:108,nome:"Canto da colheita"},{t:168,nome:"Entardecer"}] },
+    { id:"t9", nome:"Yūgen", arquivo:"trilhas/t9.mp3", dur:206,
+      partes:[{t:0,nome:"Oficina"},{t:34.3,nome:"Koto"},{t:102.9,nome:"Sinal"},{t:171.4,nome:"Repouso"}] }
   ];
+  var TRILHA_PEDACO = 700000;              // bytes por documento (base64 fica ~930 KB, abaixo de 1 MB)
+  var TRILHA_MAX_MB = 15;
+  function trilhaArqId(id, k){ return "trilhaArq_" + id + "_" + k; }
   var trilhas = (function(){
     var VOL_KEY = "pangea:trilhaVol", MUDO_KEY = "pangea:trilhaMudo";
     var ICO_NOTA = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>';
     var ICO_SOM = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M19 5a10 10 0 0 1 0 14"/></svg>';
     var ICO_MUDO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="m23 9-6 6"/><path d="m17 9 6 6"/></svg>';
     var estado = null;            // documento meta/trilha recebido do banco
-    var ligado = false, aberto = false, bloqueado = false, erroMsg = "";
+    var catalogo = null;          // documento notas/trilhas (só o Assimilador)
+    var ligado = false, aberto = false, bloqueado = false, erroMsg = "", avisoMsg = "";
     var audio = null, ctx = null, ganho = null;
     var tocandoChave = null;      // id + inicio da trilha carregada no <audio>
+    var tocandoId = null, tocandoUrl = null, carregando = false;
     var ultimoPode = null;
     var fade = 1, fadeTimer = null;
     var aba = null, painel = null;
+    var gerenciando = false, editId = null, apagarId = null, envio = null, redesenharDepois = false;
+    var arrastando = false, relogio = null;
+    var urls = {};                // id -> URL do blob (MP3 enviados)
 
-    function trilhaPorId(id){ return TRILHAS.filter(function(t){ return t.id === id; })[0] || null; }
+    // ----- Lista da campanha -----
+    function padraoPorId(id){ return TRILHAS.filter(function(t){ return t.id === id; })[0] || null; }
+    function clonarPartes(l){ return (Array.isArray(l) ? l : []).map(function(p){ return { t:Math.max(0, Number(p.t) || 0), nome:String(p.nome || "") }; }); }
+    function listaGuardada(){ return (catalogo && Array.isArray(catalogo.lista)) ? catalogo.lista : []; }
+    // Junta as trilhas padrão com o que o Assimilador mudou/enviou nesta campanha.
+    function lista(){
+      var out = [], vistos = {};
+      listaGuardada().forEach(function(x){
+        if(!x || !x.id || vistos[x.id]) return;
+        var p = padraoPorId(x.id);
+        if(p){
+          vistos[x.id] = 1;
+          out.push({ id:p.id, origem:"padrao", arquivo:p.arquivo, dur:p.dur || null, nome:x.nome || p.nome,
+            partes:clonarPartes(x.partes != null ? x.partes : p.partes), oculta:!!x.oculta, mudada:!!(x.nome || x.partes != null) });
+        } else if(x.origem === "enviada" && x.n > 0){
+          vistos[x.id] = 1;
+          out.push({ id:x.id, origem:"enviada", n:x.n, tam:x.tam || 0, dur:x.dur || null, nome:x.nome || "Trilha enviada", partes:clonarPartes(x.partes), oculta:false });
+        }
+      });
+      TRILHAS.forEach(function(p){
+        if(!vistos[p.id]) out.push({ id:p.id, origem:"padrao", arquivo:p.arquivo, dur:p.dur || null, nome:p.nome, partes:clonarPartes(p.partes), oculta:false, mudada:false });
+      });
+      return out;
+    }
+    function itemPorId(id){ return lista().filter(function(x){ return x.id === id; })[0] || null; }
+    // Volta a lista ao formato guardado (padrão só guarda o que mudou).
+    function paraGuardar(l){
+      return l.map(function(x){
+        if(x.origem === "padrao"){
+          var p = padraoPorId(x.id), o = { id:x.id, origem:"padrao" };
+          if(x.nome && x.nome !== p.nome) o.nome = x.nome;
+          if(JSON.stringify(clonarPartes(x.partes)) !== JSON.stringify(clonarPartes(p.partes))) o.partes = clonarPartes(x.partes);
+          if(x.oculta) o.oculta = true;
+          return o;
+        }
+        return { id:x.id, origem:"enviada", nome:x.nome, n:x.n, tam:x.tam || 0, dur:x.dur || null, partes:clonarPartes(x.partes) };
+      });
+    }
+    function gravarLista(l){
+      if(!FB || !podeEscolher()) return Promise.resolve();
+      erroMsg = "";
+      var dados = { lista:paraGuardar(l), ts:new Date().toISOString() };
+      catalogo = dados; desenhar();
+      return Promise.resolve(FB.escrever([{ tipo:"set", col:"notas", id:"trilhas", data:dados }])).catch(function(e){
+        console.warn("[Pangea] trilhas: lista", e);
+        erroMsg = "Não deu pra salvar a lista de trilhas. Confira a conexão e tente de novo.";
+        desenhar();
+      });
+    }
+    function mudarItem(id, fn){
+      var l = lista(), x = l.filter(function(i){ return i.id === id; })[0];
+      if(!x) return Promise.resolve();
+      fn(x, l);
+      return gravarLista(l);
+    }
+
+    // De onde vem o som da trilha que está na mesa (vale também para jogadores,
+    // que não leem a lista: o id padrão ou os dados do arquivo vêm em meta/trilha).
+    function fonteAtual(){
+      if(!estado || !estado.id) return null;
+      var p = padraoPorId(estado.id);
+      if(p) return { id:p.id, arquivo:p.arquivo };
+      if(estado.arq && estado.arq.n > 0) return { id:estado.id, n:estado.arq.n };
+      return null;
+    }
+    function trilhaPorId(id){ return itemPorId(id); }
     function vol(){ var v = parseFloat(lerPref(VOL_KEY, "0.6")); return isFinite(v) ? Math.min(1, Math.max(0, v)) : 0.6; }
     function mudo(){ return lerPref(MUDO_KEY, "0") === "1"; }
-    function ativa(){ return !!(estado && estado.id && trilhaPorId(estado.id)); }
+    function ativa(){ return !!fonteAtual(); }
     function podeEscolher(){ return temAcessoTotal() && ehMestre(); }
 
+    // ----- Guardar MP3 enviados no aparelho (para não baixar de novo) -----
+    var idb = (function(){
+      var p = null;
+      function abrirDb(){
+        if(p) return p;
+        p = new Promise(function(res, rej){
+          try{
+            var r = indexedDB.open("pangea-trilhas", 1);
+            r.onupgradeneeded = function(){ r.result.createObjectStore("arq"); };
+            r.onsuccess = function(){ res(r.result); };
+            r.onerror = function(){ rej(r.error); };
+          }catch(e){ rej(e); }
+        });
+        p.catch(function(){ p = null; });
+        return p;
+      }
+      function op(modo, fn){
+        return abrirDb().then(function(db){
+          return new Promise(function(res){
+            try{
+              var tx = db.transaction("arq", modo), q = fn(tx.objectStore("arq"));
+              tx.oncomplete = function(){ res(q && q.result !== undefined ? q.result : true); };
+              tx.onerror = tx.onabort = function(){ res(null); };
+            }catch(e){ res(null); }
+          });
+        }).catch(function(){ return null; });
+      }
+      return {
+        ler: function(k){ return op("readonly", function(s){ return s.get(k); }); },
+        gravar: function(k, v){ return op("readwrite", function(s){ s.put(v, k); }); },
+        apagar: function(k){ return op("readwrite", function(s){ s.delete(k); }); }
+      };
+    })();
+    function base64ParaBytes(b64){
+      var bin = atob(b64), n = bin.length, u = new Uint8Array(n);
+      for(var i = 0; i < n; i++) u[i] = bin.charCodeAt(i);
+      return u;
+    }
+    function blobParaBase64(blob){
+      return new Promise(function(res, rej){
+        var fr = new FileReader();
+        fr.onload = function(){ var s = String(fr.result || ""); res(s.slice(s.indexOf(",") + 1)); };
+        fr.onerror = function(){ rej(fr.error); };
+        fr.readAsDataURL(blob);
+      });
+    }
+    // URL tocável para uma trilha. Padrão: o arquivo do site. Enviada: monta o MP3
+    // a partir dos pedaços (do aparelho, se já tiver; senão, do banco).
+    function urlDe(f){
+      if(f.arquivo) return Promise.resolve(new URL(f.arquivo, location.href).href);
+      if(urls[f.id]) return Promise.resolve(urls[f.id]);
+      return idb.ler(f.id).then(function(blob){
+        if(blob && blob.size) return blob;
+        var ps = [];
+        for(var k = 0; k < f.n; k++) ps.push(FB.lerDoc("meta", trilhaArqId(f.id, k)));
+        return Promise.all(ps).then(function(docs){
+          if(docs.some(function(d){ return !d || !d.b64; })) throw new Error("arquivo incompleto");
+          var b = new Blob(docs.map(function(d){ return base64ParaBytes(d.b64); }), { type:"audio/mpeg" });
+          idb.gravar(f.id, b);
+          return b;
+        });
+      }).then(function(blob){ urls[f.id] = URL.createObjectURL(blob); return urls[f.id]; });
+    }
+
+    // ----- Som -----
     // Volume: no iPhone o volume do <audio> é fixo, então o som passa por um
     // ganho do Web Audio (criado no primeiro toque na página).
     function aplicarVolume(){
@@ -11520,6 +11740,10 @@
         if(!ativa() || !tocandoChave) return;
         try{ audio.currentTime = 0; }catch(e){}
         tocar();
+      });
+      audio.addEventListener("error", function(){
+        if(!tocandoChave || !audio.getAttribute("src")) return;
+        carregando = false; erroMsg = podeEscolher() ? "Não deu pra abrir o arquivo dessa trilha." : ""; desenhar();
       });
       return audio;
     }
@@ -11553,9 +11777,14 @@
       }, 40);
     }
     function pararLocal(suave){
-      tocandoChave = null; bloqueado = false;
+      tocandoChave = null; tocandoId = null; bloqueado = false; carregando = false;
       if(!audio || audio.paused){ return; }
       rampa(0, suave ? 700 : 0, function(){ if(!tocandoChave){ audio.pause(); } });
+    }
+    function duracao(){
+      if(audio && tocandoId && estado && tocandoId === estado.id && isFinite(audio.duration) && audio.duration > 0) return audio.duration;
+      var x = estado && estado.id ? (podeEscolher() ? itemPorId(estado.id) : padraoPorId(estado.id)) : null;
+      return x && x.dur ? x.dur : null;
     }
     function posicaoAtual(dur){
       var s = Math.max(0, (Date.now() - (Number(estado.inicio) || Date.now())) / 1000);
@@ -11567,39 +11796,60 @@
       var p;
       try{ p = a.play(); }catch(e){ p = Promise.reject(e); }
       Promise.resolve(p).then(function(){
-        bloqueado = false; rampa(1, 600); desenhar();
+        bloqueado = false; carregando = false; rampa(1, 600); desenhar();
       }).catch(function(e){
         if(e && e.name === "AbortError") return;
-        bloqueado = true; desenhar();
+        bloqueado = true; carregando = false; desenhar();
       });
     }
     function sincronizar(forcar){
       if(!ligado) return;
       if(!ativa()){ pararLocal(true); desenhar(); return; }
-      var t = trilhaPorId(estado.id);
+      var f = fonteAtual();
       var chave = estado.id + "|" + estado.inicio;
       garantirAudio();
       audio.loop = true;
       if(chave === tocandoChave && !forcar){ desenhar(); return; }
-      var trocar = function(){
+      // Mesma trilha, só mudou o ponto (o Assimilador pulou): ajuste rápido.
+      if(!forcar && tocandoId === estado.id && tocandoChave && !audio.paused && audio.readyState >= 1){
         tocandoChave = chave;
+        rampa(0, 180, function(){
+          if(tocandoChave !== chave) return;
+          try{ audio.currentTime = posicaoAtual(audio.duration); }catch(e){}
+          rampa(1, 350);
+        });
+        desenhar(); return;
+      }
+      var trocar = function(){
+        tocandoChave = chave; tocandoId = estado.id; carregando = true;
         fade = 0; aplicarVolume();
-        var url = new URL(t.arquivo, location.href).href;
-        var posicionar = function(){
-          var dur = audio.duration, pos = posicaoAtual(dur);
-          try{ audio.currentTime = pos; }catch(e){}
-          tocar();
-        };
-        if(audio.src !== url){
-          audio.src = url;
-          audio.addEventListener("loadedmetadata", function um(){ audio.removeEventListener("loadedmetadata", um); if(tocandoChave === chave) posicionar(); });
-          audio.load();
-        } else if(audio.readyState >= 1) posicionar();
-        else audio.addEventListener("loadedmetadata", function um(){ audio.removeEventListener("loadedmetadata", um); if(tocandoChave === chave) posicionar(); });
+        desenhar();
+        urlDe(f).then(function(url){
+          if(tocandoChave !== chave) return;
+          var posicionar = function(){
+            if(tocandoChave !== chave) return;
+            var dur = audio.duration, pos = posicaoAtual(dur);
+            try{ audio.currentTime = pos; }catch(e){}
+            tocar();
+          };
+          if(tocandoUrl !== url){
+            tocandoUrl = url;
+            audio.src = url;
+            audio.addEventListener("loadedmetadata", function um(){ audio.removeEventListener("loadedmetadata", um); posicionar(); });
+            audio.load();
+          } else if(audio.readyState >= 1) posicionar();
+          else audio.addEventListener("loadedmetadata", function um(){ audio.removeEventListener("loadedmetadata", um); posicionar(); });
+        }).catch(function(e){
+          console.warn("[Pangea] trilha: carregar", e);
+          if(tocandoChave !== chave) return;
+          carregando = false;
+          erroMsg = podeEscolher() ? "Não deu pra carregar essa trilha. Ela pode ter sido apagada ou a conexão caiu." : "";
+          desenhar();
+        });
       };
       if(audio && !audio.paused && tocandoChave && tocandoChave !== chave){
         tocandoChave = chave; // evita duas trocas ao mesmo tempo
-        rampa(0, 500, function(){ audio.pause(); tocandoChave = null; if(ativa() && (estado.id + "|" + estado.inicio) === chave) trocar(); });
+        rampa(0, 500, function(){ audio.pause(); tocandoChave = null; tocandoId = null; if(ativa() && (estado.id + "|" + estado.inicio) === chave) trocar(); });
       } else trocar();
       desenhar();
     }
@@ -11615,14 +11865,115 @@
         desenhar();
       });
     }
-    function escolher(id){
+    function dadosDe(x, inicio){
+      var d = { id:x.id, inicio:inicio };
+      if(x.origem === "enviada") d.arq = { n:x.n };
+      return d;
+    }
+    function escolher(id, pos){
       destravar();
-      var t = trilhaPorId(id); if(!t) return;
-      gravar({ id:t.id, inicio:Date.now() });
+      var x = itemPorId(id); if(!x) return;
+      gravar(dadosDe(x, Date.now() - Math.max(0, pos || 0) * 1000));
+    }
+    // Pular para um ponto (segundos) da trilha que está tocando: vale pra mesa toda.
+    function irPara(seg){
+      if(!ativa() || !podeEscolher()) return;
+      var x = itemPorId(estado.id); if(!x) return;
+      var d = duracao(); if(d) seg = Math.min(Math.max(0, seg), Math.max(0, d - 0.5));
+      estado = dadosDe(x, Date.now() - seg * 1000); // resposta imediata neste aparelho
+      sincronizar(false);
+      gravar(dadosDe(x, estado.inicio));
     }
     function parar(){ destravar(); gravar({ id:null }); }
 
+    // ----- Enviar / apagar MP3 -----
+    function lerDuracao(blob){
+      return new Promise(function(res){
+        var a = new Audio(), u = URL.createObjectURL(blob), feito = false;
+        var fim = function(v){ if(feito) return; feito = true; URL.revokeObjectURL(u); res(v); };
+        a.preload = "metadata";
+        a.addEventListener("loadedmetadata", function(){ fim(isFinite(a.duration) ? Math.round(a.duration * 10) / 10 : null); });
+        a.addEventListener("error", function(){ fim(-1); });
+        setTimeout(function(){ fim(null); }, 15000);
+        a.src = u;
+      });
+    }
+    function enviarArquivo(arq){
+      if(!arq || envio || !podeEscolher()) return;
+      erroMsg = ""; avisoMsg = "";
+      var ehMp3 = /\.mp3$/i.test(arq.name || "") || arq.type === "audio/mpeg" || arq.type === "audio/mp3";
+      if(!ehMp3){ erroMsg = "Envie um arquivo MP3."; desenhar(); return; }
+      if(arq.size > TRILHA_MAX_MB * 1024 * 1024){ erroMsg = "Esse arquivo passa de " + TRILHA_MAX_MB + " MB. Converta para MP3 de 128 ou 160 kbps e tente de novo."; desenhar(); return; }
+      var id = "u_" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+      var n = Math.ceil(arq.size / TRILHA_PEDACO);
+      var nome = String(arq.name || "Trilha").replace(/\.[^.]+$/, "").replace(/[_]+/g, " ").trim().slice(0, 60) || "Trilha";
+      envio = { nome:nome, feito:0, total:n };
+      desenhar();
+      var blob = arq.slice(0, arq.size, "audio/mpeg");
+      lerDuracao(blob).then(function(dur){
+        if(dur === -1) throw new Error("ilegivel");
+        var k = 0;
+        var proximo = function(){
+          if(k >= n) return Promise.resolve();
+          return blobParaBase64(blob.slice(k * TRILHA_PEDACO, (k + 1) * TRILHA_PEDACO)).then(function(b64){
+            return FB.escrever([{ tipo:"set", col:"meta", id:trilhaArqId(id, k), data:{ b64:b64, k:k, n:n } }]);
+          }).then(function(){ k++; envio.feito = k; atualizarEnvio(); return proximo(); });
+        };
+        return proximo().then(function(){
+          idb.gravar(id, blob);
+          var l = lista();
+          l.push({ id:id, origem:"enviada", nome:nome, n:n, tam:arq.size, dur:dur, partes:[{ t:0, nome:"Início" }] });
+          envio = null; editId = id; gerenciando = true;
+          avisoMsg = '"' + nome + '" está na lista. Dê um nome e marque as partes.';
+          return gravarLista(l);
+        });
+      }).catch(function(e){
+        console.warn("[Pangea] trilhas: enviar", e);
+        var feitos = envio ? envio.feito : 0;
+        envio = null;
+        erroMsg = e && e.message === "ilegivel" ? "Esse arquivo não abriu como MP3." : "O envio parou no meio. Confira a conexão e tente de novo.";
+        // limpa pedaços que chegaram a ser gravados
+        var ops = []; for(var j = 0; j < feitos; j++) ops.push({ tipo:"del", col:"meta", id:trilhaArqId(id, j) });
+        if(ops.length) Promise.resolve(FB.escrever(ops)).catch(function(){});
+        desenhar();
+      });
+    }
+    function atualizarEnvio(){
+      var el = painel && painel.querySelector("[data-trilha-envio]");
+      if(el && envio) el.textContent = "Enviando " + envio.nome + "… " + envio.feito + " de " + envio.total;
+    }
+    function apagar(id){
+      var x = itemPorId(id); if(!x || x.origem !== "enviada") return;
+      if(ativa() && estado.id === id) parar();
+      var l = lista().filter(function(i){ return i.id !== id; });
+      editId = null; apagarId = null;
+      gravarLista(l).then(function(){
+        var ops = []; for(var k = 0; k < x.n; k++) ops.push({ tipo:"del", col:"meta", id:trilhaArqId(id, k) });
+        return FB.escrever(ops);
+      }).catch(function(e){ console.warn("[Pangea] trilhas: apagar", e); });
+      idb.apagar(id);
+      if(urls[id]){ try{ URL.revokeObjectURL(urls[id]); }catch(e){} delete urls[id]; }
+    }
+
     // ----- Tela -----
+    function fmt(s){
+      s = Math.max(0, Math.floor(Number(s) || 0));
+      return Math.floor(s / 60) + ":" + ("0" + (s % 60)).slice(-2);
+    }
+    function lerTempo(txt){
+      txt = String(txt || "").trim().replace(",", ".");
+      if(!txt) return null;
+      var m = txt.match(/^(\d+):(\d{1,2}(?:\.\d+)?)$/);
+      if(m) return parseInt(m[1], 10) * 60 + parseFloat(m[2]);
+      var n = parseFloat(txt);
+      return isFinite(n) ? n : null;
+    }
+    function parteAtual(partes, pos){
+      var i = -1;
+      partes.forEach(function(p, k){ if(p.t <= pos + 0.25) i = k; });
+      return i;
+    }
+    function partesOrdenadas(x){ return clonarPartes(x.partes).sort(function(a, b){ return a.t - b.t; }); }
     function montar(){
       if(aba) return;
       aba = document.createElement("button");
@@ -11635,19 +11986,97 @@
       painel.setAttribute("role", "dialog"); painel.setAttribute("aria-label", "Trilhas sonoras");
       document.body.appendChild(painel); document.body.appendChild(aba);
       painel.addEventListener("click", function(e){
-        var b = e.target.closest("button, input"); if(!b) return;
+        var b = e.target.closest("button"); if(!b || b.disabled) return;
+        var a = function(n){ return b.getAttribute(n); };
         if(b.hasAttribute("data-trilha-fechar")){ abrir(false); aba.focus(); return; }
         if(b.hasAttribute("data-trilha-destravar")){ destravar(); return; }
         if(b.hasAttribute("data-trilha-mudo")){ gravarPref(MUDO_KEY, mudo() ? "0" : "1"); aplicarVolume(); desenhar(); return; }
         if(b.hasAttribute("data-trilha-tocar")){
-          var id = b.getAttribute("data-trilha-tocar");
+          var id = a("data-trilha-tocar");
           if(ativa() && estado.id === id) parar(); else escolher(id);
           return;
         }
         if(b.hasAttribute("data-trilha-parar")){ parar(); return; }
+        if(b.hasAttribute("data-trilha-ir")){ irPara(parseFloat(a("data-trilha-ir")) || 0); return; }
+        if(b.hasAttribute("data-trilha-marcar")){
+          if(!ativa()) return;
+          var pos = Math.round(posicaoAtual(duracao()) * 10) / 10, idm = estado.id;
+          mudarItem(idm, function(x){ x.partes.push({ t:pos, nome:"Parte " + (x.partes.length + 1) }); x.partes.sort(function(p, q){ return p.t - q.t; }); });
+          gerenciando = true; editId = idm; avisoMsg = "Parte marcada em " + fmt(pos) + ". Dê um nome a ela abaixo.";
+          desenhar(); return;
+        }
+        if(b.hasAttribute("data-trilha-gerenciar")){ gerenciando = !gerenciando; editId = null; apagarId = null; avisoMsg = ""; erroMsg = ""; desenhar(); return; }
+        if(b.hasAttribute("data-trilha-editar")){ var ide = a("data-trilha-editar"); editId = editId === ide ? null : ide; apagarId = null; desenhar(); return; }
+        if(b.hasAttribute("data-trilha-subir") || b.hasAttribute("data-trilha-descer")){
+          var idx = a("data-trilha-subir") || a("data-trilha-descer"), dir = b.hasAttribute("data-trilha-subir") ? -1 : 1;
+          var l = lista(), vis = l.filter(function(x){ return !x.oculta; }), i = vis.map(function(x){ return x.id; }).indexOf(idx);
+          var j = i + dir; if(i < 0 || j < 0 || j >= vis.length) return;
+          var ia = l.indexOf(vis[i]), ib = l.indexOf(vis[j]), tmp = l[ia]; l[ia] = l[ib]; l[ib] = tmp;
+          gravarLista(l); return;
+        }
+        if(b.hasAttribute("data-trilha-ocultar")){
+          var ido = a("data-trilha-ocultar");
+          if(ativa() && estado.id === ido) parar();
+          editId = null; mudarItem(ido, function(x){ x.oculta = true; }); return;
+        }
+        if(b.hasAttribute("data-trilha-mostrar")){ mudarItem(a("data-trilha-mostrar"), function(x){ x.oculta = false; }); return; }
+        if(b.hasAttribute("data-trilha-original")){
+          mudarItem(a("data-trilha-original"), function(x){ var p = padraoPorId(x.id); x.nome = p.nome; x.partes = clonarPartes(p.partes); }); return;
+        }
+        if(b.hasAttribute("data-trilha-apagar")){ apagarId = a("data-trilha-apagar"); desenhar(); return; }
+        if(b.hasAttribute("data-trilha-apagar-sim")){ apagar(a("data-trilha-apagar-sim")); return; }
+        if(b.hasAttribute("data-trilha-apagar-nao")){ apagarId = null; desenhar(); return; }
+        if(b.hasAttribute("data-trilha-pt-add")){
+          var ida = a("data-trilha-pt-add");
+          var t0 = (ativa() && estado.id === ida) ? Math.round(posicaoAtual(duracao()) * 10) / 10 : 0;
+          mudarItem(ida, function(x){ x.partes.push({ t:t0, nome:"Parte " + (x.partes.length + 1) }); x.partes.sort(function(p, q){ return p.t - q.t; }); });
+          return;
+        }
+        if(b.hasAttribute("data-trilha-pt-del")){
+          var pr = a("data-trilha-pt-del").split("|");
+          mudarItem(pr[0], function(x){ x.partes = partesOrdenadas(x); x.partes.splice(parseInt(pr[1], 10), 1); });
+          return;
+        }
+        if(b.hasAttribute("data-trilha-pt-ouvir")){
+          var po = a("data-trilha-pt-ouvir").split("|"), xi = itemPorId(po[0]); if(!xi) return;
+          var pt = partesOrdenadas(xi)[parseInt(po[1], 10)]; if(!pt) return;
+          if(ativa() && estado.id === xi.id) irPara(pt.t); else escolher(xi.id, pt.t);
+          return;
+        }
+      });
+      // Campos de texto: salvam ao sair do campo (ou Enter).
+      painel.addEventListener("change", function(e){
+        var r = e.target;
+        if(r.hasAttribute("data-trilha-arquivo")){ var f = r.files && r.files[0]; r.value = ""; enviarArquivo(f); return; }
+        if(r.hasAttribute("data-trilha-pos")){ arrastando = false; irPara(parseFloat(r.value) || 0); return; }
+        if(r.hasAttribute("data-trilha-nome")){
+          var v = String(r.value || "").trim().slice(0, 60); if(!v) { desenhar(); return; }
+          mudarItem(r.getAttribute("data-trilha-nome"), function(x){ x.nome = v; }); return;
+        }
+        if(r.hasAttribute("data-trilha-pt-n") || r.hasAttribute("data-trilha-pt-t")){
+          var pr = (r.getAttribute("data-trilha-pt-n") || r.getAttribute("data-trilha-pt-t")).split("|"), k = parseInt(pr[1], 10);
+          var ehT = r.hasAttribute("data-trilha-pt-t");
+          mudarItem(pr[0], function(x){
+            x.partes = partesOrdenadas(x); var p = x.partes[k]; if(!p) return;
+            if(ehT){ var t = lerTempo(r.value); if(t != null){ var d = x.dur || 0; p.t = Math.max(0, d ? Math.min(t, d) : t); } }
+            else p.nome = String(r.value || "").trim().slice(0, 40);
+            x.partes.sort(function(a2, b2){ return a2.t - b2.t; });
+          });
+        }
+      });
+      painel.addEventListener("keydown", function(e){
+        if(e.key === "Enter" && e.target.matches && e.target.matches(".trilha-ed input[type=text]")){ e.preventDefault(); e.target.blur(); }
+      });
+      painel.addEventListener("focusout", function(){
+        setTimeout(function(){ if(redesenharDepois && !campoEmEdicao()){ redesenharDepois = false; desenhar(); } }, 0);
       });
       painel.addEventListener("input", function(e){
         var r = e.target;
+        if(r.hasAttribute("data-trilha-pos")){
+          arrastando = true;
+          var tt = painel.querySelector("[data-trilha-tempo]"); if(tt) tt.textContent = fmt(r.value);
+          return;
+        }
         if(r.hasAttribute("data-trilha-vol")){
           var v = Math.max(0, Math.min(100, parseInt(r.value, 10) || 0));
           gravarPref(VOL_KEY, String(v / 100));
@@ -11657,6 +12086,9 @@
           var m = painel.querySelector("[data-trilha-mudo]");
           if(m){ m.setAttribute("aria-pressed", mudo() ? "true" : "false"); m.innerHTML = mudo() ? ICO_MUDO : ICO_SOM; }
         }
+      });
+      ["pointerup", "touchend", "pointercancel"].forEach(function(ev){
+        painel.addEventListener(ev, function(e){ if(e.target && e.target.hasAttribute && e.target.hasAttribute("data-trilha-pos")) setTimeout(function(){ arrastando = false; }, 50); });
       });
       document.addEventListener("keydown", function(e){ if(e.key === "Escape" && aberto){ abrir(false); aba.focus(); } });
       document.addEventListener("click", function(e){
@@ -11671,72 +12103,180 @@
         }
       });
     }
+    function campoEmEdicao(){
+      var f = document.activeElement;
+      return !!(painel && f && painel.contains(f) && f.matches && f.matches("input[type=text]"));
+    }
     function abrir(sim){
       aberto = !!sim;
       if(!painel) return;
       painel.classList.toggle("aberto", aberto);
       aba.setAttribute("aria-expanded", aberto ? "true" : "false");
       if(aberto){ desenhar(); var f = painel.querySelector("[data-trilha-fechar]"); if(f) f.focus({ preventScroll:true }); }
+      ligarRelogio();
+    }
+    // Atualiza a barra de progresso sem redesenhar o painel.
+    function ligarRelogio(){
+      var precisa = aberto && ligado && ativa() && podeEscolher();
+      if(precisa && !relogio) relogio = setInterval(tique, 500);
+      if(!precisa && relogio){ clearInterval(relogio); relogio = null; }
+    }
+    function tique(){
+      if(!painel || !ativa()) return;
+      var d = duracao(), pos = posicaoAtual(d);
+      var r = painel.querySelector("[data-trilha-pos]");
+      if(!r){ if(d && painel.querySelector("[data-trilha-sem-dur]")) desenhar(); return; }
+      if(d && Math.abs(parseFloat(r.max) - d) > 1){ desenhar(); return; }
+      if(!arrastando && document.activeElement !== r){
+        r.value = pos;
+        var tt = painel.querySelector("[data-trilha-tempo]"); if(tt) tt.textContent = fmt(pos);
+      }
+      var x = itemPorId(estado.id); if(!x) return;
+      var ps = partesOrdenadas(x), atual = parteAtual(ps, pos);
+      var chips = painel.querySelectorAll("[data-trilha-ir]");
+      for(var i = 0; i < chips.length; i++) chips[i].classList.toggle("atual", i === atual);
+    }
+    function htmlBarra(x){
+      var d = duracao();
+      if(!d) return '<p class="hint" data-trilha-sem-dur>A barra aparece quando a trilha carregar.</p>';
+      var pos = posicaoAtual(d), ps = partesOrdenadas(x), atual = parteAtual(ps, pos);
+      var h = '<div class="trilha-barra"><div class="trilha-marcas" aria-hidden="true">';
+      ps.forEach(function(p){ if(p.t > 0.5 && p.t < d) h += '<i style="left:' + (p.t / d * 100).toFixed(2) + '%"></i>'; });
+      h += '</div><input type="range" min="0" max="' + d.toFixed(1) + '" step="0.5" value="' + pos.toFixed(1) + '" data-trilha-pos aria-label="Ponto da trilha (vale para a mesa toda)"></div>';
+      h += '<div class="trilha-tempo"><span data-trilha-tempo>' + fmt(pos) + '</span><span>' + fmt(d) + '</span></div>';
+      if(ps.length){
+        h += '<p class="trilha-rot trilha-rot-partes">Pular para</p><div class="trilha-partes">';
+        ps.forEach(function(p, k){ h += '<button type="button" class="trilha-parte' + (k === atual ? ' atual' : '') + '" data-trilha-ir="' + p.t + '">' + esc(p.nome || fmt(p.t)) + '</button>'; });
+        h += '</div>';
+      }
+      h += '<button type="button" class="btn secondary trilha-marcar" data-trilha-marcar>+ Marcar parte neste ponto</button>';
+      return h;
+    }
+    function htmlEditor(x){
+      var h = '<div class="trilha-ed">';
+      h += '<label class="trilha-campo"><span>Nome</span><input type="text" maxlength="60" value="' + esc(x.nome) + '" data-trilha-nome="' + x.id + '" data-foco="nome-' + x.id + '"></label>';
+      h += '<p class="trilha-rot">Partes</p>';
+      var ps = partesOrdenadas(x);
+      if(!ps.length) h += '<p class="hint">Nenhuma parte marcada.</p>';
+      ps.forEach(function(p, k){
+        var ch = x.id + "|" + k;
+        h += '<div class="trilha-pt">' +
+          '<button type="button" class="trilha-pt-ouvir" data-trilha-pt-ouvir="' + ch + '" title="Tocar a partir daqui" aria-label="Tocar a partir de ' + fmt(p.t) + '">▶</button>' +
+          '<input type="text" class="trilha-pt-t" inputmode="decimal" value="' + fmt(p.t) + '" data-trilha-pt-t="' + ch + '" data-foco="t-' + ch + '" aria-label="Tempo (min:seg)">' +
+          '<input type="text" class="trilha-pt-n" maxlength="40" value="' + esc(p.nome) + '" data-trilha-pt-n="' + ch + '" data-foco="n-' + ch + '" aria-label="Nome da parte">' +
+          '<button type="button" class="trilha-pt-del" data-trilha-pt-del="' + ch + '" aria-label="Tirar a parte ' + esc(p.nome) + '">×</button></div>';
+      });
+      h += '<button type="button" class="btn secondary trilha-mini" data-trilha-pt-add="' + x.id + '">+ Parte' + (ativa() && estado.id === x.id ? ' no ponto atual' : '') + '</button>';
+      h += '<div class="trilha-ed-acoes">';
+      if(x.origem === "padrao"){
+        if(x.mudada) h += '<button type="button" class="btn secondary trilha-mini" data-trilha-original="' + x.id + '">Voltar ao original</button>';
+        h += '<button type="button" class="btn secondary trilha-mini" data-trilha-ocultar="' + x.id + '">Tirar da lista</button>';
+      } else if(apagarId === x.id){
+        h += '<span class="trilha-confirma">Apagar de vez?</span><button type="button" class="btn danger trilha-mini" data-trilha-apagar-sim="' + x.id + '">Apagar</button>' +
+          '<button type="button" class="btn secondary trilha-mini" data-trilha-apagar-nao>Cancelar</button>';
+      } else {
+        h += '<button type="button" class="btn secondary trilha-mini" data-trilha-apagar="' + x.id + '">Apagar MP3</button>';
+      }
+      h += '</div>';
+      h += '<p class="hint">' + (x.origem === "padrao" ? 'Trilha que vem com o site.' : 'MP3 enviado' + (x.tam ? ' (' + (x.tam / 1048576).toFixed(1).replace(".", ",") + ' MB)' : '') + '.') + (x.dur ? ' Duração ' + fmt(x.dur) + '.' : '') + ' Tempo no formato min:seg.</p>';
+      h += '</div>';
+      return h;
     }
     function desenhar(){
       if(!aba) return;
-      var on = ativa(), t = on ? trilhaPorId(estado.id) : null;
-      var verNome = podeEscolher(); // jogadores não veem o nome da música
+      ligarRelogio();
+      var on = ativa(), mestre = podeEscolher();
+      var t = on && mestre ? trilhaPorId(estado.id) : null;
+      var nomeAtual = t ? t.nome : "Trilha tocando";
       var soando = on && tocandoChave && audio && !audio.paused && !bloqueado;
       aba.style.display = ligado ? "" : "none";
       aba.classList.toggle("tocando", !!soando);
       aba.classList.toggle("bloqueado", on && bloqueado);
-      aba.title = on ? (verNome ? "Trilha: " + t.nome : "Trilha tocando") : "Trilhas sonoras";
-      aba.setAttribute("aria-label", on ? "Trilhas sonoras: " + (verNome ? "tocando " + t.nome : "trilha tocando") : "Trilhas sonoras");
+      aba.title = on ? (mestre ? "Trilha: " + nomeAtual : "Trilha tocando") : "Trilhas sonoras";
+      aba.setAttribute("aria-label", on ? "Trilhas sonoras: " + (mestre ? "tocando " + nomeAtual : "trilha tocando") : "Trilhas sonoras");
       if(!ligado){ abrir(false); }
       if(!aberto) return;
+      if(campoEmEdicao()){ redesenharDepois = true; return; } // não atrapalha quem está digitando
+      painel.classList.toggle("gerenciando", mestre && gerenciando);
       var v = Math.round(vol() * 100), m = mudo();
       var h = '<div class="trilha-topo"><h3>Trilhas sonoras</h3><button type="button" class="trilha-fechar" data-trilha-fechar aria-label="Fechar">×</button></div><div class="trilha-corpo">';
       h += '<div class="trilha-sec"><p class="trilha-rot">Tocando agora</p><div class="trilha-agora' + (soando ? ' tocando' : '') + '">';
       if(on){
-        h += '<b>' + (verNome ? esc(t.nome) : 'Trilha tocando') + '</b>';
+        h += '<b>' + esc(mestre ? nomeAtual : 'Trilha tocando') + '</b>';
         if(bloqueado) h += '<p class="hint">O navegador segurou o som. Toque no botão para ouvir.</p><button type="button" class="btn accent trilha-destravar" data-trilha-destravar>Toque para ouvir</button>';
         else if(!soando) h += '<p class="hint">Carregando…</p>';
-        else h += '<p class="hint">' + (verNome ? 'Repete até você trocar ou parar.' : 'Repete sem parar. Para não ouvir, silencie abaixo.') + '</p>';
-      } else h += '<b>Nenhuma trilha</b><p class="hint">' + (podeEscolher() ? 'Escolha abaixo o que a mesa vai ouvir.' : 'Quando o Assimilador escolher uma trilha, ela toca aqui.') + '</p>';
+        else h += '<p class="hint">' + (mestre ? 'Repete até você trocar ou parar.' : 'Repete sem parar. Para não ouvir, silencie abaixo.') + '</p>';
+        if(mestre && t) h += htmlBarra(t);
+      } else h += '<b>Nenhuma trilha</b><p class="hint">' + (mestre ? 'Escolha abaixo o que a mesa vai ouvir.' : 'Quando o Assimilador escolher uma trilha, ela toca aqui.') + '</p>';
       h += '</div></div>';
       h += '<div class="trilha-sec"><p class="trilha-rot">Seu volume</p><div class="trilha-vol' + (on ? '' : ' desligado') + '">' +
         '<button type="button" class="trilha-mudo" data-trilha-mudo aria-pressed="' + m + '" aria-label="' + (m ? 'Ligar o som' : 'Silenciar') + '"' + (on ? '' : ' disabled') + '>' + (m ? ICO_MUDO : ICO_SOM) + '</button>' +
         '<input type="range" min="0" max="100" step="1" value="' + v + '" data-trilha-vol aria-label="Volume da trilha"' + (on ? '' : ' disabled') + '>' +
         '<span class="trilha-vol-num">' + v + '%</span></div>' +
         '<p class="hint">' + (on ? 'Só muda o som neste aparelho.' : 'Libera quando uma trilha começar.') + '</p></div>';
-      if(podeEscolher()){
-        h += '<div class="trilha-sec"><p class="trilha-rot">Escolher para a mesa</p><div class="trilha-lista">';
-        TRILHAS.forEach(function(x){
+      if(mestre){
+        var l = lista(), vis = l.filter(function(x){ return !x.oculta; }), ocultas = l.filter(function(x){ return x.oculta; });
+        h += '<div class="trilha-sec"><div class="trilha-sec-topo"><p class="trilha-rot">Escolher para a mesa</p>' +
+          '<button type="button" class="trilha-ger" data-trilha-gerenciar aria-pressed="' + gerenciando + '">' + (gerenciando ? 'Pronto' : 'Organizar') + '</button></div>';
+        if(gerenciando) h += '<p class="hint trilha-ajuda">Mude nomes e partes, a ordem e o que aparece na lista. Os jogadores não veem nada disso.</p>';
+        h += '<div class="trilha-lista">';
+        if(!vis.length) h += '<p class="hint">A lista está vazia.</p>';
+        vis.forEach(function(x, i){
           var atual = on && estado.id === x.id;
-          h += '<button type="button" class="trilha-item" data-trilha-tocar="' + x.id + '" aria-pressed="' + atual + '">' +
-            '<span class="trilha-item-ico" aria-hidden="true">' + (atual ? '■' : '▶') + '</span>' +
-            '<span class="trilha-item-nome">' + esc(x.nome) + '</span></button>';
+          if(!gerenciando){
+            h += '<button type="button" class="trilha-item" data-trilha-tocar="' + x.id + '" aria-pressed="' + atual + '">' +
+              '<span class="trilha-item-ico" aria-hidden="true">' + (atual ? '■' : '▶') + '</span>' +
+              '<span class="trilha-item-nome">' + esc(x.nome) + '</span></button>';
+          } else {
+            h += '<div class="trilha-gitem' + (editId === x.id ? ' aberto' : '') + (atual ? ' atual' : '') + '"><div class="trilha-gtopo">' +
+              '<span class="trilha-ordem"><button type="button" data-trilha-subir="' + x.id + '" aria-label="Subir ' + esc(x.nome) + '"' + (i === 0 ? ' disabled' : '') + '>▲</button>' +
+              '<button type="button" data-trilha-descer="' + x.id + '" aria-label="Descer ' + esc(x.nome) + '"' + (i === vis.length - 1 ? ' disabled' : '') + '>▼</button></span>' +
+              '<span class="trilha-item-nome">' + esc(x.nome) + (x.origem === "enviada" ? ' <small>MP3</small>' : '') + '</span>' +
+              '<button type="button" class="trilha-mini-btn" data-trilha-editar="' + x.id + '" aria-expanded="' + (editId === x.id) + '">' + (editId === x.id ? 'Fechar' : 'Editar') + '</button></div>';
+            if(editId === x.id) h += htmlEditor(x);
+            h += '</div>';
+          }
         });
         h += '</div>';
-        if(on) h += '<button type="button" class="btn secondary trilha-parar" data-trilha-parar>Parar a trilha</button>';
+        if(gerenciando){
+          if(envio) h += '<p class="trilha-envio" data-trilha-envio>Enviando ' + esc(envio.nome) + '… ' + envio.feito + ' de ' + envio.total + '</p>';
+          else h += '<label class="btn accent trilha-enviar">Enviar MP3<input type="file" accept=".mp3,audio/mpeg" data-trilha-arquivo hidden></label>';
+          h += '<p class="hint">Até ' + TRILHA_MAX_MB + ' MB. Fica só nesta campanha. Quem ouvir baixa uma vez e o aparelho guarda.</p>';
+          if(ocultas.length){
+            h += '<p class="trilha-rot" style="margin-top:12px">Fora da lista</p><div class="trilha-ocultas">';
+            ocultas.forEach(function(x){ h += '<div class="trilha-oculta"><span>' + esc(x.nome) + '</span><button type="button" class="trilha-mini-btn" data-trilha-mostrar="' + x.id + '">Voltar</button></div>'; });
+            h += '</div>';
+          }
+        }
+        if(on && !gerenciando) h += '<button type="button" class="btn secondary trilha-parar" data-trilha-parar>Parar a trilha</button>';
+        if(avisoMsg && gerenciando) h += '<p class="trilha-aviso">' + esc(avisoMsg) + '</p>';
         if(erroMsg) h += '<p class="trilha-erro">' + esc(erroMsg) + '</p>';
         h += '</div>';
       }
       h += '</div>';
+      // guarda o foco e a rolagem
       var foco = document.activeElement, focoSel = null;
       if(foco && painel.contains(foco)){
-        ["data-trilha-fechar","data-trilha-mudo","data-trilha-vol","data-trilha-parar","data-trilha-destravar"].forEach(function(a){ if(foco.hasAttribute(a)) focoSel = "[" + a + "]"; });
-        if(foco.hasAttribute("data-trilha-tocar")) focoSel = '[data-trilha-tocar="' + foco.getAttribute("data-trilha-tocar") + '"]';
+        if(foco.hasAttribute("data-foco")) focoSel = '[data-foco="' + foco.getAttribute("data-foco") + '"]';
+        else for(var ai = 0; ai < foco.attributes.length; ai++){
+          var an = foco.attributes[ai].name;
+          if(an.indexOf("data-trilha-") === 0){ focoSel = "[" + an + (foco.attributes[ai].value ? '="' + foco.attributes[ai].value + '"' : "") + "]"; break; }
+        }
       }
       var rolagem = painel.querySelector(".trilha-corpo"), topoRol = rolagem ? rolagem.scrollTop : 0;
       painel.innerHTML = h;
       var nr = painel.querySelector(".trilha-corpo"); if(nr) nr.scrollTop = topoRol;
-      if(focoSel){ var nf = painel.querySelector(focoSel); if(nf) nf.focus({ preventScroll:true }); }
+      if(focoSel){ try{ var nf = painel.querySelector(focoSel); if(nf) nf.focus({ preventScroll:true }); }catch(e){} }
     }
 
     return {
-      ligar: function(){ montar(); ligado = true; estado = null; erroMsg = ""; desenhar(); },
-      desligar: function(){ ligado = false; estado = null; erroMsg = ""; pararLocal(false); if(audio){ try{ audio.pause(); }catch(e){} } desenhar(); },
+      ligar: function(){ montar(); ligado = true; estado = null; catalogo = null; erroMsg = ""; avisoMsg = ""; gerenciando = false; editId = null; desenhar(); },
+      desligar: function(){ ligado = false; estado = null; catalogo = null; erroMsg = ""; pararLocal(false); if(audio){ try{ audio.pause(); }catch(e){} } desenhar(); },
       receber: function(d){ estado = d || null; if(!ativa()) erroMsg = ""; sincronizar(false); },
+      receberLista: function(d){ catalogo = d || null; desenhar(); },
       // Chamado a cada render da página: só redesenha se mudou quem pode escolher
       // (ex.: "Ver como Jogador"), pra não atrapalhar quem está mexendo no volume.
-      redesenhar: function(){ var p = ligado && podeEscolher(); if(p !== ultimoPode){ ultimoPode = p; desenhar(); } }
+      redesenhar: function(){ var p = ligado && podeEscolher(); if(p !== ultimoPode){ ultimoPode = p; if(!p) gerenciando = false; desenhar(); } }
     };
   })();
 
