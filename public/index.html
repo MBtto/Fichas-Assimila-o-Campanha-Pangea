@@ -488,17 +488,28 @@
   .diamond.c-det.filled{ color:var(--royal); }
 
   @keyframes dieSpin{
-    0%{ transform:rotate(0deg) scale(1); }
-    50%{ transform:rotate(180deg) scale(0.85); }
-    100%{ transform:rotate(360deg) scale(1); }
+    0%{ transform:translate3d(0,0,0) rotate(0deg) scale(1); }
+    25%{ transform:translate3d(0,-5px,0) rotate(90deg) scale(.94); }
+    50%{ transform:translate3d(0,0,0) rotate(180deg) scale(.88); }
+    75%{ transform:translate3d(0,-5px,0) rotate(270deg) scale(.94); }
+    100%{ transform:translate3d(0,0,0) rotate(360deg) scale(1); }
+  }
+  @keyframes diePousa{
+    0%{ transform:scale(1.22) rotate(-10deg); opacity:.2; }
+    60%{ transform:scale(.97) rotate(2deg); opacity:1; }
+    100%{ transform:none; opacity:1; }
   }
   .dice-anim{ display:flex; gap:6px; flex-wrap:wrap; margin-top:12px; }
   .dice-anim .die-spin{
     width:34px; height:34px; display:flex; align-items:center; justify-content:center;
     background:var(--surface-2); border:2px solid var(--accent); border-radius:6px;
     font-family:"IBM Plex Mono",monospace; font-weight:700; font-size:15px; color:var(--accent);
-    animation: dieSpin 0.5s linear infinite;
+    font-variant-numeric:tabular-nums; will-change:transform; backface-visibility:hidden;
+    animation: dieSpin 0.6s linear infinite;
   }
+  .dado-pousa{ animation:diePousa .4s cubic-bezier(.2,1.4,.4,1) both; }
+  :root[data-anim="reduzidas"] .dice-anim .die-spin, :root[data-anim="reduzidas"] .dado-pousa{ animation:none !important; }
+  @media (prefers-reduced-motion: reduce){ .dice-anim .die-spin, .dado-pousa{ animation:none !important; } }
   .die-chip{
     display:inline-block; font-family:"IBM Plex Mono",monospace; font-size:11px;
     padding:2px 6px; border:1px solid var(--border-strong); border-radius:4px;
@@ -799,7 +810,7 @@
   .rollfeed-cena{ padding:8px 12px 2px; border-bottom:1px solid var(--border-strong); }
   /* ===== Teste de Assimilação: animação central e destaque no histórico ===== */
   .assim-ov{ position:fixed; inset:0; z-index:9500; display:flex; align-items:center; justify-content:center; padding:16px;
-    background:rgba(12,8,4,.62); backdrop-filter:blur(2px); -webkit-backdrop-filter:blur(2px); animation:assimFade .25s ease-out; }
+    background:rgba(12,8,4,.72); animation:assimFade .25s ease-out; }
   .assim-ov.saindo{ opacity:0; transition:opacity .25s; }
   .assim-box{ background:var(--surface); color:var(--ink); border:2px solid var(--assim); border-radius:14px; padding:20px 20px 14px;
     width:min(540px,100%); text-align:center; animation:assimPop .35s cubic-bezier(.2,1.4,.4,1);
@@ -811,11 +822,12 @@
   .assim-sub{ font-size:12.5px; color:var(--ink-muted); margin:0 0 14px; }
   .assim-dados{ display:flex; gap:12px; justify-content:center; flex-wrap:wrap; margin-bottom:14px; }
   .assim-die{ width:74px; height:74px; border-radius:12px; border:2px solid var(--assim); background:var(--surface-2);
-    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; animation:assimRola .42s linear infinite; }
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; animation:assimRola .48s linear infinite;
+    will-change:transform; backface-visibility:hidden; }
   .assim-die.d12{ border-color:var(--royal); border-radius:22px; }
   .assim-die.parou{ animation:assimPara .45s cubic-bezier(.2,1.6,.4,1) forwards; }
   .assim-die.tem-p{ border-color:var(--danger); box-shadow:0 0 14px color-mix(in srgb, var(--danger) 60%, transparent); }
-  .assim-face{ font-family:"IBM Plex Mono",monospace; font-weight:700; font-size:26px; color:var(--assim); display:flex; gap:3px; align-items:center; flex-wrap:wrap; justify-content:center; line-height:1; }
+  .assim-face{ font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums; font-weight:700; font-size:26px; color:var(--assim); display:flex; gap:3px; align-items:center; flex-wrap:wrap; justify-content:center; line-height:1; }
   .assim-die.parou .assim-face{ font-size:15px; color:var(--ink); }
   .assim-die .dado{ font-size:22px; }
   .assim-tipo{ font-family:"IBM Plex Mono",monospace; font-size:10px; color:var(--ink-muted); }
@@ -823,7 +835,7 @@
   .assim-res.aparece{ animation:assimSobe .4s ease-out; }
   .assim-res .rbadge{ font-size:15px; padding:4px 12px; }
   .assim-cartas{ margin:10px 0 0; font-size:13px; color:var(--ink-muted); }
-  @keyframes assimRola{ 0%{transform:rotate(0) translateY(0)} 25%{transform:rotate(90deg) translateY(-7px)} 50%{transform:rotate(180deg) translateY(0)} 75%{transform:rotate(270deg) translateY(-7px)} 100%{transform:rotate(360deg) translateY(0)} }
+  @keyframes assimRola{ 0%{transform:translate3d(0,0,0) rotate(0)} 25%{transform:translate3d(0,-7px,0) rotate(90deg)} 50%{transform:translate3d(0,0,0) rotate(180deg)} 75%{transform:translate3d(0,-7px,0) rotate(270deg)} 100%{transform:translate3d(0,0,0) rotate(360deg)} }
   @keyframes assimPara{ 0%{transform:scale(1.3) rotate(-14deg)} 100%{transform:scale(1) rotate(0)} }
   @keyframes assimPop{ from{transform:scale(.85);opacity:0} to{transform:scale(1);opacity:1} }
   @keyframes assimFade{ from{opacity:0} to{opacity:1} }
@@ -6528,9 +6540,10 @@
       }
       raf = requestAnimationFrame(passo);
     }
+    var pausado = false;
     function parar(){ rodando = false; if(raf){ cancelAnimationFrame(raf); raf = 0; } }
     function iniciar(){
-      if(rodando) return;
+      if(rodando || pausado) return;
       rodando = true; ultimo = 0;
       raf = requestAnimationFrame(passo);
     }
@@ -6589,7 +6602,12 @@
       var mqr = window.matchMedia("(prefers-reduced-motion: reduce)");
       if(mqr.addEventListener) mqr.addEventListener("change", function(){ if(cv) atualizar(); });
     }
-    return { atualizar:atualizar, pressao:pressao, emPressao:emPressao };
+    function pausar(sim){
+      pausado = !!sim;
+      if(!cv) return;
+      if(pausado) parar(); else if(!document.hidden && !movimentoReduzido()) iniciar();
+    }
+    return { atualizar:atualizar, pressao:pressao, emPressao:emPressao, pausar:pausar };
   })();
   // Chamado pelo teste da ficha e pelo Teste de Assimilação.
   function fundoPressaoSe(totP){ if((totP||0) >= 2 && fundoPoros) tentar("Fundo", fundoPoros.pressao); }
@@ -8953,6 +8971,7 @@
       '<button type="button" class="btn secondary assim-fechar">Fechar</button>' +
     '</div>';
     document.body.appendChild(ov);
+    if(fundoPoros) tentar("Fundo", function(){ fundoPoros.pausar(true); });
     var dieEls = ov.querySelectorAll(".assim-die");
     var tick = setInterval(function(){
       Array.prototype.forEach.call(dieEls, function(el){
@@ -8973,7 +8992,10 @@
       revelar();
       clearTimeout(auto);
       ov.classList.add("saindo");
-      setTimeout(function(){ if(ov.parentNode) ov.parentNode.removeChild(ov); }, 260);
+      setTimeout(function(){
+        if(ov.parentNode) ov.parentNode.removeChild(ov);
+        if(fundoPoros && !document.getElementById("assim-overlay")) tentar("Fundo", function(){ fundoPoros.pausar(false); });
+      }, 260);
     }
     ov.querySelector(".assim-fechar").addEventListener("click", fechar);
     ov.addEventListener("click", function(ev){ if(ev.target === ov) fechar(); });
@@ -9990,12 +10012,35 @@
   // (bindGmDryRoll).
   function iniciarTickerDados(){
     clearInterval(diceAnimTimer);
+    if(animacoesReduzidas()) return;
+    var els = app.querySelectorAll('.die-spin');
     diceAnimTimer = setInterval(function(){
-      app.querySelectorAll('.die-spin').forEach(function(el){
-        el.textContent = String(1 + Math.floor(Math.random()*12));
-      });
-    }, 90);
+      if(!els.length || !els[0].isConnected) els = app.querySelectorAll('.die-spin');
+      for(var i = 0; i < els.length; i++) els[i].textContent = String(1 + Math.floor(Math.random()*12));
+    }, 80);
   }
+  // Dados girando: continuam do mesmo ponto do giro se a tela for redesenhada no meio
+  // (atualização vinda da mesa), em vez de recomeçar o giro.
+  var DADOS_GIRO_MS = 850;
+  function dadosGirandoHtml(n, ini){
+    var fase = -Math.round(((Date.now() - (ini || Date.now())) % 600 + 600) % 600);
+    var h = "";
+    for(var k = 0; k < n; k++) h += '<span class="die-spin" style="animation-delay:'+(fase - k*70)+'ms">?</span>';
+    return '<div class="dice-anim">'+h+'</div>';
+  }
+  // Troca só o cartão (em vez da tela inteira) quando a rolagem começa: os dados aparecem
+  // na hora, sem esperar a ficha toda ser montada de novo.
+  function trocarCartao(secid, html){
+    var velho = app.querySelector('[data-secid="'+secid+'"]');
+    if(!velho) return false;
+    var tmp = document.createElement("div"); tmp.innerHTML = html;
+    var novo = tmp.querySelector('[data-secid="'+secid+'"]');
+    if(!novo) return false;
+    velho.parentNode.replaceChild(novo, velho);
+    return true;
+  }
+  function classePousa(t){ return t.pousar ? ' dado-pousa' : ''; }
+  function estiloPousa(t, idx){ return t.pousar ? ';animation-delay:'+(idx*45)+'ms' : ''; }
 
   function renderSheetTest(c){
     var t = state.sheetTest;
@@ -10031,10 +10076,7 @@
     body += '<div class="btn-row" style="margin-top:0"><button class="btn accent" data-testaction="roll" '+(t.rolling?'disabled':'')+'>'+(t.rolling?"Rolando…":"Rolar")+'</button></div>';
 
     if(t.rolling){
-      var n = Math.max(1, t.rollingCount||1);
-      var spins = "";
-      for(var k=0;k<n;k++){ spins += '<span class="die-spin">?</span>'; }
-      body += '<div class="dice-anim">'+spins+'</div>';
+      body += dadosGirandoHtml(Math.max(1, t.rollingCount||1), t.rollIni);
     } else if(t.results.length){
       var kept = t.results.filter(function(d){ return d.kept; });
       var totS = sum(kept.map(function(d){return d.s;}));
@@ -10045,7 +10087,7 @@
         '<p class="hint tmantidos">Mantidos <b>'+kept.length+'</b> de '+keepN+'</p>' +
         '<div class="row" style="flex-wrap:wrap;gap:8px">';
       t.results.forEach(function(d, idx){
-        body += '<button type="button" class="btn secondary" data-testtoggle="'+idx+'" '+(t.registered?'disabled':'')+' style="font-family:\'IBM Plex Mono\',monospace'+(d.kept?'':';opacity:.4;text-decoration:line-through')+(t.registered?';cursor:default':'')+'">d'+d.sides+':'+d.face+' ('+diceResultHtml(d)+')</button>';
+        body += '<button type="button" class="btn secondary'+classePousa(t)+'" data-testtoggle="'+idx+'" '+(t.registered?'disabled':'')+' style="font-family:\'IBM Plex Mono\',monospace'+(d.kept?'':';opacity:.4;text-decoration:line-through')+(t.registered?';cursor:default':'')+estiloPousa(t, idx)+'">d'+d.sides+':'+d.face+' ('+diceResultHtml(d)+')</button>';
       });
       body += '</div>';
       var fin = t.registered && t.final ? t.final : modsAplicar(c, t, { s:totS, a:totA, p:totP });
@@ -10192,7 +10234,9 @@
       pararAnimacaoDados();
       t.rolling = true;
       t.rollingCount = dInst + d10;
-      renderSheet();
+      t.rollIni = Date.now();
+      if(trocarCartao("testar", tentarHtml("Teste", function(){ return renderSheetTest(c); }))) iniciarTickerDados();
+      else renderSheet();
       diceAnimTimeout = setTimeout(function(){
         diceAnimTimeout = null;
         pararAnimacaoDados();
@@ -10205,10 +10249,12 @@
         if(autoLigada("dadosMantidosAuto")) pickBestIndices(results, Math.min(keepN, results.length)).forEach(function(idx){ results[idx].kept = true; });
         t.results = results;
         t.rolling = false;
+        t.pousar = !animacoesReduzidas();
         renderSheet();
+        t.pousar = false;
         // Easter egg do fundo: 2+ Pressões nos dados mantidos.
         fundoPressaoSe(sum(results.filter(function(d){ return d.kept; }).map(function(d){ return d.p; })));
-      }, 650);
+      }, DADOS_GIRO_MS);
     });
     app.querySelectorAll('[data-testtoggle]').forEach(function(btn){
       btn.addEventListener("click", function(){
@@ -10679,10 +10725,7 @@
       (t.results.length ? '<button class="btn secondary" data-gmdryaction="clear">Limpar resultado</button>' : '<span></span>') +
     '</div>';
     if(t.rolling){
-      var n = Math.max(1, t.rollingCount||1);
-      var spins = "";
-      for(var k=0;k<n;k++){ spins += '<span class="die-spin">?</span>'; }
-      body += '<div class="dice-anim">'+spins+'</div>';
+      body += dadosGirandoHtml(Math.max(1, t.rollingCount||1), t.rollIni);
     } else if(t.results.length){
       var kept = t.results.filter(function(d){ return d.kept; });
       var totS = sum(kept.map(function(d){return d.s;}));
@@ -10691,7 +10734,7 @@
       body += '<div style="margin-top:14px">' +
         '<div class="row" style="flex-wrap:wrap;gap:8px">';
       t.results.forEach(function(d, idx){
-        body += '<button type="button" class="btn secondary" data-gmdrytoggle="'+idx+'" style="font-family:\'IBM Plex Mono\',monospace'+(d.kept?'':';opacity:.4;text-decoration:line-through')+'">d'+d.sides+': <b>'+d.face+'</b>'+(numeros?'':' ('+diceResultHtml(d)+')')+'</button>';
+        body += '<button type="button" class="btn secondary'+classePousa(t)+'" data-gmdrytoggle="'+idx+'" style="font-family:\'IBM Plex Mono\',monospace'+(d.kept?'':';opacity:.4;text-decoration:line-through')+estiloPousa(t, idx)+'">d'+d.sides+': <b>'+d.face+'</b>'+(numeros?'':' ('+diceResultHtml(d)+')')+'</button>';
       });
       body += '</div>';
       var somaFaces = sum(kept.map(function(d){ return d.face; }));
@@ -10724,8 +10767,10 @@
       pararAnimacaoDados();
       t.rolling = true;
       t.rollingCount = total;
+      t.rollIni = Date.now();
       t.results = []; t.mostrado = false;
-      renderGm();
+      if(trocarCartao("gmdryroll", renderGmDryRoll())) iniciarTickerDados();
+      else renderGm();
       diceAnimTimeout = setTimeout(function(){
         diceAnimTimeout = null;
         pararAnimacaoDados();
@@ -10740,8 +10785,10 @@
         results.forEach(function(d){ d.kept = true; });
         t.results = results;
         t.rolling = false;
+        t.pousar = !animacoesReduzidas();
         renderGm();
-      }, 650);
+        t.pousar = false;
+      }, DADOS_GIRO_MS);
     });
     app.querySelectorAll('[data-gmdrytoggle]').forEach(function(btn){
       btn.addEventListener("click", function(){
@@ -12656,7 +12703,7 @@
     var estado = null;            // documento meta/trilha recebido do banco
     var catalogo = null;          // documento notas/trilhas (só o Assimilador)
     var ligado = false, aberto = false, bloqueado = false, erroMsg = "", avisoMsg = "";
-    var audio = null, ctx = null, ganho = null;
+    var audio = null, pausaNossa = false, tRetomar = 0;
     var tocandoChave = null;      // id + inicio da trilha carregada no <audio>
     var tocandoId = null, tocandoUrl = null, carregando = false;
     var ultimoPode = null;
@@ -12804,17 +12851,65 @@
     }
 
     // ----- Som -----
-    // Volume: no iPhone o volume do <audio> é fixo, então o som passa por um
-    // ganho do Web Audio (criado no primeiro toque na página).
+    // O som sai direto do <audio>, sem passar pelo Web Audio: no celular, com o Discord
+    // (ou outra chamada) aberto, o Web Audio fica mudo ou trava ao trocar de app.
+    // No iPhone o volume do <audio> é fixo: lá vale o volume do próprio celular.
+    var volFixo = null;
+    function volumeFixo(){
+      if(volFixo === null){ try{ var t = new Audio(); t.volume = 0.5; volFixo = t.volume !== 0.5; }catch(e){ volFixo = false; } }
+      return volFixo;
+    }
     function aplicarVolume(){
       if(!audio) return;
-      var v = (mudo() ? 0 : vol()) * fade;
-      if(ganho){ ganho.gain.value = v; audio.volume = 1; }
-      else { try{ audio.volume = v; }catch(e){} }
+      try{ audio.muted = mudo(); audio.volume = Math.max(0, Math.min(1, vol() * fade)); }catch(e){}
+      infoMidia();
+    }
+    function pausar(){ if(audio && !audio.paused){ pausaNossa = true; audio.pause(); } }
+    // Controles da tela de bloqueio / notificação do celular: tocar e pausar só ligam e
+    // desligam o som deste aparelho (a trilha continua no ponto da mesa).
+    function infoMidia(){
+      var ms = navigator.mediaSession; if(!ms) return;
+      try{
+        if(!ativa() || !tocandoChave){ ms.playbackState = "none"; return; }
+        var x = podeEscolher() && estado ? trilhaPorId(estado.id) : null;
+        if(window.MediaMetadata && (!ms.metadata || ms.metadata.title !== (x ? x.nome : "Trilha da mesa")))
+          ms.metadata = new MediaMetadata({ title:x ? x.nome : "Trilha da mesa", artist:(campanhaAtual && campanhaAtual.nome) || "Pangea", album:"Pangea" });
+        ms.playbackState = mudo() ? "paused" : "playing";
+      }catch(e){}
+    }
+    function ligarControlesMidia(){
+      var ms = navigator.mediaSession; if(!ms) return;
+      try{
+        ms.setActionHandler("play", function(){ gravarPref(MUDO_KEY, "0"); aplicarVolume(); destravar(); if(audio && audio.paused && ativa()) sincronizar(true); desenhar(); });
+        ms.setActionHandler("pause", function(){ gravarPref(MUDO_KEY, "1"); aplicarVolume(); desenhar(); });
+      }catch(e){}
+    }
+    // O celular pausou o som sozinho (chamada, Discord, outro app tocando): tenta voltar.
+    // Se ele insistir em pausar (3 vezes em meio minuto), para de brigar e espera um toque.
+    var retomadas = [];
+    function retomarDepois(ms){
+      clearTimeout(tRetomar);
+      var agora = Date.now();
+      retomadas = retomadas.filter(function(t){ return agora - t < 30000; });
+      if(retomadas.length >= 3){ bloqueado = true; desenhar(); return; }
+      retomadas.push(agora);
+      tRetomar = setTimeout(function(){
+        if(!ligado || !ativa() || !tocandoChave || !audio || !audio.paused || document.hidden) return;
+        sincronizar(true);
+      }, ms);
     }
     function garantirAudio(){
       if(audio) return audio;
       audio = new Audio(); audio.preload = "auto"; audio.loop = true;
+      audio.setAttribute("playsinline", "");
+      audio.addEventListener("pause", function(){
+        if(pausaNossa){ pausaNossa = false; return; }
+        if(!ativa() || !tocandoChave || audio.ended) return;
+        retomarDepois(1500);
+        desenhar();
+      });
+      audio.addEventListener("playing", function(){ infoMidia(); desenhar(); });
+      ligarControlesMidia();
       // Segurança: se algum navegador ignorar o loop, recomeça do início.
       audio.addEventListener("ended", function(){
         if(!ativa() || !tocandoChave) return;
@@ -12827,24 +12922,15 @@
       });
       return audio;
     }
-    function garantirCtx(){
-      if(ctx || !audio) return;
-      var AC = window.AudioContext || window.webkitAudioContext;
-      if(!AC) return;
-      try{
-        ctx = new AC();
-        ganho = ctx.createGain();
-        ctx.createMediaElementSource(audio).connect(ganho);
-        ganho.connect(ctx.destination);
-        aplicarVolume();
-      }catch(e){ console.warn("[Pangea] trilha: Web Audio", e); ctx = null; ganho = null; }
-    }
-    // Navegadores só deixam tocar som depois de um toque/clique na página.
+    // Navegadores só deixam tocar som depois de um toque/clique na página. O play() é
+    // chamado já aqui, dentro do toque (no iPhone, depois de um carregamento, ele seria recusado).
     function destravar(){
       if(!ligado) return;
-      garantirAudio(); garantirCtx();
-      if(ctx && ctx.state === "suspended") ctx.resume().catch(function(){});
-      if(bloqueado && ativa()) sincronizar(true);
+      garantirAudio();
+      var parado = ativa() && tocandoChave && audio.paused && audio.getAttribute("src") && !carregando;
+      if(!(bloqueado || parado) || !ativa()) return;
+      if(audio.getAttribute("src")){ try{ var p = audio.play(); if(p && p.catch) p.catch(function(){}); }catch(e){} }
+      sincronizar(true);
     }
     function rampa(alvo, ms, depois){
       clearInterval(fadeTimer);
@@ -12859,7 +12945,7 @@
     function pararLocal(suave){
       tocandoChave = null; tocandoId = null; bloqueado = false; carregando = false;
       if(!audio || audio.paused){ return; }
-      rampa(0, suave ? 700 : 0, function(){ if(!tocandoChave){ audio.pause(); } });
+      rampa(0, suave ? 700 : 0, function(){ if(!tocandoChave){ pausar(); infoMidia(); } });
     }
     function duracao(){
       if(audio && tocandoId && estado && tocandoId === estado.id && isFinite(audio.duration) && audio.duration > 0) return audio.duration;
@@ -12929,7 +13015,7 @@
       };
       if(audio && !audio.paused && tocandoChave && tocandoChave !== chave){
         tocandoChave = chave; // evita duas trocas ao mesmo tempo
-        rampa(0, 500, function(){ audio.pause(); tocandoChave = null; tocandoId = null; if(ativa() && (estado.id + "|" + estado.inicio) === chave) trocar(); });
+        rampa(0, 500, function(){ pausar(); tocandoChave = null; tocandoId = null; if(ativa() && (estado.id + "|" + estado.inicio) === chave) trocar(); });
       } else trocar();
       desenhar();
     }
@@ -13178,7 +13264,6 @@
       ["pointerdown", "keydown", "touchend"].forEach(function(ev){ document.addEventListener(ev, destravar, true); });
       document.addEventListener("visibilitychange", function(){
         if(document.visibilityState === "visible" && ligado && ativa()){
-          if(ctx && ctx.state === "suspended") ctx.resume().catch(function(){});
           if(audio && audio.paused) sincronizar(true);
         }
       });
@@ -13291,9 +13376,9 @@
       h += '</div></div>';
       h += '<div class="trilha-sec"><p class="trilha-rot">Seu volume</p><div class="trilha-vol' + (on ? '' : ' desligado') + '">' +
         '<button type="button" class="trilha-mudo" data-trilha-mudo aria-pressed="' + m + '" aria-label="' + (m ? 'Ligar o som' : 'Silenciar') + '"' + (on ? '' : ' disabled') + '>' + (m ? ICO_MUDO : ICO_SOM) + '</button>' +
-        '<input type="range" min="0" max="100" step="1" value="' + v + '" data-trilha-vol aria-label="Volume da trilha"' + (on ? '' : ' disabled') + '>' +
-        '<span class="trilha-vol-num">' + v + '%</span></div>' +
-        '<p class="hint">' + (on ? 'Só muda o som neste aparelho.' : 'Libera quando uma trilha começar.') + '</p></div>';
+        (volumeFixo() ? '' : '<input type="range" min="0" max="100" step="1" value="' + v + '" data-trilha-vol aria-label="Volume da trilha"' + (on ? '' : ' disabled') + '>' +
+        '<span class="trilha-vol-num">' + v + '%</span>') + '</div>' +
+        '<p class="hint">' + (!on ? 'Libera quando uma trilha começar.' : volumeFixo() ? 'No iPhone, o volume é o do celular.' : 'Só muda o som neste aparelho.') + '</p></div>';
       if(mestre){
         var l = lista(), vis = l.filter(function(x){ return !x.oculta; }), ocultas = l.filter(function(x){ return x.oculta; });
         h += '<div class="trilha-sec"><div class="trilha-sec-topo"><p class="trilha-rot">Escolher para a mesa</p>' +
@@ -13351,7 +13436,7 @@
 
     return {
       ligar: function(){ montar(); ligado = true; estado = null; catalogo = null; erroMsg = ""; avisoMsg = ""; gerenciando = false; editId = null; desenhar(); },
-      desligar: function(){ ligado = false; estado = null; catalogo = null; erroMsg = ""; pararLocal(false); if(audio){ try{ audio.pause(); }catch(e){} } desenhar(); },
+      desligar: function(){ ligado = false; estado = null; catalogo = null; erroMsg = ""; pararLocal(false); if(audio){ try{ pausar(); }catch(e){} } infoMidia(); desenhar(); },
       receber: function(d){ estado = d || null; if(!ativa()) erroMsg = ""; sincronizar(false); },
       receberLista: function(d){ catalogo = d || null; desenhar(); },
       // Chamado a cada render da página: só redesenha se mudou quem pode escolher
