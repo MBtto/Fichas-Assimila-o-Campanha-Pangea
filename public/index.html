@@ -1343,6 +1343,30 @@
 @font-face{ font-family:"Doc Manuscrito"; src:url(fontes/caveat-latin-400-normal.woff2) format("woff2"); font-weight:400; font-display:swap; }
 @font-face{ font-family:"Doc Manuscrito"; src:url(fontes/caveat-latin-700-normal.woff2) format("woff2"); font-weight:700; font-display:swap; }
 @font-face{ font-family:"Doc Rabisco"; src:url(fontes/reenie-beanie-latin-400-normal.woff2) format("woff2"); font-display:swap; }
+@font-face{ font-family:"Rabisco"; src:url(fontes/gloria-hallelujah-latin-400-normal.woff2) format("woff2"); font-display:swap; }
+/* ===== Letra de rabisco (18/11/2026): rodapé, capas sem imagem, Cabo de Guerra, nome na ficha,
+   animação central, telas vazias e Notas. ===== */
+.footer-note{ font-family:"Rabisco","Comic Sans MS",cursive; font-size:13px; line-height:1.6; }
+.footer-note .aviso-fan{ font-size:13px; line-height:1.6; max-width:none; }
+.footer-note .aviso-fan b{ font-weight:400; color:var(--ink); }
+.tug-faixa > span{ font-family:"Rabisco",cursive; font-weight:400; text-transform:none; letter-spacing:.01em; font-size:15px; }
+.tug-anel b{ font-family:"Rabisco",cursive; font-weight:400; font-size:22px; line-height:1; }
+.tug-anel.mini b{ font-size:12px; }
+.ficha-nome{ font-family:"Rabisco",cursive; font-weight:400; letter-spacing:0; text-transform:none; font-size:32px; line-height:1.25; }
+.assim-kicker{ font-family:"Rabisco",cursive; font-weight:400; text-transform:none; letter-spacing:.02em; font-size:15px; }
+.assim-nome{ font-family:"Rabisco",cursive; font-weight:400; font-size:28px; line-height:1.3; }
+p.empty, .empty > p:first-child, .lobby-vazio > p:first-child, .cmp-fichas.vazio{ font-family:"Rabisco",cursive; }
+p.empty, .empty > p:first-child, .lobby-vazio > p:first-child{ font-size:16px; }
+textarea[data-notas]{ font-family:"Rabisco",cursive; font-size:15px; line-height:28px; padding:6px 12px 0; min-height:124px !important;
+  background-image:repeating-linear-gradient(to bottom, transparent 0, transparent 27px, var(--border) 27px, var(--border) 28px);
+  background-position:0 6px; background-attachment:local; }
+/* Capa sem imagem: o nome inteiro, encaixado (uma linha; frase em até duas). */
+.cmp-nome-capa{ position:absolute; left:14px; right:14px; top:30px; bottom:2px; display:flex; align-items:center;
+  font-family:"Rabisco",cursive; line-height:1.3; color:rgba(255,255,255,.92); text-wrap:balance; overflow:hidden;
+  overflow-wrap:normal; word-break:normal; pointer-events:none; }
+.cmp-nome-capa > span{ display:block; max-width:100%; }
+.capa-previa .cmp-nome-capa{ top:4px; }
+.cmp-capa.sem-fundo .cmp-nome-capa{ color:var(--ink); opacity:.6; }
 @font-face{ font-family:"Doc Maquina"; src:url(fontes/special-elite-latin-400-normal.woff2) format("woff2"); font-display:swap; }
 @font-face{ font-family:"Doc Relatorio"; src:url(fontes/courier-prime-latin-400-normal.woff2) format("woff2"); font-weight:400; font-display:swap; }
 @font-face{ font-family:"Doc Relatorio"; src:url(fontes/courier-prime-latin-700-normal.woff2) format("woff2"); font-weight:700; font-display:swap; }
@@ -4510,7 +4534,7 @@
     var pendente = !!(meuPedido && meuPedido.status === "pendente");
     var html = '<div class="cmp-card lobby-cmp" data-abrircmp="'+esc(cmp.id)+'" style="--capa:'+esc(capa.cor)+'">' +
       '<div class="cmp-capa'+(capa.semFundo ? ' sem-fundo' : '')+'"'+(capa.img ? ' style="background-image:url(&quot;'+esc(capa.img)+'&quot;);background-position:50% '+capa.pos+'%"' : '')+'>' +
-        (capa.img ? '' : '<span class="cmp-inicial" aria-hidden="true">'+esc(Array.from(nome)[0] || "")+'</span>') +
+        (capa.img ? '' : nomeCapaHtml(nome)) +
         '<span class="cmp-selo">'+(comoMestre ? 'Mestre' : 'Jogador')+'</span>' +
       '</div>' +
       '<div class="cmp-corpo"><h3>'+esc(nome)+'</h3>' +
@@ -6721,6 +6745,37 @@
   var CAPA_CORES = ["#a8492b", "#b07a1e", "#5d7a3a", "#2f7a6b", "#2f5f8a", "#5a4a8a", "#8a3a5f", "#4a4a4a"];
   // "Sem fundo": opção extra de cor, fora da lista acima para não mexer na cor automática das campanhas que já existem.
   var CAPA_SEM_FUNDO = "transparent";
+  function nomeCapaHtml(nome){
+    return nome ? '<span class="cmp-nome-capa" aria-hidden="true"><span>'+esc(nome)+'</span></span>' : '';
+  }
+  // Acha o maior tamanho de letra em que o nome cabe: palavra única numa linha só;
+  // frase em até duas linhas. Roda sozinho quando uma capa nova aparece na tela.
+  function encaixarNomesCapa(todas){
+    var els = document.querySelectorAll(todas ? ".cmp-nome-capa" : ".cmp-nome-capa:not([data-ok])");
+    for(var i = 0; i < els.length; i++){
+      var box = els[i], el = box.firstChild; if(!el || !box.clientWidth) continue;
+      var frase = /\s/.test(el.textContent.trim());
+      el.style.whiteSpace = frase ? "normal" : "nowrap";
+      var w = box.clientWidth, h = box.clientHeight, lo = 10, hi = 64;
+      while(lo < hi){
+        var s = Math.ceil((lo + hi) / 2); el.style.fontSize = s + "px";
+        var linhas = Math.round(el.offsetHeight / (s * 1.3));
+        var cabe = el.scrollWidth <= w + 1 && el.offsetHeight <= h + 1 && linhas <= (frase ? 2 : 1);
+        if(cabe) lo = s; else hi = s - 1;
+      }
+      el.style.fontSize = lo + "px";
+      box.setAttribute("data-ok", "1");
+    }
+  }
+  (function(){
+    var fila = 0;
+    function agenda(todas){ if(fila) return; fila = requestAnimationFrame(function(){ fila = 0; encaixarNomesCapa(todas); }); }
+    new MutationObserver(function(){ if(document.querySelector(".cmp-nome-capa:not([data-ok])")) agenda(false); })
+      .observe(document.getElementById("app") || document.body, { childList:true, subtree:true });
+    window.addEventListener("resize", function(){ agenda(true); });
+    if(document.fonts && document.fonts.ready) document.fonts.ready.then(function(){ agenda(true); });
+    if(document.fonts && document.fonts.addEventListener) document.fonts.addEventListener("loadingdone", function(){ agenda(true); });
+  })();
   function capaDe(cmp){
     var cp = (cmp && cmp.capa && typeof cmp.capa === "object") ? cmp.capa : {};
     var cor = (cp.cor === CAPA_SEM_FUNDO || /^#[0-9a-f]{6}$/i.test(String(cp.cor || ""))) ? cp.cor : "";
@@ -6973,7 +7028,7 @@
     var cp = capaDe(campanhaAtual), bruta = String((campanhaAtual.capa && campanhaAtual.capa.img) || ""), enviada = /^data:/i.test(bruta);
     return '<div class="cfg-bloco capa-cfg">' +
       '<div class="cmp-capa capa-previa'+(cp.semFundo ? ' sem-fundo' : '')+'" data-capaprevia="1" style="--capa:'+esc(cp.cor)+(cp.img ? ';background-image:url(&quot;'+esc(cp.img)+'&quot;);background-position:50% '+cp.pos+'%' : '')+'">' +
-        (cp.img ? '' : '<span class="cmp-inicial" aria-hidden="true">'+esc(Array.from(String(campanhaAtual.nome||"").trim())[0] || "")+'</span>') + '</div>' +
+        (cp.img ? '' : nomeCapaHtml(String(campanhaAtual.nome||"").trim())) + '</div>' +
       '<div class="capa-cores" role="group" aria-label="Cor da capa">' + CAPA_CORES.concat([CAPA_SEM_FUNDO]).map(function(c){
         var sf = c === CAPA_SEM_FUNDO;
         return '<button type="button" class="capa-cor'+(sf ? ' sem-fundo' : '')+(c === cp.cor ? ' sel' : '')+'" data-capacor="'+c+'"'+(sf ? ' title="Sem fundo" aria-label="Sem fundo, transparente"' : ' style="background:'+c+'" aria-label="Cor '+c+'"')+' aria-pressed="'+(c === cp.cor)+'"></button>';
@@ -7210,9 +7265,9 @@
   }
 
   // Aviso de direitos (pedido do Marco, 08/10/2026): projeto de fã, sem vínculo com a editora.
-  // Créditos conferidos no livro básico novo: "Publicado pela Editora Assimilar, Campinas — SP".
+  // Créditos conferidos nos livros: autores Rafael "Rakin" Knittel e Vinícius "Lau" Motta; "Publicado pela Editora Assimilar" (18/11/2026, opção A).
   function avisoFanMadeHtml(){
-    return '<p class="aviso-fan">Projeto fan-made, não oficial. <b>Assimilação RPG</b> é uma criação da Editora Assimilar (Campinas — SP): textos, regras, ilustrações e marcas pertencem à editora e aos seus autores, com todos os direitos reservados a eles. Este site não tem vínculo com a Editora Assimilar.</p><p class="aviso-fan credito">By <b>_hudgens</b></p>';
+    return '<p class="aviso-fan">Projeto fan-made, não oficial. <b>Assimilação RPG</b> foi criado por Rafael "Rakin" Knittel e Vinícius "Lau" Motta e é publicado pela Editora Assimilar. Textos, regras, ilustrações e marcas pertencem aos autores e à editora, com todos os direitos reservados. Este site não tem vínculo com eles.</p><p class="aviso-fan credito">By <b>_hudgens</b></p>';
   }
   function footer(){
     var msg;
@@ -8140,7 +8195,7 @@
 
     html += '<div class="card" style="border-left:6px solid '+(camp?camp.cor:'var(--accent)')+'">';
     html += '<div class="row" style="justify-content:space-between">';
-    html += '<div><h2 style="margin-bottom:2px">'+esc(c.nomePersonagem||"Sem nome")+npcBadgeHtml(c)+'</h2><span class="camp-tag">'+(camp?esc(camp.nome)+' · ':'')+'jogador(a): <input type="text" data-jogador value="'+esc(c.nomeJogador)+'" placeholder="seu nome" style="width:140px;display:inline-block"></span>' +
+    html += '<div><h2 class="ficha-nome" style="margin-bottom:2px">'+esc(c.nomePersonagem||"Sem nome")+npcBadgeHtml(c)+'</h2><span class="camp-tag">'+(camp?esc(camp.nome)+' · ':'')+'jogador(a): <input type="text" data-jogador value="'+esc(c.nomeJogador)+'" placeholder="seu nome" style="width:140px;display:inline-block"></span>' +
       (caps.mode === "mesa" && ehMestre() && c.donoEmail ? ' <span class="hint">· vinculada a '+esc(c.donoEmail)+'</span>' : '') +
       '</div>';
     if(camp && camp.img) html += '<img src="'+esc(camp.img)+'" alt="" style="width:88px;height:88px">';
