@@ -814,9 +814,9 @@
   .assim-ov.saindo{ opacity:0; transition:opacity .25s; }
   .assim-box{ background:var(--surface); color:var(--ink); border:2px solid var(--assim); border-radius:14px; padding:20px 20px 14px;
     width:min(540px,100%); text-align:center; animation:assimPop .35s cubic-bezier(.2,1.4,.4,1);
-    box-shadow:0 0 0 6px color-mix(in srgb, var(--assim) 22%, transparent), 0 20px 60px rgba(0,0,0,.5); }
+    box-shadow:0 14px 36px rgba(0,0,0,.45); }
   .assim-box.pressao{ border-color:var(--danger); animation:assimTreme .5s ease-in-out;
-    box-shadow:0 0 0 6px color-mix(in srgb, var(--danger) 25%, transparent), 0 0 40px color-mix(in srgb, var(--danger) 45%, transparent), 0 20px 60px rgba(0,0,0,.5); }
+    box-shadow:0 14px 36px rgba(0,0,0,.45); }
   .assim-kicker{ font-family:"Oswald",sans-serif; text-transform:uppercase; letter-spacing:.16em; font-size:12px; color:var(--assim); font-weight:600; }
   .assim-nome{ font-family:"Oswald",sans-serif; font-size:26px; font-weight:600; margin:2px 0 4px; line-height:1.15; }
   .assim-sub{ font-size:12.5px; color:var(--ink-muted); margin:0 0 14px; }
@@ -826,7 +826,7 @@
     will-change:transform; backface-visibility:hidden; }
   .assim-die.d12{ border-color:var(--royal); border-radius:22px; }
   .assim-die.parou{ animation:assimPara .45s cubic-bezier(.2,1.6,.4,1) forwards; }
-  .assim-die.tem-p{ border-color:var(--danger); box-shadow:0 0 14px color-mix(in srgb, var(--danger) 60%, transparent); }
+  .assim-die.tem-p{ border-color:var(--danger); }
   .assim-face{ font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums; font-weight:700; font-size:26px; color:var(--assim); display:flex; gap:3px; align-items:center; flex-wrap:wrap; justify-content:center; line-height:1; }
   .assim-die.parou .assim-face{ font-size:15px; color:var(--ink); }
   .assim-die .dado{ font-size:22px; }
@@ -842,7 +842,7 @@
   @keyframes assimSobe{ from{transform:translateY(8px);opacity:0} to{transform:none;opacity:1} }
   @keyframes assimTreme{ 0%,100%{transform:translateX(0)} 20%{transform:translateX(-7px)} 40%{transform:translateX(7px)} 60%{transform:translateX(-4px)} 80%{transform:translateX(4px)} }
   @media (prefers-reduced-motion: reduce){ .assim-die, .assim-box, .assim-ov, .assim-res.aparece{ animation:none !important; } }
-  .assim-box.destaque{ border-color:var(--accent); box-shadow:0 0 0 6px color-mix(in srgb, var(--accent) 22%, transparent), 0 20px 60px rgba(0,0,0,.5); }
+  .assim-box.destaque{ border-color:var(--accent); box-shadow:0 14px 36px rgba(0,0,0,.45); }
   .assim-box.destaque .assim-kicker{ color:var(--accent); }
   .assim-box.destaque .assim-die{ border-color:var(--accent); }
   .assim-box.destaque .assim-face{ color:var(--accent); }
@@ -962,8 +962,8 @@
     animation:detChacoalha .55s ease-in-out 1, detPulseGlow 2.4s ease-in-out infinite .55s;
   }
   @keyframes detPulseGlow{
-    0%,100%{ box-shadow:0 0 0 3px rgba(var(--suscet-rgb),.22), 0 0 14px rgba(var(--suscet-rgb),.45); }
-    50%{ box-shadow:0 0 0 3px rgba(var(--suscet-rgb),.42), 0 0 26px rgba(var(--suscet-rgb),.8); }
+    0%,100%{ box-shadow:0 0 0 2px rgba(var(--suscet-rgb),.45); }
+    50%{ box-shadow:0 0 0 2px rgba(var(--suscet-rgb),.95); }
   }
   @keyframes detChacoalha{
     0%{ transform:translateX(0) rotate(0); }
@@ -1033,14 +1033,10 @@
   .tug-anel svg .tg-disco{ fill:var(--surface); stroke:none; }
   .tug-anel svg .tg-linha{ stroke-width:2.4px; }
   .tug-anel svg .tg-linha2{ stroke-width:1.2px; opacity:.6; }
-  .tug-anel.det svg{ filter:drop-shadow(0 0 5px color-mix(in srgb, var(--royal) 55%, transparent)); }
-  .tug-anel.assim svg{ filter:drop-shadow(0 0 5px color-mix(in srgb, var(--assim) 55%, transparent)); }
   .tug-anel b{
     position:relative; font-family:"Oswald",sans-serif; font-weight:700; font-size:24px; color:var(--ink);
     font-variant-numeric:tabular-nums;
   }
-  .tug-anel.det b{ text-shadow:0 0 6px color-mix(in srgb, var(--royal) 70%, transparent), 0 0 14px color-mix(in srgb, var(--royal) 45%, transparent); }
-  .tug-anel.assim b{ text-shadow:0 0 6px color-mix(in srgb, var(--assim) 70%, transparent), 0 0 14px color-mix(in srgb, var(--assim) 45%, transparent); }
   .tug-rot{ display:flex; align-items:center; gap:6px; }
   .tug-rot.det{ justify-content:flex-start; margin-bottom:6px; }
   .tug-rot.assim{ justify-content:flex-end; margin-top:6px; }
@@ -1074,8 +1070,6 @@
   .tug-anel.mini svg .tg-linha{ stroke-width:1.6px; }
   .tug-anel.mini b{ font-size:12px; }
   .tug-anel.mini.det svg, .tug-anel.mini.assim svg{ filter:none; }
-  .tug-anel.mini.det b{ text-shadow:0 0 4px color-mix(in srgb, var(--royal) 60%, transparent); }
-  .tug-anel.mini.assim b{ text-shadow:0 0 4px color-mix(in srgb, var(--assim) 60%, transparent); }
   .gm-attr-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(92px,1fr)); gap:6px; margin-top:6px; }
   .gm-attr-cell{ background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius); padding:5px 8px; text-align:center; }
   .gm-attr-cell .lbl{ font-size:10px; text-transform:uppercase; letter-spacing:.04em; color:var(--ink-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
