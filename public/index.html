@@ -1343,30 +1343,54 @@
 @font-face{ font-family:"Doc Manuscrito"; src:url(fontes/caveat-latin-400-normal.woff2) format("woff2"); font-weight:400; font-display:swap; }
 @font-face{ font-family:"Doc Manuscrito"; src:url(fontes/caveat-latin-700-normal.woff2) format("woff2"); font-weight:700; font-display:swap; }
 @font-face{ font-family:"Doc Rabisco"; src:url(fontes/reenie-beanie-latin-400-normal.woff2) format("woff2"); font-display:swap; }
-@font-face{ font-family:"Rabisco"; src:url(fontes/gloria-hallelujah-latin-400-normal.woff2) format("woff2"); font-display:swap; }
-/* ===== Letra de rabisco (18/11/2026): rodapé, capas sem imagem, Cabo de Guerra, nome na ficha,
-   animação central, telas vazias e Notas. ===== */
-.footer-note{ font-family:"Rabisco","Comic Sans MS",cursive; font-size:13px; line-height:1.6; }
-.footer-note .aviso-fan{ font-size:13px; line-height:1.6; max-width:none; }
+@font-face{ font-family:"Rabisco Fino"; src:url(fontes/covered-by-your-grace-latin-400-normal.woff2) format("woff2"); font-display:swap; }
+@font-face{ font-family:"Rabisco Grosso"; src:url(fontes/permanent-marker-latin-400-normal.woff2) format("woff2"); font-display:swap; }
+/* ===== Letras de rabisco (18/11/2026): fina = Covered By Your Grace (rodapé, faixas do Cabo,
+   título da animação, telas vazias, Notas); grossa = Permanent Marker (capas, nome na ficha,
+   nome na animação, números do Cabo). ===== */
+.footer-note, .tug-faixa > span, .tug-anel b, .ficha-nome, .assim-kicker, .assim-nome, p.empty, .empty > p:first-child,
+.lobby-vazio > p:first-child, .cmp-fichas.vazio, textarea[data-notas], .cmp-nome-capa{ font-synthesis:none; }
+.footer-note{ font-family:"Rabisco Fino","Comic Sans MS",cursive; font-size:15.5px; line-height:1.5; }
+.footer-note .aviso-fan{ font-size:15.5px; line-height:1.5; max-width:none; }
 .footer-note .aviso-fan b{ font-weight:400; color:var(--ink); }
-.tug-faixa > span{ font-family:"Rabisco",cursive; font-weight:400; text-transform:none; letter-spacing:.01em; font-size:15px; }
-.tug-anel b{ font-family:"Rabisco",cursive; font-weight:400; font-size:22px; line-height:1; }
-.tug-anel.mini b{ font-size:12px; }
-.ficha-nome{ font-family:"Rabisco",cursive; font-weight:400; letter-spacing:0; text-transform:none; font-size:32px; line-height:1.25; }
-.assim-kicker{ font-family:"Rabisco",cursive; font-weight:400; text-transform:none; letter-spacing:.02em; font-size:15px; }
-.assim-nome{ font-family:"Rabisco",cursive; font-weight:400; font-size:28px; line-height:1.3; }
-p.empty, .empty > p:first-child, .lobby-vazio > p:first-child, .cmp-fichas.vazio{ font-family:"Rabisco",cursive; }
-p.empty, .empty > p:first-child, .lobby-vazio > p:first-child{ font-size:16px; }
-textarea[data-notas]{ font-family:"Rabisco",cursive; font-size:15px; line-height:28px; padding:6px 12px 0; min-height:124px !important;
+.footer-note .link-autor{ color:var(--ink); text-decoration:underline; text-decoration-thickness:1px; text-underline-offset:3px; }
+.footer-note .link-autor:hover{ color:var(--accent); }
+.tug-faixa > span{ font-family:"Rabisco Fino",cursive; font-weight:400; text-transform:none; letter-spacing:.02em; font-size:17px; }
+.tug-anel b{ font-family:"Rabisco Grosso",cursive; font-weight:400; font-size:19px; line-height:1; }
+.tug-anel.mini b{ font-size:11px; }
+.ficha-nome{ font-family:"Rabisco Grosso",cursive; font-weight:400; letter-spacing:.01em; text-transform:none; font-size:28px; line-height:1.25; }
+.assim-kicker{ font-family:"Rabisco Fino",cursive; font-weight:400; text-transform:none; letter-spacing:.03em; font-size:18px; }
+.assim-nome{ font-family:"Rabisco Grosso",cursive; font-weight:400; font-size:26px; line-height:1.3; }
+p.empty, .empty > p:first-child, .lobby-vazio > p:first-child, .cmp-fichas.vazio{ font-family:"Rabisco Fino",cursive; }
+p.empty, .empty > p:first-child, .lobby-vazio > p:first-child{ font-size:19px; }
+textarea[data-notas]{ font-family:"Rabisco Fino",cursive; font-size:18px; line-height:28px; padding:6px 12px 0; min-height:124px !important;
   background-image:repeating-linear-gradient(to bottom, transparent 0, transparent 27px, var(--border) 27px, var(--border) 28px);
   background-position:0 6px; background-attachment:local; }
 /* Capa sem imagem: o nome inteiro, encaixado (uma linha; frase em até duas). */
 .cmp-nome-capa{ position:absolute; left:14px; right:14px; top:30px; bottom:2px; display:flex; align-items:center;
-  font-family:"Rabisco",cursive; line-height:1.3; color:rgba(255,255,255,.92); text-wrap:balance; overflow:hidden;
+  font-family:"Rabisco Grosso",cursive; font-weight:400; line-height:1.3; color:rgba(255,255,255,.94); text-wrap:balance; overflow:hidden;
   overflow-wrap:normal; word-break:normal; pointer-events:none; }
 .cmp-nome-capa > span{ display:block; max-width:100%; }
 .capa-previa .cmp-nome-capa{ top:4px; }
 .cmp-capa.sem-fundo .cmp-nome-capa{ color:var(--ink); opacity:.6; }
+/* ===== Cabeçalho: o nome volta para o Início (guia de navegação) ===== */
+.brand-link{ all:unset; cursor:pointer; border-radius:4px; }
+.brand-link:hover{ color:var(--accent); }
+.brand-link:focus-visible{ outline:2px solid var(--accent); outline-offset:3px; }
+.inicio-sec{ margin:clamp(26px, 5vh, 44px) 0 0; text-align:left; }
+.inicio-sec h2{ font-size:15px; margin:0 0 10px; }
+.inicio-nav{ display:grid; grid-template-columns:repeat(auto-fill, minmax(min(100%, 200px), 1fr)); gap:10px; }
+.inicio-btn{ display:flex; align-items:center; gap:12px; width:100%; box-sizing:border-box; padding:14px; margin:0; text-align:left;
+  background:var(--surface); color:var(--ink); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow);
+  font:inherit; cursor:pointer; min-width:0; }
+.inicio-btn:hover{ border-color:var(--accent); }
+.inicio-btn:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+.inicio-btn svg{ color:var(--accent); flex:none; }
+.inicio-btn .ib-txt{ display:flex; flex-direction:column; gap:2px; min-width:0; }
+.inicio-btn b{ font-family:"Oswald","Arial Narrow",sans-serif; font-size:15px; font-weight:600; text-transform:uppercase; letter-spacing:.04em; overflow-wrap:anywhere; }
+.inicio-btn .ib-sub{ font-size:12.5px; color:var(--ink-muted); line-height:1.3; overflow-wrap:anywhere; }
+.inicio-btn .ib-cor{ width:26px; height:26px; border-radius:6px; flex:none; background:var(--capa, var(--accent)); }
+.entrada.logado .entrada-frase{ margin-bottom:6px; }
 @font-face{ font-family:"Doc Maquina"; src:url(fontes/special-elite-latin-400-normal.woff2) format("woff2"); font-display:swap; }
 @font-face{ font-family:"Doc Relatorio"; src:url(fontes/courier-prime-latin-400-normal.woff2) format("woff2"); font-weight:400; font-display:swap; }
 @font-face{ font-family:"Doc Relatorio"; src:url(fontes/courier-prime-latin-700-normal.woff2) format("woff2"); font-weight:700; font-display:swap; }
@@ -3886,9 +3910,24 @@ textarea[data-notas]{ font-family:"Rabisco",cursive; font-size:15px; line-height
   // ---------- RECEBENDO MUDANÇAS EM TEMPO REAL ----------
   var appPronto = false;
   var renderAdiado = false;
+  // Só conta como digitação um campo de texto aberto dentro da tela. Antes qualquer
+  // campo com foco (caixinha, botão de opção, barra de volume, lista) segurava as
+  // atualizações até o foco sair - no celular isso podia durar a sessão inteira, e os
+  // resumos em Personagens e Mesa ficavam parados.
+  // Lista (select): segura só nos primeiros segundos, enquanto ela pode estar aberta.
+  var focoDesde = 0;
+  document.addEventListener("focusin", function(){ focoDesde = Date.now(); }, true);
   function estaDigitando(){
-    var tag = (document.activeElement && document.activeElement.tagName) || "";
-    return tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT";
+    var el = document.activeElement;
+    if(!el || !el.isConnected || !app.contains(el)) return false;
+    if(el.tagName === "TEXTAREA") return true;
+    if(el.tagName === "SELECT"){
+      if(Date.now() - focoDesde < 6000){ setTimeout(function(){ if(renderAdiado) agendarRender(); }, 6100); return true; }
+      return false;
+    }
+    if(el.isContentEditable) return true;
+    if(el.tagName !== "INPUT") return false;
+    return /^(text|search|email|url|tel|password|number)$/i.test(el.type || "text");
   }
   // Re-renderiza quando chega mudança de outra pessoa, mas nunca no meio de uma
   // digitação (espera o campo perder o foco).
@@ -4267,6 +4306,9 @@ textarea[data-notas]{ font-family:"Rabisco",cursive; font-size:15px; line-height
   }
   function autoLigada(k){ return !!cfgCampanha().automacoes[k]; }
   function grupoLigado(){ return !!cfgCriacao().acampamento; }
+  // Grupo (acampamento) da ficha só aparece - nome, símbolo e cor - quando a campanha
+  // usa grupos na configuração.
+  function campDe(c){ return (c && c.acampamento && grupoLigado() && CAMPS[c.acampamento]) || null; }
   function grupoRotulo(){ return cfgCriacao().grupo.rotulo || "Acampamento"; }
   function grupoOpcoes(){ return grupoLigado() ? cfgCriacao().grupo.opcoes : []; }
   // CAMPS vira as opções da campanha aberta, mais as da Pangea por baixo (uma ficha
@@ -4415,6 +4457,80 @@ textarea[data-notas]{ font-family:"Rabisco",cursive; font-size:15px; line-height
   }
 
   // ---------- TELA INICIAL ----------
+  // ---------- INÍCIO (guia de navegação) ----------
+  // O nome no cabeçalho leva ao Início. Sem login é a tela de entrada; com login, a
+  // mesma tela vira um guia: atalhos para o que a conta pode abrir e os informes.
+  var inicioNoLobby = false;
+  function irAoInicio(){
+    fecharCaixa();
+    if(modoBase){ inicioNoLobby = true; sairModoBase(); return; }
+    if(campanhaAtual && appPronto){ goto("inicio"); return; }
+    if(lobby){ lobby.inicio = true; renderLobby(); window.scrollTo(0, 0); return; }
+    if(usuario && FB){ inicioNoLobby = true; mostrarLobby(); }
+  }
+  document.addEventListener("click", function(e){
+    var b = e.target && e.target.closest ? e.target.closest('[data-action="inicio"]') : null;
+    if(!b) return;
+    e.preventDefault(); e.stopPropagation();
+    irAoInicio();
+  }, true);
+  function inicioIco(d){ return '<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+d+'</svg>'; }
+  var INICIO_ICO = {
+    campanhas:'<path d="M4 6h16M4 12h16M4 18h10"/>',
+    fichas:'<path d="M7 3h8l4 4v14H7z"/><path d="M15 3v4h4"/><path d="M10 12h6M10 16h6"/>',
+    roster:'<circle cx="9" cy="8" r="3"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><circle cx="17" cy="9" r="2.4"/><path d="M15.5 14.2c2.9.3 5 2.6 5 5.8"/>',
+    criar:'<circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/>',
+    mesa:'<rect x="4" y="4" width="16" height="16" rx="3"/><circle cx="9" cy="9" r="1.1" fill="currentColor"/><circle cx="15" cy="15" r="1.1" fill="currentColor"/><circle cx="15" cy="9" r="1.1" fill="currentColor"/><circle cx="9" cy="15" r="1.1" fill="currentColor"/>',
+    gm:'<path d="M12 3l8 3v6c0 4.5-3.2 7.8-8 9-4.8-1.2-8-4.5-8-9V6z"/><path d="M9 12l2 2 4-4"/>'
+  };
+  function inicioBtn(attr, ico, titulo, sub){
+    return '<button type="button" class="inicio-btn" '+attr+'>'+ico+'<span class="ib-txt"><b>'+titulo+'</b>'+(sub ? '<span class="ib-sub">'+sub+'</span>' : '')+'</span></button>';
+  }
+  function inicioHtml(){
+    var nome = esc(((usuario && (usuario.displayName || usuario.email)) || "").split(" ")[0]);
+    var html = '<div class="entrada logado">' +
+      '<h1 class="entrada-marca">Pangea</h1>' +
+      '<p class="entrada-frase">'+(nome ? 'Olá, '+nome+'. ' : '')+'Suas campanhas de RPG, com fichas e mesa ao vivo.</p>' +
+      '<div class="entrada-sis"><span class="selo-sis">Assimilação RPG</span></div>';
+    if(campanhaAtual){
+      var donoAtivo = caps.isOwner && !state.gmPreviewJogador;
+      html += '<section class="inicio-sec"><h2>'+esc(campanhaAtual.nome || "Campanha")+'</h2><div class="inicio-nav">' +
+        inicioBtn('data-nav="roster"', inicioIco(INICIO_ICO.roster), "Personagens da Mesa", donoAtivo ? "Todas as fichas e NPCs" : "Suas fichas") +
+        inicioBtn('data-nav="wizard-new"', inicioIco(INICIO_ICO.criar), "Criar Personagem", "") +
+        inicioBtn('data-nav="mesa"', inicioIco(INICIO_ICO.mesa), "Mesa", "Rolagens e resumos de todos") +
+        (caps.mode === "mesa" && donoAtivo ? inicioBtn('data-nav="gm"', inicioIco(INICIO_ICO.gm), "Painel do Assimilador", "Convites, bestiário, itens e documentos") : "") +
+      '</div></section>' +
+      '<section class="inicio-sec"><h2>Conta</h2><div class="inicio-nav">' +
+        inicioBtn('data-action="lobby"', inicioIco(INICIO_ICO.campanhas), "Campanhas", "Trocar de campanha") +
+        inicioBtn('data-action="lobby"', inicioIco(INICIO_ICO.fichas), "Minhas fichas", "Fichas fora de campanha") +
+      '</div></section>';
+    } else {
+      var cmps = (lobby && lobby.campanhas) || [];
+      html += '<section class="inicio-sec"><h2>Navegar</h2><div class="inicio-nav">' +
+        inicioBtn('data-inicio="campanhas"', inicioIco(INICIO_ICO.campanhas), "Campanhas", "Criar, abrir e convites") +
+        inicioBtn('data-inicio="fichas"', inicioIco(INICIO_ICO.fichas), "Minhas fichas", "Fichas fora de campanha") +
+      '</div></section>';
+      if(cmps.length){
+        html += '<section class="inicio-sec"><h2>Abrir campanha</h2><div class="inicio-nav">' +
+          cmps.map(function(c){
+            var capa = capaDe(c);
+            var papel = c.donoUid === (usuario && usuario.uid) ? "Mestre" : "Jogador";
+            return '<button type="button" class="inicio-btn" data-abrircmp="'+esc(c.id)+'" style="--capa:'+esc(capa.cor)+'"><span class="ib-cor" aria-hidden="true"></span><span class="ib-txt"><b>'+esc(c.nome || "Campanha")+'</b><span class="ib-sub">'+papel+'</span></span></button>';
+          }).join("") +
+        '</div></section>';
+      }
+    }
+    html += '<ul class="entrada-tres">' +
+      '<li>'+inicioIco(INICIO_ICO.fichas)+'<b>Fichas</b><span>Criação guiada e testes num toque</span></li>' +
+      '<li>'+inicioIco(INICIO_ICO.mesa)+'<b>Mesa ao vivo</b><span>Rolagens, documentos e trilhas</span></li>' +
+      '<li>'+inicioIco(INICIO_ICO.gm)+'<b>Painel do mestre</b><span>Convites, bestiário e itens</span></li>' +
+    '</ul></div>';
+    return html;
+  }
+  function renderInicio(){
+    app.innerHTML = topbar("inicio") + inicioHtml() + footer() + caixaHtml();
+    bindGlobal();
+  }
   function mostrarLobby(){
     if(!FB || !usuario) return;
     var u = usuario;
@@ -4426,7 +4542,8 @@ textarea[data-notas]{ font-family:"Rabisco",cursive; font-size:15px; line-height
     try{ sessionStorage.removeItem(CAMPANHA_ABERTA_KEY); }catch(e){}
     document.getElementById("rollfeed").innerHTML = "";
     lobby = { campanhas:null, bases:null, copias:{}, guardadas:{}, pedidos:{}, convite:null, extras:false,
-              form:{ escolha:null, acampamento:"", extras:{} }, criando:false, ocupado:false };
+              form:{ escolha:null, acampamento:"", extras:{} }, criando:false, ocupado:false, inicio:inicioNoLobby };
+    inicioNoLobby = false;
     renderLobby();
     // Primeira vez no formato de campanhas: a conta da migração ainda vê o botão de migrar.
     var antes = ehContaDaMigracao()
@@ -4765,13 +4882,18 @@ textarea[data-notas]{ font-family:"Rabisco",cursive; font-size:15px; line-height
     var digitando = ativo && app.contains(ativo) && (ativo.tagName === "TEXTAREA" || (ativo.tagName === "INPUT" && !/^(radio|checkbox|button)$/i.test(ativo.type||"")));
     if(digitando){ lobbyRenderAdiado = true; return; }
     var nomeCurto = esc(((usuario && (usuario.displayName || usuario.email)) || "").split(" ")[0]);
-    var html = '<header class="top"><div class="brand"><h1 id="brand-title">Pangea</h1></div>' +
+    var html = '<header class="top"><div class="brand"><h1 id="brand-title"><button type="button" class="brand-link" data-action="inicio" title="Início">Pangea</button></h1></div>' +
       '<nav class="tabs"><button type="button" class="btn secondary" data-action="sair" title="'+esc((usuario&&usuario.email)||"")+'">Sair ('+nomeCurto+')</button></nav></header>';
     if(avisoLobby){
       html += '<div class="card tight" style="border-color:var(--accent)"><div class="row" style="justify-content:space-between;gap:8px"><span>'+esc(avisoLobby)+'</span><button type="button" class="btn secondary" data-lobby="fechar-aviso">OK</button></div></div>';
     }
     if(lobby.campanhas === null || lobby.bases === null || !lobby.extras){
       app.innerHTML = html + '<p class="empty">Carregando suas campanhas…</p>';
+      ligarLobby();
+      return;
+    }
+    if(lobby.inicio){
+      app.innerHTML = html + inicioHtml() + '<div class="footer-note entrada-rodape">'+avisoFanMadeHtml()+'</div>';
       ligarLobby();
       return;
     }
@@ -4807,6 +4929,16 @@ textarea[data-notas]{ font-family:"Rabisco",cursive; font-size:15px; line-height
     if(sairBtn) sairBtn.addEventListener("click", function(){ if(FB) FB.sair(); });
     var fa = app.querySelector('[data-lobby="fechar-aviso"]');
     if(fa) fa.addEventListener("click", function(){ avisoLobby = null; renderLobby(); });
+    app.querySelectorAll("[data-inicio]").forEach(function(el){
+      el.addEventListener("click", function(){
+        var alvo = el.getAttribute("data-inicio");
+        if(!lobby) return;
+        lobby.inicio = false; renderLobby();
+        var h = null;
+        if(alvo === "fichas") app.querySelectorAll(".lobby-titulo h2").forEach(function(x){ if(/fichas/i.test(x.textContent)) h = x; });
+        if(h) h.scrollIntoView({ block:"start" }); else window.scrollTo(0, 0);
+      });
+    });
     app.querySelectorAll("[data-abrircmp]").forEach(function(el){
       el.addEventListener("click", function(e){
         if(el.classList.contains("lobby-cmp") && e.target.closest("button")) return;
@@ -6075,7 +6207,7 @@ textarea[data-notas]{ font-family:"Rabisco",cursive; font-size:15px; line-height
   function caixaHtml(){
     var d = caixaDados();
     if(!d){ state.caixa = null; return ''; }
-    if(!d.cor && state.view === "sheet"){ var cf = fichaAtual(); if(cf && cf.acampamento && CAMPS[cf.acampamento]) d.cor = CAMPS[cf.acampamento].cor; }
+    if(!d.cor && state.view === "sheet"){ var cf = fichaAtual(); if(campDe(cf)) d.cor = campDe(cf).cor; }
     if(caixaRaf) cancelAnimationFrame(caixaRaf);
     caixaRaf = requestAnimationFrame(function(){ caixaRaf = 0; posicionarCaixa(); });
     return '<div class="caixa-fundo" id="caixa-fundo" hidden></div>' +
@@ -6638,7 +6770,7 @@ textarea[data-notas]{ font-family:"Rabisco",cursive; font-size:15px; line-height
     try{
       if(state.view === "sheet"){
         var c = state.sheetEditing ? state.sheetDraft : getChar(state.charId);
-        if(c && c.acampamento && CAMPS[c.acampamento]) cor = CAMPS[c.acampamento].cor;
+        if(campDe(c)) cor = campDe(c).cor;
       }
     }catch(e){}
     if(cor) raiz.style.setProperty("--camp-tema", cor); else raiz.style.removeProperty("--camp-tema");
@@ -7178,6 +7310,7 @@ textarea[data-notas]{ font-family:"Rabisco",cursive; font-size:15px; line-height
       else if(state.view === "sheet"){ if(state.sheetEditing) renderSheetEdit(); else renderSheet(); }
       else if(state.view === "gm") renderGm();
       else if(state.view === "mesa") renderMesa();
+      else if(state.view === "inicio") renderInicio();
     });
     renderRollFeed();
     renderConfirmOverlay();
@@ -7235,7 +7368,7 @@ textarea[data-notas]{ font-family:"Rabisco",cursive; font-size:15px; line-height
   function topbar(active){
     if(modoBase){
       return '<header class="top">' +
-        '<div class="brand"><h1 id="brand-title">Minha ficha</h1><small>Assimilação RPG</small></div>' +
+        '<div class="brand"><h1 id="brand-title"><button type="button" class="brand-link" data-action="inicio" title="Início">Minha ficha</button></h1><small>Assimilação RPG</small></div>' +
         '<nav class="tabs">' +
           '<button type="button" class="btn secondary" data-action="lobby" title="Minhas campanhas e fichas">⇦ Campanhas</button>' +
           (usuario ? '<button type="button" class="btn secondary" data-action="sair" title="'+esc(usuario.email||"")+'">Sair ('+esc((usuario.displayName||usuario.email||"").split(" ")[0])+')</button>' : "") +
@@ -7250,7 +7383,7 @@ textarea[data-notas]{ font-family:"Rabisco",cursive; font-size:15px; line-height
     var donoAtivo = caps.isOwner && !state.gmPreviewJogador;
     var showGm = caps.mode === "mesa" && donoAtivo;
     var html = '<header class="top">' +
-      '<div class="brand"><h1 id="brand-title">'+(campanhaAtual ? esc(campanhaAtual.nome||"Campanha") : 'Pangea')+'</h1><small>'+esc(sistemaNome(campanhaAtual && campanhaAtual.sistema))+' RPG'+(state.gmPreviewJogador?" · vendo como jogador":"")+'</small></div>' +
+      '<div class="brand"><h1 id="brand-title"><button type="button" class="brand-link" data-action="inicio" title="Início">'+(campanhaAtual ? esc(campanhaAtual.nome||"Campanha") : 'Pangea')+'</button></h1><small>'+esc(sistemaNome(campanhaAtual && campanhaAtual.sistema))+' RPG'+(state.gmPreviewJogador?" · vendo como jogador":"")+'</small></div>' +
       '<nav class="tabs">' +
         (caps.mode==="mesa" && usuario ? '<button type="button" class="btn secondary" data-action="lobby" title="Minhas campanhas e fichas">⇦ Campanhas</button>' : "") +
         '<button data-nav="roster" aria-current="'+(active==="roster")+'">'+(caps.mode==="mesa"?"Personagens da Mesa":"Meus Personagens")+'</button>' +
@@ -7267,8 +7400,10 @@ textarea[data-notas]{ font-family:"Rabisco",cursive; font-size:15px; line-height
   // Aviso de direitos (pedido do Marco, 08/10/2026): projeto de fã, sem vínculo com a editora.
   // Créditos conferidos nos livros: autores Rafael "Rakin" Knittel e Vinícius "Lau" Motta; "Publicado pela Editora Assimilar" (18/11/2026, opção A).
   function avisoFanMadeHtml(){
-    return '<p class="aviso-fan">Projeto fan-made, não oficial. <b>Assimilação RPG</b> foi criado por Rafael "Rakin" Knittel e Vinícius "Lau" Motta e é publicado pela Editora Assimilar. Textos, regras, ilustrações e marcas pertencem aos autores e à editora, com todos os direitos reservados. Este site não tem vínculo com eles.</p><p class="aviso-fan credito">By <b>_hudgens</b></p>';
+    return '<p class="aviso-fan">Projeto fan-made, não oficial. <b>Assimilação RPG</b> foi criado por Rafael "Rakin" Knittel e Vinícius "Lau" Motta e é publicado pela Editora Assimilar. Textos, regras, ilustrações e marcas pertencem aos autores e à editora, com todos os direitos reservados. Este site não tem vínculo com eles.</p><p class="aviso-fan credito">By <a class="link-autor" href="'+LINK_AUTOR+'" target="_blank" rel="noopener noreferrer">_hudgens</a></p>';
   }
+  // Link do crédito do rodapé (depois vira um linktree).
+  var LINK_AUTOR = "https://discord.com/users/1132058124774285453";
   function footer(){
     var msg;
     if(caps.mode === "mesa"){
@@ -7310,7 +7445,7 @@ textarea[data-notas]{ font-family:"Rabisco",cursive; font-size:15px; line-height
     } else {
       html += '<div class="roster-grid">';
       chars.forEach(function(c){
-        var camp = c.acampamento ? CAMPS[c.acampamento] : null;
+        var camp = campDe(c);
         var maxNivelRoster = saudePontosMax(c);
         var pontosRoster = c.saudePontosAtuais!=null ? c.saudePontosAtuais : maxNivelRoster;
         html += '<div class="char-card" style="--camp-color:'+(camp?camp.cor:'var(--accent)')+'" data-open="'+esc(c.id)+'">' +
@@ -8171,7 +8306,7 @@ textarea[data-notas]{ font-family:"Rabisco",cursive; font-size:15px; line-height
     // Animação de "aparecer" (uma vez só, consumida aqui).
     var playReveal = !!state.sheetRevealAnim;
     state.sheetRevealAnim = false;
-    var camp = c.acampamento ? CAMPS[c.acampamento] : null;
+    var camp = campDe(c);
     var html = topbar("sheet");
     html += '<div'+(playReveal?' class="sheet-reveal"':'')+(camp?' style="--camp-color:'+camp.cor+'"':'')+'>';
 
@@ -10504,7 +10639,7 @@ textarea[data-notas]{ font-family:"Rabisco",cursive; font-size:15px; line-height
   // Não mostra a Assimilação oculta nem os Instintos/Conhecimentos - isso fica só
   // no Painel do Assimilador.
   function miniFichaCard(c, soLeitura){
-    var camp = c.acampamento ? CAMPS[c.acampamento] : null;
+    var camp = campDe(c);
     var cardStyle = (camp?'--camp-color:'+camp.cor+';':'')+'border-left:6px solid '+(camp?camp.cor:'var(--accent)')+';cursor:'+(soLeitura?'default':'pointer');
     var maxNivel = c.saudeMax != null ? c.saudeMax : (c.instintos ? saudePontosMax(c) : 1);
     return '<div class="char-card" style="'+cardStyle+'"'+(soLeitura?'':' data-mesaopen="'+esc(c.id)+'"')+'>' +
@@ -10525,7 +10660,7 @@ textarea[data-notas]{ font-family:"Rabisco",cursive; font-size:15px; line-height
     return r ? { c:r, soLeitura:true } : null;
   }
   function mesaLinhaHtml(c){
-    var camp = c.acampamento ? CAMPS[c.acampamento] : null;
+    var camp = campDe(c);
     var maxNivel = c.saudeMax != null ? c.saudeMax : (c.instintos ? saudePontosMax(c) : 1);
     var nivelDet = c.determinacao ? nivelDetAtual(c) : 10;
     var nS = c.saudeNivel!=null ? c.saudeNivel : 6;
@@ -10538,7 +10673,7 @@ textarea[data-notas]{ font-family:"Rabisco",cursive; font-size:15px; line-height
   CAIXAS.mesa = function(id){
     if(state.view !== "mesa") return null;
     var d = mesaFichaDados(id); if(!d) return null;
-    var c = d.c, camp = c.acampamento ? CAMPS[c.acampamento] : null;
+    var c = d.c, camp = campDe(c);
     var maxNivel = c.saudeMax != null ? c.saudeMax : (c.instintos ? saudePontosMax(c) : 1);
     var corpo = '<p class="hint" style="margin:0 0 8px">'+(camp?esc(camp.nome):(grupoLigado()?esc(grupoRotulo().toLowerCase())+" não definido":""))+(c.nomeJogador?(camp||grupoLigado()?" · ":"")+"jogador(a): "+esc(c.nomeJogador):"")+'</p>' +
       '<div style="margin-bottom:10px"><span class="hint" style="display:block;margin-bottom:3px">Saúde (nível '+(c.saudeNivel!=null?c.saudeNivel:"?")+'/6'+(c.saudeNivel!=null&&NIVEIS_SAUDE[c.saudeNivel]?' · '+NIVEIS_SAUDE[c.saudeNivel]:'')+')</span>'+diamondsMini(c.saudePontosAtuais||0, maxNivel, "c-saude")+'</div>' +
@@ -12237,7 +12372,7 @@ textarea[data-notas]{ font-family:"Rabisco",cursive; font-size:15px; line-height
       var compras = xpComprasDe(c);
       if(!pedidas.length && !compras.length) return;
       algum = true;
-      var camp = c.acampamento ? CAMPS[c.acampamento] : null, saldo = xpSaldo(c);
+      var camp = campDe(c), saldo = xpSaldo(c);
       html += '<div class="gm-xppc" style="border-left:4px solid '+(camp?camp.cor:'var(--accent)')+'">' +
         '<div class="row" style="justify-content:space-between;gap:6px;flex-wrap:wrap;align-items:baseline">' +
           '<b>'+esc(c.nomePersonagem||"Sem nome")+(c.ehNpc?' <span class="hint" style="margin:0;font-weight:400">(NPC)</span>':'')+'</b>' +
@@ -12397,7 +12532,7 @@ textarea[data-notas]{ font-family:"Rabisco",cursive; font-size:15px; line-height
       html += '<div class="card"><p class="hint">Nenhum personagem criado ainda nesta mesa.</p></div>';
     } else {
       roster.forEach(function(c){
-        var camp = c.acampamento ? CAMPS[c.acampamento] : null;
+        var camp = campDe(c);
         var cardStyle = (camp?'--camp-color:'+camp.cor+';':'')+'border-left:6px solid '+(camp?camp.cor:'var(--accent)')+';margin-bottom:12px;cursor:pointer';
         var dobraId = "gmc_" + c.id, charFechado = !!state.collapsed[dobraId];
         html += '<div class="card" style="'+cardStyle+'" data-gmopen="'+esc(c.id)+'">';
