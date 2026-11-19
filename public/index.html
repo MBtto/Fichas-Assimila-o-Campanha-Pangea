@@ -1417,6 +1417,13 @@ textarea[data-notas]{ font-family:"Rabisco Fino",cursive; font-size:18px; line-h
 .mini-modos .btn[aria-pressed="true"]{ background:var(--ink); color:var(--bg); border-color:var(--ink); }
 .mini-cfg input[type=range]{ width:100%; margin:0; accent-color:var(--accent); display:block; height:30px; }
 .mini-cfg .field{ margin:0; }
+/* Imagem inteira ("caber") com o resto completado */
+.cmp-capa.caber .capa-desf{ position:absolute; inset:-18px; background-size:cover; background-position:center; filter:blur(14px) saturate(1.05); transform:scale(1.06); opacity:.9; }
+.cmp-capa.caber .capa-caber{ position:absolute; inset:6px; background-size:contain; background-repeat:no-repeat; }
+.ib-cor.com-img.caber .mini-desf{ position:absolute; inset:-8px; width:calc(100% + 16px); height:calc(100% + 16px); max-width:none; object-fit:cover; filter:blur(5px); opacity:.9; }
+.ib-cor.com-img.caber .mini-img{ position:relative; object-fit:contain; }
+.ib-cor.com-img.caber.fundo-cor{ background:var(--capa, var(--surface-2)); }
+.ajuste-img{ display:flex; flex-direction:column; gap:6px; margin:4px 0; }
 .inicio-btn.sem-fundo .ib-cor:not(.com-img){ background:transparent; border:1px dashed var(--border-strong, var(--border)); }
 /* Dica do botão de aparência (uma vez por aparelho) */
 .dica-aa{ position:fixed; left:12px; bottom:66px; z-index:9002; width:min(290px, calc(100vw - 24px)); box-sizing:border-box;
@@ -1608,6 +1615,7 @@ textarea[data-notas]{ font-family:"Rabisco Fino",cursive; font-size:18px; line-h
 .pdoc-overlay{ position:fixed; inset:0; z-index:9999; background:rgba(12,9,6,.82); overflow:auto; padding:40px 16px; display:flex; align-items:flex-start; justify-content:center; }
 .pdoc-overlay .pdoc-wrap{ width:100%; }
 .pdoc-fechar{ position:fixed; top:12px; right:14px; z-index:10000; background:#efe4c8 !important; color:#2a2118 !important; border-color:#efe4c8 !important; }
+.pdoc-quem.pdoc-rotulo{ background:rgba(239,228,200,.8); box-shadow:none; font-size:12.5px; }
 .pdoc-exibir{ position:fixed; top:12px; left:14px; z-index:10000; background:#efe4c8 !important; color:#2a2118 !important; border-color:#efe4c8 !important; }
 .pdoc-quem{ position:fixed; top:12px; left:50%; transform:translateX(-50%); z-index:10000; max-width:calc(100vw - 220px); padding:7px 14px; border-radius:999px;
   background:#efe4c8; color:#2a2118; font-size:13px; box-shadow:0 3px 0 rgba(0,0,0,.35); text-align:center; }
@@ -3182,6 +3190,7 @@ textarea[data-notas]{ font-family:"Rabisco Fino",cursive; font-size:18px; line-h
     el.innerHTML = '<div class="pdoc-overlay" data-pdocfechar><button type="button" class="btn secondary pdoc-fechar" data-pdocfechar>Fechar ✕</button>' +
       (opts.exibir ? '<button type="button" class="btn secondary pdoc-exibir" data-pdocexibir>📣 Exibir para a mesa</button>' : '') +
       (opts.quem ? '<div class="pdoc-quem" role="status"><b>'+esc(opts.quem)+'</b> está mostrando este documento</div>' : '') +
+      (!opts.quem && opts.rotulo ? '<div class="pdoc-quem pdoc-rotulo">'+esc(opts.rotulo)+'</div>' : '') +
       '<div class="pdoc-paginador" data-pdocnav hidden><button type="button" class="btn" data-pdocir="-1" aria-label="Página anterior">‹</button><span data-pdocnum aria-live="polite"></span><button type="button" class="btn" data-pdocir="1" aria-label="Próxima página">›</button></div>' +
       '<div style="width:100%;max-width:620px" data-pdocpapel></div></div>';
     var overlay = el.querySelector(".pdoc-overlay"), papel = el.querySelector("[data-pdocpapel]"), num = el.querySelector("[data-pdocnum]"), nav = el.querySelector("[data-pdocnav]");
@@ -3339,9 +3348,16 @@ textarea[data-notas]{ font-family:"Rabisco Fino",cursive; font-size:18px; line-h
     renderRollFeed();
     avisar("Documento mostrado para a mesa.", "ok");
   }
-  function abrirDocDaMesa(e){
+  // revisitar = aberto de novo pelo Histórico (só na tela de quem clicou): sem o aviso
+  // "está mostrando", só a lembrança de quem mostrou e quando.
+  function abrirDocDaMesa(e, revisitar){
     if(!e || !Array.isArray(e.paginas) || !e.paginas.some(Boolean)) return;
     var meu = !!(usuario && e.porUid && e.porUid === usuario.uid);
+    if(revisitar){
+      var hora = ""; try{ hora = new Date(e.ts).toLocaleTimeString("pt-BR", { hour:"2-digit", minute:"2-digit" }); }catch(er){}
+      abrirDocumento(e.paginas, 0, { rotulo: (meu ? "Você mostrou" : "Mostrado por " + (e.nomePersonagem || "alguém")) + (hora ? " às " + hora : "") });
+      return;
+    }
     abrirDocumento(e.paginas, 0, { quem: meu ? "Você" : (e.nomePersonagem || "Alguém") });
   }
   document.addEventListener("click", function(ev){
@@ -3349,7 +3365,7 @@ textarea[data-notas]{ font-family:"Rabisco Fino",cursive; font-size:18px; line-h
     if(!b) return;
     var id = b.getAttribute("data-verdocmesa");
     var e = (shared.testLog || []).filter(function(x){ return x.id === id; })[0];
-    if(e) abrirDocDaMesa(e);
+    if(e) abrirDocDaMesa(e, true);
   });
 
   // ----- Painel do Assimilador: biblioteca de documentos -----
@@ -4889,7 +4905,7 @@ textarea[data-notas]{ font-family:"Rabisco Fino",cursive; font-size:18px; line-h
     var meuPedido = !comoMestre && lobby.pedidos && lobby.pedidos[cmp.id];
     var pendente = !!(meuPedido && meuPedido.status === "pendente");
     var html = '<div class="cmp-card lobby-cmp" data-abrircmp="'+esc(cmp.id)+'" style="--capa:'+esc(capa.cor)+'">' +
-      '<div class="cmp-capa'+(capa.semFundo ? ' sem-fundo' : '')+'"'+(capa.img ? ' style="background-image:url(&quot;'+esc(capa.img)+'&quot;);background-position:50% '+capa.pos+'%"' : '')+'>' +
+      '<div class="cmp-capa'+(capa.semFundo ? ' sem-fundo' : '')+capaVisual(capa).cls+'"'+(capaVisual(capa).estilo ? ' style="'+capaVisual(capa).estilo.slice(1)+'"' : '')+'>' + capaVisual(capa).camadas +
         (capa.img ? '' : nomeCapaHtml(nome)) +
         '<span class="cmp-selo">'+(comoMestre ? 'Mestre' : 'Jogador')+'</span>' +
       '</div>' +
@@ -7186,15 +7202,30 @@ textarea[data-notas]{ font-family:"Rabisco Fino",cursive; font-size:18px; line-h
     var mm = (cp.mini && typeof cp.mini === "object") ? cp.mini : {};
     var num = function(v, d, a, b){ v = Number(v); return (v >= a && v <= b) ? v : d; };
     var miniImg = mm.img ? imgSegura(mm.img) : ""; if(/[\\()]/.test(miniImg)) miniImg = "";
+    var miniCaber = mm.ajuste === "caber";
     var mini = { modo: mm.modo === "img" ? "img" : "recorte", img: miniImg,
-      x: Math.round(num(mm.x, 50, 0, 100)), y: Math.round(num(mm.y, pos, 0, 100)), zoom: Math.round(num(mm.zoom, 1, 1, 4) * 100) / 100 };
-    return { cor: cor, img: img, pos: Math.round(pos), semFundo: cor === CAPA_SEM_FUNDO, mini: mini };
+      x: Math.round(num(mm.x, 50, 0, 100)), y: Math.round(num(mm.y, pos, 0, 100)),
+      zoom: Math.round(num(mm.zoom, 1, miniCaber ? 0.5 : 1, 4) * 100) / 100,
+      ajuste: miniCaber ? "caber" : "preencher", fundo: mm.fundo === "cor" ? "cor" : "desfocado" };
+    return { cor: cor, img: img, pos: Math.round(pos), semFundo: cor === CAPA_SEM_FUNDO, mini: mini,
+      ajuste: cp.ajuste === "caber" ? "caber" : "preencher", fundo: cp.fundo === "cor" ? "cor" : "desfocado" };
+  }
+  // Capa grande: "preencher" corta a imagem para cobrir a faixa; "caber" mostra a imagem
+  // inteira e completa o resto com a própria imagem desfocada ou com a cor da capa.
+  function capaVisual(capa){
+    if(!capa.img) return { cls:"", estilo:"", camadas:"" };
+    var u = 'url(&quot;'+esc(capa.img)+'&quot;)';
+    if(capa.ajuste !== "caber") return { cls:"", estilo:';background-image:'+u+';background-position:50% '+capa.pos+'%', camadas:"" };
+    return { cls:" caber", estilo:"",
+      camadas:(capa.fundo === "cor" ? '' : '<span class="capa-desf" aria-hidden="true" style="background-image:'+u+'"></span>') +
+        '<span class="capa-caber" aria-hidden="true" data-capacaber="1" style="background-image:'+u+';background-position:50% '+capa.pos+'%"></span>' };
   }
   // Miniatura (Início e prévia da configuração).
   function miniCapaHtml(capa, classe){
-    var mi = capa.mini, cl = 'ib-cor com-img' + (classe ? ' ' + classe : '');
-    if(mi.modo === "img" && mi.img) return '<span class="'+cl+'" aria-hidden="true"><img src="'+esc(mi.img)+'" alt="" draggable="false"></span>';
-    if(capa.img) return '<span class="'+cl+'" aria-hidden="true"><img src="'+esc(capa.img)+'" alt="" draggable="false" style="object-position:'+mi.x+'% '+mi.y+'%;transform:scale('+mi.zoom+');transform-origin:'+mi.x+'% '+mi.y+'%"></span>';
+    var mi = capa.mini, caber = mi.ajuste === "caber", cl = 'ib-cor com-img' + (caber ? ' caber' + (mi.fundo === "cor" ? ' fundo-cor' : '') : '') + (classe ? ' ' + classe : '');
+    var desf = function(src){ return caber && mi.fundo !== "cor" ? '<img class="mini-desf" src="'+esc(src)+'" alt="" draggable="false">' : ''; };
+    if(mi.modo === "img" && mi.img) return '<span class="'+cl+'" aria-hidden="true">'+desf(mi.img)+'<img class="mini-img" src="'+esc(mi.img)+'" alt="" draggable="false"></span>';
+    if(capa.img) return '<span class="'+cl+'" aria-hidden="true">'+desf(capa.img)+'<img class="mini-img" src="'+esc(capa.img)+'" alt="" draggable="false" style="object-position:'+mi.x+'% '+mi.y+'%;transform:scale('+mi.zoom+');transform-origin:'+mi.x+'% '+mi.y+'%"></span>';
     return '<span class="ib-cor'+(classe ? ' ' + classe : '')+'" aria-hidden="true"></span>';
   }
   // ---------- ENVIO DE IMAGEM (16/11/2026) ----------
@@ -7436,7 +7467,7 @@ textarea[data-notas]{ font-family:"Rabisco Fino",cursive; font-size:18px; line-h
   function capaConfigHtml(){
     var cp = capaDe(campanhaAtual), bruta = String((campanhaAtual.capa && campanhaAtual.capa.img) || ""), enviada = /^data:/i.test(bruta);
     return '<div class="cfg-bloco capa-cfg">' +
-      '<div class="cmp-capa capa-previa'+(cp.semFundo ? ' sem-fundo' : '')+'" data-capaprevia="1" style="--capa:'+esc(cp.cor)+(cp.img ? ';background-image:url(&quot;'+esc(cp.img)+'&quot;);background-position:50% '+cp.pos+'%' : '')+'">' +
+      '<div class="cmp-capa capa-previa'+(cp.semFundo ? ' sem-fundo' : '')+capaVisual(cp).cls+'" data-capaprevia="1" style="--capa:'+esc(cp.cor)+capaVisual(cp).estilo+'">' + capaVisual(cp).camadas +
         (cp.img ? '' : nomeCapaHtml(String(campanhaAtual.nome||"").trim())) + '</div>' +
       '<div class="capa-cores" role="group" aria-label="Cor da capa">' + CAPA_CORES.concat([CAPA_SEM_FUNDO]).map(function(c){
         var sf = c === CAPA_SEM_FUNDO;
@@ -7447,11 +7478,21 @@ textarea[data-notas]{ font-family:"Rabisco Fino",cursive; font-size:18px; line-h
         '<button type="button" class="btn secondary" data-capaimgok="1">Aplicar</button>' +
         '<button type="button" class="btn secondary" data-capaenviar="1">Enviar imagem</button>' +
       '</div>' +
+      (cp.img ? ajusteBotoesHtml("capa", cp.ajuste, cp.fundo) : '') +
       (cp.img ? '<div class="row capa-pos" style="gap:8px;flex-wrap:wrap;align-items:flex-end">' +
         '<div class="field" style="flex:1;min-width:min(160px, 100%);margin:0"><label for="capa-pos">Posição</label><input type="range" id="capa-pos" min="0" max="100" step="1" value="'+cp.pos+'" data-capapos="1"></div>' +
         '<button type="button" class="btn secondary" data-caparemover="1">Remover</button>' +
       '</div>' : '') +
       miniConfigHtml(cp) +
+    '</div>';
+  }
+  // Botões "Preencher / Adaptar" e, no adaptar, "Fundo: Desfocado / Cor da capa".
+  function ajusteBotoesHtml(alvo, ajuste, fundo){
+    var b = function(attr, val, atual, txt){ return '<button type="button" class="btn secondary doc-btn" data-'+alvo+attr+'="'+val+'" aria-pressed="'+(val === atual)+'">'+txt+'</button>'; };
+    return '<div class="ajuste-img"><div class="mini-modos" role="group" aria-label="Ajuste da imagem">' +
+        b("ajuste", "preencher", ajuste, "Preencher") + b("ajuste", "caber", ajuste, "Adaptar") + '</div>' +
+      (ajuste === "caber" ? '<div class="mini-modos" role="group" aria-label="Fundo"><span class="hint" style="margin:0;align-self:center">Fundo</span>' +
+        b("fundo", "desfocado", fundo, "Desfocado") + b("fundo", "cor", fundo, "Cor da capa") + '</div>' : '') +
     '</div>';
   }
   function miniConfigHtml(cp){
@@ -7460,12 +7501,13 @@ textarea[data-notas]{ font-family:"Rabisco Fino",cursive; font-size:18px; line-h
       '<div style="--capa:'+esc(cp.semFundo ? "transparent" : cp.cor)+'">' + miniCapaHtml(cp, 'mini-grande' + (recorte && cp.img ? ' mini-arrasta' : '')).replace('<span ', '<span data-miniprevia="1" ') + '</div>' +
       '<div class="mini-lado"><div class="mini-modos" role="group" aria-label="Origem da miniatura">' +
         '<button type="button" class="btn secondary doc-btn" data-minimodo="recorte" aria-pressed="'+recorte+'">Recorte da capa</button>' +
-        '<button type="button" class="btn secondary doc-btn" data-minimodo="img" aria-pressed="'+(!recorte)+'">Outra imagem</button></div>';
+        '<button type="button" class="btn secondary doc-btn" data-minimodo="img" aria-pressed="'+(!recorte)+'">Outra imagem</button></div>' +
+      ((recorte ? cp.img : mi.img) ? ajusteBotoesHtml("mini", mi.ajuste, mi.fundo) : '');
     if(recorte){
       h += cp.img
         ? '<div class="field"><label for="mini-x">Horizontal</label><input type="range" id="mini-x" min="0" max="100" step="1" value="'+mi.x+'" data-miniajuste="x"></div>' +
           '<div class="field"><label for="mini-y">Vertical</label><input type="range" id="mini-y" min="0" max="100" step="1" value="'+mi.y+'" data-miniajuste="y"></div>' +
-          '<div class="field"><label for="mini-z">Zoom</label><input type="range" id="mini-z" min="1" max="4" step="0.05" value="'+mi.zoom+'" data-miniajuste="zoom"></div>'
+          '<div class="field"><label for="mini-z">Zoom</label><input type="range" id="mini-z" min="'+(mi.ajuste === "caber" ? 0.5 : 1)+'" max="4" step="0.05" value="'+mi.zoom+'" data-miniajuste="zoom"></div>'
         : '<p class="hint" style="margin:0">Sem imagem de capa: a miniatura usa a cor.</p>';
     } else {
       h += '<div class="row" style="gap:8px;flex-wrap:wrap;align-items:flex-end">' +
@@ -7490,7 +7532,9 @@ textarea[data-notas]{ font-family:"Rabisco Fino",cursive; font-size:18px; line-h
     }
     function atual(){
       var c = campanhaAtual.capa || {}, cp = capaDe(campanhaAtual), m = (c.mini && typeof c.mini === "object") ? c.mini : null, r = { cor: cp.cor, img: String(c.img || ""), pos: cp.pos };
-      if(m){ r.mini = { modo: cp.mini.modo, img: String(m.img || "") }; if(m.x != null) r.mini.x = cp.mini.x; if(m.y != null) r.mini.y = cp.mini.y; if(m.zoom != null) r.mini.zoom = cp.mini.zoom; }
+      if(m){ r.mini = { modo: cp.mini.modo, img: String(m.img || "") }; if(m.x != null) r.mini.x = cp.mini.x; if(m.y != null) r.mini.y = cp.mini.y; if(m.zoom != null) r.mini.zoom = cp.mini.zoom;
+        if(m.ajuste === "caber") r.mini.ajuste = "caber"; if(m.fundo === "cor") r.mini.fundo = "cor"; }
+      if(c.ajuste === "caber") r.ajuste = "caber"; if(c.fundo === "cor") r.fundo = "cor";
       return r;
     }
     function zerarRecorte(c){ if(c.mini){ delete c.mini.x; delete c.mini.y; delete c.mini.zoom; } }
@@ -7520,8 +7564,14 @@ textarea[data-notas]{ font-family:"Rabisco Fino",cursive; font-size:18px; line-h
     if(enviar) enviar.addEventListener("click", function(){ escolherImagem(receber); });
     soltarImagem(raiz.querySelector(".capa-cfg"), receber);
     var pos = raiz.querySelector("[data-capapos]"), previa = raiz.querySelector("[data-capaprevia]");
+    raiz.querySelectorAll("[data-capaajuste]").forEach(function(b){
+      b.addEventListener("click", function(){ var c = atual(); if(b.getAttribute("data-capaajuste") === "caber") c.ajuste = "caber"; else delete c.ajuste; gravar(c); });
+    });
+    raiz.querySelectorAll("[data-capafundo]").forEach(function(b){
+      b.addEventListener("click", function(){ var c = atual(); if(b.getAttribute("data-capafundo") === "cor") c.fundo = "cor"; else delete c.fundo; gravar(c); });
+    });
     if(pos){
-      pos.addEventListener("input", function(){ if(previa) previa.style.backgroundPosition = "50% " + pos.value + "%"; });
+      pos.addEventListener("input", function(){ var alvo = previa && (previa.querySelector("[data-capacaber]") || previa); if(alvo) alvo.style.backgroundPosition = "50% " + pos.value + "%"; });
       pos.addEventListener("change", function(){ var c = atual(); c.pos = Math.max(0, Math.min(100, parseInt(pos.value, 10) || 0)); gravar(c); });
     }
     var remover = raiz.querySelector("[data-caparemover]");
@@ -7531,8 +7581,14 @@ textarea[data-notas]{ font-family:"Rabisco Fino",cursive; font-size:18px; line-h
     raiz.querySelectorAll("[data-minimodo]").forEach(function(b){
       b.addEventListener("click", function(){ var c = comMini(atual()); if(c.mini.modo === b.getAttribute("data-minimodo")) return; c.mini.modo = b.getAttribute("data-minimodo"); gravar(c); });
     });
-    var mprev = raiz.querySelector("[data-miniprevia]"), mimg = mprev && mprev.querySelector("img");
-    var ajustes = {}; raiz.querySelectorAll("[data-miniajuste]").forEach(function(r){ ajustes[r.getAttribute("data-miniajuste")] = r; });
+    raiz.querySelectorAll('button[data-miniajuste]').forEach(function(b){
+      b.addEventListener("click", function(){ var c = comMini(atual()); if(b.getAttribute("data-miniajuste") === "caber") c.mini.ajuste = "caber"; else { delete c.mini.ajuste; if(c.mini.zoom != null && c.mini.zoom < 1) c.mini.zoom = 1; } gravar(c); });
+    });
+    raiz.querySelectorAll('button[data-minifundo]').forEach(function(b){
+      b.addEventListener("click", function(){ var c = comMini(atual()); if(b.getAttribute("data-minifundo") === "cor") c.mini.fundo = "cor"; else delete c.mini.fundo; gravar(c); });
+    });
+    var mprev = raiz.querySelector("[data-miniprevia]"), mimg = mprev && mprev.querySelector("img.mini-img");
+    var ajustes = {}; raiz.querySelectorAll("input[data-miniajuste]").forEach(function(r){ ajustes[r.getAttribute("data-miniajuste")] = r; });
     function vivo(){
       if(!mimg || !ajustes.x) return;
       var x = ajustes.x.value, y = ajustes.y.value, z = ajustes.zoom.value;
@@ -7544,7 +7600,7 @@ textarea[data-notas]{ font-family:"Rabisco Fino",cursive; font-size:18px; line-h
       c.mini.modo = "recorte";
       c.mini.x = Math.max(0, Math.min(100, Math.round(parseFloat(ajustes.x.value) || 0)));
       c.mini.y = Math.max(0, Math.min(100, Math.round(parseFloat(ajustes.y.value) || 0)));
-      c.mini.zoom = Math.max(1, Math.min(4, Math.round((parseFloat(ajustes.zoom.value) || 1) * 100) / 100));
+      c.mini.zoom = Math.max(c.mini.ajuste === "caber" ? 0.5 : 1, Math.min(4, Math.round((parseFloat(ajustes.zoom.value) || 1) * 100) / 100));
       gravar(c);
     }
     Object.keys(ajustes).forEach(function(k){ ajustes[k].addEventListener("input", vivo); ajustes[k].addEventListener("change", salvarRecorte); });
@@ -11068,7 +11124,7 @@ textarea[data-notas]{ font-family:"Rabisco Fino",cursive; font-size:18px; line-h
       html += '<div class="card tight" style="border-color:var(--accent)"><p class="hint" style="margin:0">Você edita só a sua ficha. Das fichas dos outros jogadores aparece só um resumo, sem abrir a ficha completa.</p></div>';
     }
     html += tentarHtml("Ameaças em cena", encontrosMesaHtml);
-    html += testLogHtml("Histórico de Rolagens", {showClear:true});
+    html += testLogHtml("Histórico de Ações", {showClear:true});
     html += '<h2 style="margin:20px 0 10px">Personagens</h2>';
     if(!chars.length && !resumosOutros.length){
       html += '<div class="card"><p class="hint">Nenhum personagem criado ainda.</p></div>';
@@ -11142,7 +11198,7 @@ textarea[data-notas]{ font-family:"Rabisco Fino",cursive; font-size:18px; line-h
   function testLogHtml(title, opts){
     opts = opts || {};
     var log = testLogVisivelPara(testLog());
-    if(!log.length) return '<div class="card"><p class="hint">Nenhum teste rolado ainda.</p></div>';
+    if(!log.length) return '<div class="card"><p class="hint">Nenhuma ação ainda.</p></div>';
     var showHeader = title !== false;
     var html = '<div class="card">' + (showHeader ? '<h2>'+esc(title||"Histórico de Testes")+'</h2>' : '') + '<div class="table-wrap"><table><thead><tr><th>Quando</th><th>Personagem</th><th>Teste</th><th>Dados</th><th class="num">Resultado</th></tr></thead><tbody>';
     log.forEach(function(t){
@@ -11162,7 +11218,7 @@ textarea[data-notas]{ font-family:"Rabisco Fino",cursive; font-size:18px; line-h
     });
     html += '</tbody></table></div>';
     if(opts.showClear && temAcessoTotal()){
-      html += '<div class="row" style="margin-top:10px"><button type="button" class="btn secondary" data-action="clear-rolagens">Limpar histórico de rolagens</button></div>';
+      html += '<div class="row" style="margin-top:10px"><button type="button" class="btn secondary" data-action="clear-rolagens">Limpar histórico de ações</button></div>';
     }
     html += '</div>';
     return html;
@@ -11176,7 +11232,7 @@ textarea[data-notas]{ font-family:"Rabisco Fino",cursive; font-size:18px; line-h
   // contra a rolagem de outro jogador, em vez de só torcer pra dar certo.
   function limparHistoricoRolagens(){
     if(!podeEditar() || !temAcessoTotal()) return;
-    askConfirm("Apagar TODO o histórico de rolagens pra sempre? Isso não pode ser desfeito.", function(){
+    askConfirm("Apagar TODO o histórico de ações pra sempre? Isso não pode ser desfeito.", function(){
       if(caps.mode === "mesa") publicarAgoraComRetry(function(sh){ sh.testLog = []; });
     });
   }
@@ -11230,10 +11286,10 @@ textarea[data-notas]{ font-family:"Rabisco Fino",cursive; font-size:18px; line-h
     var collapsed = state.rollFeedCollapsed;
     var listHtml = log.length
       ? log.map(rollFeedEntryHtml).join('')
-      : '<p class="hint" style="margin:4px 0">Nenhum teste rolado ainda.</p>';
+      : '<p class="hint" style="margin:4px 0">Nenhuma ação ainda.</p>';
     var html = '<div class="rollfeed'+(collapsed?' collapsed':'')+'">' +
       '<button type="button" class="rollfeed-toggle" data-rollfeed="toggle">' +
-        '<span>🎲 Histórico de Rolagens'+(log.length?' ('+log.length+')':'')+'</span><span>'+(collapsed?'▸':'▾')+'</span>' +
+        '<span>🎲 Histórico de Ações'+(log.length?' ('+log.length+')':'')+'</span><span>'+(collapsed?'▸':'▾')+'</span>' +
       '</button>' +
       '<div class="rollfeed-list">'+rollFeedCenaHtml()+listHtml+'</div>' +
     '</div>';
