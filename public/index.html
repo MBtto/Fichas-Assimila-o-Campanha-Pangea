@@ -14184,9 +14184,15 @@ try {
     projectId: "ficha-pangea",
     storageBucket: "ficha-pangea.firebasestorage.app",
     messagingSenderId: "476574641686",
-    appId: "1:476574641686:web:f078f9859ebe49af89cf37"
+    appId: "1:476574641686:web:f078f9859ebe49af89cf37",
+    measurementId: "G-LT6EN8P4VQ"
   };
   const app = initializeApp(firebaseConfig);
+  // Google Analytics: só conta visitas e páginas. Carrega à parte e sem esperar:
+  // se o navegador ou um bloqueador impedir, o resto do site segue normal.
+  import(`https://www.gstatic.com/firebasejs/${V}/firebase-analytics.js`)
+    .then(async ({ getAnalytics, isSupported }) => { if (await isSupported()) getAnalytics(app); })
+    .catch((e) => console.warn("[Pangea] analytics indisponível", e));
   const auth = getAuth(app);
   const db = getFirestore(app);
   getRedirectResult(auth).catch((e) => console.warn("[Pangea] retorno do login", e));
