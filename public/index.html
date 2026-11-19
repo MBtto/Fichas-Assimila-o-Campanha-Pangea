@@ -7232,9 +7232,11 @@ textarea[data-notas]{ font-family:"Rabisco Fino",cursive; font-size:18px; line-h
   // O site reduz a imagem no navegador e guarda o resultado dentro da própria campanha
   // (endereço "data:"), sem depender de site de hospedagem.
   var IMG_MODOS = {
-    capa: { larg:640, alt:400, limite:90000, corta:true },   // faixa larga; mais alta que isso, corta pelo centro
-    mini: { larg:240, alt:168, limite:30000, corta:true },   // miniatura do Início (46×32 na tela)
-    logo: { larg:256, alt:256, limite:30000, corta:false }   // cabe inteira, mantém transparência
+    // Capa e miniatura guardam a imagem inteira (sem cortar): quem decide o enquadramento
+    // é "Preencher" (corta na tela) ou "Adaptar" (mostra inteira).
+    capa: { larg:640, alt:640, limite:90000, foto:true },
+    mini: { larg:240, alt:240, limite:30000, foto:true },    // miniatura do Início (46×32 na tela)
+    logo: { larg:256, alt:256, limite:30000 }                // cabe inteira, mantém transparência
   };
   function prepararImagem(arq, modo){
     var m = IMG_MODOS[modo] || IMG_MODOS.logo;
@@ -7270,7 +7272,7 @@ textarea[data-notas]{ font-family:"Rabisco Fino",cursive; font-size:18px; line-h
           };
           // WebP onde o navegador grava; senão PNG no logo e na capa com transparência, JPEG na capa sem.
           var tipo = "image/webp", saida = desenhar(1, tipo, 0.82);
-          if(saida.indexOf("data:image/webp") !== 0){ tipo = (m.corta && !temTransparencia()) ? "image/jpeg" : "image/png"; saida = desenhar(1, tipo, 0.82); }
+          if(saida.indexOf("data:image/webp") !== 0){ tipo = (m.foto && !temTransparencia()) ? "image/jpeg" : "image/png"; saida = desenhar(1, tipo, 0.82); }
           var passos = [[1, 0.7], [1, 0.55], [0.8, 0.7], [0.65, 0.65], [0.5, 0.6], [0.4, 0.55], [0.3, 0.5]];
           for(var i = 0; i < passos.length && saida.length > m.limite; i++) saida = desenhar(passos[i][0], tipo, passos[i][1]);
           URL.revokeObjectURL(url);
