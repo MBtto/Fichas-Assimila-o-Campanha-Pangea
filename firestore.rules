@@ -1,11 +1,12 @@
 rules_version = '2';
-// Plataforma 1 (16/11/2026). Base: regras da etapa H2 (no Console desde 09/10/2026).
-// Mudanças:
-//  1. campanhas: QUALQUER conta logada cria a própria campanha (antes só a conta do Marco),
-//     com conferência dos campos na criação (dono = quem cria, só ele em "membros",
-//     nome de 1 a 60 letras, sistema conhecido).
-//  2. campanhas: o sistema da campanha não muda depois de definido.
-// Todo o resto é igual à etapa H2.
+// Apagar ficha (19/11/2026). Base: regras da Plataforma 1 (as do Console desde 16/11/2026).
+// Mudanças (só nas fichas; todo o resto é igual à Plataforma 1):
+//  1. fichas da campanha: o mestre só apaga a ficha de um jogador, ou tira o jogador
+//     dela (muda/limpa o donoUid), se a cópia guardada já existir na conta do jogador
+//     (fichas/{base}/guardadas/{id}). NPC, ficha sem conta e as fichas do próprio mestre
+//     continuam livres. O jogador continua apagando as próprias fichas.
+//  2. guardadas: o mestre só apaga uma guardada quando a ficha volta para a campanha
+//     no mesmo lote (aprovar a volta). Sem isso, ele não apaga o que ficou na conta do jogador.
 service cloud.firestore {
   match /databases/{database}/documents {
 
@@ -65,6 +66,16 @@ service cloud.firestore {
       return request.resource.data.get('xpInicial', null) == null
         || request.resource.data.xpInicial == campanha(cid).get('config', {}).get('criacao', {}).get('valores', {}).get('xpInicial', 7);
     }
+    // Apagar ficha (19/11/2026): ficha sem conta (NPC ou de mesa) ou do próprio mestre.
+    function semDonoOuMinha(dados) {
+      return dados.get('donoUid', null) == null || dados.get('donoUid', null) == request.auth.uid;
+    }
+    // A cópia guardada na conta do jogador (o site guarda em fichas/{baseId ou id}/guardadas/{id}).
+    function guardadaExiste(id, dados) {
+      return existsAfter(/databases/$(database)/documents/fichas/$(id)/guardadas/$(id))
+        || (dados.get('baseId', null) is string
+            && existsAfter(/databases/$(database)/documents/fichas/$(dados.baseId)/guardadas/$(id)));
+    }
 
     match /campanhas/{cid} {
       // Ler: membros. Um documento que ainda não existe pode ser consultado (tela de migração).
@@ -98,14 +109,21 @@ service cloud.firestore {
       // Fichas-cópia da campanha (o site ainda as chama de "personagens").
       // Etapa G: saiu o "vínculo pela senha" (ficha sem dono pega pelo jogador).
       // Quem dá uma ficha da mesa a um jogador agora é o mestre (update do mestre).
+      // Apagar ficha (19/11/2026): só o jogador apaga personagem dele. O mestre só tira
+      // a ficha de um jogador da mesa (apagar, ou mudar/limpar o donoUid) depois de
+      // guardar a cópia na conta do jogador.
       match /fichas/{id} {
         allow read: if mestreDe(cid) || (membroDe(cid) && donoDe(resource.data));
         allow create: if mestreDe(cid)
           || (membroDe(cid) && donoDe(request.resource.data) && request.resource.data.get('xp', null) == null
               && xpInicialDaCampanha(cid));
-        allow update: if mestreDe(cid)
+        allow update: if (mestreDe(cid)
+            && (semDonoOuMinha(resource.data)
+                || request.resource.data.get('donoUid', null) == resource.data.get('donoUid', null)
+                || guardadaExiste(id, resource.data)))
           || (membroDe(cid) && donoDe(resource.data) && donoDe(request.resource.data) && xpIntacta());
-        allow delete: if mestreDe(cid) || (membroDe(cid) && donoDe(resource.data));
+        allow delete: if (mestreDe(cid) && (semDonoOuMinha(resource.data) || guardadaExiste(id, resource.data)))
+          || (membroDe(cid) && donoDe(resource.data));
       }
       match /resumos/{id} {
         allow read: if mestreDe(cid) || (membroDe(cid) && resource.data.ehNpc == false);
@@ -199,14 +217,17 @@ service cloud.firestore {
 
       // Fichas guardadas (etapa B): a cópia de uma campanha que a ficha deixou.
       // O dono da base mexe à vontade. O mestre da campanha de onde ela saiu pode
-      // guardá-la ao remover o jogador, ler e apagar ao aprovar a volta.
+      // guardá-la ao remover o jogador e ler ao aprovar a volta. Apagar ficha (19/11/2026):
+      // o mestre só apaga a guardada quando a ficha volta para a campanha no mesmo lote.
       function donoDaBase() {
         return getAfter(/databases/$(database)/documents/fichas/$(id)).data.get('donoUid', null);
       }
       match /guardadas/{gid} {
         allow read, write: if logado() && get(/databases/$(database)/documents/fichas/$(id)).data.get('donoUid', null) == request.auth.uid;
         allow create: if logado() && donoDaBase() == request.auth.uid;
-        allow get, delete: if logado() && mestreDe(resource.data.campanhaId);
+        allow get: if logado() && mestreDe(resource.data.campanhaId);
+        allow delete: if logado() && mestreDe(resource.data.campanhaId)
+          && existsAfter(/databases/$(database)/documents/campanhas/$(resource.data.campanhaId)/fichas/$(gid));
         allow create, update: if logado() && mestreDe(request.resource.data.campanhaId)
           && request.resource.data.get('donoUid', null) == donoDaBase()
           && request.resource.data.get('id', null) == gid

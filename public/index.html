@@ -930,6 +930,27 @@
   }
   .confirm-box p{ margin:0 0 16px; white-space:pre-line; }
   .confirm-box .btn-row{ margin-top:0; }
+  /* Apagar ficha: confirmação digitando o nome, com backup opcional */
+  #apf-overlay .confirm-overlay{ z-index:9600; } /* acima dos botões fixos (pincel, apoio) */
+  .best-dano-det{ font-size:.85em; opacity:.75; }
+  .best-conv{ margin:0 0 10px; }
+  .testes-cria{ margin:0 0 12px 20px; padding:0; }
+  .testes-cria li{ margin:0 0 3px; }
+  .testes-cria li.feito{ color:var(--ink-muted); }
+  .apf-box{ max-width:460px; max-height:calc(100dvh - 32px); overflow:auto; }
+  :root[data-texto="grande"] .apf-box{ max-height:calc((100dvh - 32px) / 1.15); }
+  :root[data-texto="maior"] .apf-box{ max-height:calc((100dvh - 32px) / 1.3); }
+  .apf-box h2{ margin:0 0 10px; color:var(--danger); overflow-wrap:anywhere; }
+  .apf-avisos{ margin:0 0 14px 18px; padding:0; }
+  .apf-avisos li{ margin:0 0 4px; overflow-wrap:anywhere; }
+  .apf-backup{ display:flex; flex-wrap:wrap; align-items:center; gap:6px 10px; margin:0 0 14px; }
+  .apf-backup .hint{ margin:0; }
+  .apf-codigo{ width:100%; font:12px/1.4 "IBM Plex Mono", monospace; resize:vertical; }
+  .apf-box .field{ margin:0 0 10px; }
+  .apf-box .field label b{ text-transform:none; overflow-wrap:anywhere; }
+  .apf-status{ min-height:1.2em; margin:0 0 10px; font-weight:600; }
+  .apf-status.erro{ color:var(--danger); }
+  .apf-box .btn-row{ flex-wrap:wrap; gap:8px; }
 
   /* Cabo de Guerra (ver tugDeGuerraCardHtml): única forma de calcular e
      mostrar Determinação/Assimilação, sempre visível na ficha - não é mais
@@ -1371,12 +1392,14 @@
 @font-face{ font-family:"Doc Rabisco"; src:url(fontes/reenie-beanie-latin-400-normal.woff2) format("woff2"); font-display:swap; }
 @font-face{ font-family:"Rabisco Fino"; src:url(fontes/covered-by-your-grace-latin-400-normal.woff2) format("woff2"); font-display:swap; }
 @font-face{ font-family:"Rabisco Grosso"; src:url(fontes/permanent-marker-latin-400-normal.woff2) format("woff2"); font-display:swap; }
+@font-face{ font-family:"Rodape Fino"; src:url(fontes/shadows-into-light-two-latin-400-normal.woff2) format("woff2"); font-display:swap; }
 /* ===== Letras de rabisco (18/11/2026): fina = Covered By Your Grace (rodapé, faixas do Cabo,
    título da animação, telas vazias, Notas); grossa = Permanent Marker (capas, nome na ficha,
    nome na animação, números do Cabo). ===== */
 .footer-note, .tug-faixa > span, .tug-anel b, .ficha-nome, .assim-kicker, .assim-nome, p.empty, .empty > p:first-child,
 .lobby-vazio > p:first-child, .cmp-fichas.vazio, textarea[data-notas], .cmp-nome-capa{ font-synthesis:none; }
-.footer-note{ font-family:"Rabisco Fino","Comic Sans MS",cursive; font-size:15.5px; line-height:1.5; }
+/* rodapé (19/11/2026): Shadows Into Light Two, fina e menos distorcida que a Covered By Your Grace */
+.footer-note{ font-family:"Rodape Fino","Rabisco Fino","Comic Sans MS",cursive; font-size:15.5px; line-height:1.5; }
 .footer-note .aviso-fan{ font-size:15.5px; line-height:1.5; max-width:none; }
 .footer-note .aviso-fan b{ font-weight:400; color:var(--ink); }
 .footer-note .link-autor{ color:var(--ink); text-decoration:underline; text-decoration-thickness:1px; text-underline-offset:3px; }
@@ -2008,10 +2031,10 @@ textarea[data-notas]{ font-family:"Rabisco Fino",cursive; font-size:18px; line-h
   var ESCASSEZ_TETO_INICIAL = 3;
   var XP_INICIAL = 7;
 
-  var WIZ_STEPS = ["Acampamento","Origem","Propósitos e Conexões","Instintos","Conhecimentos e Práticas","Características (Experiência)","Artefato e Equipamentos","Cabo de Guerra"];
+  var WIZ_STEPS = ["Acampamento","Origem","Propósitos e Conexões","Instintos","Conhecimentos e Práticas","Características (Experiência)","Artefato e Equipamentos","Cabo de Guerra","Testes de Assimilação"];
   // Ordem dos passos na criação: o Cabo de Guerra (7, só com a etapa ligada) vem
   // depois dos Propósitos. Os índices continuam fixos (a edição reaproveita cada passo).
-  var WIZ_ORDEM = [0,1,2,7,3,4,5,6];
+  var WIZ_ORDEM = [0,1,2,7,3,4,5,6,8];
 
   // Kits de itens iniciais: cada um preenche o Inventário adicional com alguns itens narrativos prontos.
   var KITS_INICIAIS = [
@@ -3912,7 +3935,7 @@ textarea[data-notas]{ font-family:"Rabisco Fino",cursive; font-size:18px; line-h
   }
   function registrarTeste(entry){
     entry.id = uid(); entry.ts = new Date().toISOString();
-    var chRol = entry.charId ? getChar(entry.charId) : null;
+    var chRol = entry.charId ? (getChar(entry.charId) || (state.draft && state.draft.id === entry.charId ? state.draft : null)) : null;
     entry.npc = !!(chRol && chRol.ehNpc);
     if(caps.mode === "mesa"){
       var log = shared.testLog;
@@ -4615,7 +4638,7 @@ textarea[data-notas]{ font-family:"Rabisco Fino",cursive; font-size:18px; line-h
     if(!FB || !usuario || !campanhaAtual) return;
     var cid = campanhaAtual.id;
     shared.characters.forEach(function(c){
-      if(c.ehNpc || c.baseId || c.donoUid !== usuario.uid || basesEmCurso[c.id]) return;
+      if(c.ehNpc || c.baseId || c.baseApagada || c.donoUid !== usuario.uid || basesEmCurso[c.id]) return;
       basesEmCurso[c.id] = true;
       FB.escrever([{ tipo:"set", col:"/fichas", id:c.id, data:paraFirestore(baseDaCopia(c, cid)) }]).then(function(){
         var atual = getChar(c.id);
@@ -5133,8 +5156,11 @@ textarea[data-notas]{ font-family:"Rabisco Fino",cursive; font-size:18px; line-h
 
   function lobbyFichasHtml(){
     var bases = lobby.bases || [];
-    var html = '<div class="row lobby-titulo"><h2 style="margin:0">Fichas</h2><div class="row lobby-criar" style="gap:8px"><button type="button" class="btn secondary" data-lobby="criar-ficha">+ Ficha</button></div></div>' +
-      '';
+    var html = '<div class="row lobby-titulo"><h2 style="margin:0">Fichas</h2><div class="row lobby-criar" style="gap:8px"><button type="button" class="btn secondary" data-lobby="colar-ficha">Colar código</button><button type="button" class="btn secondary" data-lobby="criar-ficha">+ Ficha</button></div></div>' +
+      (lobby.colando ? '<div class="card" id="lobby-colar"><h2>Colar código de ficha</h2>' +
+        '<div class="field"><label for="colar-cod">Código de backup</label><textarea id="colar-cod" data-colarcod rows="4" spellcheck="false"></textarea></div>' +
+        '<p class="hint" id="colar-status" aria-live="polite" style="font-weight:600"></p>' +
+        '<div class="row" style="gap:8px;flex-wrap:wrap"><button type="button" class="btn accent" data-colar="ok">Trazer ficha</button><button type="button" class="btn secondary" data-colar="cancelar">Cancelar</button></div></div>' : '');
     if(!bases.length){
       return html + '<div class="card lobby-vazio"><p>Nenhuma ficha ainda.</p><p class="hint">Cada campanha recebe uma cópia da ficha que você levar.</p></div>';
     }
@@ -5151,7 +5177,7 @@ textarea[data-notas]{ font-family:"Rabisco Fino",cursive; font-size:18px; line-h
         '<div class="camp-tag">'+(camp?camp.nome:"sem acampamento")+(b.nomeJogador?" · "+esc(b.nomeJogador):"")+'</div>' +
         '<div class="hint" style="margin-top:6px">'+(emCampanhas.length ? 'Em: <b>'+emCampanhas.join(", ")+'</b>' : 'Fora de campanhas no momento')+'</div>' +
         (guard.length ? '<div class="hint">Guardada de: '+guard.join(", ")+'</div>' : '') +
-        '<div class="row" style="margin-top:12px;gap:8px"><button type="button" class="btn secondary" data-abrirbase="'+esc(b.id)+'">Abrir</button></div>' +
+        '<div class="row" style="margin-top:12px;gap:8px"><button type="button" class="btn secondary" data-abrirbase="'+esc(b.id)+'">Abrir</button><button type="button" class="btn secondary" data-apagarbase="'+esc(b.id)+'">Apagar</button></div>' +
       '</div>';
     });
     return html + '</div>';
@@ -5253,6 +5279,27 @@ textarea[data-notas]{ font-family:"Rabisco Fino",cursive; font-size:18px; line-h
         });
       });
     });
+    app.querySelectorAll('[data-lobby="colar-ficha"]').forEach(function(bt){
+      bt.addEventListener("click", function(){ lobby.colando = true; renderLobby(); var t = app.querySelector("[data-colarcod]"); if(t){ t.focus(); if(t.scrollIntoView) t.scrollIntoView({ block:"center" }); } });
+    });
+    var colarCancel = app.querySelector('[data-colar="cancelar"]');
+    if(colarCancel) colarCancel.addEventListener("click", function(){ lobby.colando = false; renderLobby(); });
+    var colarOk = app.querySelector('[data-colar="ok"]');
+    if(colarOk) colarOk.addEventListener("click", function(){
+      var campo = app.querySelector("[data-colarcod]"), st = app.querySelector("#colar-status");
+      colarOk.disabled = true; st.textContent = "Trazendo…";
+      restaurarFichaDeCodigo(campo.value).then(function(f){
+        if(!lobby) return;
+        lobby.colando = false;
+        avisoLobby = 'Ficha "'+(apfNome(f) || "Sem nome")+'" de volta em Minhas fichas.';
+        renderLobby();
+      }).catch(function(err){
+        colarOk.disabled = false;
+        console.warn("[Pangea] colar código de ficha", err);
+        var m = (err && (err.code || err.message)) || "erro desconhecido";
+        st.textContent = "Não deu: " + m.charAt(0).toLowerCase() + m.slice(1) + ".";
+      });
+    });
     app.querySelectorAll('[data-lobby="criar-ficha"]').forEach(function(criarFicha){
       criarFicha.addEventListener("click", function(){ lobby.levar = null; abrirModoBase({}); });
     });
@@ -5294,6 +5341,9 @@ textarea[data-notas]{ font-family:"Rabisco Fino",cursive; font-size:18px; line-h
     });
     app.querySelectorAll("[data-abrirbase]").forEach(function(b){
       b.addEventListener("click", function(){ abrirModoBase({ id: b.getAttribute("data-abrirbase") }); });
+    });
+    app.querySelectorAll("[data-apagarbase]").forEach(function(b){
+      b.addEventListener("click", function(){ apagarFichaBase(b.getAttribute("data-apagarbase")); });
     });
     app.querySelectorAll("[data-convextra]").forEach(function(el){
       el.addEventListener(el.tagName === "SELECT" ? "change" : "input", function(){
@@ -6356,8 +6406,7 @@ textarea[data-notas]{ font-family:"Rabisco Fino",cursive; font-size:18px; line-h
       ["notas", "Notas", fnavIco("notas")]
     ];
     if(c.precisaRefazer) casas = casas.filter(function(x){ return x[0]!=="evoluir"; });
-    if(caps.mode !== "mesa" || modoBase) casas = casas.filter(function(x){ return x[0]!=="documentos"; });
-    if(modoBase) casas = casas.filter(function(x){ return x[0]!=="testar"; });
+    if(caps.mode !== "mesa") casas = casas.filter(function(x){ return x[0]!=="documentos"; });
     return casas;
   }
   function fichaNavHtml(c){
@@ -7425,7 +7474,11 @@ textarea[data-notas]{ font-family:"Rabisco Fino",cursive; font-size:18px; line-h
           status("Apagando " + (BACKUP_NOMES[par[0]] || par[0]) + "…");
           return FB.lerColecao(raizCol + par[0]);
         }).then(function(l){
-          return l.length ? FB.escrever(l.map(function(x){ return { tipo:"del", col:raizCol + par[0], id:String(x.id) }; })) : null;
+          var ops = l.map(function(x){ return { tipo:"del", col:raizCol + par[0], id:String(x.id) }; });
+          if(par[0] !== "fichas") return ops.length ? FB.escrever(ops) : null;
+          // fichas: lotes de 8 (cada ficha de jogador faz a regra conferir a cópia guardada)
+          var lotes = []; for(var i = 0; i < ops.length; i += 8) lotes.push(ops.slice(i, i + 8));
+          return lotes.reduce(function(p, lote){ return p.then(function(){ return FB.escrever(lote); }); }, Promise.resolve());
         });
       }, Promise.resolve());
     }
@@ -7456,16 +7509,10 @@ textarea[data-notas]{ font-family:"Rabisco Fino",cursive; font-size:18px; line-h
       }, Promise.resolve()).then(function(){ return falhas; });
     }).then(function(falhas){
       if(!falhas.length) return true;
-      // Alguma ficha não pôde ser guardada: quem decide é o mestre.
-      return new Promise(function(resolver){
-        status("Não consegui guardar na conta do jogador: " + falhas.join(", ") + ".");
-        var dica = document.getElementById("apagar-dica"), acoes = document.getElementById("apagar-acoes");
-        if(dica) dica.textContent = "Se apagar agora, " + (falhas.length > 1 ? "essas fichas ficam" : "essa ficha fica") + " só no backup que acabou de ser baixado.";
-        if(!acoes){ resolver(false); return; }
-        acoes.innerHTML = '<div class="btn-row"><button type="button" class="btn secondary" data-apg="nao">Cancelar</button><button type="button" class="btn danger" data-apg="sim">Apagar mesmo assim</button></div>';
-        acoes.querySelector('[data-apg="nao"]').addEventListener("click", function(){ resolver(false); });
-        acoes.querySelector('[data-apg="sim"]').addEventListener("click", function(){ acoes.innerHTML = ""; if(dica) dica.textContent = "Não feche esta aba até terminar."; resolver(true); });
-      });
+      // Alguma ficha não pôde ser guardada na conta do jogador: a campanha não é apagada
+      // (só o jogador apaga personagem dele).
+      avisar("Não consegui guardar na conta do jogador: " + falhas.join(", ") + ". Nada foi apagado. Tente de novo ou remova esse jogador antes.", "erro");
+      return false;
     }).then(function(seguir){
       if(!seguir) return desistir(null);
       status("Fechando a campanha para os jogadores…");
@@ -7878,6 +7925,224 @@ textarea[data-notas]{ font-family:"Rabisco Fino",cursive; font-size:18px; line-h
     });
   }
 
+  // ---------- APAGAR FICHA ----------
+  // Janela própria (não usa o confirm-overlay, que o askConfirm limpa): pede para
+  // digitar o nome da ficha e oferece um backup .json antes de apagar.
+  // o = { ficha, avisos:[texto], bloqueio:texto|null, backup:fn->Promise(dados), apagar:fn->Promise, depois:fn }
+  var apfDlg = null;
+  function apfNormal(s){ return String(s == null ? "" : s).replace(/\s+/g, " ").trim().toLowerCase(); }
+  function apfNome(f){ return String((f && f.nomePersonagem) || "").replace(/\s+/g, " ").trim(); }
+  function pedirApagarFicha(o){
+    var el = document.getElementById("apf-overlay");
+    if(!el){ el = document.createElement("div"); el.id = "apf-overlay"; document.body.appendChild(el); }
+    apfDlg = o; o.ocupado = false;
+    renderApagarFicha();
+  }
+  function fecharApagarFicha(){
+    if(apfDlg && apfDlg.ocupado) return;
+    apfDlg = null;
+    var el = document.getElementById("apf-overlay"); if(el) el.innerHTML = "";
+  }
+  document.addEventListener("keydown", function(e){ if(e.key === "Escape" && apfDlg) fecharApagarFicha(); });
+  function renderApagarFicha(){
+    var el = document.getElementById("apf-overlay"), o = apfDlg;
+    if(!el || !o) return;
+    var nome = apfNome(o.ficha), chave = nome || "apagar";
+    var html = '<div class="confirm-overlay" data-apffundo="1"><div class="confirm-box apf-box" role="dialog" aria-modal="true" aria-labelledby="apf-tit">' +
+      '<h2 id="apf-tit">Apagar “'+esc(nome || "Sem nome")+'”?</h2>' +
+      (o.avisos && o.avisos.length ? '<ul class="apf-avisos">'+o.avisos.map(function(a){ return '<li>'+a+'</li>'; }).join("")+'</ul>' : '');
+    if(o.bloqueio){
+      html += '<p class="apf-status erro">'+o.bloqueio+'</p><div class="btn-row"><button type="button" class="btn secondary" data-apf="cancelar">Fechar</button></div>';
+    } else {
+      html += '<div class="apf-backup"><button type="button" class="btn secondary" data-apf="backup">Copiar código de backup</button><span class="hint" data-apfbk></span>' +
+          '<textarea class="apf-codigo" data-apfcod readonly rows="3" hidden aria-label="Código de backup"></textarea></div>' +
+        '<div class="field"><label for="apf-nome">Digite <b>'+esc(chave)+'</b> para confirmar</label><input type="text" id="apf-nome" autocomplete="off" spellcheck="false" autocapitalize="off"></div>' +
+        '<p class="apf-status" data-apfst aria-live="polite"></p>' +
+        '<div class="btn-row"><button type="button" class="btn secondary" data-apf="cancelar">Cancelar</button><button type="button" class="btn danger" data-apf="ok" disabled>Apagar para sempre</button></div>';
+    }
+    el.innerHTML = html + '</div></div>';
+    var campo = el.querySelector("#apf-nome"), ok = el.querySelector('[data-apf="ok"]'), st = el.querySelector("[data-apfst]");
+    function confere(){ return !!campo && apfNormal(campo.value) === apfNormal(chave); }
+    function status(t, erro){ if(st){ st.textContent = t || ""; st.classList.toggle("erro", !!erro); } }
+    el.querySelector("[data-apffundo]").addEventListener("click", function(e){ if(e.target === e.currentTarget) fecharApagarFicha(); });
+    el.querySelectorAll('[data-apf="cancelar"]').forEach(function(b){ b.addEventListener("click", fecharApagarFicha); });
+    if(campo){
+      campo.addEventListener("input", function(){ if(!o.ocupado) ok.disabled = !confere(); });
+      campo.addEventListener("keydown", function(e){ if(e.key === "Enter" && !ok.disabled){ e.preventDefault(); ok.click(); } });
+      setTimeout(function(){ try{ campo.focus(); }catch(e){} }, 0);
+    }
+    var bk = el.querySelector('[data-apf="backup"]');
+    if(bk) bk.addEventListener("click", function(){
+      var info = el.querySelector("[data-apfbk]"), cod = el.querySelector("[data-apfcod]");
+      bk.disabled = true; if(info) info.textContent = "Preparando…";
+      Promise.resolve().then(o.backup).then(function(dados){
+        var texto = JSON.stringify(dados);
+        cod.value = texto; cod.hidden = false;
+        var guardar = "Para trazer de volta: Minhas fichas → Colar código.";
+        function manual(){ try{ cod.focus(); cod.select(); if(document.execCommand("copy")){ if(info) info.textContent = "Copiado. " + guardar; return; } }catch(e){} if(info) info.textContent = "Copie o código abaixo e guarde. " + guardar; }
+        if(navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(texto).then(function(){ if(info) info.textContent = "Copiado. " + guardar; }, manual);
+        else manual();
+      }).catch(function(err){
+        console.error("[Pangea] backup da ficha", err);
+        if(info) info.textContent = "Não deu para gerar o backup.";
+      }).then(function(){ bk.disabled = false; });
+    });
+    if(ok) ok.addEventListener("click", function(){
+      if(!confere() || o.ocupado) return;
+      o.ocupado = true; ok.disabled = true;
+      el.querySelectorAll("button").forEach(function(b){ b.disabled = true; });
+      if(campo) campo.disabled = true;
+      status("Apagando…");
+      Promise.resolve().then(o.apagar).then(function(){
+        o.ocupado = false; fecharApagarFicha();
+        if(o.depois) o.depois();
+      }).catch(function(err){
+        console.error("[Pangea] apagar ficha", err);
+        o.ocupado = false;
+        el.querySelectorAll("button").forEach(function(b){ b.disabled = false; });
+        if(campo) campo.disabled = false;
+        ok.disabled = !confere();
+        status("Não deu para apagar: " + ((err && (err.code || err.message)) || "erro desconhecido") + ".", true);
+      });
+    });
+  }
+  var FICHA_COD_TIPO = "ficha-assimilacao";
+  function apfBackupDados(ficha, extra){
+    var d = { tipo:FICHA_COD_TIPO, versao:1, exportadoEm:agoraIso(), ficha:paraFirestore(ficha) };
+    if(extra) Object.keys(extra).forEach(function(k){ d[k] = extra[k]; });
+    return d;
+  }
+  // Na campanha: o mestre apaga qualquer ficha (inclusive NPC); o jogador, só a própria.
+  function apagarFichaDaMesa(id, depois){
+    if(!podeEditar()) return;
+    var c = getChar(id); if(!c) return;
+    var meu = !!(usuario && c.donoUid && c.donoUid === usuario.uid);
+    // Ficha de outra conta: só o jogador apaga. O mestre só tira da campanha.
+    if(c.donoUid && !meu){ if(temAcessoTotal()) removerFichaDaCampanha(id, depois); return; }
+    if(!temAcessoTotal() && !meu) return;
+    var av = [];
+    if(c.ehNpc) av.push("NPC desta campanha.");
+    else if(meu && c.baseId) av.push("Sai só desta campanha. A ficha em Minhas fichas continua.");
+    av.push("Não dá para desfazer.");
+    var cmp = campanhaAtual;
+    pedirApagarFicha({ ficha:c, avisos:av,
+      backup: function(){ return apfBackupDados(getChar(id) || c, { campanhaId:cmp && cmp.id, campanhaNome:(cmp && cmp.nome) || "" }); },
+      apagar: function(){
+        if(!getChar(id)) return;
+        if(state.pendenteCharId === id){ state.pendenteCharId = null; state.pendenteSecoes = {}; }
+        esquecerContinuar(id);
+        deleteChar(id);
+        if(caps.mode !== "mesa") return;
+        clearTimeout(publishTimer);
+        return Promise.resolve(doPublish()).then(function(){
+          if(state.syncFalhou) avisar("A ficha saiu daqui, mas o servidor ainda não confirmou. O site tenta de novo sozinho.");
+        });
+      },
+      depois: function(){ avisar("Ficha apagada.", "ok"); if(depois) depois(); }
+    });
+  }
+  function esquecerContinuar(id){
+    var cont = loadLS(CONTINUAR_KEY, null);
+    if(cont && cont.charId === id){ try{ localStorage.removeItem(CONTINUAR_KEY); }catch(e){} }
+  }
+  function fichaDeOutraConta(c){ return !!(c && c.donoUid && !(usuario && c.donoUid === usuario.uid)); }
+  // Mestre tira da campanha a ficha de um jogador: ela fica guardada na conta dele
+  // (com tudo) e sai da mesa. Nada é apagado da conta do jogador.
+  function removerFichaDaCampanha(id, depois){
+    if(!podeEditar() || !temAcessoTotal() || !FB || !campanhaAtual) return;
+    var c = getChar(id); if(!fichaDeOutraConta(c)) return;
+    var quem = c.donoNome || c.donoEmail || "o jogador";
+    askConfirm('Remover "'+(c.nomePersonagem || "esta ficha")+'" da campanha?\n\nA ficha fica guardada na conta de '+quem+', com tudo (XP, inventário, mutações). Ele pode trazer de volta com Levar ficha.', function(){
+      if(state.pendenteCharId === id) flushPendente();
+      var cid = campanhaAtual.id, nomeCmp = campanhaAtual.nome || "";
+      guardarFichaDaCampanha(paraFirestore(getChar(id) || c), cid, nomeCmp).then(function(){
+        if(FB.campanhaAberta() !== cid || !getChar(id)) return;
+        esquecerContinuar(id);
+        deleteChar(id);
+        clearTimeout(publishTimer);
+        return doPublish();
+      }).then(function(){
+        avisar("Ficha removida da campanha. Ficou guardada na conta de " + quem + ".", "ok");
+        if(depois) depois();
+      }).catch(function(err){
+        console.error("[Pangea] remover ficha", err);
+        avisar("Não deu pra remover a ficha: " + ((err && (err.code || err.message)) || "erro desconhecido") + ". Nada foi apagado.");
+      });
+    });
+  }
+  // Minhas fichas → Colar código: traz de volta uma ficha do código de backup, como
+  // ficha-base nova da conta (id novo), com as guardadas que vieram junto.
+  function restaurarFichaDeCodigo(texto){
+    var u = usuario; texto = String(texto || "").trim();
+    if(!FB || !u) return Promise.reject(new Error("entre com sua conta"));
+    if(texto.length > 900000) return Promise.reject(new Error("código grande demais"));
+    var d; try{ d = JSON.parse(texto); }catch(e){ return Promise.reject(new Error("código inválido: confira se copiou tudo")); }
+    if(!d || d.tipo !== FICHA_COD_TIPO || !d.ficha || typeof d.ficha !== "object" || Array.isArray(d.ficha)) return Promise.reject(new Error("esse código não é de uma ficha"));
+    var agora = agoraIso(), nid = uid(), f = clonar(d.ficha), vinhaDe = typeof f.campanhaId === "string" ? f.campanhaId : null;
+    ["campanhaId","baseId","guardadaEm","campanhaNome","baseApagada","copiaId","passadaPeloMestreEm","entrouNaCampanhaEm"].forEach(function(k){ delete f[k]; });
+    f.id = nid; f.ehBase = true; f.ehNpc = false; f.campanhas = [];
+    if(typeof f.origemCampanha !== "string") f.origemCampanha = vinhaDe;
+    f.donoUid = u.uid; f.donoEmail = u.email || null; f.donoNome = u.displayName || null;
+    f.baseCriadaEm = f.baseCriadaEm || agora; f.restauradaEm = agora; f.atualizadoEm = agora;
+    var ops = [{ tipo:"set", col:"/fichas", id:nid, data:paraFirestore(f) }];
+    (Array.isArray(d.guardadas) ? d.guardadas : []).slice(0, 50).forEach(function(g){
+      if(!g || typeof g !== "object" || Array.isArray(g)) return;
+      g = clonar(g);
+      var gid = String(g.id == null || g.id === "" ? uid() : g.id).replace(/[\/\s]+/g, "_").slice(0, 120);
+      g.id = gid; g.baseId = nid; g.donoUid = u.uid;
+      ops.push({ tipo:"set", col:"/fichas/"+nid+"/guardadas", id:gid, data:paraFirestore(g) });
+    });
+    return FB.escrever(ops).then(function(){ return f; });
+  }
+  // Em Minhas fichas: o dono apaga a ficha-base. Antes, desliga as cópias que estão
+  // em campanhas (baseId vazio + baseApagada, para a base não ser recriada sozinha)
+  // e apaga as fichas guardadas dela.
+  function apagarFichaBase(bid){
+    var u = usuario; if(!FB || !u || !lobby) return;
+    var b = (lobby.bases || []).filter(function(x){ return x.id === bid; })[0]; if(!b) return;
+    var copias = [];
+    (lobby.campanhas || []).forEach(function(cmp){
+      ((lobby.copias || {})[cmp.id] || []).forEach(function(c){ if(c.baseId === bid && c.donoUid === u.uid) copias.push({ cmp:cmp, c:c }); });
+    });
+    var guard = (lobby.guardadas || {})[bid] || [];
+    var pedidoCid = Object.keys(lobby.pedidos || {}).filter(function(cid){
+      var d = lobby.pedidos[cid]; return d && d.status === "pendente" && d.uid === u.uid && d.fichaBaseId === bid;
+    })[0];
+    var nomesCmp = function(l){ return l.map(function(n){ return "<b>"+esc(n || "campanha")+"</b>"; }).join(", "); };
+    var av = [];
+    if(copias.length) av.push("Está em " + nomesCmp(copias.map(function(x){ return x.cmp.nome; })) + ". A cópia de lá continua na campanha, mas deixa de estar ligada a esta ficha.");
+    if(guard.length) av.push("As fichas guardadas de " + nomesCmp(guard.map(function(g){ return g.campanhaNome || g.campanhaId; })) + " também são apagadas.");
+    av.push("Não dá para desfazer.");
+    var bloqueio = null;
+    if(pedidoCid){
+      var pd = lobby.pedidos[pedidoCid];
+      bloqueio = "Esta ficha está num pedido para <b>"+esc(pd.campanhaNome || (campanhaDoLobby(pedidoCid) || {}).nome || "uma campanha")+"</b>. Cancele o pedido antes.";
+    }
+    function lerGuardadas(){ return FB.lerColecao("/fichas/"+bid+"/guardadas"); }
+    pedirApagarFicha({ ficha:b, avisos:av, bloqueio:bloqueio,
+      backup: function(){
+        return lerGuardadas().then(function(l){ return apfBackupDados(b, { guardadas:l.map(function(x){ return x.data; }) }); });
+      },
+      apagar: function(){
+        var agora = agoraIso();
+        return Promise.all(copias.map(function(x){
+          return FB.escrever([{ tipo:"update", col:"/campanhas/"+x.cmp.id+"/fichas", id:x.c.id, data:{ baseId:null, baseApagada:agora } }]);
+        })).then(lerGuardadas).then(function(l){
+          var ops = l.map(function(x){ return { tipo:"del", col:"/fichas/"+bid+"/guardadas", id:String(x.id) }; });
+          ops.push({ tipo:"del", col:"/fichas", id:bid });
+          return FB.escrever(ops);
+        });
+      },
+      depois: function(){
+        if(!lobby) return;
+        // tira já da lista (o ouvinte de fichas-base pode demorar um instante)
+        lobby.bases = (lobby.bases || []).filter(function(x){ return x.id !== bid; });
+        avisoLobby = 'Ficha "'+(apfNome(b) || "Sem nome")+'" apagada.';
+        carregarExtrasLobby();
+      }
+    });
+  }
+
   function topbar(active){
     if(modoBase){
       return '<header class="top">' +
@@ -8134,11 +8399,26 @@ textarea[data-notas]{ font-family:"Rabisco Fino",cursive; font-size:18px; line-h
     if(step === 6) return cr.artefato && cr.kitInicial ? "Artefato e Equipamentos" : (cr.artefato ? "Artefato inicial" : "Equipamentos iniciais");
     return WIZ_STEPS[step];
   }
+  function criandoFichaNova(){ return state.view === "wizard" && !!state.draft && !getChar(state.draft.id); }
+  function testesCriacaoHtml(c){
+    var total = 10 - caboInicialNaFaixa(c), feitos = c.testesCriacao || 0;
+    if(!feitos && !c.assimTesteAtual) aplicarCaboInicial(c, caboInicialNaFaixa(c));
+    var html = '<p class="hint">Cabo de Guerra <b>'+(10-total)+'/'+total+'</b>: '+total+' Teste'+(total>1?'s':'')+' de Assimilação, um por Nível, em ordem.</p><ol class="testes-cria">';
+    for(var i = 1; i <= total; i++){
+      var est = i <= feitos ? (i === feitos && c.assimTesteAtual ? "em andamento" : "feito") : (i === feitos + 1 && !c.assimTesteAtual ? "próximo" : "pendente");
+      html += '<li class="'+(est === "feito" ? "feito" : "")+'">Nível '+i+' · 1d10 + '+i+'d12 <span class="hint">('+est+')</span></li>';
+    }
+    html += '</ol>';
+    html += renderMutacoesCard(c);
+    html += '<p class="hint" style="margin-top:8px">Pode deixar para depois: o que faltar fica pendente na ficha.</p>';
+    return html;
+  }
   function wizEtapas(){
     var cr = cfgCriacao();
     return WIZ_ORDEM.filter(function(st){
       if(st === 2) return cr.propositos === "livro" || (cr.propPers.qtd1 + cr.propPers.qtd2) > 0;
       if(st === 7) return !!caboCriacao().ligado;
+      if(st === 8) return criandoFichaNova() && (10 - caboInicialNaFaixa(state.draft) > 0 || !!state.draft.testesCriacao);
       if(st === 6) return !!(cr.artefato || cr.kitInicial);
       return true;
     });
@@ -8211,7 +8491,9 @@ textarea[data-notas]{ font-family:"Rabisco Fino",cursive; font-size:18px; line-h
           if(!String(c.nomePersonagem||"").trim()) c.nomePersonagem = "";
           if(c.xpInicial == null) c.xpInicial = cfgValores().xpInicial;
           // Cabo de Guerra inicial: escolhido na etapa (dentro dos limites) ou o 9/1 do livro.
-          aplicarCaboInicial(c, caboInicialNaFaixa(c));
+          // (se os Testes já começaram no último passo, o Cabo fica como está)
+          if(!c.testesCriacao && !c.assimTesteAtual) aplicarCaboInicial(c, caboInicialNaFaixa(c));
+          delete c.testesCriacao;
           if(!podeEditar()) return;
           c.atualizadoEm = new Date().toISOString();
           // NPC é ficha da mesa: fica sem conta vinculada e só o mestre vê.
@@ -8428,7 +8710,8 @@ textarea[data-notas]{ font-family:"Rabisco Fino",cursive; font-size:18px; line-h
   }
 
   function wizardStepBody(c, step){
-    if(step === 7) return caboCriacaoHtml(c);
+    if(step === 7) return caboCriacaoHtml(c) + (c.testesCriacao ? '<p class="hint" style="margin-top:8px">Travado: os Testes de Assimilação já foram feitos com este Cabo.</p>' : '');
+    if(step === 8) return testesCriacaoHtml(c);
     if(step === 0 && state.view === "sheet" && !temAcessoTotal()){
       var hj = camposExtrasFormHtml(c);
       var origJ = getChar(c.id);
@@ -8627,9 +8910,15 @@ textarea[data-notas]{ font-family:"Rabisco Fino",cursive; font-size:18px; line-h
 
   function bindWizardStep(c, step, rerender){
     rerender = rerender || renderWizard;
+    if(step === 8){
+      var bt = app.querySelector('[data-action="assim-testar"]');
+      if(bt) bt.addEventListener("click", function(){ if(!state.assimRolando) c.testesCriacao = (c.testesCriacao || 0) + 1; });
+      bindMutacoesCard(c);
+    }
     if(step === 7){
       app.querySelectorAll("[data-tugcria]").forEach(function(el){
         el.addEventListener("click", function(){
+          if(c.testesCriacao){ avisar("Os Testes de Assimilação já foram feitos com este Cabo de Guerra."); return; }
           var cb = caboCriacao(), n = clamp(parseInt(el.getAttribute("data-tugcria"),10), cb.detMin, cb.detMax);
           if(n === caboInicialDe(c)) return;
           aplicarCaboInicial(c, n); rerender();
@@ -8637,6 +8926,7 @@ textarea[data-notas]{ font-family:"Rabisco Fino",cursive; font-size:18px; line-h
       });
       app.querySelectorAll("[data-tugcriapasso]").forEach(function(el){
         el.addEventListener("click", function(){
+          if(c.testesCriacao){ avisar("Os Testes de Assimilação já foram feitos com este Cabo de Guerra."); return; }
           var cb = caboCriacao(), n = clamp(caboInicialNaFaixa(c) + parseInt(el.getAttribute("data-tugcriapasso"),10), cb.detMin, cb.detMax);
           aplicarCaboInicial(c, n); rerender();
         });
@@ -8909,7 +9199,7 @@ textarea[data-notas]{ font-family:"Rabisco Fino",cursive; font-size:18px; line-h
     if(!state.sheetTest || state.sheetTest.charId !== c.id){
       state.sheetTest = { charId:c.id, instintoKey:INSTINTOS[0][0], cpKey:CONH_PRAT[0][0], instinto2Key:INSTINTOS[0][0], agir:false, extraDado:false, agirSnapshot:null, extraSnapshot:null, agirUsouAssim:false, results:[], rolling:false, rollingCount:0, keepN:0, registered:false, mods:{}, final:null };
     }
-    if(!modoBase) html += tentarHtml("Teste", function(){ return renderSheetTest(c); });
+    html += tentarHtml("Teste", function(){ return renderSheetTest(c); });
 
     // Saúde e Cabo de Guerra logo abaixo do Teste (pedido do Marco, 11/10/2026).
     // Saude e Determinacao
@@ -8980,20 +9270,22 @@ textarea[data-notas]{ font-family:"Rabisco Fino",cursive; font-size:18px; line-h
       invBody += '<div class="row" style="margin-top:10px"><button class="btn secondary" data-inv="add">+ adicionar item</button></div>';
     }
     html += sectionCard("inventario", "Inventário adicional", pendingSectionBannerHtml(c, "inv") + invBody);
-    if(caps.mode === "mesa" && !modoBase) html += tentarHtml("Documentos", function(){ return sectionCard("documentos", "Documentos", docsFichaHtml(c)); });
+    if(caps.mode === "mesa") html += tentarHtml("Documentos", function(){ return sectionCard("documentos", "Documentos", modoBase
+      ? '<p class="hint" style="margin:0">Aqui aparecem os documentos que esta ficha achar durante as campanhas. Eles ficam no inventário dela.</p>'
+      : docsFichaHtml(c)); });
 
     // Notas
     html += sectionCard("notas", "Notas", '<textarea data-notas style="min-height:80px">'+esc(c.notas)+'</textarea>');
 
 
     if(modoBase){
-      // Etapa H: ficha-base fora de campanha. Sem testes, documentos e exclusão.
+      // Etapa H: ficha-base fora de campanha (Testar é treino; Documentos só explica).
       html += '<div class="card tight"><div class="hint ajuda" style="margin:0"><p>Esta é a sua <b>ficha-base</b>, fora de campanha. As mudanças aqui ficam só nela; as cópias que já estão em campanhas não mudam.</p><p>Para levar a ficha a uma campanha, abra o link de convite do mestre.</p></div></div>';
       html += '<div class="btn-row"><button class="btn secondary" data-action="lobby">Voltar às campanhas</button>' +
         '<div class="row"><button class="btn accent" data-action="edit">Editar Ficha</button></div></div>';
     } else
     html += '<div class="btn-row"><button class="btn secondary" data-nav="roster">Voltar pros personagens</button>' +
-      '<div class="row"><button class="btn accent" data-action="edit">Editar Ficha</button><button class="btn danger" data-action="delete">Excluir personagem</button></div></div>';
+      '<div class="row"><button class="btn accent" data-action="edit">Editar Ficha</button>'+(fichaDeOutraConta(c) ? '<button class="btn secondary" data-action="delete">Remover da campanha</button>' : '<button class="btn danger" data-action="delete">Apagar ficha</button>')+'</div></div>';
 
     html += '</div>';
 
@@ -9305,7 +9597,7 @@ textarea[data-notas]{ font-family:"Rabisco Fino",cursive; font-size:18px; line-h
       '<ul class="hint"><li><b>Mais Determinação:</b> o personagem começa mais firme.</li><li><b>Mais Assimilação:</b> mais Pontos de Assimilação desde o início, mas cada Nível de Assimilação já começa com um Teste de Assimilação a fazer.</li></ul></div>' +
       '<div class="tug-wrap tug-cria">' + tugRotuloHtml("det") + tugLacosHtml(nd, true, { attr:"data-tugcria", min:cb.detMin, max:cb.detMax }) + tugRotuloHtml("assim") + '</div>' +
       '<p class="tug-cria-resumo"><b style="color:var(--royal)">Determinação '+nd+'</b> · <b style="color:var(--assim)">Assimilação '+na+'</b><span class="hint" style="display:block;margin:2px 0 0;text-align:center">'+
-        (na === 0 ? 'Sem Teste de Assimilação para fazer.' : na+' Teste'+(na>1?'s':'')+' de Assimilação para fazer na ficha.')+' Começa com '+nd+' '+(nd===1?'ponto':'pontos')+' de Determinação e '+na+' de Assimilação.</span></p>' +
+        (na === 0 ? 'Sem Teste de Assimilação para fazer.' : na+' Teste'+(na>1?'s':'')+' de Assimilação para fazer no último passo (ou depois, na ficha).')+' Começa com '+nd+' '+(nd===1?'ponto':'pontos')+' de Determinação e '+na+' de Assimilação.</span></p>' +
       '<div class="row tug-cria-botoes">' +
         '<button type="button" class="btn secondary" data-tugcriapasso="1"'+(nd >= cb.detMax ? ' disabled' : '')+'>'+icoHtml("nd")+' + Determinação</button>' +
         '<button type="button" class="btn secondary" data-tugcriapasso="-1"'+(nd <= cb.detMin ? ' disabled' : '')+'>+ Assimilação '+icoHtml("na")+'</button>' +
@@ -9608,8 +9900,14 @@ textarea[data-notas]{ font-family:"Rabisco Fino",cursive; font-size:18px; line-h
   // (G) por B, 1 de Inoportunas (H) por C. O resultado vira um "pool" de pontos pra gastar
   // em qualquer carta puxada (ver adquirirTier) - todos os pontos devem ser gastos, mas a
   // ferramenta não obriga: sobras ficam visíveis pro Assimilador arbitrar (pág. 124).
+  // Com vários Testes pendentes, o mais antigo é o do Nível mais baixo: rola primeiro
+  // o do Nível 1, depois o do 2, e assim por diante (ex.: ficha criada em 8/2).
+  function nivelDoProximoTesteAssim(c){
+    var pend = Math.max(1, c.testesAssimPendentes || 0);
+    return clamp(nivelAssimAtual(c) - (pend - 1), 0, 10);
+  }
   function iniciarTesteAssimilacao(c){
-    var e = Math.max(0, nivelAssimAtual(c));
+    var e = nivelDoProximoTesteAssim(c);
     var dados = [rollDie(10)];
     for(var i=0;i<e;i++) dados.push(rollDie(12));
     var totS = sum(dados.map(function(d){return d.s;}));
@@ -9742,7 +10040,8 @@ textarea[data-notas]{ font-family:"Rabisco Fino",cursive; font-size:18px; line-h
     if(!c.assimTesteAtual) return false;
     var tier = MUT_DECKS[cat][cardIdx][2][tierIdx];
     if(tierJaAdquirido(c, cat, cardIdx, tierIdx)) return false;
-    if(tier[3] && nivelAssimAtual(c) < tier[3]) return false;
+    var nivelTeste = (c.assimTesteAtual.e != null) ? c.assimTesteAtual.e : nivelAssimAtual(c);
+    if(tier[3] && nivelTeste < tier[3]) return false;
     var custo = custoSimbolos(tier[0]);
     var pool = c.assimTesteAtual;
     return pool.sPool >= custo.s && pool.aPool >= custo.a && pool.pPool >= custo.p;
@@ -9843,6 +10142,7 @@ textarea[data-notas]{ font-family:"Rabisco Fino",cursive; font-size:18px; line-h
   // adquiridas por categoria - livro definitivo, Cap. 4 (págs. 122-165).
   function renderMutacoesCard(c){
     var pendentes = c.testesAssimPendentes||0;
+    var naCriacao = state.view === "wizard";
     var pressao = pressaoTotal(c);
     var perdido = perdidoParaAssimilacao(c);
     var pool = c.assimTesteAtual;
@@ -9862,16 +10162,17 @@ textarea[data-notas]{ font-family:"Rabisco Fino",cursive; font-size:18px; line-h
       '<span class="gm-compact-line" style="margin:0">Pressão acumulada (Assimilações Inoportunas): <b'+(pressao>=7?' style="color:var(--danger)"':'')+'>'+pressao+'</b> / 10'+(pressao>=7&&pressao<10?' <span class="badge-pill warn">atenção</span>':'')+'</span>' +
     '</div>';
 
-    if(pendentes>0 && !perdido){
+    if(pendentes>0 && !perdido && !naCriacao){
       body += '<div class="card tight" style="border-color:var(--suscet);margin-top:10px"><p class="hint" style="margin:0">O Nível de Determinação caiu <b>'+pendentes+'</b> '+(pendentes===1?'vez':'vezes')+' sem o Teste de Assimilação correspondente ter sido rolado ainda.</p></div>';
     }
 
     if(!perdido){
       body += '<div class="row" style="margin-top:12px;gap:10px;flex-wrap:wrap">';
-      if(!pool && !modoBase){
-        body += '<button type="button" class="btn accent" data-action="assim-testar">Fazer Teste de Assimilação (1d10'+(nivelAssimAtual(c)>0?' + '+nivelAssimAtual(c)+'d12':'')+')</button>';
+      if(!pool && pendentes > 0){
+        var eProx = nivelDoProximoTesteAssim(c);
+        body += '<button type="button" class="btn accent" data-action="assim-testar">Fazer Teste de Assimilação · Nível '+eProx+' (1d10'+(eProx>0?' + '+eProx+'d12':'')+')</button>';
       }
-      body += '<button type="button" class="btn secondary" data-action="assim-clareza-toggle">'+(clarezaAberta?"Fechar Clareza de Propósito":"Clareza de Propósito")+'</button>';
+      if(!naCriacao) body += '<button type="button" class="btn secondary" data-action="assim-clareza-toggle">'+(clarezaAberta?"Fechar Clareza de Propósito":"Clareza de Propósito")+'</button>';
       body += '</div>';
     }
 
@@ -9918,7 +10219,7 @@ textarea[data-notas]{ font-family:"Rabisco Fino",cursive; font-size:18px; line-h
     // retroativamente qualquer mutação (de qualquer categoria) que a personagem já tinha
     // antes desse sistema existir na ficha, sem precisar simular um Teste de Assimilação
     // pra "sortear" a carta certa. Pedido do Marco em 27/09/2026.
-    body += '<div class="card tight" style="margin-top:10px">' +
+    if(!naCriacao) body += '<div class="card tight" style="margin-top:10px">' +
       '<h3 style="margin-bottom:8px">Adicionar mutação manualmente</h3>' +
       '<div class="hint ajuda"><p>Use para registrar:</p><ul><li>uma Assimilação Singular dada pelo Assimilador (elas nunca saem no Teste);</li><li>uma mutação que a personagem já tinha antes de a ficha controlar isso.</li></ul></div>' +
       '<div class="row" style="gap:8px;flex-wrap:wrap;align-items:center">' +
@@ -9963,7 +10264,9 @@ textarea[data-notas]{ font-family:"Rabisco Fino",cursive; font-size:18px; line-h
       '<div class="cx-acoes"><button type="button" class="btn secondary" data-action="assim-remover" data-mutid="'+esc(m.id)+'">Remover mutação</button></div>';
     return { titulo:esc(card[0]+" — "+tier[1]), corpo:corpo, lado:"direita", largura:420 };
   };
+  function renderFichaOuCriacao(){ if(state.view === "wizard") render(); else renderSheet(); }
   function bindMutacoesCard(c){
+    var renderSheet = renderFichaOuCriacao; // na criação (passo dos Testes) redesenha a criação
     app.querySelectorAll('[data-mutcardtoggle]').forEach(function(el){
       el.addEventListener("click", function(){
         var id = el.getAttribute("data-mutcardtoggle");
@@ -9985,6 +10288,7 @@ textarea[data-notas]{ font-family:"Rabisco Fino",cursive; font-size:18px; line-h
         assimVistos[entrada.id] = true;
         marcarPendenteOuSalvar(c, "assim");
         if(state.view === "sheet" && !state.sheetEditing && state.charId === c.id) renderSheet();
+        else if(state.view === "wizard" && state.draft === c) render();
       });
     });
     var clarezaToggle = app.querySelector('[data-action="assim-clareza-toggle"]');
@@ -10311,14 +10615,12 @@ textarea[data-notas]{ font-family:"Rabisco Fino",cursive; font-size:18px; line-h
         render();
       });
       var delBtn = app.querySelector('[data-action="delete"]');
-      if(delBtn) delBtn.addEventListener("click", function(){ state.deleteConfirm = true; render(); });
+      if(delBtn) delBtn.addEventListener("click", function(){ apagarFichaDaMesa(c.id, function(){ goto("roster"); }); });
     });
     tentar("Assimilação", function(){ bindMutacoesCard(c); });
     tentar("Evoluir", function(){ bindEvoluir(c); });
-    if(!modoBase){
-      tentar("Documentos", function(){ bindDocsFicha(); });
-      tentar("Teste", function(){ bindSheetTest(c); });
-    }
+    if(!modoBase) tentar("Documentos", function(){ bindDocsFicha(); });
+    tentar("Teste", function(){ bindSheetTest(c); });
     tentar("ficha", function(){ bindSheetCampos(c, maxNivel); });
     tentar("Navegação", bindFichaNav);
   }
@@ -10813,6 +11115,11 @@ textarea[data-notas]{ font-family:"Rabisco Fino",cursive; font-size:18px; line-h
   };
   function bindSheetTest(c){
     var t = state.sheetTest;
+    // Ficha fora de campanha: treino com os valores da ficha. Os gastos (Agir por
+    // Instinto, Empenho, etiquetas) mexem numa cópia descartável: a ficha não muda.
+    var treino = !!modoBase;
+    if(treino) c = clonar(c);
+    function pendTeste(x){ if(!treino) marcarPendenteOuSalvar(x, "teste"); }
     if(t.rolling){ iniciarTickerDados(); }
     var instSel = app.querySelector('[data-test="instinto"]');
     if(instSel) instSel.addEventListener("change", function(){ t.instintoKey = instSel.value; t.results = []; t.registered = false; renderSheet(); });
@@ -10884,7 +11191,7 @@ textarea[data-notas]{ font-family:"Rabisco Fino",cursive; font-size:18px; line-h
         else if(t.agirSnapshot){ c.determinacao.caixaAtual = t.agirSnapshot.caixaAtual; c.determinacao.pontosAtual = t.agirSnapshot.pontosAtual; }
         t.agirSnapshot = null;
       }
-      marcarPendenteOuSalvar(c, "teste");
+      pendTeste(c);
       t.agir = ligar; t.results = []; t.registered = false; renderSheet();
     });
     // Manter +1 dado extra é o Empenho (livro definitivo pág. 59): só gasta
@@ -10901,7 +11208,7 @@ textarea[data-notas]{ font-family:"Rabisco Fino",cursive; font-size:18px; line-h
         c.determinacao.pontosAtual = t.extraSnapshot.pontosAtual;
         t.extraSnapshot = null;
       }
-      marcarPendenteOuSalvar(c, "teste");
+      pendTeste(c);
       t.extraDado = ligar; renderSheet();
     });
     var rollBtn = app.querySelector('[data-testaction="roll"]');
@@ -10990,7 +11297,7 @@ textarea[data-notas]{ font-family:"Rabisco Fino",cursive; font-size:18px; line-h
         if(m.det && determinacaoDisponivel(c)){ if(gastarDeterminacao(c, m.det)) marcarFlashSuscetivel(c); gastouMod = true; }
         if(m.assim && assimilacaoDisponivel(c)){ gastarAssimilacao(c, m.assim); gastouMod = true; }
       });
-      if(gastouMod) marcarPendenteOuSalvar(c, "teste");
+      if(gastouMod) pendTeste(c);
       t.final = { s:fin.s, a:fin.a, p:fin.p, mudou:fin.mudou };
       var modsNomes = fin.ativos.map(function(m){ return m.nome + (modEfeitoTexto(m) ? " (" + modEfeitoTexto(m) + ")" : ""); });
       totS = fin.s; totA = fin.a; totP = fin.p;
@@ -11014,7 +11321,8 @@ textarea[data-notas]{ font-family:"Rabisco Fino",cursive; font-size:18px; line-h
       // esperar o debounce de schedulePublish. Sem gasto pendente, força a
       // mesma publicação imediata (em vez de esperar até 1,2s) - confirmar é
       // uma ação deliberada, não precisa de debounce.
-      if(temPendente(c)){ confirmarPendente(c); }
+      if(treino){ /* nada a gravar */ }
+      else if(temPendente(c)){ confirmarPendente(c); }
       else { clearTimeout(publishTimer); doPublish(); }
       t.registered = true;
       renderSheet();
@@ -11030,7 +11338,7 @@ textarea[data-notas]{ font-family:"Rabisco Fino",cursive; font-size:18px; line-h
   // Na edição comum (fora do "Refazer"), só o Assimilador mexe no passo de Experiência.
   function editPassos(c){
     // O Cabo de Guerra é mexido direto na ficha, não na edição.
-    var vis = wizEtapas().filter(function(st){ return st !== 7; });
+    var vis = wizEtapas().filter(function(st){ return st !== 7 && st !== 8; });
     // Passo 6 continua aparecendo pra quem já tem Artefato, mesmo com a etapa desligada.
     if(vis.indexOf(6) < 0 && c && c.equip && c.equip.nome) vis.push(6);
     var temExtras = (cfgCriacao().camposExtras||[]).length > 0 || (c && !c.acampamento && grupoOpcoes().length > 0);
@@ -11373,12 +11681,12 @@ textarea[data-notas]{ font-family:"Rabisco Fino",cursive; font-size:18px; line-h
   function renderRollFeed(){
     var feed = document.getElementById("rollfeed");
     if(!feed) return;
-    if(modoBase){ feed.innerHTML = ""; return; } // etapa H: fora de campanha não há rolagens
+    // Fora de campanha (ficha-base): rolagens de treino, só nesta tela e sem gravar.
     var log = testLogVisivelPara(testLog());
     var collapsed = state.rollFeedCollapsed;
     var listHtml = log.length
       ? log.map(rollFeedEntryHtml).join('')
-      : '<p class="hint" style="margin:4px 0">Nenhuma ação ainda.</p>';
+      : '<p class="hint" style="margin:4px 0">'+(modoBase ? 'Rolagens desta ficha ficam só nesta tela.' : 'Nenhuma ação ainda.')+'</p>';
     var html = '<div class="rollfeed'+(collapsed?' collapsed':'')+'">' +
       '<button type="button" class="rollfeed-toggle" data-rollfeed="toggle">' +
         '<span>🎲 Histórico de Ações'+(log.length?' ('+log.length+')':'')+'</span><span>'+(collapsed?'▸':'▾')+'</span>' +
@@ -11590,14 +11898,51 @@ textarea[data-notas]{ font-family:"Rabisco Fino",cursive; font-size:18px; line-h
     var n = 0;
     var html = esc(txt).replace(/(\d+)d(6|10|12)(\/2)?/g, function(m){
       var k = chave+"-"+(n++), r = (state.bestDano||{})[k];
-      return '<button type="button" class="best-dano" data-bdano="'+m+'" data-bdkey="'+esc(k)+'" title="Rolar dano">🎲 '+m+(r!=null?' <b>= '+r+'</b>':'')+'</button>';
+      var det = (r && r.dados) ? r.dados.map(function(d){ return d.face + " → " + d.n; }).join(" · ") + (r.metade ? " (metade, para cima)" : "") : "";
+      return '<button type="button" class="best-dano" data-bdano="'+m+'" data-bdkey="'+esc(k)+'" title="'+(det ? esc("Faces: "+det+". Cada símbolo vale 1 de dano.") : "Rolar dano: cada símbolo vale 1")+'">🎲 '+m +
+        (r && r.dados ? ' <b>= '+r.total+'</b>'+(r.dados.length > 1 ? ' <span class="best-dano-det">('+r.dados.map(function(d){ return d.n; }).join("+")+')</span>' : '') : '')+'</button>';
     });
     return iconizarTexto(html);
   }
+  // Dano (livro, pág. 66): conta os símbolos de cada dado (Sucesso, Adaptação ou
+  // Pressão, tanto faz), não o número da face. "/2" = metade, arredondada para cima.
   function bestRolarExpr(expr){
-    var m = /^(\d+)d(\d+)(\/2)?$/.exec(expr); if(!m) return 0;
-    var tot = 0; for(var i=0;i<parseInt(m[1],10);i++) tot += 1 + Math.floor(Math.random()*parseInt(m[2],10));
-    return m[3] ? Math.ceil(tot/2) : tot;
+    var m = /^(\d+)d(6|10|12)(\/2)?$/.exec(expr); if(!m) return null;
+    var dados = [];
+    for(var i=0;i<Math.min(20, parseInt(m[1],10));i++){ var d = rollDie(parseInt(m[2],10)); dados.push({ face:d.face, n:d.s + d.a + d.p }); }
+    var tot = sum(dados.map(function(d){ return d.n; }));
+    return { total: m[3] ? Math.ceil(tot/2) : tot, dados:dados, metade:!!m[3] };
+  }
+  // Conversão única do dano das criaturas para a contagem de símbolos, mantendo a força
+  // de antes: 1d6/2 → 1d10, 1d6 → 2d10, 1d10 → 3d10, 1d12 → 4d10.
+  var DANO_CONV = { "1d6/2":"1d10", "1d6":"2d10", "1d10":"3d10", "1d12":"4d10" };
+  function converterDanoTexto(t){ return String(t).replace(/\b1d(?:6\/2|6|10|12)\b/g, function(m){ return DANO_CONV[m] || m; }); }
+  function converterDanoObj(o){
+    if(typeof o === "string") return converterDanoTexto(o);
+    if(Array.isArray(o)) return o.map(converterDanoObj);
+    if(o && typeof o === "object"){ var r = {}; Object.keys(o).forEach(function(k){ r[k] = (k === "id" || k === "criaturaId") ? o[k] : converterDanoObj(o[k]); }); return r; }
+    return o;
+  }
+  function temDanoAntigo(o){ return JSON.stringify(o) !== JSON.stringify(converterDanoObj(o)); }
+  function precisaConverterDano(){
+    if(!campanhaAtual || campanhaAtual.danoSimbolos) return false;
+    return criaturasLista().some(temDanoAntigo) || encontrosLista().some(function(e){ return e.criatura && temDanoAntigo(e.criatura); });
+  }
+  function converterDanoCampanha(rerender){
+    if(!FB || !ehMestre() || !campanhaAtual) return;
+    askConfirm("Converter o dano das criaturas desta campanha?\n\n1d6/2 → 1d10 · 1d6 → 2d10 · 1d10 → 3d10 · 1d12 → 4d10\n\nVale para o catálogo e para as criaturas em cena. Antes, o catálogo atual é baixado em .json.", function(){
+      exportarCatalogo();
+      var ops = [], agora = agoraIso();
+      criaturasLista().forEach(function(c){ if(temDanoAntigo(c)) ops.push({ tipo:"set", col:"criaturas", id:c.id, data:paraFirestore(converterDanoObj(c)) }); });
+      encontrosLista().forEach(function(e){ if(e.criatura && temDanoAntigo(e.criatura)){ var n = clonar(e); n.criatura = converterDanoObj(e.criatura); ops.push({ tipo:"set", col:"encontros", id:e.id, data:paraFirestore(n) }); } });
+      ops.push({ tipo:"update", col:"/campanhas", id:campanhaAtual.id, data:{ danoSimbolos:agora } });
+      var cid = campanhaAtual.id;
+      FB.escrever(ops).then(function(){
+        if(campanhaAtual && campanhaAtual.id === cid) campanhaAtual.danoSimbolos = agora;
+        state.bestDano = {};
+        avisar("Dano das criaturas convertido.", "ok"); rerender();
+      }).catch(function(e){ console.error("[Pangea] converter dano", e); avisar("Não deu pra converter: " + ((e && (e.code || e.message)) || "erro desconhecido") + ". Nada mudou."); });
+    });
   }
   function bestRolarPilha(p){
     var dados = [];
@@ -12134,6 +12479,8 @@ textarea[data-notas]{ font-family:"Rabisco Fino",cursive; font-size:18px; line-h
     if(!encs.length) body += '<p class="hint">Nenhuma criatura em cena.</p>';
     encs.forEach(function(enc){ body += bestEncontroHtml(enc); });
     body += '<p class="best-grupo-tit">Catálogo</p>';
+    if(!state.bestEdit && precisaConverterDano()) body += '<div class="card tight best-conv"><p style="margin:0 0 6px"><b>Dano por símbolos.</b> Cada símbolo do dado vale 1 de dano. Para manter a força das criaturas: 1d6/2 → 1d10 · 1d6 → 2d10 · 1d10 → 3d10 · 1d12 → 4d10.</p>' +
+      '<button type="button" class="btn accent doc-btn" data-bconvdano="1">Converter o dano das criaturas</button></div>';
     if(state.bestEdit){ body += bestEditorHtml(); }
     else {
       body += '<div class="row" style="gap:6px;flex-wrap:wrap;margin:0 0 8px">' +
@@ -12179,6 +12526,7 @@ textarea[data-notas]{ font-family:"Rabisco Fino",cursive; font-size:18px; line-h
       setTimeout(function(){ var e = app.querySelector("#best-editor"); if(e && e.scrollIntoView) e.scrollIntoView({block:"start"}); }, 0);
     });
     on("[data-bexportar]", "click", function(){ exportarCatalogo(); });
+    on("[data-bconvdano]", "click", function(){ converterDanoCampanha(rerender); });
     on("[data-bcopiar]", "click", function(el){
       var cri = bestCriatura(el.getAttribute("data-bcopiar")); if(!cri) return;
       copiarTexto(codigoDeUm("catalogo-criaturas-assimilacao", "criaturas", criaturaExportavel(cri)), el);
@@ -13069,7 +13417,7 @@ textarea[data-notas]{ font-family:"Rabisco Fino",cursive; font-size:18px; line-h
           '<div class="row gm-acoes" style="gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end;min-width:0">' +
             '<label class="gm-npc" style="display:flex;align-items:center;gap:5px;text-transform:none;margin:0;font-size:12px"><input type="checkbox" style="width:auto" data-gmnpc="'+esc(c.id)+'"'+(c.ehNpc?' checked':'')+'> NPC</label>' +
             (!c.donoUid ? passarParaHtml(c) : '') +
-            (caps.canEdit ? '<button class="btn secondary" data-gmdelmesa="'+esc(c.id)+'" style="padding:4px 10px;font-size:11px">excluir</button>' : '') +
+            (caps.canEdit ? '<button class="btn secondary" data-gmdelmesa="'+esc(c.id)+'" style="padding:4px 10px;font-size:11px">'+(fichaDeOutraConta(c) ? 'remover' : 'apagar')+'</button>' : '') +
           '</div>' +
         '</div><button type="button" class="card-toggle" data-collapse-toggle="'+dobraId+'" title="'+(charFechado?"Expandir":"Minimizar")+'">'+(charFechado?"▸":"▾")+'</button>' +
         '</div>';
@@ -13107,9 +13455,17 @@ textarea[data-notas]{ font-family:"Rabisco Fino",cursive; font-size:18px; line-h
           if(caps.mode==="mesa"){ clearTimeout(publishTimer); doPublish(); }
           renderGmMesa();
         };
+        // Ficha de jogador: antes de virar NPC, uma cópia fica guardada na conta dele.
+        var guardarEAplicar = function(){
+          if(!FB || !campanhaAtual){ aplicar(); return; }
+          guardarFichaDaCampanha(paraFirestore(c), campanhaAtual.id, campanhaAtual.nome || "").then(aplicar).catch(function(err){
+            console.error("[Pangea] guardar antes de virar NPC", err);
+            avisar("Não deu pra guardar a ficha na conta do jogador: " + ((err && (err.code || err.message)) || "erro desconhecido") + ". Ela continua como estava.");
+          });
+        };
         if(marcar && c.donoUid){
           el.checked = false; // só marca depois de confirmar
-          askConfirm("Marcar "+(c.nomePersonagem||"esta ficha")+" como NPC? Ela sai da conta "+(c.donoEmail||"vinculada")+" e passa a ser vista só por você.", aplicar);
+          askConfirm("Marcar "+(c.nomePersonagem||"esta ficha")+" como NPC? Ela passa a ser vista só por você. A conta "+(c.donoEmail||"vinculada")+" fica com uma cópia guardada.", guardarEAplicar);
           return;
         }
         aplicar();
@@ -13140,12 +13496,7 @@ textarea[data-notas]{ font-family:"Rabisco Fino",cursive; font-size:18px; line-h
       btn.addEventListener("click", function(e){
         e.stopPropagation();
         if(!podeEditar()) return;
-        var id = btn.getAttribute("data-gmdelmesa");
-        var c = getChar(id);
-        askConfirm('Excluir "'+(c?c.nomePersonagem:"este personagem")+'" da mesa pra sempre?', function(){
-          deleteChar(id);
-          renderGmMesa();
-        });
+        apagarFichaDaMesa(btn.getAttribute("data-gmdelmesa"), renderGmMesa);
       });
     });
   }
