@@ -316,6 +316,32 @@
   .ajuda-box ol{ margin:0; padding-left:20px; }
   .ajuda-box li{ margin:0 0 6px; line-height:1.4; overflow-wrap:anywhere; }
   .ajuda-box .hint{ margin:10px 0 0; white-space:normal; }
+  /* Apoie com Pix (18/11/2026) */
+  .apoio-box{ max-width:400px; }
+  .apoio-box p{ margin:0 0 10px; line-height:1.45; white-space:normal; }
+  .apoio-box .apoio-opc{ color:var(--ink); font-weight:600; }
+  .apoio-pix{ display:flex; flex-direction:column; align-items:center; gap:8px; margin:12px 0 2px; }
+  .pix-qr{ width:min(200px, 60vw); height:auto; display:block; border-radius:6px; }
+  .apoio-cod[hidden]{ display:none; }
+  .apoio-cod{ width:100%; box-sizing:border-box; font:12px/1.35 ui-monospace,Consolas,monospace; padding:6px 8px; resize:none;
+    color:var(--ink); background:var(--surface-2, var(--surface)); border:1px solid var(--border); border-radius:6px; overflow-wrap:anywhere; }
+  .apoio-chave{ font-size:12px; color:var(--ink-muted); text-align:center; overflow-wrap:anywhere; }
+  /* Botão fixo "Apoie Pangea": ao lado do pincel (no celular, acima dele). Forma, altura e estilo diferentes
+     do pincel e com espaço entre os dois, pra ninguém clicar achando que é a personalização. */
+  .apoio-btn{ position:fixed; left:70px; bottom:16px; z-index:8990; height:36px; box-sizing:border-box;
+    display:inline-flex; align-items:center; gap:7px; padding:0 12px; border-radius:999px;
+    border:1.5px solid var(--border-strong); background:var(--surface); color:var(--ink); cursor:pointer;
+    font-family:"Oswald",sans-serif; font-weight:600; font-size:13px; text-transform:uppercase; letter-spacing:.05em; white-space:nowrap; }
+  .apoio-qr-ico{ width:20px; height:20px; display:block; }
+  .apoio-btn:hover{ border-color:var(--good); }
+  .apoio-btn:focus-visible{ outline:3px solid var(--accent); outline-offset:2px; }
+  body:has(.aparencia-painel) .apoio-btn, body:has(.dica-aa) .apoio-btn, body:has(#apoio-pix) .apoio-btn{ display:none; }
+  @media (max-width:600px){
+    .apoio-btn{ left:12px; bottom:68px; }
+    body:has(.rollfeed:not(.collapsed)) .apoio-btn{ display:none; }
+    body:has(#apoio-btn){ padding-bottom:58px; }
+  }
+  .aparencia-btn svg{ width:24px; height:24px; display:block; margin:auto; }
   .ajuda-x{ position:absolute; top:8px; right:8px; width:30px; height:30px; padding:0; border:0; background:transparent; color:var(--ink-muted);
     font-size:22px; line-height:1; cursor:pointer; border-radius:var(--radius); }
   .ajuda-x:hover{ color:var(--ink); background:var(--surface-2); }
@@ -7058,9 +7084,9 @@ textarea[data-notas]{ font-family:"Rabisco Fino",cursive; font-size:18px; line-h
     if(document.getElementById("aparencia-btn")) return;
     var btn = document.createElement("button");
     btn.id = "aparencia-btn"; btn.type = "button"; btn.className = "aparencia-btn";
-    btn.setAttribute("aria-label", "Aparência: cores, texto e estilo");
-    btn.setAttribute("aria-expanded", "false"); btn.title = "Aparência";
-    btn.textContent = "Aa";
+    btn.setAttribute("aria-label", "Personalizar: cores, texto e estilo");
+    btn.setAttribute("aria-expanded", "false"); btn.title = "Personalizar";
+    btn.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 3.4l-6.9 6.9" stroke-width="2.4"/><path d="M12.4 9.2l2.4 2.4-1.7 1.7-2.4-2.4z"/><path d="M10.4 11.2c-2.3-.2-3.9 1.1-4.3 3-.4 1.7-1.3 3.2-3.1 4.3 2.7 1.3 6.3.9 8.1-1.3 1.1-1.4 1.4-3 1.2-4.1" fill="currentColor"/></svg>';
     document.body.appendChild(btn);
     var painel = null;
     function fechar(){ if(painel){ painel.remove(); painel = null; } btn.setAttribute("aria-expanded","false"); }
@@ -7104,7 +7130,7 @@ textarea[data-notas]{ font-family:"Rabisco Fino",cursive; font-size:18px; line-h
         if(document.getElementById("dica-aa") || lerPref(DICA_AA_KEY, "") === "1" || painel) return;
         var d = document.createElement("div"); d.id = "dica-aa"; d.className = "dica-aa"; d.setAttribute("role", "dialog"); d.setAttribute("aria-labelledby", "dica-aa-t");
         d.innerHTML = '<h3 id="dica-aa-t">Deixe o site do seu jeito</h3>' +
-          '<p>No botão <b>Aa</b> você escolhe o tema de cores, o tamanho do texto, a fonte, o espaçamento e as animações. Fica salvo neste aparelho.</p>' +
+          '<p>No <b>botão de personalização</b> você escolhe o tema de cores, o tamanho do texto, a fonte, o espaçamento e as animações. Fica salvo neste aparelho.</p>' +
           '<div class="row"><button type="button" class="btn secondary" data-dicaaa="ok">Entendi</button><button type="button" class="btn accent" data-dicaaa="abrir">Abrir</button></div>';
         document.body.appendChild(d);
         d.querySelector('[data-dicaaa="ok"]').addEventListener("click", function(e){ e.stopPropagation(); fecharDica(); btn.focus(); });
@@ -7700,6 +7726,70 @@ textarea[data-notas]{ font-family:"Rabisco Fino",cursive; font-size:18px; line-h
   document.addEventListener("keydown", function(ev){
     if(ev.key === "Escape" && document.getElementById("ajuda-img")){ ev.stopPropagation(); fecharAjudaImg(); }
   }, true);
+  // ---------- APOIE COM PIX (18/11/2026) ----------
+  // Totalmente opcional. Pix estático sem valor (quem doa escolhe). Para tirar o botão: deixar PIX_COPIA_COLA vazio.
+  var PIX_CHAVE = "68e908af-2ce9-475b-ba3e-3b2b018c14ea";
+  var PIX_COPIA_COLA = "00020126970014BR.GOV.BCB.PIX013668e908af-2ce9-475b-ba3e-3b2b018c14ea0235Obgd por apoiar Pangea!    _hudgens5204000053039865802BR5925Marco Aurelio Santos Barr6009SAO PAULO621405108lwEq7YMdO6304691C";
+  var PIX_QR_SVG = "<svg class=\"pix-qr\" viewBox=\"0 0 57 57\" role=\"img\" aria-label=\"QR Code do Pix\" shape-rendering=\"crispEdges\"><rect width=\"57\" height=\"57\" fill=\"#fff\"/><path fill=\"#000\" d=\"M2 2h7v1h-7zM10 2h2v1h-2zM13 2h2v1h-2zM16 2h2v1h-2zM21 2h1v1h-1zM25 2h6v1h-6zM32 2h1v1h-1zM37 2h3v1h-3zM41 2h1v1h-1zM43 2h2v1h-2zM48 2h7v1h-7zM2 3h1v1h-1zM8 3h1v1h-1zM10 3h1v1h-1zM12 3h1v1h-1zM16 3h5v1h-5zM22 3h1v1h-1zM25 3h1v1h-1zM28 3h2v1h-2zM32 3h1v1h-1zM34 3h1v1h-1zM36 3h3v1h-3zM40 3h3v1h-3zM44 3h2v1h-2zM48 3h1v1h-1zM54 3h1v1h-1zM2 4h1v1h-1zM4 4h3v1h-3zM8 4h1v1h-1zM11 4h4v1h-4zM19 4h1v1h-1zM21 4h2v1h-2zM25 4h3v1h-3zM30 4h2v1h-2zM33 4h1v1h-1zM36 4h2v1h-2zM40 4h1v1h-1zM45 4h1v1h-1zM48 4h1v1h-1zM50 4h3v1h-3zM54 4h1v1h-1zM2 5h1v1h-1zM4 5h3v1h-3zM8 5h1v1h-1zM10 5h2v1h-2zM20 5h3v1h-3zM31 5h3v1h-3zM36 5h2v1h-2zM39 5h2v1h-2zM44 5h1v1h-1zM46 5h1v1h-1zM48 5h1v1h-1zM50 5h3v1h-3zM54 5h1v1h-1zM2 6h1v1h-1zM4 6h3v1h-3zM8 6h1v1h-1zM11 6h3v1h-3zM19 6h2v1h-2zM22 6h1v1h-1zM24 6h1v1h-1zM26 6h5v1h-5zM34 6h1v1h-1zM39 6h1v1h-1zM42 6h3v1h-3zM48 6h1v1h-1zM50 6h3v1h-3zM54 6h1v1h-1zM2 7h1v1h-1zM8 7h1v1h-1zM11 7h2v1h-2zM14 7h1v1h-1zM17 7h2v1h-2zM22 7h1v1h-1zM24 7h1v1h-1zM26 7h1v1h-1zM30 7h1v1h-1zM32 7h1v1h-1zM35 7h1v1h-1zM37 7h2v1h-2zM42 7h1v1h-1zM44 7h1v1h-1zM48 7h1v1h-1zM54 7h1v1h-1zM2 8h7v1h-7zM10 8h1v1h-1zM12 8h1v1h-1zM14 8h1v1h-1zM16 8h1v1h-1zM18 8h1v1h-1zM20 8h1v1h-1zM22 8h1v1h-1zM24 8h1v1h-1zM26 8h1v1h-1zM28 8h1v1h-1zM30 8h1v1h-1zM32 8h1v1h-1zM34 8h1v1h-1zM36 8h1v1h-1zM38 8h1v1h-1zM40 8h1v1h-1zM42 8h1v1h-1zM44 8h1v1h-1zM46 8h1v1h-1zM48 8h7v1h-7zM10 9h3v1h-3zM14 9h3v1h-3zM21 9h2v1h-2zM25 9h2v1h-2zM30 9h2v1h-2zM33 9h4v1h-4zM38 9h1v1h-1zM40 9h1v1h-1zM42 9h2v1h-2zM45 9h2v1h-2zM2 10h1v1h-1zM4 10h2v1h-2zM7 10h3v1h-3zM11 10h2v1h-2zM14 10h1v1h-1zM16 10h1v1h-1zM19 10h2v1h-2zM23 10h8v1h-8zM35 10h1v1h-1zM37 10h1v1h-1zM39 10h2v1h-2zM42 10h1v1h-1zM45 10h1v1h-1zM48 10h1v1h-1zM51 10h1v1h-1zM53 10h2v1h-2zM2 11h1v1h-1zM4 11h1v1h-1zM6 11h2v1h-2zM9 11h2v1h-2zM14 11h2v1h-2zM17 11h1v1h-1zM23 11h2v1h-2zM26 11h1v1h-1zM28 11h7v1h-7zM37 11h3v1h-3zM43 11h1v1h-1zM46 11h2v1h-2zM49 11h1v1h-1zM51 11h3v1h-3zM2 12h2v1h-2zM7 12h3v1h-3zM14 12h1v1h-1zM18 12h3v1h-3zM25 12h1v1h-1zM28 12h3v1h-3zM34 12h1v1h-1zM36 12h1v1h-1zM43 12h1v1h-1zM45 12h1v1h-1zM49 12h1v1h-1zM51 12h2v1h-2zM2 13h3v1h-3zM7 13h1v1h-1zM9 13h1v1h-1zM11 13h10v1h-10zM22 13h1v1h-1zM24 13h1v1h-1zM30 13h1v1h-1zM32 13h3v1h-3zM36 13h2v1h-2zM39 13h1v1h-1zM41 13h1v1h-1zM45 13h2v1h-2zM48 13h1v1h-1zM50 13h2v1h-2zM54 13h1v1h-1zM3 14h1v1h-1zM6 14h3v1h-3zM11 14h1v1h-1zM13 14h1v1h-1zM15 14h1v1h-1zM17 14h2v1h-2zM21 14h3v1h-3zM26 14h1v1h-1zM28 14h2v1h-2zM31 14h2v1h-2zM35 14h5v1h-5zM41 14h1v1h-1zM43 14h1v1h-1zM46 14h3v1h-3zM50 14h4v1h-4zM5 15h1v1h-1zM7 15h1v1h-1zM9 15h1v1h-1zM11 15h2v1h-2zM14 15h3v1h-3zM19 15h2v1h-2zM22 15h1v1h-1zM25 15h1v1h-1zM28 15h1v1h-1zM30 15h2v1h-2zM33 15h1v1h-1zM35 15h1v1h-1zM37 15h1v1h-1zM40 15h1v1h-1zM42 15h1v1h-1zM45 15h2v1h-2zM49 15h2v1h-2zM52 15h1v1h-1zM3 16h4v1h-4zM8 16h1v1h-1zM10 16h1v1h-1zM17 16h2v1h-2zM20 16h1v1h-1zM24 16h8v1h-8zM34 16h1v1h-1zM39 16h2v1h-2zM42 16h1v1h-1zM44 16h2v1h-2zM50 16h1v1h-1zM54 16h1v1h-1zM2 17h1v1h-1zM4 17h2v1h-2zM7 17h1v1h-1zM9 17h2v1h-2zM12 17h1v1h-1zM19 17h2v1h-2zM22 17h1v1h-1zM25 17h3v1h-3zM30 17h1v1h-1zM34 17h2v1h-2zM41 17h2v1h-2zM44 17h1v1h-1zM47 17h1v1h-1zM50 17h2v1h-2zM3 18h3v1h-3zM7 18h2v1h-2zM10 18h1v1h-1zM12 18h2v1h-2zM16 18h3v1h-3zM21 18h1v1h-1zM23 18h1v1h-1zM25 18h1v1h-1zM29 18h2v1h-2zM33 18h3v1h-3zM39 18h1v1h-1zM42 18h1v1h-1zM45 18h1v1h-1zM47 18h1v1h-1zM49 18h1v1h-1zM51 18h1v1h-1zM2 19h1v1h-1zM4 19h1v1h-1zM9 19h1v1h-1zM11 19h8v1h-8zM20 19h1v1h-1zM23 19h1v1h-1zM27 19h1v1h-1zM29 19h1v1h-1zM31 19h1v1h-1zM34 19h3v1h-3zM42 19h2v1h-2zM45 19h1v1h-1zM47 19h2v1h-2zM2 20h1v1h-1zM7 20h2v1h-2zM10 20h2v1h-2zM20 20h4v1h-4zM25 20h1v1h-1zM27 20h3v1h-3zM33 20h1v1h-1zM40 20h3v1h-3zM45 20h1v1h-1zM48 20h1v1h-1zM51 20h2v1h-2zM2 21h1v1h-1zM5 21h1v1h-1zM7 21h1v1h-1zM11 21h2v1h-2zM19 21h1v1h-1zM21 21h2v1h-2zM25 21h1v1h-1zM28 21h1v1h-1zM31 21h1v1h-1zM33 21h1v1h-1zM37 21h2v1h-2zM40 21h2v1h-2zM44 21h1v1h-1zM46 21h7v1h-7zM54 21h1v1h-1zM3 22h2v1h-2zM6 22h1v1h-1zM8 22h1v1h-1zM10 22h1v1h-1zM12 22h1v1h-1zM14 22h6v1h-6zM23 22h1v1h-1zM25 22h1v1h-1zM27 22h1v1h-1zM30 22h1v1h-1zM32 22h2v1h-2zM36 22h2v1h-2zM39 22h1v1h-1zM42 22h4v1h-4zM48 22h2v1h-2zM51 22h1v1h-1zM53 22h2v1h-2zM3 23h1v1h-1zM5 23h1v1h-1zM9 23h2v1h-2zM13 23h1v1h-1zM16 23h1v1h-1zM18 23h1v1h-1zM20 23h4v1h-4zM25 23h1v1h-1zM27 23h3v1h-3zM32 23h2v1h-2zM35 23h1v1h-1zM37 23h1v1h-1zM41 23h1v1h-1zM43 23h2v1h-2zM47 23h8v1h-8zM2 24h2v1h-2zM8 24h1v1h-1zM11 24h1v1h-1zM13 24h1v1h-1zM16 24h2v1h-2zM19 24h2v1h-2zM25 24h1v1h-1zM27 24h1v1h-1zM29 24h2v1h-2zM32 24h1v1h-1zM34 24h1v1h-1zM37 24h2v1h-2zM41 24h1v1h-1zM44 24h1v1h-1zM46 24h5v1h-5zM53 24h1v1h-1zM5 25h1v1h-1zM7 25h1v1h-1zM10 25h3v1h-3zM15 25h1v1h-1zM17 25h1v1h-1zM21 25h3v1h-3zM25 25h1v1h-1zM30 25h5v1h-5zM36 25h2v1h-2zM39 25h3v1h-3zM43 25h3v1h-3zM47 25h1v1h-1zM50 25h2v1h-2zM54 25h1v1h-1zM2 26h1v1h-1zM6 26h8v1h-8zM16 26h6v1h-6zM26 26h5v1h-5zM33 26h1v1h-1zM38 26h3v1h-3zM43 26h1v1h-1zM45 26h6v1h-6zM53 26h1v1h-1zM2 27h2v1h-2zM5 27h2v1h-2zM10 27h1v1h-1zM12 27h1v1h-1zM15 27h1v1h-1zM24 27h1v1h-1zM26 27h1v1h-1zM30 27h1v1h-1zM33 27h2v1h-2zM38 27h4v1h-4zM43 27h4v1h-4zM50 27h1v1h-1zM52 27h1v1h-1zM54 27h1v1h-1zM3 28h1v1h-1zM6 28h1v1h-1zM8 28h1v1h-1zM10 28h3v1h-3zM14 28h5v1h-5zM21 28h1v1h-1zM23 28h1v1h-1zM25 28h2v1h-2zM28 28h1v1h-1zM30 28h4v1h-4zM35 28h1v1h-1zM38 28h1v1h-1zM42 28h1v1h-1zM45 28h2v1h-2zM48 28h1v1h-1zM50 28h2v1h-2zM54 28h1v1h-1zM4 29h1v1h-1zM6 29h1v1h-1zM10 29h1v1h-1zM12 29h3v1h-3zM18 29h3v1h-3zM24 29h3v1h-3zM30 29h1v1h-1zM32 29h2v1h-2zM35 29h3v1h-3zM41 29h6v1h-6zM50 29h1v1h-1zM4 30h7v1h-7zM14 30h1v1h-1zM17 30h1v1h-1zM19 30h5v1h-5zM25 30h6v1h-6zM32 30h3v1h-3zM41 30h1v1h-1zM46 30h5v1h-5zM52 30h1v1h-1zM54 30h1v1h-1zM2 31h2v1h-2zM7 31h1v1h-1zM10 31h10v1h-10zM22 31h2v1h-2zM26 31h1v1h-1zM28 31h2v1h-2zM31 31h1v1h-1zM33 31h5v1h-5zM39 31h1v1h-1zM41 31h2v1h-2zM49 31h1v1h-1zM54 31h1v1h-1zM5 32h1v1h-1zM8 32h2v1h-2zM11 32h2v1h-2zM14 32h1v1h-1zM17 32h1v1h-1zM20 32h2v1h-2zM24 32h1v1h-1zM26 32h3v1h-3zM30 32h1v1h-1zM33 32h1v1h-1zM36 32h1v1h-1zM38 32h3v1h-3zM44 32h2v1h-2zM49 32h2v1h-2zM53 32h1v1h-1zM2 33h1v1h-1zM4 33h1v1h-1zM6 33h2v1h-2zM9 33h1v1h-1zM15 33h4v1h-4zM21 33h2v1h-2zM24 33h2v1h-2zM27 33h3v1h-3zM31 33h1v1h-1zM35 33h1v1h-1zM37 33h2v1h-2zM40 33h1v1h-1zM42 33h1v1h-1zM52 33h2v1h-2zM2 34h3v1h-3zM6 34h1v1h-1zM8 34h2v1h-2zM12 34h1v1h-1zM15 34h2v1h-2zM21 34h1v1h-1zM23 34h2v1h-2zM27 34h1v1h-1zM31 34h2v1h-2zM35 34h2v1h-2zM39 34h1v1h-1zM41 34h3v1h-3zM48 34h1v1h-1zM52 34h1v1h-1zM54 34h1v1h-1zM2 35h1v1h-1zM5 35h1v1h-1zM12 35h1v1h-1zM15 35h3v1h-3zM19 35h5v1h-5zM26 35h1v1h-1zM30 35h2v1h-2zM33 35h1v1h-1zM38 35h1v1h-1zM42 35h1v1h-1zM44 35h1v1h-1zM49 35h2v1h-2zM54 35h1v1h-1zM2 36h3v1h-3zM7 36h2v1h-2zM10 36h1v1h-1zM14 36h2v1h-2zM22 36h1v1h-1zM25 36h1v1h-1zM28 36h2v1h-2zM31 36h1v1h-1zM36 36h2v1h-2zM43 36h2v1h-2zM48 36h2v1h-2zM52 36h1v1h-1zM54 36h1v1h-1zM7 37h1v1h-1zM9 37h1v1h-1zM11 37h1v1h-1zM13 37h4v1h-4zM19 37h1v1h-1zM29 37h1v1h-1zM31 37h1v1h-1zM33 37h3v1h-3zM37 37h2v1h-2zM40 37h1v1h-1zM43 37h6v1h-6zM54 37h1v1h-1zM3 38h4v1h-4zM8 38h1v1h-1zM11 38h2v1h-2zM19 38h3v1h-3zM26 38h2v1h-2zM29 38h1v1h-1zM31 38h3v1h-3zM35 38h1v1h-1zM38 38h4v1h-4zM48 38h3v1h-3zM52 38h2v1h-2zM2 39h3v1h-3zM12 39h1v1h-1zM14 39h2v1h-2zM20 39h1v1h-1zM23 39h2v1h-2zM31 39h1v1h-1zM34 39h2v1h-2zM40 39h3v1h-3zM46 39h2v1h-2zM50 39h1v1h-1zM4 40h3v1h-3zM8 40h1v1h-1zM10 40h1v1h-1zM12 40h2v1h-2zM16 40h2v1h-2zM19 40h1v1h-1zM24 40h1v1h-1zM30 40h3v1h-3zM36 40h1v1h-1zM39 40h4v1h-4zM44 40h2v1h-2zM47 40h5v1h-5zM54 40h1v1h-1zM2 41h3v1h-3zM6 41h2v1h-2zM9 41h1v1h-1zM11 41h4v1h-4zM16 41h1v1h-1zM18 41h1v1h-1zM20 41h1v1h-1zM22 41h2v1h-2zM27 41h2v1h-2zM32 41h1v1h-1zM34 41h1v1h-1zM37 41h1v1h-1zM42 41h7v1h-7zM50 41h1v1h-1zM52 41h2v1h-2zM2 42h1v1h-1zM4 42h1v1h-1zM8 42h6v1h-6zM15 42h1v1h-1zM21 42h2v1h-2zM25 42h1v1h-1zM27 42h3v1h-3zM32 42h3v1h-3zM39 42h2v1h-2zM42 42h2v1h-2zM46 42h1v1h-1zM49 42h4v1h-4zM3 43h2v1h-2zM7 43h1v1h-1zM10 43h5v1h-5zM18 43h2v1h-2zM21 43h1v1h-1zM24 43h2v1h-2zM27 43h4v1h-4zM35 43h5v1h-5zM42 43h1v1h-1zM49 43h1v1h-1zM51 43h1v1h-1zM2 44h2v1h-2zM5 44h6v1h-6zM12 44h1v1h-1zM14 44h3v1h-3zM21 44h1v1h-1zM23 44h1v1h-1zM26 44h1v1h-1zM30 44h2v1h-2zM33 44h1v1h-1zM35 44h1v1h-1zM37 44h1v1h-1zM41 44h4v1h-4zM47 44h1v1h-1zM49 44h3v1h-3zM53 44h1v1h-1zM3 45h2v1h-2zM10 45h2v1h-2zM13 45h1v1h-1zM18 45h1v1h-1zM24 45h1v1h-1zM26 45h1v1h-1zM28 45h1v1h-1zM31 45h1v1h-1zM33 45h3v1h-3zM40 45h1v1h-1zM42 45h2v1h-2zM46 45h1v1h-1zM48 45h3v1h-3zM52 45h1v1h-1zM54 45h1v1h-1zM5 46h1v1h-1zM8 46h2v1h-2zM15 46h1v1h-1zM19 46h1v1h-1zM22 46h1v1h-1zM24 46h1v1h-1zM26 46h9v1h-9zM36 46h2v1h-2zM41 46h2v1h-2zM44 46h7v1h-7zM52 46h1v1h-1zM54 46h1v1h-1zM10 47h5v1h-5zM16 47h1v1h-1zM18 47h1v1h-1zM20 47h1v1h-1zM22 47h3v1h-3zM26 47h1v1h-1zM30 47h1v1h-1zM32 47h1v1h-1zM34 47h1v1h-1zM38 47h1v1h-1zM41 47h1v1h-1zM43 47h1v1h-1zM46 47h1v1h-1zM50 47h2v1h-2zM54 47h1v1h-1zM2 48h7v1h-7zM10 48h1v1h-1zM12 48h3v1h-3zM17 48h1v1h-1zM22 48h5v1h-5zM28 48h1v1h-1zM30 48h5v1h-5zM36 48h1v1h-1zM39 48h1v1h-1zM42 48h1v1h-1zM46 48h1v1h-1zM48 48h1v1h-1zM50 48h1v1h-1zM52 48h1v1h-1zM2 49h1v1h-1zM8 49h1v1h-1zM10 49h2v1h-2zM13 49h1v1h-1zM15 49h2v1h-2zM20 49h2v1h-2zM26 49h1v1h-1zM30 49h1v1h-1zM35 49h2v1h-2zM39 49h1v1h-1zM43 49h1v1h-1zM46 49h1v1h-1zM50 49h2v1h-2zM53 49h2v1h-2zM2 50h1v1h-1zM4 50h3v1h-3zM8 50h1v1h-1zM15 50h2v1h-2zM19 50h2v1h-2zM22 50h1v1h-1zM24 50h11v1h-11zM37 50h2v1h-2zM43 50h8v1h-8zM2 51h1v1h-1zM4 51h3v1h-3zM8 51h1v1h-1zM10 51h1v1h-1zM12 51h6v1h-6zM19 51h3v1h-3zM29 51h1v1h-1zM33 51h3v1h-3zM37 51h1v1h-1zM40 51h3v1h-3zM45 51h1v1h-1zM49 51h5v1h-5zM2 52h1v1h-1zM4 52h3v1h-3zM8 52h1v1h-1zM10 52h1v1h-1zM12 52h2v1h-2zM16 52h3v1h-3zM22 52h6v1h-6zM32 52h1v1h-1zM34 52h1v1h-1zM40 52h5v1h-5zM46 52h2v1h-2zM49 52h1v1h-1zM52 52h1v1h-1zM54 52h1v1h-1zM2 53h1v1h-1zM8 53h1v1h-1zM11 53h2v1h-2zM14 53h1v1h-1zM21 53h2v1h-2zM24 53h1v1h-1zM29 53h1v1h-1zM31 53h1v1h-1zM34 53h1v1h-1zM36 53h1v1h-1zM42 53h2v1h-2zM46 53h2v1h-2zM49 53h1v1h-1zM53 53h2v1h-2zM2 54h7v1h-7zM10 54h1v1h-1zM12 54h2v1h-2zM15 54h1v1h-1zM19 54h1v1h-1zM22 54h2v1h-2zM25 54h1v1h-1zM27 54h1v1h-1zM30 54h1v1h-1zM33 54h2v1h-2zM37 54h1v1h-1zM40 54h1v1h-1zM45 54h3v1h-3zM50 54h2v1h-2z\"/></svg>";
+  var apoioOrigem = null;
+  function fecharApoio(){
+    var el = document.getElementById("apoio-pix");
+    if(!el) return;
+    el.parentNode.removeChild(el);
+    var o = apoioOrigem; apoioOrigem = null;
+    if(o && o.isConnected) o.focus();
+  }
+  function copiarTexto(txt, campo){
+    if(navigator.clipboard && window.isSecureContext){ return navigator.clipboard.writeText(txt); }
+    return new Promise(function(ok, falha){
+      try{ campo.hidden = false; campo.focus(); campo.select(); if(document.execCommand("copy")){ campo.hidden = true; ok(); } else falha(); }catch(e){ falha(e); }
+    });
+  }
+  function abrirApoio(origem){
+    if(!PIX_COPIA_COLA) return;
+    fecharApoio();
+    apoioOrigem = origem || null;
+    var el = document.createElement("div"); el.id = "apoio-pix";
+    el.innerHTML = '<div class="confirm-overlay ajuda-ov">' +
+      '<div class="confirm-box ajuda-box apoio-box" role="dialog" aria-modal="true" aria-labelledby="apoio-t">' +
+        '<button type="button" class="ajuda-x" data-apoiofechar="1" aria-label="Fechar">×</button>' +
+        '<h3 id="apoio-t">Apoie Pangea</h3>' +
+        '<p class="apoio-opc">Totalmente opcional. A plataforma continua livre e nada muda para quem não doar.</p>' +
+        '<p>A doação não é pelo Assimilação RPG nem pelo conteúdo dos livros, que pertencem aos autores e à editora. É pela montagem e pelo planejamento da plataforma.</p>' +
+        '<p>A Pangea nasceu para as minhas campanhas com amigos. Se ela crescer, os serviços que mantêm o site no ar vão precisar de planos maiores, e é para isso que vai o que entrar.</p>' +
+        '<div class="apoio-pix">' + PIX_QR_SVG +
+          '<textarea class="apoio-cod" rows="3" readonly hidden aria-label="Pix copia e cola">'+esc(PIX_COPIA_COLA)+'</textarea>' +
+          '<button type="button" class="btn" data-apoiocopiar="1">Copiar Pix copia e cola</button>' +
+          (PIX_CHAVE ? '<span class="apoio-chave">Chave: '+esc(PIX_CHAVE)+'</span>' : '') +
+        '</div>' +
+      '</div></div>';
+    document.body.appendChild(el);
+    el.querySelector(".ajuda-ov").addEventListener("click", function(ev){
+      if(ev.target === ev.currentTarget || (ev.target.closest && ev.target.closest("[data-apoiofechar]"))){ fecharApoio(); return; }
+      var b = ev.target.closest && ev.target.closest("[data-apoiocopiar]");
+      if(b){
+        copiarTexto(PIX_COPIA_COLA, el.querySelector(".apoio-cod")).then(function(){ b.textContent = "Copiado!"; }, function(){ var c = el.querySelector(".apoio-cod"); c.hidden = false; c.select(); b.textContent = "Copie o código acima"; });
+        setTimeout(function(){ if(b.isConnected) b.textContent = "Copiar Pix copia e cola"; }, 2500);
+      }
+    });
+    el.querySelector(".ajuda-x").focus();
+  }
+  function montarApoio(){
+    if(!PIX_COPIA_COLA || document.getElementById("apoio-btn")) return;
+    var b = document.createElement("button");
+    b.id = "apoio-btn"; b.type = "button"; b.className = "apoio-btn"; b.setAttribute("data-apoio", "1");
+    b.setAttribute("aria-haspopup", "dialog"); b.title = "Apoie Pangea (Pix opcional)";
+    b.setAttribute("aria-label", "Apoie Pangea");
+    b.innerHTML = '<svg class="apoio-qr-ico" viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path fill-rule="evenodd" d="M3 3h7v7H3zm2 2v3h3V5zM14 3h7v7h-7zm2 2v3h3V5zM3 14h7v7H3zm2 2v3h3v-3z"/><path d="M14 14h3v3h-3zM18 14h3v2h-3zM17 17h2v2h-2zM14 18h2v3h-2zM19 19h2v2h-2zM17 20h1v1h-1z"/></svg>';
+    document.body.appendChild(b);
+  }
+  document.addEventListener("click", function(ev){
+    var b = ev.target && ev.target.closest && ev.target.closest("[data-apoio]");
+    if(b){ ev.preventDefault(); abrirApoio(b); }
+  });
+  document.addEventListener("keydown", function(ev){
+    if(ev.key === "Escape" && document.getElementById("apoio-pix")){ ev.stopPropagation(); fecharApoio(); }
+  }, true);
   function avisarErro(onde, e){
     var msg = (e && e.message) ? e.message : String(e);
     try{ console.error("[Pangea] " + onde + ":", e); }catch(_){}
@@ -7721,7 +7811,7 @@ textarea[data-notas]{ font-family:"Rabisco Fino",cursive; font-size:18px; line-h
     }
   }
   window.addEventListener("error", function(ev){ if(ev && ev.error) avisarErro("página", ev.error); });
-  tentar("Aparência", function(){ aplicarAparencia(); montarAparencia(); });
+  tentar("Aparência", function(){ aplicarAparencia(); montarAparencia(); montarApoio(); });
 
   function render(){
     tentar("Configuração", aplicarConfigCampanha);
