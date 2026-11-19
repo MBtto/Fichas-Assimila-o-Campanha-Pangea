@@ -1402,7 +1402,21 @@ textarea[data-notas]{ font-family:"Rabisco Fino",cursive; font-size:18px; line-h
 .inicio-btn:disabled::after{ content:none; }
 .inicio-btn[data-abrircmp]{ border-left-color:var(--capa, var(--accent)); }
 .inicio-btn.sem-fundo[data-abrircmp]{ border-left-color:var(--accent); }
-.inicio-btn .ib-cor.com-img{ width:46px; height:32px; background-size:cover; background-repeat:no-repeat; border:1px solid var(--border); }
+.inicio-btn .ib-cor.com-img, .ib-cor.com-img{ display:block; width:46px; height:32px; position:relative; overflow:hidden; border:1px solid var(--border); background:var(--surface-2, var(--surface)); }
+.ib-cor.com-img img{ display:block; width:100%; height:100%; object-fit:cover; pointer-events:none; user-select:none; }
+/* Miniatura na configuração da capa */
+.mini-cfg{ margin-top:14px; padding-top:12px; border-top:1px dashed var(--border); }
+.mini-cfg h4{ margin:0 0 8px; font-size:13px; }
+.mini-linha{ display:flex; gap:14px; align-items:flex-start; flex-wrap:wrap; }
+.ib-cor.mini-grande, .mini-grande{ display:block; width:138px; height:96px; border-radius:8px; flex:none; }
+.mini-grande.ib-cor:not(.com-img){ background:var(--capa, var(--accent)); }
+.mini-arrasta{ cursor:grab; touch-action:none; }
+.mini-arrasta:active{ cursor:grabbing; }
+.mini-lado{ flex:1; min-width:min(220px, 100%); display:flex; flex-direction:column; gap:8px; }
+.mini-modos{ display:flex; gap:6px; flex-wrap:wrap; }
+.mini-modos .btn[aria-pressed="true"]{ background:var(--ink); color:var(--bg); border-color:var(--ink); }
+.mini-cfg input[type=range]{ width:100%; margin:0; accent-color:var(--accent); display:block; height:30px; }
+.mini-cfg .field{ margin:0; }
 .inicio-btn.sem-fundo .ib-cor:not(.com-img){ background:transparent; border:1px dashed var(--border-strong, var(--border)); }
 /* Dica do botão de aparência (uma vez por aparelho) */
 .dica-aa{ position:fixed; left:12px; bottom:66px; z-index:9002; width:min(290px, calc(100vw - 24px)); box-sizing:border-box;
@@ -1594,6 +1608,15 @@ textarea[data-notas]{ font-family:"Rabisco Fino",cursive; font-size:18px; line-h
 .pdoc-overlay{ position:fixed; inset:0; z-index:9999; background:rgba(12,9,6,.82); overflow:auto; padding:40px 16px; display:flex; align-items:flex-start; justify-content:center; }
 .pdoc-overlay .pdoc-wrap{ width:100%; }
 .pdoc-fechar{ position:fixed; top:12px; right:14px; z-index:10000; background:#efe4c8 !important; color:#2a2118 !important; border-color:#efe4c8 !important; }
+.pdoc-exibir{ position:fixed; top:12px; left:14px; z-index:10000; background:#efe4c8 !important; color:#2a2118 !important; border-color:#efe4c8 !important; }
+.pdoc-quem{ position:fixed; top:12px; left:50%; transform:translateX(-50%); z-index:10000; max-width:calc(100vw - 220px); padding:7px 14px; border-radius:999px;
+  background:#efe4c8; color:#2a2118; font-size:13px; box-shadow:0 3px 0 rgba(0,0,0,.35); text-align:center; }
+@media (max-width:640px){ .pdoc-quem{ top:58px; max-width:calc(100vw - 28px); } .pdoc-overlay:has(.pdoc-quem){ padding-top:100px; } }
+.doc-linha{ display:flex; flex-direction:column; gap:4px; min-width:0; }
+.doc-linha .doc-item{ flex:1; min-width:0; }
+.doc-linha .doc-exibir{ padding:5px 8px; font-size:11.5px; white-space:normal; }
+.log-doc td, .rollfeed-entry.doc{ background:color-mix(in srgb, var(--accent) 7%, transparent); }
+.doc-tag{ display:inline-block; font-size:11px; padding:1px 7px; border-radius:999px; border:1px solid var(--accent); color:var(--accent); margin-right:6px; text-transform:uppercase; letter-spacing:.04em; }
 /* Documentos com várias páginas (08/11/2026): folhear uma página por vez */
 .pdoc-overlay.pdoc-com-paginas{ padding-bottom:96px; overflow-x:hidden; }
 .pdoc-paginador{ position:fixed; left:50%; bottom:14px; transform:translateX(-50%); z-index:10000; display:flex; align-items:center; gap:8px; padding:6px; border-radius:999px; background:#efe4c8; color:#2a2118; box-shadow:0 4px 18px rgba(0,0,0,.45); max-width:calc(100vw - 24px); }
@@ -3138,7 +3161,8 @@ textarea[data-notas]{ font-family:"Rabisco Fino",cursive; font-size:18px; line-h
   }
   // Abre em tela cheia. "d" é um documento ou uma lista de páginas (null = página que
   // o personagem ainda não recebeu). Com várias páginas: setas, teclado e deslizar.
-  function abrirDocumento(d, inicio){
+  function abrirDocumento(d, inicio, opts){
+    opts = opts || {};
     pdocInstalarFiltros();
     var pags = Array.isArray(d) ? d : [d], nPag = pags.length;
     // "telas" = o que se folheia: as folhas de cada página, na ordem. Página não recebida = uma tela.
@@ -3156,6 +3180,8 @@ textarea[data-notas]{ font-family:"Rabisco Fino",cursive; font-size:18px; line-h
     var el = document.getElementById("pdoc-overlay-root");
     if(!el){ el = document.createElement("div"); el.id = "pdoc-overlay-root"; document.body.appendChild(el); }
     el.innerHTML = '<div class="pdoc-overlay" data-pdocfechar><button type="button" class="btn secondary pdoc-fechar" data-pdocfechar>Fechar ✕</button>' +
+      (opts.exibir ? '<button type="button" class="btn secondary pdoc-exibir" data-pdocexibir>📣 Exibir para a mesa</button>' : '') +
+      (opts.quem ? '<div class="pdoc-quem" role="status"><b>'+esc(opts.quem)+'</b> está mostrando este documento</div>' : '') +
       '<div class="pdoc-paginador" data-pdocnav hidden><button type="button" class="btn" data-pdocir="-1" aria-label="Página anterior">‹</button><span data-pdocnum aria-live="polite"></span><button type="button" class="btn" data-pdocir="1" aria-label="Próxima página">›</button></div>' +
       '<div style="width:100%;max-width:620px" data-pdocpapel></div></div>';
     var overlay = el.querySelector(".pdoc-overlay"), papel = el.querySelector("[data-pdocpapel]"), num = el.querySelector("[data-pdocnum]"), nav = el.querySelector("[data-pdocnav]");
@@ -3195,6 +3221,12 @@ textarea[data-notas]{ font-family:"Rabisco Fino",cursive; font-size:18px; line-h
       if(tx === null || telas.length < 2) return;
       var t = e.changedTouches[0], dx = t.clientX - tx, dy = t.clientY - ty; tx = null;
       if(Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)*1.5) ir(dx < 0 ? 1 : -1);
+    });
+    var bExibir = el.querySelector("[data-pdocexibir]");
+    if(bExibir) bExibir.addEventListener("click", function(e){
+      e.stopPropagation();
+      if(bExibir.disabled) return;
+      opts.exibir(); bExibir.disabled = true; bExibir.textContent = "Mostrado para a mesa ✓";
     });
     el.querySelectorAll("[data-pdocfechar]").forEach(function(b){
       b.addEventListener("click", function(e){
@@ -3260,16 +3292,65 @@ textarea[data-notas]{ font-family:"Rabisco Fino",cursive; font-size:18px; line-h
       var nomeJog = docRotuloJogador(d), nomePainel = (caps.isOwner && !state.gmPreviewJogador && principal) ? docRotulo(principal) : nomeJog;
       var info = condicaoNome(d.condicao);
       if(g.total > 1){ var tem = g.paginas.filter(Boolean).length; info = tem === g.total ? g.total+" páginas" : tem+" de "+g.total+" páginas"; }
-      return '<button type="button" class="doc-item" data-docabrir="'+esc(g.id)+'"><span class="doc-ico">📜</span><span><b>'+esc(nomeJog)+'</b><span class="hint" style="display:block;margin:0">'+info+'</span>' +
-        (nomePainel !== nomeJog ? '<span class="hint" style="display:block;margin:0"><i>No seu Painel:</i> '+esc(nomePainel)+'</span>' : '') + '</span></button>';
+      return '<div class="doc-linha"><button type="button" class="doc-item" data-docabrir="'+esc(g.id)+'"><span class="doc-ico">📜</span><span><b>'+esc(nomeJog)+'</b><span class="hint" style="display:block;margin:0">'+info+'</span>' +
+        (nomePainel !== nomeJog ? '<span class="hint" style="display:block;margin:0"><i>No seu Painel:</i> '+esc(nomePainel)+'</span>' : '') + '</span></button>' +
+        (caps.mode === "mesa" && podeEditar() ? '<button type="button" class="btn secondary doc-btn doc-exibir" data-docexibir="'+esc(g.id)+'" title="Mostrar este documento para todos na mesa">📣 Exibir para a mesa</button>' : '') + '</div>';
     }).join('') + '</div><p class="hint" style="margin:8px 0 0">Papéis não ocupam espaço no inventário.</p>';
   }
   var DOC_GRUPOS_FICHA = {};
   function bindDocsFicha(){
+    var c = getChar(state.charId);
+    var podeExibir = !!(c && caps.mode === "mesa" && podeEditar());
     app.querySelectorAll("[data-docabrir]").forEach(function(b){
-      b.addEventListener("click", function(){ var g = DOC_GRUPOS_FICHA[b.getAttribute("data-docabrir")]; if(g) abrirDocumento(g.paginas); });
+      b.addEventListener("click", function(){
+        var g = DOC_GRUPOS_FICHA[b.getAttribute("data-docabrir")]; if(!g) return;
+        abrirDocumento(g.paginas, 0, podeExibir ? { exibir: function(){ exibirDocParaMesa(c, g); } } : null);
+      });
+    });
+    app.querySelectorAll("[data-docexibir]").forEach(function(b){
+      b.addEventListener("click", function(){
+        var g = DOC_GRUPOS_FICHA[b.getAttribute("data-docexibir")]; if(!g || !c) return;
+        exibirDocParaMesa(c, g);
+        abrirDocumento(g.paginas, 0, { quem: "Você" });
+      });
     });
   }
+  // ----- Exibir para a mesa (18/11/2026) -----
+  // O personagem mostra (ou lê em voz alta) um documento que recebeu: vira uma linha do
+  // Histórico de Rolagens com uma cópia das páginas que ELE tem, e abre na tela de todos
+  // na mesa. Quem não recebeu o documento só vê o que foi mostrado.
+  var DOC_CAMPOS_EXIBIR = ["id","titulo","texto","escrita","papel","condicao","data","assinatura","carimbo","cabecalho","tamanho","paginaDe","ordem","total","herda","imagem","img"];
+  function docCopiaParaMesa(p){
+    if(!p) return null;
+    var r = {};
+    DOC_CAMPOS_EXIBIR.forEach(function(k){ if(p[k] !== undefined) r[k] = clonar(p[k]); });
+    return r;
+  }
+  function exibirDocParaMesa(c, g){
+    if(!c || !g || caps.mode !== "mesa") return;
+    var primeira = g.paginas[0] || g.paginas.filter(Boolean)[0];
+    var entry = { tipo:"documento", nomePersonagem:c.nomePersonagem || "Sem nome", nomeJogador:c.nomeJogador || "",
+      label: docRotuloJogador(primeira), docId:g.id, paginas:g.paginas.map(docCopiaParaMesa), porUid:(usuario && usuario.uid) || null };
+    entry.id = uid(); entry.ts = new Date().toISOString(); entry.npc = false;
+    assimVistos[entry.id] = true;
+    shared.testLog.unshift(entry); if(shared.testLog.length > 60) shared.testLog.length = 60;
+    dirtyTestLogEntries.push(entry);
+    clearTimeout(publishTimer); doPublish();
+    renderRollFeed();
+    avisar("Documento mostrado para a mesa.", "ok");
+  }
+  function abrirDocDaMesa(e){
+    if(!e || !Array.isArray(e.paginas) || !e.paginas.some(Boolean)) return;
+    var meu = !!(usuario && e.porUid && e.porUid === usuario.uid);
+    abrirDocumento(e.paginas, 0, { quem: meu ? "Você" : (e.nomePersonagem || "Alguém") });
+  }
+  document.addEventListener("click", function(ev){
+    var b = ev.target && ev.target.closest ? ev.target.closest("[data-verdocmesa]") : null;
+    if(!b) return;
+    var id = b.getAttribute("data-verdocmesa");
+    var e = (shared.testLog || []).filter(function(x){ return x.id === id; })[0];
+    if(e) abrirDocDaMesa(e);
+  });
 
   // ----- Painel do Assimilador: biblioteca de documentos -----
   function novoDocRascunho(){
@@ -4514,7 +4595,8 @@ textarea[data-notas]{ font-family:"Rabisco Fino",cursive; font-size:18px; line-h
   function irAoInicio(){
     fecharCaixa();
     if(modoBase){ inicioNoLobby = true; sairModoBase(); return; }
-    if(campanhaAtual && appPronto){ goto("inicio"); return; }
+    // Dentro de uma campanha também: sai dela e abre a página de navegação.
+    if(campanhaAtual){ inicioNoLobby = true; voltarAoLobby(); return; }
     if(lobby){ lobby.inicio = true; renderLobby(); window.scrollTo(0, 0); return; }
     if(usuario && FB){ inicioNoLobby = true; mostrarLobby(); }
   }
@@ -4672,8 +4754,7 @@ textarea[data-notas]{ font-family:"Rabisco Fino",cursive; font-size:18px; line-h
           cmps.map(function(c){
             var capa = capaDe(c);
             var papel = c.donoUid === (usuario && usuario.uid) ? "Mestre" : "Jogador";
-            var fundoCapa = capa.img ? ' style="background-image:url(&quot;'+esc(capa.img)+'&quot;);background-position:50% '+capa.pos+'%"' : '';
-            return '<button type="button" class="inicio-btn'+(capa.semFundo ? ' sem-fundo' : '')+'" data-abrircmp="'+esc(c.id)+'" style="--capa:'+esc(capa.semFundo ? "transparent" : capa.cor)+'"><span class="ib-cor'+(capa.img ? ' com-img' : '')+'" aria-hidden="true"'+fundoCapa+'></span><span class="ib-txt"><b>'+esc(c.nome || "Campanha")+'</b><span class="ib-sub">'+papel+'</span></span></button>';
+            return '<button type="button" class="inicio-btn'+(capa.semFundo ? ' sem-fundo' : '')+'" data-abrircmp="'+esc(c.id)+'" style="--capa:'+esc(capa.semFundo ? "transparent" : capa.cor)+'">'+miniCapaHtml(capa)+'<span class="ib-txt"><b>'+esc(c.nome || "Campanha")+'</b><span class="ib-sub">'+papel+'</span></span></button>';
           }).join("") +
         '</div></section>';
       }
@@ -5382,7 +5463,7 @@ textarea[data-notas]{ font-family:"Rabisco Fino",cursive; font-size:18px; line-h
     flushPendente();
     var p = temPendencias() ? (clearTimeout(publishTimer), doPublish()) : null;
     Promise.resolve(p).then(function(){
-      if(state.syncFalhou){ avisar("A última mudança ainda não foi salva no servidor. Espere a conexão voltar antes de trocar de campanha."); return; }
+      if(state.syncFalhou){ inicioNoLobby = false; avisar("A última mudança ainda não foi salva no servidor. Espere a conexão voltar antes de trocar de campanha."); return; }
       state.view = "roster"; state.charId = null;
       mostrarLobby();
     });
@@ -7101,13 +7182,27 @@ textarea[data-notas]{ font-family:"Rabisco Fino",cursive; font-size:18px; line-h
     var img = cp.img ? imgSegura(cp.img) : "";
     if(/[\\()]/.test(img)) img = "";
     var pos = Number(cp.pos); if(!(pos >= 0 && pos <= 100)) pos = 50;
-    return { cor: cor, img: img, pos: Math.round(pos), semFundo: cor === CAPA_SEM_FUNDO };
+    // Miniatura do Início: recorte da própria capa (x, y, zoom) ou outra imagem.
+    var mm = (cp.mini && typeof cp.mini === "object") ? cp.mini : {};
+    var num = function(v, d, a, b){ v = Number(v); return (v >= a && v <= b) ? v : d; };
+    var miniImg = mm.img ? imgSegura(mm.img) : ""; if(/[\\()]/.test(miniImg)) miniImg = "";
+    var mini = { modo: mm.modo === "img" ? "img" : "recorte", img: miniImg,
+      x: Math.round(num(mm.x, 50, 0, 100)), y: Math.round(num(mm.y, pos, 0, 100)), zoom: Math.round(num(mm.zoom, 1, 1, 4) * 100) / 100 };
+    return { cor: cor, img: img, pos: Math.round(pos), semFundo: cor === CAPA_SEM_FUNDO, mini: mini };
+  }
+  // Miniatura (Início e prévia da configuração).
+  function miniCapaHtml(capa, classe){
+    var mi = capa.mini, cl = 'ib-cor com-img' + (classe ? ' ' + classe : '');
+    if(mi.modo === "img" && mi.img) return '<span class="'+cl+'" aria-hidden="true"><img src="'+esc(mi.img)+'" alt="" draggable="false"></span>';
+    if(capa.img) return '<span class="'+cl+'" aria-hidden="true"><img src="'+esc(capa.img)+'" alt="" draggable="false" style="object-position:'+mi.x+'% '+mi.y+'%;transform:scale('+mi.zoom+');transform-origin:'+mi.x+'% '+mi.y+'%"></span>';
+    return '<span class="ib-cor'+(classe ? ' ' + classe : '')+'" aria-hidden="true"></span>';
   }
   // ---------- ENVIO DE IMAGEM (16/11/2026) ----------
   // O site reduz a imagem no navegador e guarda o resultado dentro da própria campanha
   // (endereço "data:"), sem depender de site de hospedagem.
   var IMG_MODOS = {
     capa: { larg:640, alt:400, limite:90000, corta:true },   // faixa larga; mais alta que isso, corta pelo centro
+    mini: { larg:240, alt:168, limite:30000, corta:true },   // miniatura do Início (46×32 na tela)
     logo: { larg:256, alt:256, limite:30000, corta:false }   // cabe inteira, mantém transparência
   };
   function prepararImagem(arq, modo){
@@ -7356,7 +7451,31 @@ textarea[data-notas]{ font-family:"Rabisco Fino",cursive; font-size:18px; line-h
         '<div class="field" style="flex:1;min-width:min(160px, 100%);margin:0"><label for="capa-pos">Posição</label><input type="range" id="capa-pos" min="0" max="100" step="1" value="'+cp.pos+'" data-capapos="1"></div>' +
         '<button type="button" class="btn secondary" data-caparemover="1">Remover</button>' +
       '</div>' : '') +
+      miniConfigHtml(cp) +
     '</div>';
+  }
+  function miniConfigHtml(cp){
+    var mi = cp.mini, recorte = mi.modo !== "img", brutaMini = String((campanhaAtual.capa && campanhaAtual.capa.mini && campanhaAtual.capa.mini.img) || ""), miniEnviada = /^data:/i.test(brutaMini);
+    var h = '<div class="mini-cfg" data-minicfg><h4>Miniatura no Início</h4><div class="mini-linha">' +
+      '<div style="--capa:'+esc(cp.semFundo ? "transparent" : cp.cor)+'">' + miniCapaHtml(cp, 'mini-grande' + (recorte && cp.img ? ' mini-arrasta' : '')).replace('<span ', '<span data-miniprevia="1" ') + '</div>' +
+      '<div class="mini-lado"><div class="mini-modos" role="group" aria-label="Origem da miniatura">' +
+        '<button type="button" class="btn secondary doc-btn" data-minimodo="recorte" aria-pressed="'+recorte+'">Recorte da capa</button>' +
+        '<button type="button" class="btn secondary doc-btn" data-minimodo="img" aria-pressed="'+(!recorte)+'">Outra imagem</button></div>';
+    if(recorte){
+      h += cp.img
+        ? '<div class="field"><label for="mini-x">Horizontal</label><input type="range" id="mini-x" min="0" max="100" step="1" value="'+mi.x+'" data-miniajuste="x"></div>' +
+          '<div class="field"><label for="mini-y">Vertical</label><input type="range" id="mini-y" min="0" max="100" step="1" value="'+mi.y+'" data-miniajuste="y"></div>' +
+          '<div class="field"><label for="mini-z">Zoom</label><input type="range" id="mini-z" min="1" max="4" step="0.05" value="'+mi.zoom+'" data-miniajuste="zoom"></div>'
+        : '<p class="hint" style="margin:0">Sem imagem de capa: a miniatura usa a cor.</p>';
+    } else {
+      h += '<div class="row" style="gap:8px;flex-wrap:wrap;align-items:flex-end">' +
+          '<div class="field" style="flex:1;min-width:min(180px, 100%)"><label>Imagem'+ajudaImgLink()+'</label><input type="text" data-miniimg value="'+esc(miniEnviada ? "" : brutaMini)+'" placeholder="'+(miniEnviada ? 'Imagem enviada' : 'https://…')+'"></div>' +
+          '<button type="button" class="btn secondary" data-miniimgok="1">Aplicar</button>' +
+          '<button type="button" class="btn secondary" data-minienviar="1">Enviar imagem</button>' +
+          (mi.img ? '<button type="button" class="btn secondary" data-miniremover="1">Remover</button>' : '') +
+        '</div>';
+    }
+    return h + '</div></div></div>';
   }
   function bindCapaConfig(raiz, rerender){
     function gravar(capa){
@@ -7369,7 +7488,12 @@ textarea[data-notas]{ font-family:"Rabisco Fino",cursive; font-size:18px; line-h
         avisar("Não deu pra salvar a capa: " + (err && (err.code || err.message) || "erro desconhecido"));
       });
     }
-    function atual(){ var c = campanhaAtual.capa || {}, cp = capaDe(campanhaAtual); return { cor: cp.cor, img: String(c.img || ""), pos: cp.pos }; }
+    function atual(){
+      var c = campanhaAtual.capa || {}, cp = capaDe(campanhaAtual), m = (c.mini && typeof c.mini === "object") ? c.mini : null, r = { cor: cp.cor, img: String(c.img || ""), pos: cp.pos };
+      if(m){ r.mini = { modo: cp.mini.modo, img: String(m.img || "") }; if(m.x != null) r.mini.x = cp.mini.x; if(m.y != null) r.mini.y = cp.mini.y; if(m.zoom != null) r.mini.zoom = cp.mini.zoom; }
+      return r;
+    }
+    function zerarRecorte(c){ if(c.mini){ delete c.mini.x; delete c.mini.y; delete c.mini.zoom; } }
     raiz.querySelectorAll("[data-capacor]").forEach(function(b){
       b.addEventListener("click", function(){ var c = atual(); c.cor = b.getAttribute("data-capacor"); gravar(c); });
     });
@@ -7378,7 +7502,7 @@ textarea[data-notas]{ font-family:"Rabisco Fino",cursive; font-size:18px; line-h
       var v = String(campo.value || "").trim(), c = atual();
       if(v && (!/^https:\/\//i.test(v) || !imgSegura(v) || /[\\()]/.test(v))){ avisar("Use o endereço de uma imagem começando com https://"); return; }
       if(!v && /^data:/i.test(c.img)) return; // campo vazio com imagem enviada: quem tira é o Remover
-      if(v !== c.img) c.pos = 50;
+      if(v !== c.img){ c.pos = 50; zerarRecorte(c); }
       c.img = v; gravar(c);
     }
     if(ok && campo){
@@ -7389,7 +7513,7 @@ textarea[data-notas]{ font-family:"Rabisco Fino",cursive; font-size:18px; line-h
       var cid = campanhaAtual.id;
       prepararImagem(arq, "capa").then(function(u){
         if(!campanhaAtual || campanhaAtual.id !== cid) return;
-        var c = atual(); c.img = u; c.pos = 50; gravar(c);
+        var c = atual(); c.img = u; c.pos = 50; zerarRecorte(c); gravar(c);
       }).catch(function(e){ avisar(e.message, "erro"); });
     }
     var enviar = raiz.querySelector("[data-capaenviar]");
@@ -7401,7 +7525,66 @@ textarea[data-notas]{ font-family:"Rabisco Fino",cursive; font-size:18px; line-h
       pos.addEventListener("change", function(){ var c = atual(); c.pos = Math.max(0, Math.min(100, parseInt(pos.value, 10) || 0)); gravar(c); });
     }
     var remover = raiz.querySelector("[data-caparemover]");
-    if(remover) remover.addEventListener("click", function(){ var c = atual(); c.img = ""; c.pos = 50; gravar(c); });
+    if(remover) remover.addEventListener("click", function(){ var c = atual(); c.img = ""; c.pos = 50; zerarRecorte(c); gravar(c); });
+    // ----- Miniatura -----
+    function comMini(c){ c.mini = c.mini || { modo: "recorte", img: "" }; return c; }
+    raiz.querySelectorAll("[data-minimodo]").forEach(function(b){
+      b.addEventListener("click", function(){ var c = comMini(atual()); if(c.mini.modo === b.getAttribute("data-minimodo")) return; c.mini.modo = b.getAttribute("data-minimodo"); gravar(c); });
+    });
+    var mprev = raiz.querySelector("[data-miniprevia]"), mimg = mprev && mprev.querySelector("img");
+    var ajustes = {}; raiz.querySelectorAll("[data-miniajuste]").forEach(function(r){ ajustes[r.getAttribute("data-miniajuste")] = r; });
+    function vivo(){
+      if(!mimg || !ajustes.x) return;
+      var x = ajustes.x.value, y = ajustes.y.value, z = ajustes.zoom.value;
+      mimg.style.objectPosition = x + "% " + y + "%"; mimg.style.transformOrigin = x + "% " + y + "%"; mimg.style.transform = "scale(" + z + ")";
+    }
+    function salvarRecorte(){
+      if(!ajustes.x) return;
+      var c = comMini(atual());
+      c.mini.modo = "recorte";
+      c.mini.x = Math.max(0, Math.min(100, Math.round(parseFloat(ajustes.x.value) || 0)));
+      c.mini.y = Math.max(0, Math.min(100, Math.round(parseFloat(ajustes.y.value) || 0)));
+      c.mini.zoom = Math.max(1, Math.min(4, Math.round((parseFloat(ajustes.zoom.value) || 1) * 100) / 100));
+      gravar(c);
+    }
+    Object.keys(ajustes).forEach(function(k){ ajustes[k].addEventListener("input", vivo); ajustes[k].addEventListener("change", salvarRecorte); });
+    // Arrastar a miniatura move o recorte.
+    if(mprev && mprev.classList.contains("mini-arrasta") && ajustes.x){
+      var arr = null;
+      mprev.addEventListener("pointerdown", function(e){ arr = { px:e.clientX, py:e.clientY, x:+ajustes.x.value, y:+ajustes.y.value, w:mprev.clientWidth || 1, h:mprev.clientHeight || 1 }; try{ mprev.setPointerCapture(e.pointerId); }catch(er){} e.preventDefault(); });
+      mprev.addEventListener("pointermove", function(e){
+        if(!arr) return;
+        var z = +ajustes.zoom.value || 1;
+        ajustes.x.value = Math.max(0, Math.min(100, arr.x - (e.clientX - arr.px) / arr.w * 100 / z));
+        ajustes.y.value = Math.max(0, Math.min(100, arr.y - (e.clientY - arr.py) / arr.h * 100 / z));
+        vivo();
+      });
+      var soltar = function(){ if(!arr) return; arr = null; salvarRecorte(); };
+      mprev.addEventListener("pointerup", soltar); mprev.addEventListener("pointercancel", soltar);
+    }
+    var mcampo = raiz.querySelector("[data-miniimg]"), mok = raiz.querySelector("[data-miniimgok]");
+    function aplicarMini(){
+      var v = String(mcampo.value || "").trim(), c = comMini(atual());
+      if(v && (!/^https:\/\//i.test(v) || !imgSegura(v) || /[\\()]/.test(v))){ avisar("Use o endereço de uma imagem começando com https://"); return; }
+      if(!v && /^data:/i.test(c.mini.img)) return;
+      c.mini.modo = "img"; c.mini.img = v; gravar(c);
+    }
+    if(mok && mcampo){
+      mok.addEventListener("click", aplicarMini);
+      mcampo.addEventListener("keydown", function(e){ if(e.key === "Enter"){ e.preventDefault(); aplicarMini(); } });
+    }
+    var menviar = raiz.querySelector("[data-minienviar]");
+    if(menviar) menviar.addEventListener("click", function(){
+      var cid = campanhaAtual.id;
+      escolherImagem(function(arq){
+        prepararImagem(arq, "mini").then(function(u){
+          if(!campanhaAtual || campanhaAtual.id !== cid) return;
+          var c = comMini(atual()); c.mini.modo = "img"; c.mini.img = u; gravar(c);
+        }).catch(function(e){ avisar(e.message, "erro"); });
+      });
+    });
+    var mrem = raiz.querySelector("[data-miniremover]");
+    if(mrem) mrem.addEventListener("click", function(){ var c = comMini(atual()); c.mini.img = ""; gravar(c); });
   }
   // Tela de entrada (antes do login).
   function entradaHtml(){
@@ -9391,14 +9574,16 @@ textarea[data-notas]{ font-family:"Rabisco Fino",cursive; font-size:18px; line-h
   function verificarAssimNovos(lista){
     var vis = testLogVisivelPara(lista);
     if(!assimLogPronto){
-      vis.forEach(function(e){ if(e.tipo === "assim" || e.tipo === "destaque") assimVistos[e.id] = true; });
+      vis.forEach(function(e){ if(e.tipo === "assim" || e.tipo === "destaque" || e.tipo === "documento") assimVistos[e.id] = true; });
       assimLogPronto = true; return;
     }
     vis.forEach(function(e){
-      if((e.tipo !== "assim" && e.tipo !== "destaque") || assimVistos[e.id]) return;
+      if((e.tipo !== "assim" && e.tipo !== "destaque" && e.tipo !== "documento") || assimVistos[e.id]) return;
       assimVistos[e.id] = true;
       var idade = Date.now() - (Date.parse(e.ts||"") || 0);
-      if(idade < 120000) mostrarAnimAssim(e);
+      if(idade >= 120000) return;
+      if(e.tipo === "documento") tentar("Documento da mesa", function(){ abrirDocDaMesa(e); });
+      else mostrarAnimAssim(e);
     });
   }
   function encerrarTesteAssimilacao(c){ c.assimTesteAtual = null; atualizarSuscetivel(c); }
@@ -10963,6 +11148,11 @@ textarea[data-notas]{ font-family:"Rabisco Fino",cursive; font-size:18px; line-h
     log.forEach(function(t){
       var quando = "";
       try{ quando = new Date(t.ts).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"}); }catch(e){ quando = ""; }
+      if(t.tipo === "documento"){
+        html += '<tr class="log-doc"><td>'+esc(quando)+'</td><td><b>'+esc(t.nomePersonagem||"?")+'</b>'+(t.nomeJogador?'<br><span class="hint">'+esc(t.nomeJogador)+'</span>':'')+'</td>' +
+          '<td colspan="2"><span class="doc-tag">Documento</span>'+esc(t.label||"")+'</td><td class="num"><button type="button" class="btn secondary doc-btn" data-verdocmesa="'+esc(t.id)+'">Ver</button></td></tr>';
+        return;
+      }
       var ehAssim = t.tipo === "assim", ehDest = t.tipo === "destaque";
       html += '<tr'+(ehAssim?' class="log-assim"':ehDest?' class="log-destaque"':'')+'><td>'+esc(quando)+'</td>' +
         '<td><b>'+esc(t.nomePersonagem||"?")+'</b>'+(t.nomeJogador?'<br><span class="hint">'+esc(t.nomeJogador)+'</span>':'')+'</td>' +
@@ -11004,6 +11194,11 @@ textarea[data-notas]{ font-family:"Rabisco Fino",cursive; font-size:18px; line-h
   function rollFeedEntryHtml(t){
     var quando = "";
     try{ quando = new Date(t.ts).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"}); }catch(e){ quando = ""; }
+    if(t.tipo === "documento"){
+      return '<div class="rollfeed-entry doc"><div class="rollfeed-entry-head"><b>'+esc(t.nomePersonagem||"?")+'</b><span class="hint">'+esc(quando)+'</span></div>' +
+        '<div class="rollfeed-entry-label"><span class="doc-tag">Documento</span>'+esc(t.label||"")+'</div>' +
+        '<div class="rollfeed-total"><button type="button" class="btn secondary doc-btn" data-verdocmesa="'+esc(t.id)+'">Ver</button></div></div>';
+    }
     var diceHtml = (t.dados||[]).map(function(d){
       var lbl = diceResultLabel(d);
       return '<span class="rf-die'+(d.kept?" kept":"")+'">'+(lbl==="em branco"?"-":diceResultHtml(d))+'</span>';
