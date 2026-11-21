@@ -243,6 +243,60 @@
   .tmods-mais summary{ cursor:pointer; }
   .tmods-mais ul{ margin:6px 0 0; padding-left:18px; }
   .tmods-mais li{ margin:3px 0; }
+  /* Cartão Testar (20/11/2026): escolhas em botões, pilha desenhada, Teste de Assimilação */
+  .tst-modo{ display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:0 0 14px; }
+  .tst-modo-op{ display:flex; flex-direction:column; align-items:flex-start; gap:2px; min-width:0; padding:8px 12px; cursor:pointer;
+    font:inherit; text-align:left; color:var(--ink-muted); background:transparent;
+    border:2px solid var(--border); border-radius:var(--radius); }
+  .tst-modo-n{ font-family:"Oswald",sans-serif; font-weight:600; text-transform:uppercase; letter-spacing:.04em; font-size:13.5px; color:var(--ink); }
+  .tst-modo-s{ display:inline-flex; align-items:center; flex-wrap:wrap; gap:3px; font-size:11.5px; line-height:1.3; }
+  .tst-modo-op.on{ background:var(--surface-2); border-color:var(--camp-color, var(--accent)); color:var(--ink); }
+  .tst-modo-op.assim.on{ border-color:var(--assim); }
+  .tst-modo-op:disabled{ cursor:not-allowed; opacity:.5; }
+  .tst-modo-op:focus-visible, .tst-op:focus-visible, .tst-usar:focus-visible{ outline:2px solid var(--camp-color, var(--accent)); outline-offset:2px; }
+  .tst-rot{ margin:0 0 6px; font-family:"Oswald",sans-serif; font-weight:600; text-transform:uppercase; letter-spacing:.05em; font-size:11.5px; color:var(--ink-muted); }
+  .tst-grade{ display:grid; grid-template-columns:repeat(auto-fill, minmax(min(118px, 100%), 1fr)); gap:6px; margin:0 0 12px; }
+  .tst-op{ display:flex; align-items:center; justify-content:space-between; gap:6px; min-width:0; min-height:36px; padding:5px 9px; cursor:pointer;
+    font:inherit; font-size:13px; line-height:1.2; text-align:left; color:var(--ink); background:transparent;
+    border:1.5px solid var(--border); border-radius:var(--radius); }
+  .tst-op-n{ min-width:0; overflow-wrap:anywhere; }
+  .tst-op-v{ display:inline-flex; align-items:center; gap:4px; flex:none; font-family:"IBM Plex Mono",monospace; font-weight:600; font-variant-numeric:tabular-nums; }
+  .tst-op.zero{ color:var(--ink-muted); }
+  .tst-op:hover:not(:disabled){ border-color:var(--border-strong); }
+  .tst-op.on{ background:var(--camp-color, var(--accent)); border-color:var(--camp-color, var(--accent)); color:var(--accent-ink); }
+  .tst-op:disabled{ cursor:default; opacity:.6; }
+  .tst-x2{ padding:0 4px; border-radius:4px; font-size:11px; background:var(--accent-ink); color:var(--camp-color, var(--accent)); }
+  .tmod.tst-emp{ border-style:solid; border-color:var(--border); }
+  .tmod.tst-emp.on{ border-color:var(--camp-color, var(--accent)); }
+  .tst-pilha{ display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px 14px; margin:4px 0 12px; padding:10px 14px;
+    background:var(--surface-2); border:1px solid var(--border-strong); border-left:5px solid var(--camp-color, var(--accent)); border-radius:var(--radius); }
+  .tst-pilha.assim{ border-left-color:var(--assim); }
+  .tst-pilha-nome{ display:flex; align-items:center; flex-wrap:wrap; gap:6px; min-width:0; font-family:"Oswald",sans-serif; font-weight:600; letter-spacing:.03em; font-size:15px; overflow-wrap:anywhere; }
+  .tst-tag{ padding:1px 7px; border:1px solid var(--assim); border-radius:999px; font-size:11px; text-transform:uppercase; letter-spacing:.05em; }
+  .tst-pilha-dados{ display:flex; align-items:center; flex-wrap:wrap; gap:6px 12px; }
+  .tst-dgrupo{ display:inline-flex; align-items:center; flex-wrap:wrap; gap:3px; }
+  .tst-d{ display:inline-block; width:14px; height:14px; flex:none; background:var(--ink); }
+  .tst-d6{ border-radius:3px; }
+  .tst-d10{ width:12px; height:12px; margin:1px 2px; transform:rotate(45deg); border-radius:2px; background:var(--camp-color, var(--accent)); }
+  .tst-d12{ clip-path:polygon(50% 0, 100% 38%, 82% 100%, 18% 100%, 0 38%); background:var(--assim); width:15px; height:15px; }
+  .tst-dmais{ font-size:12px; color:var(--ink-muted); }
+  .tst-dn{ margin-left:3px; font-family:"IBM Plex Mono",monospace; font-size:12.5px; }
+  .tst-mantem{ font-family:"IBM Plex Mono",monospace; font-size:12.5px; color:var(--ink-muted); }
+  .tst-origem{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin:0 0 12px; padding:6px 6px 6px 12px;
+    border:1.5px dashed var(--camp-color, var(--accent)); border-radius:var(--radius); font-size:13px; }
+  .tst-origem-x{ flex:none; width:30px; height:30px; padding:0; cursor:pointer; font-size:18px; line-height:1; color:var(--ink); background:transparent; border:1px solid var(--border); border-radius:var(--radius); }
+  .tst-assim{ display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px 12px; margin-top:16px; padding-top:12px;
+    border-top:1px dashed var(--line, rgba(128,128,128,.4)); }
+  .tst-assim-t{ display:inline-flex; align-items:center; flex-wrap:wrap; gap:6px; min-width:0; font-family:"Oswald",sans-serif; font-weight:600; letter-spacing:.03em; font-size:13.5px; text-transform:uppercase; }
+  .tst-assim-b{ display:inline-flex; flex-wrap:wrap; gap:8px; }
+  .tst-assim .btn{ white-space:normal; text-align:left; }
+  /* Nomes de Instintos e Conhecimentos & Práticas: um toque monta o teste */
+  .tst-usar{ display:inline-flex; align-items:center; gap:6px; padding:2px 0; cursor:pointer; font:inherit; color:inherit; text-align:left;
+    background:none; border:none; border-bottom:1px dashed transparent; }
+  .tst-usar:hover{ border-bottom-color:currentColor; color:var(--camp-color, var(--accent)); }
+  /* Caixa da Característica: testes prontos */
+  .cx-testes{ margin-top:12px; padding-top:10px; border-top:1px dashed var(--line, rgba(128,128,128,.4)); }
+  .cx-testes .btn{ white-space:normal; }
   .tcusto{ display:inline-flex; align-items:center; gap:3px; margin-left:4px; font-size:12px; color:var(--ink-muted); white-space:nowrap; }
   .budget.tdados{ opacity:.75; }
   .tmantidos{ margin:0 0 8px; }
@@ -8911,8 +8965,7 @@ textarea[data-notas]{ font-family:"Rabisco Fino",cursive; font-size:18px; line-h
   function bindWizardStep(c, step, rerender){
     rerender = rerender || renderWizard;
     if(step === 8){
-      var bt = app.querySelector('[data-action="assim-testar"]');
-      if(bt) bt.addEventListener("click", function(){ if(!state.assimRolando) c.testesCriacao = (c.testesCriacao || 0) + 1; });
+      app.querySelectorAll('[data-action="assim-testar"]').forEach(function(bt){ bt.addEventListener("click", function(){ if(!state.assimRolando) c.testesCriacao = (c.testesCriacao || 0) + 1; }); });
       bindMutacoesCard(c);
     }
     if(step === 7){
@@ -9175,7 +9228,7 @@ textarea[data-notas]{ font-family:"Rabisco Fino",cursive; font-size:18px; line-h
     INSTINTOS.forEach(function(i){
       var baseInstDisp = instintoBase(c, i[0]); // já inclui o que foi comprado com Experiência
       var bonusInstDisp = (c.instintosAssimBonus && c.instintosAssimBonus[i[0]])||0;
-      instintosBody += '<tr><td>'+i[1]+'</td><td class="num">'+(baseInstDisp+bonusInstDisp)+(bonusInstDisp?' <span class="hint">('+baseInstDisp+'+'+bonusInstDisp+')</span>':'')+'</td></tr>';
+      instintosBody += '<tr><td>'+tstUsarHtml("data-usarinst", i[0], i[1])+'</td><td class="num">'+(baseInstDisp+bonusInstDisp)+(bonusInstDisp?' <span class="hint">('+baseInstDisp+'+'+bonusInstDisp+')</span>':'')+'</td></tr>';
     });
     instintosBody += '</tbody></table>';
     instintosBody += bonusAssimHtml(c);
@@ -9188,8 +9241,8 @@ textarea[data-notas]{ font-family:"Rabisco Fino",cursive; font-size:18px; line-h
     for(var i=0;i<6;i++){
       var kC = CONHECIMENTOS[i][0], kP = PRATICAS[i][0];
       var bC = (c.conhPratAssimBonus && c.conhPratAssimBonus[kC])||0, bP = (c.conhPratAssimBonus && c.conhPratAssimBonus[kP])||0;
-      cpBody += '<tr><td>'+CONHECIMENTOS[i][1]+'</td><td class="num">'+valorCP(c,kC)+(bC?' <span class="hint">('+valorCPBase(c,kC)+'+'+bC+')</span>':'')+'</td>' +
-        '<td>'+PRATICAS[i][1]+'</td><td class="num">'+valorCP(c,kP)+(bP?' <span class="hint">('+valorCPBase(c,kP)+'+'+bP+')</span>':'')+'</td></tr>';
+      cpBody += '<tr><td>'+tstUsarHtml("data-usarcp", kC, CONHECIMENTOS[i][1])+'</td><td class="num">'+valorCP(c,kC)+(bC?' <span class="hint">('+valorCPBase(c,kC)+'+'+bC+')</span>':'')+'</td>' +
+        '<td>'+tstUsarHtml("data-usarcp", kP, PRATICAS[i][1])+'</td><td class="num">'+valorCP(c,kP)+(bP?' <span class="hint">('+valorCPBase(c,kP)+'+'+bP+')</span>':'')+'</td></tr>';
     }
     cpBody += '</tbody></table></div>';
     html += sectionCard("conhprat", "Conhecimentos &amp; Práticas", cpBody);
@@ -9367,7 +9420,7 @@ textarea[data-notas]{ font-family:"Rabisco Fino",cursive; font-size:18px; line-h
     var cF = fichaAtual(), escF = cF && cF.caracEscolhas && cF.caracEscolhas[id];
     return { titulo:esc(d.nome)+' <span class="hint" style="font-weight:400">· '+d.custo+' pt</span>', tituloTexto:d.nome,
       corpo:'<p>'+iconizarTexto(esc(d.txt))+'</p>' +
-        '<p class="hint" style="margin:6px 0 0">'+esc(reqTexto(d))+(escF?' · Sentido: <b>'+esc(escF)+'</b>':'')+'</p>', lado:"direita", largura:400 };
+        '<p class="hint" style="margin:6px 0 0">'+esc(reqTexto(d))+(escF?' · Sentido: <b>'+esc(escF)+'</b>':'')+'</p>' + caracTestesHtml(cF, id), lado:"direita", largura:400 };
   };
 
   // ----- Formulário de item genérico do inventário -----
@@ -10171,6 +10224,9 @@ textarea[data-notas]{ font-family:"Rabisco Fino",cursive; font-size:18px; line-h
       if(!pool && pendentes > 0){
         var eProx = nivelDoProximoTesteAssim(c);
         body += '<button type="button" class="btn accent" data-action="assim-testar">Fazer Teste de Assimilação · Nível '+eProx+' (1d10'+(eProx>0?' + '+eProx+'d12':'')+')</button>';
+      } else if(!pool && !naCriacao){
+        var eX = nivelDoProximoTesteAssim(c), pilhaX = '1d10'+(eX>0?' + '+eX+'d12':'');
+        body += '<button type="button" class="btn secondary" data-action="assim-testar">Teste de Assimilação · Nível '+eX+' ('+pilhaX+')</button>';
       }
       if(!naCriacao) body += '<button type="button" class="btn secondary" data-action="assim-clareza-toggle">'+(clarezaAberta?"Fechar Clareza de Propósito":"Clareza de Propósito")+'</button>';
       body += '</div>';
@@ -10275,9 +10331,10 @@ textarea[data-notas]{ font-family:"Rabisco Fino",cursive; font-size:18px; line-h
         renderSheet();
       });
     });
-    var testarBtn = app.querySelector('[data-action="assim-testar"]');
-    if(testarBtn) testarBtn.addEventListener("click", function(){
+    // Teste de Assimilação: botão no cartão Testar e no cartão Assimilação.
+    app.querySelectorAll('[data-action="assim-testar"]').forEach(function(testarBtn){ testarBtn.addEventListener("click", function(){
       if(state.assimRolando) return;
+      var doTestar = !!testarBtn.closest('[data-secid="testar"]');
       state.assimRolando = true;
       testarBtn.disabled = true; testarBtn.textContent = "Rolando…";
       iniciarTesteAssimilacao(c);
@@ -10287,10 +10344,14 @@ textarea[data-notas]{ font-family:"Rabisco Fino",cursive; font-size:18px; line-h
         registrarTeste(entrada);
         assimVistos[entrada.id] = true;
         marcarPendenteOuSalvar(c, "assim");
-        if(state.view === "sheet" && !state.sheetEditing && state.charId === c.id) renderSheet();
+        if(state.view === "sheet" && !state.sheetEditing && state.charId === c.id){
+          if(doTestar && state.collapsed.assimilacao){ state.collapsed.assimilacao = false; saveLS("pangea:collapsed", state.collapsed); }
+          renderSheet();
+          if(doTestar && c.assimTesteAtual) fnavIrPara("assimilacao");
+        }
         else if(state.view === "wizard" && state.draft === c) render();
       });
-    });
+    }); });
     var clarezaToggle = app.querySelector('[data-action="assim-clareza-toggle"]');
     if(clarezaToggle) clarezaToggle.addEventListener("click", function(){
       if(!state.clarezaAberta) state.clarezaAberta = {};
@@ -10825,6 +10886,21 @@ textarea[data-notas]{ font-family:"Rabisco Fino",cursive; font-size:18px; line-h
     inabalavel:{ conv:99, inst:["resolucao"] }, olhar_minucioso:{ s:1, inst:["percepcao","sagacidade"] },
     orientacao:{ a:1, cp:["geografia","sobrevivencia"] }, parkour:{ a:1 }, primeiros_socorros:{ s:1 }
   };
+  // Caixa da Característica: "Testar com ela" liga a etiqueta dela (CARAC_MODS) no
+  // cartão Testar; o próprio jogador escolhe o Instinto e o Conhecimento/Prática.
+  function caracTestesHtml(c, id){
+    if(!c || state.view !== "sheet" || state.sheetEditing || (c.caracComp||[]).indexOf(id) < 0 || !CARAC_MODS[id]) return '';
+    return '<div class="cx-testes"><button type="button" class="btn accent" data-caractest="'+esc(id)+'">Testar com ela</button></div>';
+  }
+  // Onde a etiqueta vale (quando a Característica é só de um Instinto/Conhecimento/Prática).
+  function caracOndeVale(id){
+    var ef = CARAC_MODS[id]; if(!ef) return "";
+    var nomes = (ef.inst||[]).map(function(k){ return tstNome(INSTINTOS, k); }).concat((ef.cp||[]).map(function(k){ return tstNome(CONH_PRAT, k); }));
+    return nomes.length ? nomes.join(" ou ") : "";
+  }
+  function tstUsarHtml(attr, k, nome){
+    return '<button type="button" class="tst-usar" '+attr+'="'+k+'" title="Testar '+esc(nome)+'">'+esc(nome)+'</button>';
+  }
   var MOD_ATTR = null;
   function modAttr(nome){
     if(!MOD_ATTR){
@@ -10969,12 +11045,12 @@ textarea[data-notas]{ font-family:"Rabisco Fino",cursive; font-size:18px; line-h
     });
     return out;
   }
-  function modsChipsHtml(c, t){
+  function modsChipsHtml(c, t, antes){
     var lista = modsDoTeste(c, t), lemb = modsLembretes(c);
-    if(!lista.length && !lemb.length) return "";
+    if(!lista.length && !lemb.length && !antes) return "";
     var h = "";
-    if(lista.length){
-      h += '<div class="tmods" role="group" aria-label="Modificadores">';
+    if(lista.length || antes){
+      h += '<div class="tmods" role="group" aria-label="Modificadores">'+(antes||'');
       lista.forEach(function(m){
         var on = modAtivo(m, t);
         h += '<button type="button" class="tmod'+(on?" on":"")+((m.s||0) < 0 || (m.a||0) < 0 || (m.p||0) > 0 ? " neg" : "")+'" data-testmod="'+esc(m.id)+'" aria-pressed="'+(on?"true":"false")+'"'+((t.rolling||t.registered)?" disabled":"")+' title="'+esc(m.fonte+": "+(m.texto||""))+'">' +
@@ -11044,6 +11120,37 @@ textarea[data-notas]{ font-family:"Rabisco Fino",cursive; font-size:18px; line-h
   function classePousa(t){ return t.pousar ? ' dado-pousa' : ''; }
   function estiloPousa(t, idx){ return t.pousar ? ';animation-delay:'+(idx*45)+'ms' : ''; }
 
+  // ---------- CARTÃO TESTAR (reforma de 20/11/2026) ----------
+  // Escolhas em botões (nada de listas suspensas): modo Normal/Assimilada, Instinto,
+  // segundo Instinto ou Conhecimento/Prática, Empenho e etiquetas; a pilha aparece
+  // desenhada antes de rolar. No fim do cartão, o Teste de Assimilação fica sempre à mão.
+  function tstNome(lista, k){ return (lista.filter(function(x){ return x[0]===k; })[0]||[null,k||""])[1]; }
+  function tstOpcao(attr, k, nome, val, on, dis, extra){
+    return '<button type="button" class="tst-op'+(on?' on':'')+(val<=0?' zero':'')+'" '+attr+'="'+k+'" aria-pressed="'+(on?'true':'false')+'"'+(dis?' disabled':'')+'>' +
+      '<span class="tst-op-n">'+esc(nome)+'</span><span class="tst-op-v">'+val+(extra||'')+'</span></button>';
+  }
+  function tstDadosHtml(n, lados){
+    if(n <= 0) return '';
+    var h = '', mostra = Math.min(n, 8);
+    for(var i=0;i<mostra;i++) h += '<span class="tst-d tst-d'+lados+'" aria-hidden="true"></span>';
+    if(n > mostra) h += '<span class="tst-dmais">+'+(n-mostra)+'</span>';
+    return '<span class="tst-dgrupo" title="'+n+' d'+lados+'">'+h+'<span class="tst-dn">'+n+'d'+lados+'</span></span>';
+  }
+  function tstAssimHtml(c){
+    if(perdidoParaAssimilacao(c)) return '';
+    var pool = c.assimTesteAtual, pend = c.testesAssimPendentes||0;
+    var h = '<div class="tst-assim">';
+    if(pool){
+      h += '<span class="tst-assim-t">Teste de Assimilação em andamento</span>' +
+        '<button type="button" class="btn secondary" data-tstir="assimilacao">Ver cartas</button>';
+    } else {
+      var e = nivelDoProximoTesteAssim(c);
+      var pilha = '1d10'+(e>0?' + '+e+'d12':'');
+      h += '<span class="tst-assim-t">Teste de Assimilação'+(pend>0?' <span class="badge-pill warn">'+pend+' pendente'+(pend>1?'s':'')+'</span>':'')+'</span>' +
+          '<button type="button" class="btn '+(pend>0?'accent':'secondary')+'" data-action="assim-testar">Nível '+e+' · '+pilha+'</button>';
+    }
+    return h + '</div>';
+  }
   function renderSheetTest(c){
     var t = state.sheetTest;
     var instintoDado = t.agir ? 12 : 6;
@@ -11051,31 +11158,46 @@ textarea[data-notas]{ font-family:"Rabisco Fino",cursive; font-size:18px; line-h
     var baseInst2 = (t.agir && t.instinto2Key) ? valorInstinto(c,t.instinto2Key) : 0;
     var dInst = baseInst + baseInst2;
     var d10 = (!t.agir && t.cpKey) ? valorCP(c,t.cpKey) : 0;
-    // Só bloqueia MARCAR uma caixa nova sem recurso pra ela - uma caixa já
-    // marcada (o ponto já foi reservado na hora, ver bindSheetTest) continua
-    // ativa e clicável mesmo que o recurso tenha zerado depois.
+    // Só bloqueia LIGAR uma opção nova sem recurso pra ela - uma já ligada (o ponto já
+    // foi reservado na hora, ver bindSheetTest) continua ativa mesmo que o recurso zere.
     var agirIndisponivel = !t.agir && !agirPorInstintoDisponivel(c);
     var extraIndisponivel = !t.extraDado && !extraDadoDisponivel(c);
-    var extraLabel = "Empenho <span class=\"tcusto\">+1 dado · 1 "+icoHtml("pd")+"</span>";
     var keepMods = modsKeepExtra(c, t);
+    var trava = t.rolling;
     var body = pendingSectionBannerHtml(c, "teste");
-    // As explicações ficam na caixa "Como funciona" (CAIXAS.testar); no cartão, só os controles.
-    body += '<div class="lx-lista" style="margin-bottom:12px">'+caixaLinha("testar", "", "Como funciona", "Instinto + Prática/Conhecimento, Agir por Instinto, dado extra")+'</div>';
-    body += '<div class="grid cols-2">';
-    body += '<div class="field"><label>Instinto</label><select data-test="instinto" '+(t.rolling?"disabled":"")+'>' +
-      INSTINTOS.map(function(i){ return '<option value="'+i[0]+'"'+(t.instintoKey===i[0]?" selected":"")+'>'+i[1]+' ('+valorInstinto(c,i[0])+')</option>'; }).join('') +
-      '</select></div>';
-    body += '<div class="field"><label>'+(t.agir?"Segundo Instinto":"Prática ou Conhecimento")+'</label><select data-test="segundo" '+(t.rolling?"disabled":"")+'>' +
-      (t.agir ?
-        INSTINTOS.map(function(i){ return '<option value="'+i[0]+'"'+(t.instinto2Key===i[0]?" selected":"")+'>'+i[1]+' ('+valorInstinto(c,i[0])+')</option>'; }).join('') :
-        CONH_PRAT.map(function(p){ return '<option value="'+p[0]+'"'+(t.cpKey===p[0]?" selected":"")+'>'+p[1]+' ('+valorCP(c,p[0])+')</option>'; }).join('')) +
-      '</select></div>';
-    body += '</div>';
-    body += '<label style="display:flex;align-items:center;gap:8px;text-transform:none;font-size:13px;margin-bottom:10px"><input type="checkbox" style="width:auto" data-test="agir"'+(t.agir?" checked":"")+((t.rolling||agirIndisponivel)?" disabled":"")+'> Agir por Instinto <span class="tcusto">1 '+icoHtml("pa")+' ou 2 '+icoHtml("pd")+'</span></label>';
-    body += '<label style="display:flex;align-items:center;gap:8px;text-transform:none;font-size:13px;margin-bottom:10px"><input type="checkbox" style="width:auto" data-test="extra"'+(t.extraDado?" checked":"")+((t.rolling||extraIndisponivel)?" disabled":"")+'> '+extraLabel+'</label>';
-    body += modsChipsHtml(c, t);
-    body += '<div class="budget ok"><span>Pilha</span><span class="num">'+dInst+' d'+instintoDado+(d10?' + '+d10+' d10':'')+' · mantém '+(t.results.length && t.keepN ? t.keepN : (t.agir?2:1)+(t.extraDado?1:0)+keepMods)+'</span></div>';
-    body += '<div class="btn-row" style="margin-top:0"><button class="btn accent" data-testaction="roll" '+(t.rolling?'disabled':'')+'>'+(t.rolling?"Rolando…":"Rolar")+'</button></div>';
+    body += '<div class="lx-lista" style="margin-bottom:12px">'+caixaLinha("testar", "", "Como funciona", "Instinto + Prática/Conhecimento, Rolagem Assimilada, Empenho")+'</div>';
+    if(t.origem && t.origem.nome){
+      var oVale = !t.origem.mod || modsDoTeste(c, t).some(function(m){ return m.id === t.origem.mod; });
+      var oOnde = (!oVale && t.origem.id) ? caracOndeVale(t.origem.id) : "";
+      body += '<div class="tst-origem"><span>Com <b>'+esc(t.origem.nome)+'</b>'+(oOnde ? ' <span class="hint">· vale em testes de '+esc(oOnde)+'</span>' : '')+'</span><button type="button" class="tst-origem-x" data-tstorigem="limpar" aria-label="Tirar">×</button></div>';
+    }
+    // Modo: Normal (Instinto + Conhecimento/Prática) ou Assimilada (dois Instintos, d12).
+    body += '<div class="tst-modo" role="group" aria-label="Tipo de rolagem">' +
+      '<button type="button" class="tst-modo-op'+(!t.agir?' on':'')+'" data-tstmodo="normal" aria-pressed="'+(!t.agir)+'"'+(trava?' disabled':'')+'><span class="tst-modo-n">Normal</span><span class="tst-modo-s">d6 + d10</span></button>' +
+      '<button type="button" class="tst-modo-op assim'+(t.agir?' on':'')+'" data-tstmodo="assimilada" aria-pressed="'+(!!t.agir)+'"'+((trava||agirIndisponivel)?' disabled':'')+' title="Agir por Instinto">' +
+        '<span class="tst-modo-n">Assimilada</span><span class="tst-modo-s">2 Instintos · d12 · <span class="tcusto">1 '+icoHtml("pa")+' ou 2 '+icoHtml("pd")+'</span></span></button>' +
+    '</div>';
+    body += '<div class="tst-rot">'+(t.agir?'Primeiro Instinto':'Instinto')+'</div><div class="tst-grade">' +
+      INSTINTOS.map(function(i){ return tstOpcao("data-tstinst", i[0], i[1], valorInstinto(c,i[0]), t.instintoKey===i[0], trava); }).join('') + '</div>';
+    if(t.agir){
+      body += '<div class="tst-rot">Segundo Instinto</div><div class="tst-grade">' +
+        INSTINTOS.map(function(i){ var on = t.instinto2Key===i[0]; return tstOpcao("data-tstinst2", i[0], i[1], valorInstinto(c,i[0]), on, trava, (on && t.instintoKey===i[0]) ? '<span class="tst-x2">×2</span>' : ''); }).join('') + '</div>';
+    } else {
+      body += '<div class="tst-rot">Conhecimento</div><div class="tst-grade">' +
+        CONHECIMENTOS.map(function(p){ return tstOpcao("data-tstcp", p[0], p[1], valorCP(c,p[0]), t.cpKey===p[0], trava); }).join('') + '</div>';
+      body += '<div class="tst-rot">Prática</div><div class="tst-grade">' +
+        PRATICAS.map(function(p){ return tstOpcao("data-tstcp", p[0], p[1], valorCP(c,p[0]), t.cpKey===p[0], trava); }).join('') + '</div>';
+    }
+    // Empenho junto das etiquetas (mesmo visual): liga e desliga com um toque.
+    body += modsChipsHtml(c, t, '<button type="button" class="tmod tst-emp'+(t.extraDado?' on':'')+'" data-tstempenho="1" aria-pressed="'+(!!t.extraDado)+'"'+((trava||extraIndisponivel||t.registered)?' disabled':'')+'><span class="tmod-n">Empenho</span><span class="tmod-e">+1 dado · 1 '+icoHtml("pd")+'</span></button>');
+    // Pilha desenhada: o nome do teste, os dados e quantos ficam.
+    var keepShow = (t.results.length && t.keepN) ? t.keepN : (t.agir?2:1)+(t.extraDado?1:0)+keepMods;
+    var nomeTeste = t.agir ? tstNome(INSTINTOS, t.instintoKey)+' + '+tstNome(INSTINTOS, t.instinto2Key) : tstNome(INSTINTOS, t.instintoKey)+' + '+tstNome(CONH_PRAT, t.cpKey);
+    body += '<div class="tst-pilha'+(t.agir?' assim':'')+'">' +
+      '<div class="tst-pilha-nome">'+esc(nomeTeste)+(t.agir?' <span class="tst-tag">Assimilada</span>':'')+'</div>' +
+      '<div class="tst-pilha-dados">'+(dInst+d10>0 ? tstDadosHtml(dInst, instintoDado)+tstDadosHtml(d10, 10) : '<span class="hint">sem dados</span>')+'<span class="tst-mantem">mantém '+keepShow+'</span></div>' +
+    '</div>';
+    body += '<div class="btn-row tst-rolar" style="margin-top:0"><button class="btn accent" data-testaction="roll" '+(t.rolling?'disabled':'')+'>'+(t.rolling?"Rolando…":"Rolar")+'</button></div>';
 
     if(t.rolling){
       body += dadosGirandoHtml(Math.max(1, t.rollingCount||1), t.rollIni);
@@ -11100,17 +11222,20 @@ textarea[data-notas]{ font-family:"Rabisco Fino",cursive; font-size:18px; line-h
       }
       body += '</div>';
     }
+    body += tstAssimHtml(c);
     return sectionCard("testar", "Testar", body);
   }
 
   CAIXAS.testar = function(){
     var c = fichaAtual(); if(!c) return null;
     var corpo = '<div class="ajuda"><p>Escolha o <b>Instinto</b> e a <b>Prática ou Conhecimento</b> do teste. A pilha de dados sai da ficha: 1d6 por ponto de Instinto e 1d10 por ponto de Prática/Conhecimento.</p>' +
-      '<p><b>Agir por Instinto (Rolagem Assimilada):</b></p><ul><li>escolha dois Instintos no lugar de Instinto + Prática/Conhecimento (pode repetir o mesmo);</li><li>os dados viram d12 e você mantém 1 dado a mais;</li><li>custa 1 ponto de Assimilação, ou 2 de Determinação se não houver Assimilação.</li></ul>' +
+      '<p><b>Assimilada (Agir por Instinto):</b></p><ul><li>dois Instintos no lugar de Instinto + Prática/Conhecimento (pode repetir o mesmo);</li><li>os dados viram d12 e você mantém 1 dado a mais;</li><li>custa 1 ponto de Assimilação, ou 2 de Determinação se não houver Assimilação.</li></ul>' +
       '<p><b>Empenho (dado extra):</b> pra manter um dado a mais nessa rolagem, declare antes de rolar. Gasta 1 ponto de Determinação.</p>' +
+      '<p><b>Atalhos:</b> toque no nome de um Instinto, Conhecimento ou Prática na ficha para montar o teste. Na caixa de uma Característica, <b>Testar com ela</b> liga o efeito dela no teste que você montar.</p>' +
+      '<p><b>Teste de Assimilação:</b> fica no fim deste cartão.</p>' +
       (modsLigados() ? '<p><b>Etiquetas:</b> Saúde, Características, Assimilações e itens que mexem neste teste. As acesas entram no resultado; toque para ligar ou desligar.</p>' : '') +
       '<p>'+(autoLigada("dadosMantidosAuto") ? 'Depois que os dados caírem, os melhores já vêm marcados. Clique num dado para manter ou soltar outro (ex.: tensionando uma Origem) e confirme para registrar no histórico.' : 'Depois que os dados caírem, clique nos dados que quer manter (quantos foram declarados) e confirme para registrar no histórico.')+'</p>' +
-      '<div class="hint ajuda"><p>Os pontos de Agir por Instinto e do dado extra são gastos ao marcar a caixa (voltam se desmarcar antes de rolar). Por isso uma opção pode ficar bloqueada se faltar recurso.</p><p>O gasto só vai para a mesa quando o teste é confirmado.</p></div></div>';
+      '<div class="hint ajuda"><p>Os pontos da Rolagem Assimilada e do Empenho saem ao escolher (voltam se desfizer antes de rolar). Por isso uma opção pode ficar bloqueada se faltar recurso.</p><p>O gasto só vai para a mesa quando o teste é confirmado.</p></div></div>';
     return { titulo:"Testar: como funciona", corpo:corpo, lado:"direita", largura:440 };
   };
   function bindSheetTest(c){
@@ -11121,14 +11246,25 @@ textarea[data-notas]{ font-family:"Rabisco Fino",cursive; font-size:18px; line-h
     if(treino) c = clonar(c);
     function pendTeste(x){ if(!treino) marcarPendenteOuSalvar(x, "teste"); }
     if(t.rolling){ iniciarTickerDados(); }
-    var instSel = app.querySelector('[data-test="instinto"]');
-    if(instSel) instSel.addEventListener("change", function(){ t.instintoKey = instSel.value; t.results = []; t.registered = false; renderSheet(); });
-    var segSel = app.querySelector('[data-test="segundo"]');
-    if(segSel) segSel.addEventListener("change", function(){
-      if(t.agir) t.instinto2Key = segSel.value; else t.cpKey = segSel.value;
-      t.results = [];
-      t.registered = false;
-      renderSheet();
+    // Escolhas do cartão (botões): trocar qualquer uma recomeça o teste.
+    function tstRecomeca(){ t.results = []; t.registered = false; renderSheet(); }
+    app.querySelectorAll('[data-tstinst]').forEach(function(b){ b.addEventListener("click", function(){
+      if(t.rolling) return;
+      var k = b.getAttribute("data-tstinst");
+      // Assimilada: o segundo Instinto acompanha o primeiro enquanto eram iguais.
+      if(t.agir && t.instinto2Key === t.instintoKey) t.instinto2Key = k;
+      t.instintoKey = k; tstRecomeca();
+    }); });
+    app.querySelectorAll('[data-tstinst2]').forEach(function(b){ b.addEventListener("click", function(){
+      if(t.rolling) return; t.instinto2Key = b.getAttribute("data-tstinst2"); tstRecomeca();
+    }); });
+    app.querySelectorAll('[data-tstcp]').forEach(function(b){ b.addEventListener("click", function(){
+      if(t.rolling) return; t.cpKey = b.getAttribute("data-tstcp"); tstRecomeca();
+    }); });
+    var origemX = app.querySelector('[data-tstorigem="limpar"]');
+    if(origemX) origemX.addEventListener("click", function(){
+      if(t.origem && t.origem.mod && t.mods) delete t.mods[t.origem.mod];
+      t.origem = null; renderSheet();
     });
     // "Agir por Instinto" e "Manter +1 dado extra": o(s) ponto(s) de recurso
     // são gastos (ou devolvidos) NA HORA que a caixa é marcada/desmarcada,
@@ -11173,11 +11309,10 @@ textarea[data-notas]{ font-family:"Rabisco Fino",cursive; font-size:18px; line-h
         renderSheet();
       });
     });
-    var agirChk = app.querySelector('[data-test="agir"]');
-    if(agirChk) agirChk.addEventListener("change", function(){
-      var ligar = agirChk.checked;
+    function definirAgir(ligar){
+      if(!!t.agir === !!ligar) return true;
       if(ligar){
-        if(!agirPorInstintoDisponivel(c)){ agirChk.checked = false; avisar("Sem Pontos de Assimilação nem de Determinação: não dá pra Agir por Instinto agora."); return; }
+        if(!agirPorInstintoDisponivel(c)){ avisar("Sem Pontos de Assimilação nem de Determinação: não dá pra fazer a Rolagem Assimilada agora."); return false; }
         if(assimilacaoDisponivel(c)){
           t.agirUsouAssim = true;
           gastarAssimilacao(c,1);
@@ -11186,21 +11321,30 @@ textarea[data-notas]{ font-family:"Rabisco Fino",cursive; font-size:18px; line-h
           t.agirSnapshot = { caixaAtual:c.determinacao.caixaAtual, pontosAtual:c.determinacao.pontosAtual };
           if(gastarDeterminacao(c,2)) marcarFlashSuscetivel(c);
         }
+        // Começa com o mesmo Instinto duas vezes; dá pra trocar o segundo.
+        t.instinto2Key = t.instintoKey;
       } else {
         if(t.agirUsouAssim){ devolverAssimilacao(c,1); }
         else if(t.agirSnapshot){ c.determinacao.caixaAtual = t.agirSnapshot.caixaAtual; c.determinacao.pontosAtual = t.agirSnapshot.pontosAtual; }
         t.agirSnapshot = null;
+        t.agirUsouAssim = false;
       }
       pendTeste(c);
-      t.agir = ligar; t.results = []; t.registered = false; renderSheet();
-    });
-    // Manter +1 dado extra é o Empenho (livro definitivo pág. 59): só gasta
-    // Determinação, nunca Assimilação - ver extraDadoDisponivel.
-    var extraChk = app.querySelector('[data-test="extra"]');
-    if(extraChk) extraChk.addEventListener("change", function(){
-      var ligar = extraChk.checked;
+      t.agir = ligar; t.results = []; t.registered = false;
+      return true;
+    }
+    app.querySelectorAll('[data-tstmodo]').forEach(function(b){ b.addEventListener("click", function(){
+      if(t.rolling) return;
+      if(definirAgir(b.getAttribute("data-tstmodo") === "assimilada")) renderSheet();
+    }); });
+    // Empenho (livro definitivo pág. 59): só gasta Determinação, nunca Assimilação -
+    // ver extraDadoDisponivel.
+    var empBtn = app.querySelector('[data-tstempenho]');
+    if(empBtn) empBtn.addEventListener("click", function(){
+      if(t.rolling || t.registered) return;
+      var ligar = !t.extraDado;
       if(ligar){
-        if(!extraDadoDisponivel(c)){ extraChk.checked = false; avisar("Sem pontos de Determinação: não dá pra manter um dado extra agora."); return; }
+        if(!extraDadoDisponivel(c)){ avisar("Sem pontos de Determinação: não dá pra manter um dado extra agora."); return; }
         t.extraSnapshot = { caixaAtual:c.determinacao.caixaAtual, pontosAtual:c.determinacao.pontosAtual };
         if(gastarDeterminacao(c,1)) marcarFlashSuscetivel(c);
       } else if(t.extraSnapshot){
@@ -11210,6 +11354,38 @@ textarea[data-notas]{ font-family:"Rabisco Fino",cursive; font-size:18px; line-h
       }
       pendTeste(c);
       t.extraDado = ligar; renderSheet();
+    });
+    // Montar o teste de fora do cartão: Característica (caixa dela), linhas de
+    // Instintos e de Conhecimentos & Práticas. Monta e leva até o cartão Testar.
+    function montarTeste(o){
+      if(t.rolling) return;
+      if(o.normal && t.agir && !definirAgir(false)) return;
+      if(o.inst) t.instintoKey = o.inst;
+      if(o.cp) t.cpKey = o.cp;
+      if(t.agir && o.inst && !o.cp) t.instinto2Key = t.instinto2Key || o.inst;
+      if(o.carac){
+        var d = carDef(o.carac);
+        t.mods = t.mods || {};
+        if(t.origem && t.origem.mod && t.origem.mod !== "c:"+o.carac) delete t.mods[t.origem.mod];
+        var temMod = !!CARAC_MODS[o.carac];
+        if(temMod) t.mods["c:"+o.carac] = true;
+        t.origem = { tipo:"carac", id:o.carac, nome:d ? d.nome.replace("[Sentido]", (c.caracEscolhas && c.caracEscolhas[o.carac]) ? String(c.caracEscolhas[o.carac]).replace(/^./, function(x){ return x.toUpperCase(); }) : "Sentido") : o.carac, mod: temMod ? "c:"+o.carac : null };
+      }
+      t.results = []; t.registered = false;
+      fecharCaixa();
+      if(state.collapsed.testar){ state.collapsed.testar = false; saveLS("pangea:collapsed", state.collapsed); }
+      renderSheet();
+      fnavIrPara("testar");
+    }
+    app.querySelectorAll('[data-caractest]').forEach(function(b){ b.addEventListener("click", function(){
+      montarTeste({ carac:b.getAttribute("data-caractest") });
+    }); });
+    app.querySelectorAll('[data-usarinst]').forEach(function(b){ b.addEventListener("click", function(){ montarTeste({ inst:b.getAttribute("data-usarinst") }); }); });
+    app.querySelectorAll('[data-usarcp]').forEach(function(b){ b.addEventListener("click", function(){ montarTeste({ cp:b.getAttribute("data-usarcp"), normal:true }); }); });
+    var irAssim = app.querySelector('[data-tstir="assimilacao"]');
+    if(irAssim) irAssim.addEventListener("click", function(){
+      if(state.collapsed.assimilacao){ state.collapsed.assimilacao = false; saveLS("pangea:collapsed", state.collapsed); renderSheet(); }
+      fnavIrPara("assimilacao");
     });
     var rollBtn = app.querySelector('[data-testaction="roll"]');
     if(rollBtn) rollBtn.addEventListener("click", function(){
@@ -11308,7 +11484,7 @@ textarea[data-notas]{ font-family:"Rabisco Fino",cursive; font-size:18px; line-h
       registrarTeste({
         charId: c.id, nomePersonagem: c.nomePersonagem, nomeJogador: c.nomeJogador,
         acampamento: c.acampamento,
-        label: instLbl+" + "+segLbl+(t.agir?" (Agir por Instinto)":""),
+        label: instLbl+" + "+segLbl+(t.agir?" (Assimilada)":"")+(t.origem && t.origem.nome ? " · "+t.origem.nome : ""),
         resultado: totS+" Suc · "+totA+" Adap · "+totP+" Press",
         totS: totS, totA: totA, totP: totP,
         dados: t.results.map(function(d){ return {sides:d.sides, face:d.face, s:d.s, a:d.a, p:d.p, kept:d.kept}; }),
