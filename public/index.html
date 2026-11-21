@@ -10229,13 +10229,12 @@ textarea[data-notas]{ font-family:"Rabisco Fino",cursive; font-size:18px; line-h
     }
 
     if(!perdido){
+      // Seção do Teste de Assimilação (antes ficava no fim do cartão Testar).
+      if(!pool && !naCriacao) body += tstAssimHtml(c);
       body += '<div class="row" style="margin-top:12px;gap:10px;flex-wrap:wrap">';
-      if(!pool && pendentes > 0){
+      if(!pool && pendentes > 0 && naCriacao){
         var eProx = nivelDoProximoTesteAssim(c);
         body += '<button type="button" class="btn accent" data-action="assim-testar">Fazer Teste de Assimilação · Nível '+eProx+' (1d10'+(eProx>0?' + '+eProx+'d12':'')+')</button>';
-      } else if(!pool && !naCriacao){
-        var eX = nivelDoProximoTesteAssim(c), pilhaX = '1d10'+(eX>0?' + '+eX+'d12':'');
-        body += '<button type="button" class="btn secondary" data-action="assim-testar">Teste de Assimilação · Nível '+eX+' ('+pilhaX+')</button>';
       }
       if(!naCriacao) body += '<button type="button" class="btn secondary" data-action="assim-clareza-toggle">'+(clarezaAberta?"Fechar Clareza de Propósito":"Clareza de Propósito")+'</button>';
       body += '</div>';
@@ -11232,7 +11231,6 @@ textarea[data-notas]{ font-family:"Rabisco Fino",cursive; font-size:18px; line-h
       }
       body += '</div>';
     }
-    body += tstAssimHtml(c);
     return sectionCard("testar", "Testar", body);
   }
 
@@ -11242,7 +11240,7 @@ textarea[data-notas]{ font-family:"Rabisco Fino",cursive; font-size:18px; line-h
       '<p><b>Assimilada (Agir por Instinto):</b></p><ul><li>dois Instintos no lugar de Instinto + Prática/Conhecimento (pode repetir o mesmo);</li><li>os dados viram d12 e você mantém 1 dado a mais;</li><li>custa 1 ponto de Assimilação, ou 2 de Determinação se não houver Assimilação.</li></ul>' +
       '<p><b>Empenho (dado extra):</b> pra manter um dado a mais nessa rolagem, declare antes de rolar. Gasta 1 ponto de Determinação.</p>' +
       '<p><b>Atalhos:</b> toque no nome de um Instinto, Conhecimento ou Prática na ficha para montar o teste. Na caixa de uma Característica, <b>Testar com ela</b> liga o efeito dela no teste que você montar.</p>' +
-      '<p><b>Teste de Assimilação:</b> fica no fim deste cartão.</p>' +
+      '<p><b>Teste de Assimilação:</b> fica no cartão Assimilação.</p>' +
       (modsLigados() ? '<p><b>Etiquetas:</b> Saúde, Características, Assimilações e itens que mexem neste teste. As acesas entram no resultado; toque para ligar ou desligar.</p>' : '') +
       '<p>'+(autoLigada("dadosMantidosAuto") ? 'Depois que os dados caírem, os melhores já vêm marcados. Clique num dado para manter ou soltar outro (ex.: tensionando uma Origem) e confirme para registrar no histórico.' : 'Depois que os dados caírem, clique nos dados que quer manter (quantos foram declarados) e confirme para registrar no histórico.')+'</p>' +
       '<div class="hint ajuda"><p>Os pontos da Rolagem Assimilada e do Empenho saem ao escolher (voltam se desfizer antes de rolar). Por isso uma opção pode ficar bloqueada se faltar recurso.</p><p>O gasto só vai para a mesa quando o teste é confirmado.</p></div></div>';
